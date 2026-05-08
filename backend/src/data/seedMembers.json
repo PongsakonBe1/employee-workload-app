@@ -1,0 +1,65 @@
+[
+  {
+    "username": "กฤตยชญ์",
+    "nickname": "กฤตยชญ์",
+    "fullName": "นายกฤตยชญ์ เส้งสุย",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "กรวิทย์",
+    "nickname": "กรวิทย์",
+    "fullName": "นายกรวิทย์ คำเต็ม",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "ปิยพงษ์",
+    "nickname": "ปิยพงษ์",
+    "fullName": "นายปิยพงษ์ ทองกัณฑา",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "เทอดศักดิ์",
+    "nickname": "เทอดศักดิ์",
+    "fullName": "นายเทอดศักดิ์ ไวมือ",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "ธนกฤต",
+    "nickname": "ธนกฤต",
+    "fullName": "นายธนกฤต แสงศรีจันทร์รัตน์",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "เพียงธาร",
+    "nickname": "เพียงธาร",
+    "fullName": "นางสาวเพียงธาร กุลวิวัฒน์",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "เปรมปรีดี",
+    "nickname": "เปรมปรีดี",
+    "fullName": "นายเปรมปรีดี ยิ้มขลิบ",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "พงศกร",
+    "nickname": "พงศกร",
+    "fullName": "นายพงศกร ระวังวงศ์",
+    "role": "staff",
+    "active": true
+  },
+  {
+    "username": "อัจฉริยพงษ์",
+    "nickname": "อัจฉริยพงษ์",
+    "fullName": "นายอัจฉริยพงษ์ ชลศิริพงษ์",
+    "role": "staff",
+    "active": true
+  }
+]

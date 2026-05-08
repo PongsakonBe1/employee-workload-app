@@ -1,0 +1,29 @@
+{
+  "sourceWorkbook": "แบบบันทึกปริมาณงานช่างเทคนิค.xlsx",
+  "importedRows": 2099,
+  "dateRange": {
+    "start": "2025-11-04",
+    "end": "2026-05-07"
+  },
+  "memberCountInWorkbook": 9,
+  "note": "The workbook Member sheet contains 9 names, although the requested requirement mentions 8 people. All names were preserved to avoid losing seeded records.",
+  "mainDutyCounts": {
+    "ดูแลห้องบริการคอมพิวเตอร์": 1223,
+    "คุมสอบ DL": 269,
+    "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ": 533,
+    "สนับสนุนการทำงานของสำนักคอมพิวเตอร์(ฝ่ายอื่นๆ)": 5,
+    "ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย": 68
+  },
+  "employeeCounts": {
+    "เปรมปรีดี": 285,
+    "กรวิทย์": 58,
+    "กฤตยชญ์": 69,
+    "อัจฉริยพงษ์": 162,
+    "ธนกฤต": 193,
+    "เทอดศักดิ์": 178,
+    "เพียงธาร": 572,
+    "ปิยพงษ์": 248,
+    "A": 1,
+    "พงศกร": 332
+  }
+}
