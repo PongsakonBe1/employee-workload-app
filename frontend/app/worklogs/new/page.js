@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, Sparkles, Clock } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
+import { useAuth } from "../../../components/AuthProvider";
 import { apiFetch } from "../../../lib/api";
+import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
+import { CommentSuggestions } from "../../../components/CommentSuggestions";
+import {
+  getCommentSuggestions,
+  getMainDutyFromMinorTask,
+  hasCommentSuggestions,
+} from "../../../lib/commentSuggestions";
+import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
+import { db } from "../../../lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -14,7 +27,17 @@ function nowTime() {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
+// Get lock time (23:59 today)
+function getLockTime(dateStr) {
+  const date = new Date(dateStr);
+  date.setHours(23, 59, 0, 0);
+  return date;
+}
+
 export default function NewWorkLogPage() {
+  const t = useTranslations("worklog");
+  const router = useRouter();
+  const { user } = useAuth();
   const [categories, setCategories] = useState(null);
   const [form, setForm] = useState({
     date: today(),
@@ -24,37 +47,126 @@ export default function NewWorkLogPage() {
     mainDuty: "",
     minorTask: "",
     comment: "",
-    status: "บันทึกแล้ว"
+    // Note: status field removed - auto-handled by system
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [lastSaved, setLastSaved] = useState(null);
+  const [draftRestored, setDraftRestored] = useState(false);
 
+  // Redirect admin users - they don't record worklogs
+  useEffect(() => {
+    if (user?.role === "admin") {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("worklogDraft");
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        // Check if draft is not older than 24 hours
+        const draftAge = Date.now() - (draft.timestamp || 0);
+        if (draftAge < 24 * 60 * 60 * 1000) {
+          setForm((current) => ({
+            ...current,
+            recipient: draft.recipient || "",
+            minorTask: draft.minorTask || "",
+            mainDuty: draft.mainDuty || "",
+            dutyGroup: draft.dutyGroup || "main",
+            comment: draft.comment || "",
+          }));
+          setDraftRestored(true);
+          setTimeout(() => setDraftRestored(false), 3000);
+        }
+      } catch (e) {
+        console.error("Failed to restore draft:", e);
+      }
+    }
+  }, []);
+
+  // Auto-save draft every 30 seconds or when form changes significantly
+  useEffect(() => {
+    const saveDraft = () => {
+      const draft = {
+        recipient: form.recipient,
+        minorTask: form.minorTask,
+        mainDuty: form.mainDuty,
+        dutyGroup: form.dutyGroup,
+        comment: form.comment,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("worklogDraft", JSON.stringify(draft));
+      setLastSaved(new Date());
+    };
+
+    // Save immediately if recipient, minorTask, or comment changed
+    const timeoutId = setTimeout(saveDraft, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [
+    form.recipient,
+    form.minorTask,
+    form.comment,
+    form.mainDuty,
+    form.dutyGroup,
+  ]);
+
+  // Clear draft after successful submit
+  const clearDraft = () => {
+    localStorage.removeItem("worklogDraft");
+    setLastSaved(null);
+  };
+
+  // Fetch categories on mount
   useEffect(() => {
     apiFetch("/categories").then((data) => {
       setCategories(data);
-      const firstGroup = data.dutyGroups?.[0];
-      setForm((current) => ({
-        ...current,
-        dutyGroup: firstGroup?.key || "main",
-        mainDuty: firstGroup?.duties?.[0] || ""
-      }));
     });
   }, []);
 
-  const selectedGroup = useMemo(
-    () => categories?.dutyGroups?.find((group) => group.key === form.dutyGroup),
-    [categories, form.dutyGroup]
+  // Auto-update mainDuty when minorTask changes
+  const handleMinorTaskChange = useCallback(
+    (minorTask) => {
+      const mainDuty = getMainDutyFromMinorTask(minorTask);
+      const dutyGroup =
+        categories?.dutyGroups?.find((g) => g.duties.includes(mainDuty))?.key ||
+        "main";
+
+      setForm((current) => ({
+        ...current,
+        minorTask,
+        mainDuty,
+        dutyGroup,
+      }));
+    },
+    [categories],
   );
 
-  const minorOptions = useMemo(() => {
-    const mapped = categories?.minorTasksByDuty?.[form.mainDuty] || [];
-    return mapped.length ? mapped : categories?.minorTasks || [];
-  }, [categories, form.mainDuty]);
+  // Handle comment suggestion selection
+  const handleCommentSuggestion = useCallback((suggestion) => {
+    setForm((current) => ({
+      ...current,
+      comment: suggestion,
+    }));
+  }, []);
 
-  function update(key, value) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
+  // Get suggestions for current minor task
+  const suggestions = useMemo(() => {
+    return getCommentSuggestions(form.minorTask);
+  }, [form.minorTask]);
+
+  // Check if current minor task has suggestions
+  const hasSuggestions = useMemo(() => {
+    return hasCommentSuggestions(form.minorTask);
+  }, [form.minorTask]);
+
+  // Calculate lock deadline
+  const lockDeadline = useMemo(() => {
+    return getLockTime(form.date);
+  }, [form.date]);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -63,19 +175,38 @@ export default function NewWorkLogPage() {
     setMessage("");
 
     try {
-      await apiFetch("/worklogs", {
-        method: "POST",
-        body: JSON.stringify(form)
+      const validation = validateWorklogForm(form);
+      if (!validation.valid) {
+        throw new Error(Object.values(validation.errors)[0]);
+      }
+
+      await addDoc(collection(db, "worklogs"), {
+        date: form.date,
+        time: form.time,
+        recipient: sanitizeInput(form.recipient),
+        dutyGroup: form.dutyGroup,
+        mainDuty: form.mainDuty,
+        minorTask: form.minorTask,
+        comment: sanitizeInput(form.comment),
+        employeeId: user.uid,
+        employeeNickname: user.nickname,
+        status: "บันทึกแล้ว",
+        createdAt: serverTimestamp(),
       });
 
-      setMessage("Workload record saved successfully.");
+      clearDraft();
+      setMessage(t("form.saved"));
       setForm((current) => ({
         ...current,
         recipient: "",
         minorTask: "",
+        mainDuty: "",
+        dutyGroup: "main",
         comment: "",
-        time: nowTime()
+        time: nowTime(),
       }));
+
+      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -86,28 +217,106 @@ export default function NewWorkLogPage() {
   return (
     <AppShell>
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        {/* Left panel - Info */}
         <div className="apple-panel p-8">
           <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-950 text-white">
             <Sparkles size={24} />
           </div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">New record</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            {t("newRecord")}
+          </p>
           <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
-            Save your daily workload.
+            {t("title")}
           </h1>
           <p className="mt-5 text-slate-600">
-            The minor-task field maps the small items from your Excel workbook, including headphone borrowing,
-            classroom opening/closing, ICIT account, Microsoft Authenticator, software, Gmail, Wi-Fi and print top-up.
+            {t("form.recipientPlaceholder")}
           </p>
 
-          <div className="mt-8 rounded-3xl bg-slate-950 p-5 text-white">
-            <p className="text-sm font-semibold">Mapping decision</p>
-            <p className="mt-2 text-sm leading-6 text-white/75">
-              Main duties stay in <strong>mainDuty</strong>. Smaller operational activities are saved in
-              <strong> minorTask</strong> so reports can count them independently.
-            </p>
+          {/* Draft indicator */}
+          {(lastSaved || draftRestored) && (
+            <div
+              className={`mt-6 rounded-3xl p-4 ${draftRestored ? "bg-blue-50 border border-blue-200" : "bg-slate-50"}`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2
+                    size={18}
+                    className={
+                      draftRestored ? "text-blue-600" : "text-slate-500"
+                    }
+                  />
+                  <span
+                    className={`text-sm ${draftRestored ? "text-blue-700 font-medium" : "text-slate-600"}`}
+                  >
+                    {draftRestored
+                      ? "กู้คืนข้อมูลที่บันทึกไว้อัตโนมัติ"
+                      : lastSaved
+                        ? `บันทึกร่างล่าสุด: ${lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`
+                        : ""}
+                  </span>
+                </div>
+                {(form.recipient || form.minorTask || form.comment) && (
+                  <button
+                    onClick={() => {
+                      clearDraft();
+                      setForm((c) => ({
+                        ...c,
+                        recipient: "",
+                        minorTask: "",
+                        mainDuty: "",
+                        dutyGroup: "main",
+                        comment: "",
+                      }));
+                    }}
+                    className="text-xs text-slate-400 hover:text-red-600 transition"
+                  >
+                    ล้างร่าง
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Lock deadline notice */}
+          <div className="mt-6 rounded-3xl bg-amber-50 border border-amber-200 p-5">
+            <div className="flex items-start gap-3">
+              <Clock
+                size={20}
+                className="text-amber-600 mt-0.5 flex-shrink-0"
+              />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">
+                  หมายเหตุการแก้ไข
+                </p>
+                <p className="mt-1 text-sm text-amber-700 leading-relaxed">
+                  คุณสามารถแก้ไขรายการได้จนถึง <strong>23:59</strong>{" "}
+                  ของวันที่บันทึก หลังจากนั้นรายการจะถูกล็อกและไม่สามารถแก้ไขได้
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-3xl bg-slate-950 p-5 text-white">
+            <p className="text-sm font-semibold">วิธีการบันทึก</p>
+            <ol className="mt-2 text-sm leading-6 text-white/75 list-decimal list-inside space-y-1">
+              <li>
+                เลือก <strong>หัวข้อรอง (Minor Task)</strong> เป็นหลัก
+              </li>
+              <li>
+                ระบบจะกรอก <strong>หัวข้อหลัก</strong> ให้อัตโนมัติ
+              </li>
+              <li>
+                เลือก <strong>รายละเอียด</strong> จากตัวเลือกที่แนะนำ
+                หรือเขียนเอง
+              </li>
+              <li>
+                กด <strong>บันทึก</strong> เมื่อเสร็จสิ้น
+              </li>
+            </ol>
           </div>
         </div>
 
+        {/* Right panel - Form */}
         <form onSubmit={onSubmit} className="apple-panel p-6 sm:p-8">
           {message ? (
             <div className="mb-6 flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
@@ -116,101 +325,117 @@ export default function NewWorkLogPage() {
             </div>
           ) : null}
 
-          {error ? <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div> : null}
+          {error ? (
+            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          ) : null}
 
+          {/* Date & Time */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="apple-label">Date</label>
-              <input className="apple-input" type="date" value={form.date} onChange={(e) => update("date", e.target.value)} />
+              <label className="apple-label">{t("form.date")}</label>
+              <input
+                className="apple-input"
+                type="date"
+                value={form.date}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, date: e.target.value }))
+                }
+              />
             </div>
             <div>
-              <label className="apple-label">Time</label>
-              <input className="apple-input" type="time" value={form.time} onChange={(e) => update("time", e.target.value)} />
+              <label className="apple-label">{t("form.time")}</label>
+              <input
+                className="apple-input"
+                type="time"
+                value={form.time}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, time: e.target.value }))
+                }
+              />
             </div>
           </div>
 
+          {/* Recipient */}
           <div className="mt-5">
-            <label className="apple-label">Recipient / requester</label>
+            <label className="apple-label">{t("form.recipient")}</label>
             <input
               className="apple-input"
               value={form.recipient}
-              onChange={(e) => update("recipient", e.target.value)}
-              placeholder="Student ID, staff username, room number, or name"
+              onChange={(e) =>
+                setForm((c) => ({ ...c, recipient: e.target.value }))
+              }
+              placeholder={t("form.recipientPlaceholder")}
             />
           </div>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="apple-label">Duty group</label>
-              <select
-                className="apple-input"
-                value={form.dutyGroup}
-                onChange={(e) => {
-                  const nextGroup = categories.dutyGroups.find((group) => group.key === e.target.value);
-                  setForm((current) => ({
-                    ...current,
-                    dutyGroup: e.target.value,
-                    mainDuty: nextGroup?.duties?.[0] || "",
-                    minorTask: ""
-                  }));
-                }}
-              >
-                {(categories?.dutyGroups || []).map((group) => (
-                  <option key={group.key} value={group.key}>{group.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="apple-label">Main duty</label>
-              <select
-                className="apple-input"
-                value={form.mainDuty}
-                onChange={(e) => update("mainDuty", e.target.value)}
-              >
-                {(selectedGroup?.duties || []).map((duty) => (
-                  <option key={duty} value={duty}>{duty}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
+          {/* Minor Task - PRIMARY FIELD */}
           <div className="mt-5">
-            <label className="apple-label">Minor task</label>
-            <input
-              className="apple-input"
-              list="minorTasks"
+            <MinorTaskSelector
               value={form.minorTask}
-              onChange={(e) => update("minorTask", e.target.value)}
-              placeholder="Choose or type a minor task"
+              onChange={handleMinorTaskChange}
+              label={t("form.minorTask")}
+              placeholder={t("form.minorTaskPlaceholder")}
             />
-            <datalist id="minorTasks">
-              {minorOptions.map((task) => <option key={task} value={task} />)}
-            </datalist>
           </div>
 
+          {/* Main Duty - Auto-populated, read-only display */}
+          {form.minorTask && (
+            <div className="mt-5">
+              <label className="apple-label">{t("form.mainDuty")}</label>
+              <div className="apple-input bg-slate-50 text-slate-700 flex items-center">
+                <span className="text-slate-950 font-medium">
+                  {form.mainDuty}
+                </span>
+                <span className="ml-auto text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-full">
+                  กรอกอัตโนมัติ
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Comment with Suggestions */}
           <div className="mt-5">
-            <label className="apple-label">Comment</label>
+            <label className="apple-label">{t("form.comment")}</label>
             <textarea
-              className="apple-input min-h-32 resize-y"
+              className="apple-input min-h-24 resize-y"
               value={form.comment}
-              onChange={(e) => update("comment", e.target.value)}
-              placeholder="Details, problem, room number, software name, or resolution"
+              onChange={(e) =>
+                setForm((c) => ({ ...c, comment: e.target.value }))
+              }
+              placeholder={t("form.commentPlaceholder")}
             />
+
+            {/* Comment Suggestions */}
+            {hasSuggestions && (
+              <CommentSuggestions
+                suggestions={suggestions}
+                selected={form.comment}
+                onSelect={handleCommentSuggestion}
+              />
+            )}
           </div>
 
-          <div className="mt-5">
-            <label className="apple-label">Status</label>
-            <select className="apple-input" value={form.status} onChange={(e) => update("status", e.target.value)}>
-              <option value="บันทึกแล้ว">บันทึกแล้ว</option>
-              <option value="รอดำเนินการ">รอดำเนินการ</option>
-              <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-              <option value="ปิดงานแล้ว">ปิดงานแล้ว</option>
-            </select>
+          {/* Lock Deadline Notice */}
+          <div className="mt-6 flex items-center gap-3 text-sm text-slate-500 bg-slate-50 rounded-2xl p-4">
+            <Clock size={16} />
+            <span>
+              รายการนี้จะถูกล็อกเวลา{" "}
+              {lockDeadline.toLocaleTimeString("th-TH", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}{" "}
+              น. ของวันที่ {new Date(form.date).toLocaleDateString("th-TH")}
+            </span>
           </div>
 
-          <button disabled={saving} className="apple-button mt-8 w-full">
-            {saving ? "Saving…" : "Save workload"}
+          {/* Submit Button */}
+          <button
+            disabled={saving || !form.minorTask}
+            className="apple-button mt-8 w-full disabled:opacity-50"
+          >
+            {saving ? t("form.saving") : t("form.save")}
           </button>
         </form>
       </section>

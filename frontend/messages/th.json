@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "title": "ICIT Employee Workload Recorder",
+    "description": "ระบบบันทึกปริมาณงานช่างเทคนิค"
+  },
+  "navigation": {
+    "dashboard": "แดชบอร์ด",
+    "worklogs": "ประวัติงาน",
+    "newWorklog": "บันทึกงานใหม่",
+    "export": "ส่งออก",
+    "admin": "ผู้ดูแลระบบ",
+    "auditLogs": "ประวัติการใช้งาน",
+    "userManagement": "จัดการผู้ใช้",
+    "logout": "ออกจากระบบ",
+    "login": "เข้าสู่ระบบ"
+  },
+  "worklog": {
+    "title": "บันทึกงาน",
+    "newRecord": "บันทึกงานใหม่",
+    "history": "ประวัติการบันทึก",
+    "form": {
+      "date": "วันที่",
+      "time": "เวลา",
+      "recipient": "ผู้รับบริการ",
+      "recipientPlaceholder": "รหัสนักศึกษา, ชื่อผู้ใช้, ห้อง, หรือชื่อ",
+      "dutyGroup": "กลุ่มงาน",
+      "mainDuty": "หัวข้อการให้บริการ",
+      "minorTask": "หัวข้อรอง (Minor Task)",
+      "minorTaskPlaceholder": "เลือกหัวข้อรอง",
+      "comment": "รายละเอียดเพิ่มเติม",
+      "commentPlaceholder": "รายละเอียด, หมายเลขห้อง, อุปกรณ์, หรือวิธีแก้ไข",
+      "save": "บันทึก",
+      "saving": "กำลังบันทึก...",
+      "saved": "บันทึกสำเร็จ"
+    },
+    "commentSuggestions": {
+      "title": "เลือกรายละเอียดที่ต้องการ",
+      "custom": "เขียนเอง",
+      "room303": "303/Windows",
+      "room304": "304/iOS",
+      "room305": "305/Android",
+      "room306": "306/Linux",
+      "room401": "401",
+      "room402": "402",
+      "room406": "406",
+      "room407": "407",
+      "headphone": "หูฟัง",
+      "powerOutlet": "ปลั๊กไฟ"
+    },
+    "minorTaskMapping": {
+      "openKnowledgeRoom": "เปิดห้องแลกเปลี่ยนความรู้",
+      "closeKnowledgeRoom": "ปิดห้องแลกเปลี่ยนความรู้",
+      "openClassroom4": "เปิดห้องเรียนชั้น 4",
+      "closeClassroom4": "ปิดห้องเรียนชั้น 4",
+      "borrowHeadphone": "ยืมหูฟัง",
+      "returnHeadphone": "คืนหูฟัง",
+      "borrowPowerOutlet": "ยืมปลั๊กไฟ",
+      "returnPowerOutlet": "คืนปลั๊กไฟ"
+    },
+    "table": {
+      "date": "วันที่",
+      "employee": "ผู้บันทึก",
+      "recipient": "ผู้รับบริการ",
+      "mainDuty": "หัวข้อหลัก",
+      "minorTask": "หัวข้อรอง",
+      "comment": "รายละเอียด",
+      "search": "ค้นหา",
+      "editable": "แก้ไขได้",
+      "locked": "ล็อกแล้ว",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "totalRecords": "รายการทั้งหมด"
+    },
+    "errors": {
+      "required": "จำเป็นต้องกรอก",
+      "invalidTime": "รูปแบบเวลาไม่ถูกต้อง (HH:mm)",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "locked": "รายการนี้ถูกล็อกแล้ว ไม่สามารถแก้ไขได้",
+      "loadFailed": "โหลดข้อมูลไม่สำเร็จ"
+    }
+  },
+  "dashboard": {
+    "title": "ภาพรวมงาน",
+    "subtitle": "สรุปข้อมูลจากการบันทึกงาน",
+    "fiscalYear": "ปีงบประมาณ",
+    "totalRecords": "จำนวนรายการ",
+    "fiscalPeriod": "ช่วงเวลา",
+    "topDuty": "งานที่ทำบ่อย",
+    "byEmployee": "ตามพนักงาน",
+    "byMainDuty": "ตามหัวข้อหลัก",
+    "byMinorTask": "ตามหัวข้อรอง",
+    "recentRecords": "รายการล่าสุด"
+  },
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "retry": "ลองใหม่",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "search": "ค้นหา",
+    "filter": "กรอง",
+    "export": "ส่งออก",
+    "all": "ทั้งหมด",
+    "noData": "ไม่มีข้อมูล",
+    "language": "ภาษา",
+    "previous": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "to": "ถึง"
+  },
+  "admin": {
+    "title": "ผู้ดูแลระบบ",
+    "auditLogs": {
+      "title": "ประวัติการใช้งาน",
+      "type": "ประเภท",
+      "user": "ผู้ใช้",
+      "action": "การกระทำ",
+      "target": "เป้าหมาย",
+      "timestamp": "เวลา",
+      "details": "รายละเอียด",
+      "types": {
+        "WORKLOG_CREATED": "สร้างรายการ",
+        "WORKLOG_UPDATED": "แก้ไขรายการ",
+        "WORKLOG_LOCKED": "ล็อกรายการ",
+        "USER_LOGIN": "เข้าสู่ระบบ",
+        "USER_LOGOUT": "ออกจากระบบ"
+      }
+    },
+    "users": {
+      "title": "จัดการผู้ใช้",
+      "name": "ชื่อ",
+      "email": "อีเมล",
+      "role": "สิทธิ์",
+      "status": "สถานะ",
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน",
+      "lastLogin": "เข้าสู่ระบบล่าสุด",
+      "worklogCount": "จำนวนงาน",
+      "actions": "การจัดการ",
+      "deactivate": "ปิดใช้งาน",
+      "activate": "เปิดใช้งาน"
+    }
+  }
+}

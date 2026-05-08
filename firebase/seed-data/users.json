@@ -1,0 +1,74 @@
+[
+  {
+    "username": "pongsagon.r",
+    "nickname": "พงศกร",
+    "fullName": "Pongsagon Rawangwong",
+    "role": "admin",
+    "active": true,
+    "email": "pongsagon.r@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "kanok.b",
+    "nickname": "กนก",
+    "fullName": "Kanok Boonpanjantee",
+    "role": "admin",
+    "active": true,
+    "email": "kanok.b@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "prampreedee.y",
+    "nickname": "เปรมปรีดี",
+    "fullName": "Prampreedee Yimklib",
+    "role": "staff",
+    "active": true,
+    "email": "prampreedee.y@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "krittayot.s",
+    "nickname": "กฤตยชญ์",
+    "fullName": "Krittayot Sengsul",
+    "role": "staff",
+    "active": true,
+    "email": "krittayot.s@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "korawit.k",
+    "nickname": "กรวิทย์",
+    "fullName": "Korawit Krajapan",
+    "role": "staff",
+    "active": true,
+    "email": "korawit.k@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "thanakit.s",
+    "nickname": "ธนกฤต",
+    "fullName": "Thanakit Sangsrijunrat",
+    "role": "staff",
+    "active": true,
+    "email": "thanakit.s@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "piyapong.t",
+    "nickname": "ปิยพงษ์",
+    "fullName": "Piyapong Tongguntar",
+    "role": "staff",
+    "active": true,
+    "email": "piyapong.t@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "thoedsak.w",
+    "nickname": "เทอดศักดิ์",
+    "fullName": "Thoedsak Waimuea",
+    "role": "staff",
+    "active": true,
+    "email": "thoedsak.w@icit.kmutnb.ac.th"
+  },
+  {
+    "username": "piengtarn.k",
+    "nickname": "เพียงธาร",
+    "fullName": "Piengtarn Kulwiwat",
+    "role": "staff",
+    "active": true,
+    "email": "piengtarn.k@icit.kmutnb.ac.th"
+  }
+]

@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "title": "ICIT Employee Workload Recorder",
+    "description": "Technical staff workload recording system"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "worklogs": "Worklog History",
+    "newWorklog": "New Worklog",
+    "export": "Export",
+    "admin": "Admin",
+    "auditLogs": "Audit Logs",
+    "userManagement": "User Management",
+    "logout": "Logout",
+    "login": "Login"
+  },
+  "worklog": {
+    "title": "Worklog",
+    "newRecord": "New Record",
+    "history": "Worklog History",
+    "form": {
+      "date": "Date",
+      "time": "Time",
+      "recipient": "Recipient",
+      "recipientPlaceholder": "Student ID, username, room, or name",
+      "dutyGroup": "Duty Group",
+      "mainDuty": "Main Duty",
+      "minorTask": "Minor Task",
+      "minorTaskPlaceholder": "Select minor task",
+      "comment": "Additional Details",
+      "commentPlaceholder": "Details, room number, equipment, or resolution",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved successfully"
+    },
+    "commentSuggestions": {
+      "title": "Select details",
+      "custom": "Custom",
+      "room303": "303/Windows",
+      "room304": "304/iOS",
+      "room305": "305/Android",
+      "room306": "306/Linux",
+      "room401": "401",
+      "room402": "402",
+      "room406": "406",
+      "room407": "407",
+      "headphone": "Headphone",
+      "powerOutlet": "Power Outlet"
+    },
+    "minorTaskMapping": {
+      "openKnowledgeRoom": "Open Knowledge Room",
+      "closeKnowledgeRoom": "Close Knowledge Room",
+      "openClassroom4": "Open Classroom 4",
+      "closeClassroom4": "Close Classroom 4",
+      "borrowHeadphone": "Borrow Headphone",
+      "returnHeadphone": "Return Headphone",
+      "borrowPowerOutlet": "Borrow Power Outlet",
+      "returnPowerOutlet": "Return Power Outlet"
+    },
+    "table": {
+      "date": "Date",
+      "employee": "Employee",
+      "recipient": "Recipient",
+      "mainDuty": "Main Duty",
+      "minorTask": "Minor Task",
+      "comment": "Comment",
+      "search": "Search",
+      "editable": "Editable",
+      "locked": "Locked",
+      "edit": "Edit",
+      "delete": "Delete",
+      "totalRecords": "Total records"
+    },
+    "errors": {
+      "required": "Required field",
+      "invalidTime": "Invalid time format (HH:mm)",
+      "saveFailed": "Failed to save",
+      "locked": "This record is locked and cannot be edited",
+      "loadFailed": "Failed to load data"
+    }
+  },
+  "dashboard": {
+    "title": "Workload Overview",
+    "subtitle": "Summary from worklog records",
+    "fiscalYear": "Fiscal Year",
+    "totalRecords": "Total Records",
+    "fiscalPeriod": "Period",
+    "topDuty": "Top Duty",
+    "byEmployee": "By Employee",
+    "byMainDuty": "By Main Duty",
+    "byMinorTask": "By Minor Task",
+    "recentRecords": "Recent Records"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "all": "All",
+    "noData": "No data",
+    "language": "Language",
+    "previous": "Previous",
+    "next": "Next",
+    "to": "to"
+  },
+  "admin": {
+    "title": "Admin",
+    "auditLogs": {
+      "title": "Audit Logs",
+      "type": "Type",
+      "user": "User",
+      "action": "Action",
+      "target": "Target",
+      "timestamp": "Timestamp",
+      "details": "Details",
+      "types": {
+        "WORKLOG_CREATED": "Created",
+        "WORKLOG_UPDATED": "Updated",
+        "WORKLOG_LOCKED": "Locked",
+        "USER_LOGIN": "Login",
+        "USER_LOGOUT": "Logout"
+      }
+    },
+    "users": {
+      "title": "User Management",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "lastLogin": "Last Login",
+      "worklogCount": "Worklog Count",
+      "actions": "Actions",
+      "deactivate": "Deactivate",
+      "activate": "Activate"
+    }
+  }
+}

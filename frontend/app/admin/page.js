@@ -1,0 +1,159 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import {
+  Users,
+  FileText,
+  Shield,
+  BarChart3,
+  Settings,
+  ChevronRight,
+} from "lucide-react";
+import { AppShell } from "../../components/AppShell";
+import { useAuth } from "../../components/AuthProvider";
+
+const adminModules = [
+  {
+    id: "users",
+    title: "จัดการผู้ใช้",
+    titleEn: "User Management",
+    description: "ดูและจัดการพนักงานทั้งหมดในระบบ",
+    descriptionEn: "View and manage all system users",
+    icon: Users,
+    href: "/admin/users",
+    color: "bg-blue-500",
+  },
+  {
+    id: "audit",
+    title: "ประวัติการใช้งาน",
+    titleEn: "Audit Logs",
+    description: "ดูบันทึกการกระทำทั้งหมดในระบบ",
+    descriptionEn: "View all system activity logs",
+    icon: FileText,
+    href: "/admin/audit-logs",
+    color: "bg-emerald-500",
+  },
+  {
+    id: "stats",
+    title: "สถิติรวม",
+    titleEn: "Statistics",
+    description: "ดูสถิติการทำงานของพนักงานทั้งหมด",
+    descriptionEn: "View overall employee workload statistics",
+    icon: BarChart3,
+    href: "/dashboard",
+    color: "bg-violet-500",
+  },
+  {
+    id: "settings",
+    title: "ตั้งค่าระบบ",
+    titleEn: "System Settings",
+    description: "จัดการตั้งค่าระบบและการกำหนดค่า",
+    descriptionEn: "Manage system settings and configurations",
+    icon: Settings,
+    href: "#",
+    color: "bg-amber-500",
+  },
+];
+
+export default function AdminPage() {
+  const t = useTranslations();
+  const router = useRouter();
+  const { user } = useAuth();
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== "admin") {
+    return (
+      <AppShell>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="apple-panel px-8 py-6 text-center">
+            <Shield className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+            <p className="text-slate-600">{t("common.loading")}</p>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell>
+      <section className="mb-8">
+        <div className="mb-2 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+            <Shield size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Admin
+            </p>
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-950">
+              {t("admin.title")}
+            </h1>
+          </div>
+        </div>
+        <p className="ml-[60px] text-slate-600">
+          จัดการระบบและดูข้อมูลทั้งหมดของพนักงาน
+        </p>
+      </section>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {adminModules.map((module) => {
+          const Icon = module.icon;
+          return (
+            <a
+              key={module.id}
+              href={module.href}
+              className="apple-panel group flex items-start gap-5 p-6 transition hover:shadow-lg"
+            >
+              <div
+                className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-white transition-transform group-hover:scale-110 ${module.color}`}
+              >
+                <Icon size={28} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-slate-950">
+                  {module.title}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {module.description}
+                </p>
+              </div>
+              <ChevronRight
+                className="mt-1 text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-600"
+                size={24}
+              />
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Quick Stats */}
+      <section className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold text-slate-950">
+          ภาพรวมระบบ
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="apple-panel p-5">
+            <p className="text-sm text-slate-500">พนักงานทั้งหมด</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">8</p>
+          </div>
+          <div className="apple-panel p-5">
+            <p className="text-sm text-slate-500">งานที่บันทึกวันนี้</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">-</p>
+          </div>
+          <div className="apple-panel p-5">
+            <p className="text-sm text-slate-500">งานรอการล็อก</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">-</p>
+          </div>
+        </div>
+      </section>
+    </AppShell>
+  );
+}

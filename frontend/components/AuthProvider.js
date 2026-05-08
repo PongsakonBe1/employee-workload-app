@@ -1,58 +1,66 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { apiFetch, clearToken, setToken } from "../lib/api";
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [booting, setBooting] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Get additional user data from Firestore
+        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+        if (userDoc.exists()) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            ...userDoc.data(),
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
 
-    apiFetch("/auth/me")
-      .then((data) => {
-        if (mounted) setUser(data.user);
-      })
-      .catch(() => {
-        clearToken();
-        if (mounted) setUser(null);
-      })
-      .finally(() => {
-        if (mounted) setBooting(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
+    return () => unsubscribe();
   }, []);
 
   async function login(username, password) {
-    const data = await apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ username, password })
-    });
-
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
+    // Convert username to email
+    const email = `${username}@icit.kmutnb.ac.th`;
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
   }
 
-  function logout() {
-    clearToken();
-    setUser(null);
-    window.location.href = "/login";
+  async function logout() {
+    await signOut(auth);
   }
 
-  const value = useMemo(() => ({ user, booting, login, logout }), [user, booting]);
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const value = useContext(AuthContext);
-  if (!value) throw new Error("useAuth must be used inside AuthProvider");
-  return value;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
 }

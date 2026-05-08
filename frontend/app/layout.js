@@ -1,16 +1,23 @@
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata = {
   title: "ICIT Workload Recorder",
-  description: "Employee workload recording system for ICIT technical staff"
+  description: "Employee workload recording system for ICIT technical staff",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="th">
+    <html lang={locale}>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>{children}</AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
