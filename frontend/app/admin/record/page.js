@@ -106,17 +106,41 @@ export default function AdminRecordPage() {
   async function loadStaff() {
     try {
       setLoading(true);
-      console.log("[AdminRecord] Querying staff...");
+      console.log("[AdminRecord] Querying staff and admin...");
 
-      // ใช้ query ง่ายๆ ไม่ต้องการ index
-      const q = query(collection(db, "users"), where("role", "==", "staff"));
-      const snapshot = await getDocs(q);
-      console.log("[AdminRecord] Staff query result:", snapshot.size);
+      // ดึงทั้ง staff และ admin (เพื่อให้ admin บันทึกงานให้ตัวเองได้)
+      const staffQuery = query(
+        collection(db, "users"),
+        where("role", "==", "staff"),
+      );
+      const adminQuery = query(
+        collection(db, "users"),
+        where("role", "==", "admin"),
+      );
+
+      const [staffSnapshot, adminSnapshot] = await Promise.all([
+        getDocs(staffQuery),
+        getDocs(adminQuery),
+      ]);
+
+      // รวมผลลัพธ์
+      const allUsers = [];
+      staffSnapshot.forEach((doc) =>
+        allUsers.push({ id: doc.id, ...doc.data() }),
+      );
+      adminSnapshot.forEach((doc) =>
+        allUsers.push({ id: doc.id, ...doc.data() }),
+      );
+
+      console.log(
+        "[AdminRecord] Staff:",
+        staffSnapshot.size,
+        "Admin:",
+        adminSnapshot.size,
+      );
 
       // กรอง active ที่ client side และกรองข้อมูลซ้ำ
-      const allStaff = snapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((u) => u.active !== false); // แสดงทั้ง active และไม่มี field active
+      const allStaff = allUsers.filter((u) => u.active !== false); // แสดงทั้ง active และไม่มี field active
 
       // กรองข้อมูลซ้ำ (ตาม email)
       const seenEmails = new Set();
@@ -126,6 +150,27 @@ export default function AdminRecordPage() {
         }
         seenEmails.add(u.email);
         return true;
+      });
+
+      // เรียงลำดับ: admin ก่อน (เพื่อให้ admin เจอตัวเองง่าย) แล้วตามด้วย staff ตามชื่อ
+      staff.sort((a, b) => {
+        // admin ก่อน
+        if (a.role === "admin" && b.role !== "admin") return -1;
+        if (a.role !== "admin" && b.role === "admin") return 1;
+        // เรียงตามชื่อ
+        const nameA = (
+          a.displayName ||
+          a.fullName ||
+          a.nickname ||
+          a.email
+        ).toLowerCase();
+        const nameB = (
+          b.displayName ||
+          b.fullName ||
+          b.nickname ||
+          b.email
+        ).toLowerCase();
+        return nameA.localeCompare(nameB);
       });
 
       console.log("[AdminRecord] Staff loaded:", staff.length);
@@ -156,6 +201,8 @@ export default function AdminRecordPage() {
       return "งานในหน้าที่หลัก (ห้องบริการ)";
     } else if (mainDuty === "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ") {
       return "งานในหน้าที่หลัก (รับแจ้งปัญหา)";
+    } else if (mainDuty === "คุมสอบ DL") {
+      return "งานในหน้าที่หลัก (คุมสอบ DL)";
     }
     return "งานอื่นๆ ที่ได้รับมอบหมาย";
   }
@@ -371,7 +418,9 @@ export default function AdminRecordPage() {
                       {staff.displayName ||
                         staff.fullName ||
                         staff.nickname ||
-                        staff.email}
+                        staff.email}{" "}
+                      {staff.username && `(${staff.username})`}
+                      {staff.role === "admin" && " [แอดมิน]"}
                     </option>
                   ))}
                 </select>

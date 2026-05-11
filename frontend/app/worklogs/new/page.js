@@ -147,6 +147,8 @@ export default function NewWorkLogPage() {
       return "งานในหน้าที่หลัก (ห้องบริการ)";
     } else if (mainDuty === "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ") {
       return "งานในหน้าที่หลัก (รับแจ้งปัญหา)";
+    } else if (mainDuty === "คุมสอบ DL") {
+      return "งานในหน้าที่หลัก (คุมสอบ DL)";
     }
     return "งานอื่นๆ ที่ได้รับมอบหมาย";
   }

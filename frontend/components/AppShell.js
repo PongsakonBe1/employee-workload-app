@@ -17,11 +17,14 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Breadcrumb } from "./Breadcrumb";
 import { NotificationBell } from "./NotificationBell";
 
-const getNav = (t, isAdmin) => {
+const getNav = (t, role) => {
+  const isAdmin = role === "admin";
+  const isSuperadmin = role === "superadmin";
+  const isStaff = role === "staff";
+
   const items = [
     { href: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { href: "/worklogs", label: t("navigation.worklogs"), icon: ListChecks },
@@ -29,8 +32,8 @@ const getNav = (t, isAdmin) => {
     { href: "/profile", label: "โปรไฟล์", icon: User },
   ];
 
-  // Only show Record Work for non-admin users
-  if (!isAdmin) {
+  // Show Record Work for staff only (admin uses admin/record instead)
+  if (isStaff) {
     items.splice(1, 0, {
       href: "/worklogs/new",
       label: t("navigation.newWorklog"),
@@ -38,24 +41,19 @@ const getNav = (t, isAdmin) => {
     });
   }
 
-  // Show Admin menu for admin users
-  if (isAdmin) {
+  // Show Admin menu for admin and superadmin
+  if (isAdmin || isSuperadmin) {
+    // ใส่ 'บันทึกงานให้พนักงาน' หลัง 'แดชบอร์ด' (index 1)
+    items.splice(1, 0, {
+      href: "/admin/record",
+      label: "บันทึกงานให้พนักงาน",
+      icon: UserPlus,
+    });
     items.push({
       href: "/admin/users",
       label: "จัดการผู้ใช้",
       icon: Users,
     });
-    items.push({
-      href: "/admin/record",
-      label: "บันทึกงานให้พนักงาน",
-      icon: UserPlus,
-    });
-    // ลบเมนู ผู้ดูแลระบบ เพราะมี จัดการผู้ใช้ โดยตรงแล้ว
-    // items.push({
-    //   href: "/admin",
-    //   label: t("navigation.admin"),
-    //   icon: Shield,
-    // });
   }
 
   return items;
@@ -124,7 +122,7 @@ export function AppShell({ children }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-950">
-              ICIT Workload
+              labboy Workload
             </p>
             <p className="text-xs text-slate-500">
               {t("metadata.description")}
@@ -133,31 +131,28 @@ export function AppShell({ children }) {
         </Link>
 
         <div className="hidden items-center gap-2 lg:flex">
-          {getNav(t, user?.role === "admin" || user?.role === "superadmin").map(
-            (item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                    active
-                      ? "bg-slate-950 text-white"
-                      : "text-slate-600 hover:bg-white hover:text-slate-950"
-                  }`}
-                >
-                  <Icon size={16} />
-                  {item.label}
-                </Link>
-              );
-            },
-          )}
+          {getNav(t, user?.role).map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+                  active
+                    ? "bg-slate-950 text-white"
+                    : "text-slate-600 hover:bg-white hover:text-slate-950"
+                }`}
+              >
+                <Icon size={16} />
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3">
           <NotificationBell />
-          <LanguageSwitcher />
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold text-slate-950">
               {user.displayName || user.nickname || user.fullName || "User"}
@@ -175,26 +170,24 @@ export function AppShell({ children }) {
       </header>
 
       <nav className="mx-auto mb-6 grid max-w-7xl grid-cols-2 gap-2 lg:hidden">
-        {getNav(t, user?.role === "admin" || user?.role === "superadmin").map(
-          (item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium ${
-                  active
-                    ? "bg-slate-950 text-white"
-                    : "bg-white/70 text-slate-600"
-                }`}
-              >
-                <Icon size={16} />
-                {item.label}
-              </Link>
-            );
-          },
-        )}
+        {getNav(t, user?.role).map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium ${
+                active
+                  ? "bg-slate-950 text-white"
+                  : "bg-white/70 text-slate-600"
+              }`}
+            >
+              <Icon size={16} />
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <main className="mx-auto max-w-7xl">

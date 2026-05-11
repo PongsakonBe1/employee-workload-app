@@ -16,18 +16,28 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"];
+const COLORS = [
+  "#0f172a",
+  "#334155",
+  "#64748b",
+  "#94a3b8",
+  "#cbd5e1",
+  "#e2e8f0",
+];
 
 export function WorkloadByEmployeeChart({ data }) {
   if (!data || data.length === 0) return null;
 
+  // แสดงแค่ Top 10 พนักงานที่มีงานมากที่สุด
+  const topData = data.slice(0, 10);
+
   return (
     <div className="apple-panel p-6">
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
-        จำนวนงานตามพนักงาน
+        จำนวนงานตามพนักงาน (Top 10)
       </h3>
       <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={data} layout="vertical">
+        <BarChart data={topData} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis type="number" stroke="#64748b" fontSize={12} />
           <YAxis
@@ -52,8 +62,38 @@ export function WorkloadByEmployeeChart({ data }) {
   );
 }
 
+// แปลงชื่อหัวข้อหลักให้สั้นลง
+const shortenDutyName = (name) => {
+  const shortNames = {
+    ดูแลห้องบริการคอมพิวเตอร์: "ห้องบริการ",
+    ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ: "รับแจ้งปัญหา",
+    "สนับสนุนการทำงานของสำนักคอมพิวเตอร์(ฝ่ายอื่นๆ)": "สนับสนุนฝ่ายอื่น",
+    ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย: "งานตามมอบหมาย",
+    "คุมสอบ DL": "คุมสอบ DL",
+  };
+  return shortNames[name] || name;
+};
+
 export function WorkloadByDutyChart({ data }) {
   if (!data || data.length === 0) return null;
+
+  // แสดงแค่ Top 8 หัวข้อหลัก
+  const topData = data.slice(0, 8);
+
+  // ใช้ชื่อสั้นเพื่อป้องกันข้อความทับกัน
+  const shortNames = {
+    ดูแลห้องบริการคอมพิวเตอร์: "ดูแลห้องบริการ",
+    ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ: "รับแจ้ง/แก้ไขปัญหา",
+    ซ่อมบำรุงเครื่องคอมพิวเตอร์และอุปกรณ์: "ซ่อมบำรุงคอมฯ",
+    "สนับสนุนการทำงานของสำนักคอมพิวเตอร์(ฝ่ายอื่นๆ)": "สนับสนุนฝ่ายอื่น",
+    "คุมสอบ DL": "คุมสอบ",
+    "ให้บริการ ICIT อื่นๆ": "ICIT อื่นๆ",
+  };
+
+  const shortData = topData.map((item) => ({
+    ...item,
+    label: shortenDutyName(item.label),
+  }));
 
   return (
     <div className="apple-panel p-6">
@@ -63,7 +103,7 @@ export function WorkloadByDutyChart({ data }) {
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
           <Pie
-            data={data.slice(0, 6)}
+            data={shortData}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -72,8 +112,11 @@ export function WorkloadByDutyChart({ data }) {
             dataKey="count"
             nameKey="label"
           >
-            {data.slice(0, 6).map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            {shortData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip
@@ -83,8 +126,15 @@ export function WorkloadByDutyChart({ data }) {
               borderRadius: "12px",
               fontSize: "12px",
             }}
+            formatter={(value, name, props) => {
+              // แสดงชื่อเต็มใน tooltip
+              const original = data.find(
+                (d) => shortenDutyName(d.label) === name,
+              );
+              return [value, original?.label || name];
+            }}
           />
-          <Legend fontSize={12} />
+          <Legend fontSize={10} />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -92,16 +142,26 @@ export function WorkloadByDutyChart({ data }) {
 }
 
 export function DailyWorkloadTrend({ data }) {
-  // Mock data for daily trend - in real implementation, this comes from API
-  const mockData = [
-    { date: "01/05", count: 12 },
-    { date: "02/05", count: 18 },
-    { date: "03/05", count: 15 },
-    { date: "04/05", count: 22 },
-    { date: "05/05", count: 19 },
-    { date: "06/05", count: 25 },
-    { date: "07/05", count: 14 },
-  ];
+  // ใช้ข้อมูลจริง แสดง 7 วันล่าสุด
+  // data เรียงจากเก่าไปใหม่แล้ว ต้องเอา 7 รายการสุดท้าย (ล่าสุด) แล้ว reverse
+  const chartData =
+    data && data.length > 0
+      ? data.slice(-7) // เอา 7 วันล่าสุด
+      : [];
+
+  // ถ้าไม่มีข้อมูล แสดงข้อความแจ้ง
+  if (chartData.length === 0) {
+    return (
+      <div className="apple-panel p-6">
+        <h3 className="mb-4 text-lg font-semibold text-slate-950">
+          แนวโน้มงานรายวัน (7 วันล่าสุด)
+        </h3>
+        <div className="flex h-[250px] items-center justify-center text-slate-400 text-sm">
+          ไม่มีข้อมูล
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="apple-panel p-6">
@@ -109,7 +169,7 @@ export function DailyWorkloadTrend({ data }) {
         แนวโน้มงานรายวัน (7 วันล่าสุด)
       </h3>
       <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={mockData}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
           <YAxis stroke="#64748b" fontSize={12} />
@@ -137,12 +197,13 @@ export function DailyWorkloadTrend({ data }) {
 export function MinorTaskDistribution({ data }) {
   if (!data || data.length === 0) return null;
 
-  const topItems = data.slice(0, 8);
+  // แสดงแค่ Top 6 หัวข้อรอง
+  const topItems = data.slice(0, 6);
 
   return (
     <div className="apple-panel p-6">
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
-        จำนวนงานตามหัวข้อรอง (Top 8)
+        จำนวนงานตามหัวข้อรอง (Top 6)
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={topItems}>

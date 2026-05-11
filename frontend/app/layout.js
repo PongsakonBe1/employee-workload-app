@@ -4,8 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata = {
-  title: "ICIT Workload Recorder",
-  description: "Employee workload recording system for ICIT technical staff",
+  title: "labboy Workload Recorder",
+  description: "Employee workload recording system for labboy technical staff",
 };
 
 export default async function RootLayout({ children }) {

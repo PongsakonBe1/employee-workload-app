@@ -65,6 +65,47 @@ export default function WorkLogsPage() {
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  // Users cache for display name lookup
+  const [usersCache, setUsersCache] = useState({});
+
+  // Load users for display name lookup
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        const usersMap = {};
+        snapshot.docs.forEach((doc) => {
+          const userData = doc.data();
+          usersMap[doc.id] =
+            userData.displayName ||
+            userData.fullName ||
+            userData.nickname ||
+            doc.id;
+        });
+        setUsersCache(usersMap);
+        console.log("[Worklogs] Users loaded:", Object.keys(usersMap).length);
+      } catch (err) {
+        console.error("[Worklogs] Error loading users:", err);
+      }
+    }
+    loadUsers();
+  }, []);
+
+  // Helper to get display name from user cache
+  function getDisplayName(item) {
+    if (item.employeeId && usersCache[item.employeeId]) {
+      return usersCache[item.employeeId];
+    }
+    // Fallback to stored name
+    return (
+      item.employeeDisplayName ||
+      item.employeeName ||
+      item.employeeNickname ||
+      "ไม่ระบุ"
+    );
+  }
+
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e) {
@@ -98,25 +139,61 @@ export default function WorkLogsPage() {
 
   async function load(page = 1) {
     setLoading(true);
+    console.log("[Worklogs] Loading... user:", user?.uid, "role:", user?.role);
     try {
-      let q = query(
-        collection(db, "worklogs"),
-        orderBy(sortConfig.key, sortConfig.direction),
-        limit(20),
-      );
+      let q;
 
-      if (user?.role !== "admin") {
-        q = query(q, where("employeeId", "==", user.uid));
+      if (user?.role !== "admin" && user?.role !== "superadmin") {
+        // Staff: ใช้แค่ where ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index
+        // แล้วค่อย sort ฝั่ง client
+        q = query(
+          collection(db, "worklogs"),
+          where("employeeId", "==", user.uid),
+          limit(100),
+        );
+      } else {
+        // Admin/Superadmin: ดูงานทั้งหมด ไม่ใช่แค่ของตัวเอง
+        // ใช้ client-side sort แทน orderBy เพื่อหลีกเลี่ยง composite index
+        q = query(collection(db, "worklogs"), limit(100));
       }
 
       const snapshot = await getDocs(q);
-      const items = snapshot.docs.map((doc) => ({
+      console.log("[Worklogs] Got snapshot, size:", snapshot.size);
+
+      let items = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      console.log("[Worklogs] Items loaded:", items.length);
+
+      // All users: client-side sort by date (descending) ก่อน
+      // (เพราะไม่ใช้ orderBy ในหลีกเลี่ยง composite index)
+      items.sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return b.date.localeCompare(a.date);
+      });
+
+      // Client-side sorting ถ้าต้องการ sort ตามฟิลด์อื่น (staff only)
+      if (
+        user?.role !== "admin" &&
+        user?.role !== "superadmin" &&
+        sortConfig.key !== "date"
+      ) {
+        items.sort((a, b) => {
+          const aVal = a[sortConfig.key] || "";
+          const bVal = b[sortConfig.key] || "";
+          if (sortConfig.direction === "asc") {
+            return aVal > bVal ? 1 : -1;
+          } else {
+            return aVal < bVal ? 1 : -1;
+          }
+        });
+      }
 
       setData({ items, total: items.length, page, pages: 1 });
     } catch (err) {
+      console.error("[Worklogs] Error loading:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -178,7 +255,7 @@ export default function WorkLogsPage() {
   // Check if user can edit/delete this item
   function canEdit(item) {
     if (!user) return false;
-    if (user.role === "admin") return true;
+    if (user.role === "admin" || user.role === "superadmin") return true;
     if (
       item.employeeId === user.id ||
       item.employeeNickname === user.nickname
@@ -613,7 +690,7 @@ export default function WorkLogsPage() {
                           <span className="text-xs">{item.time}</span>
                         </td>
                         <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
-                          {item.employeeNickname}
+                          {getDisplayName(item)}
                         </td>
                         <td className="px-5 py-4">
                           <input
@@ -707,7 +784,7 @@ export default function WorkLogsPage() {
                           <span className="text-xs">{item.time}</span>
                         </td>
                         <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
-                          {item.employeeNickname}
+                          {getDisplayName(item)}
                         </td>
                         <td className="min-w-32 px-5 py-4 text-slate-600">
                           {item.recipient || "—"}
@@ -845,7 +922,7 @@ const WorkLogRow = memo(function WorkLogRow({
           <span className="text-xs">{item.time}</span>
         </td>
         <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
-          {item.employeeNickname}
+          {getDisplayName(item)}
         </td>
         <td className="px-5 py-4">
           <input
