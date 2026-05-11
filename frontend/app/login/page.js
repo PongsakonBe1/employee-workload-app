@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ShieldCheck, Chrome } from "lucide-react";
+import { ShieldCheck, Chrome, BarChart3 } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
 
 export default function LoginPage() {
@@ -49,14 +48,7 @@ export default function LoginPage() {
       <section className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="apple-panel overflow-hidden p-8 sm:p-12">
           <div className="mb-10 inline-flex items-center gap-3 rounded-full bg-slate-950 px-4 py-2 text-white">
-            <div className="relative h-8 w-16">
-              <Image
-                src="/icit-logo.png"
-                alt="ICIT logo"
-                fill
-                className="object-contain"
-              />
-            </div>
+            <BarChart3 size={20} />
             <span className="text-sm font-semibold">Workload Recorder</span>
           </div>
 

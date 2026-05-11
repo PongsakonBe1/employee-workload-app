@@ -1,6 +1,7 @@
 {
   "projects": {
-    "development": "icit-workload-app"
+    "default": "labboy-workload-app",
+    "development": "labboy-workload-app"
   },
   "targets": {},
   "etags": {}

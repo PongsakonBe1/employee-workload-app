@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -112,13 +111,8 @@ export function AppShell({ children }) {
     <div className="min-h-screen px-5 py-5 sm:px-8">
       <header className="mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="relative h-10 w-20 overflow-hidden rounded-2xl bg-slate-950 p-1">
-            <Image
-              src="/icit-logo.png"
-              alt="ICIT logo"
-              fill
-              className="object-contain p-1"
-            />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
+            <BarChart3 size={22} />
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-950">
