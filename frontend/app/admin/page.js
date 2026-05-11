@@ -10,6 +10,8 @@ import {
   BarChart3,
   Settings,
   ChevronRight,
+  PlusCircle,
+  Cog,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
@@ -19,11 +21,21 @@ const adminModules = [
     id: "users",
     title: "จัดการผู้ใช้",
     titleEn: "User Management",
-    description: "ดูและจัดการพนักงานทั้งหมดในระบบ",
-    descriptionEn: "View and manage all system users",
+    description: "ดูและจัดการพนักงานทั้งหมดในระบบ อนุมัติคำขอเข้าใช้งาน",
+    descriptionEn: "View and manage all system users, approve pending requests",
     icon: Users,
     href: "/admin/users",
     color: "bg-blue-500",
+  },
+  {
+    id: "record",
+    title: "บันทึกงานให้พนักงาน",
+    titleEn: "Record Work for Staff",
+    description: "บันทึกงานแทนพนักงานในกรณีฉุกเฉิน",
+    descriptionEn: "Create work logs on behalf of staff members",
+    icon: PlusCircle,
+    href: "/admin/record",
+    color: "bg-rose-500",
   },
   {
     id: "audit",
@@ -49,10 +61,10 @@ const adminModules = [
     id: "settings",
     title: "ตั้งค่าระบบ",
     titleEn: "System Settings",
-    description: "จัดการตั้งค่าระบบและการกำหนดค่า",
-    descriptionEn: "Manage system settings and configurations",
-    icon: Settings,
-    href: "#",
+    description: "จัดการตั้งค่าระบบ การแจ้งเตือน การสำรองข้อมูล",
+    descriptionEn: "Manage system settings, notifications, and backups",
+    icon: Cog,
+    href: "/admin/settings",
     color: "bg-amber-500",
   },
 ];
@@ -62,14 +74,16 @@ export default function AdminPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Redirect non-admin users
+  // Redirect non-admin users (allow admin and superadmin)
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+
   useEffect(() => {
-    if (user && user.role !== "admin") {
+    if (user && !isAdmin) {
       router.replace("/dashboard");
     }
-  }, [user, router]);
+  }, [user, router, isAdmin]);
 
-  if (!user || user.role !== "admin") {
+  if (!user || !isAdmin) {
     return (
       <AppShell>
         <div className="flex min-h-[60vh] items-center justify-center">

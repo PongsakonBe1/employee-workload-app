@@ -1,8 +1,13 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export function getToken() {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem("icit_token");
+}
+
+// ตรวจสอบว่า Backend เปิดใช้งานหรือไม่
+function isBackendEnabled() {
+  return API_URL && API_URL !== "";
 }
 
 export function setToken(token) {
@@ -18,33 +23,50 @@ export function clearToken() {
 }
 
 export async function apiFetch(path, options = {}) {
+  if (!isBackendEnabled()) {
+    console.warn("[API] Backend is disabled. Skipping API call.");
+    return null;
+  }
+
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
-    ...(options.headers || {})
+    ...(options.headers || {}),
   };
 
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers
-  });
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
 
-  const contentType = response.headers.get("content-type") || "";
-  const body = contentType.includes("application/json") ? await response.json() : await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    const body = contentType.includes("application/json")
+      ? await response.json()
+      : await response.text();
 
-  if (!response.ok) {
-    throw new Error(body?.message || "Request failed");
+    if (!response.ok) {
+      throw new Error(body?.message || "Request failed");
+    }
+
+    return body;
+  } catch (err) {
+    if (err.message === "Failed to fetch") {
+      console.error("[API] Backend server not available at:", API_URL);
+      throw new Error(
+        "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่า backend กำลังทำงานอยู่",
+      );
+    }
+    throw err;
   }
-
-  return body;
 }
 
 export async function downloadCsv(path, filename) {
   const token = getToken();
   const response = await fetch(`${API_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (!response.ok) {

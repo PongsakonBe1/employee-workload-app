@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, memo } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Pencil,
@@ -11,6 +12,7 @@ import {
   AlertCircle,
   ChevronUp,
   ChevronDown,
+  Undo2,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { EmptyState } from "../../components/EmptyState";
@@ -27,7 +29,11 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
+import { addDoc } from "firebase/firestore";
 import { MinorTaskSelector } from "../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../components/CommentSuggestions";
 import { TableSkeleton } from "../../components/LoadingSkeleton";
@@ -40,6 +46,7 @@ import {
 export default function WorkLogsPage() {
   const t = useTranslations();
   const { user } = useAuth();
+  const router = useRouter();
   const [filters, setFilters] = useState({ search: "", from: "", to: "" });
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(false);
@@ -57,6 +64,37 @@ export default function WorkLogsPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [bulkProcessing, setBulkProcessing] = useState(false);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e) {
+      // Ctrl+N: สร้างรายการใหม่
+      if (e.ctrlKey && e.key === "n") {
+        e.preventDefault();
+        router.push("/worklogs/new");
+      }
+      // Ctrl+F: โฟกัสที่ช่องค้นหา
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        document
+          .querySelector('input[placeholder*="' + t("common.search") + '"]')
+          ?.focus();
+      }
+      // Escape: ยกเลิกการแก้ไขหรือลบ
+      if (e.key === "Escape") {
+        if (editingId) {
+          cancelEdit();
+        } else if (deleteConfirmId) {
+          cancelDelete();
+        } else if (bulkDeleteConfirm) {
+          setBulkDeleteConfirm(false);
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editingId, deleteConfirmId, bulkDeleteConfirm, router, t]);
 
   async function load(page = 1) {
     setLoading(true);
@@ -224,6 +262,11 @@ export default function WorkLogsPage() {
     setBulkDeleteConfirm(false);
   }
 
+  // เก็บข้อมูลสำหรับ Undo
+  const [deletedItems, setDeletedItems] = useState([]);
+  const [undoTimeout, setUndoTimeout] = useState(null);
+  const [showUndo, setShowUndo] = useState(false);
+
   async function executeBulkDelete() {
     if (selectedIds.length === 0) return;
 
@@ -231,11 +274,39 @@ export default function WorkLogsPage() {
     setActionError("");
 
     try {
-      // TODO: Replace with actual bulk delete API
-      // For now, delete one by one
+      // ดึงข้อมูลก่อนลบสำหรับ Undo
+      const itemsToDelete = [];
       for (const id of selectedIds) {
-        await apiFetch(`/worklogs/${id}`, { method: "DELETE" });
+        const docRef = doc(db, "worklogs", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          itemsToDelete.push({ id, ...docSnap.data() });
+        }
       }
+
+      // ใช้ Firestore batch ลบทีละหลายรายการ
+      const batch = writeBatch(db);
+      for (const id of selectedIds) {
+        batch.delete(doc(db, "worklogs", id));
+      }
+      await batch.commit();
+
+      // เก็บข้อมูลสำหรับ Undo
+      setDeletedItems(itemsToDelete);
+      setShowUndo(true);
+
+      // ตั้งเวลา 30 วินาทีสำหรับ Undo
+      const timeout = setTimeout(() => {
+        setShowUndo(false);
+        setDeletedItems([]);
+        // บันทึก audit log
+        logAuditEvent("BULK_DELETE", {
+          count: itemsToDelete.length,
+          ids: selectedIds,
+        });
+      }, 30000);
+      setUndoTimeout(timeout);
+
       setSelectedIds([]);
       setBulkDeleteConfirm(false);
       load(data.page);
@@ -246,13 +317,72 @@ export default function WorkLogsPage() {
     }
   }
 
+  async function undoDelete() {
+    if (deletedItems.length === 0) return;
+
+    try {
+      // ใช้ batch สร้างข้อมูลคืน
+      const batch = writeBatch(db);
+      for (const item of deletedItems) {
+        const { id, ...data } = item;
+        batch.set(doc(db, "worklogs", id), data);
+      }
+      await batch.commit();
+
+      // ล้าง timeout และ state
+      if (undoTimeout) clearTimeout(undoTimeout);
+      setShowUndo(false);
+      setDeletedItems([]);
+
+      // บันทึก audit log
+      logAuditEvent("UNDO_DELETE", { count: deletedItems.length });
+
+      load(data.page);
+    } catch (err) {
+      setActionError("ไม่สามารถกู้คืนข้อมูลได้: " + err.message);
+    }
+  }
+
   async function executeDelete(id) {
     try {
-      await deleteDoc(doc(db, "worklogs", id));
+      // ดึงข้อมูลก่อนลบ
+      const docRef = doc(db, "worklogs", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setDeletedItems([{ id, ...docSnap.data() }]);
+      }
+
+      await deleteDoc(docRef);
       setDeleteConfirmId(null);
+      setShowUndo(true);
+
+      // ตั้งเวลา 30 วินาที
+      const timeout = setTimeout(() => {
+        setShowUndo(false);
+        setDeletedItems([]);
+        logAuditEvent("DELETE", { id });
+      }, 30000);
+      setUndoTimeout(timeout);
+
       load(data.page);
     } catch (err) {
       setActionError(err.message);
+    }
+  }
+
+  // ฟังก์ชันบันทึก Audit Log
+  async function logAuditEvent(action, details) {
+    try {
+      await addDoc(collection(db, "auditLogs"), {
+        action,
+        details,
+        userId: user?.uid,
+        userEmail: user?.email,
+        timestamp: new Date(),
+        path: window.location.pathname,
+      });
+    } catch (err) {
+      console.error("Audit log error:", err);
     }
   }
 
@@ -319,6 +449,44 @@ export default function WorkLogsPage() {
           {actionError}
         </div>
       ) : null}
+
+      {/* Undo Notification */}
+      {showUndo && (
+        <div className="mb-6 rounded-2xl bg-blue-50 border border-blue-200 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-500 text-white rounded-full p-1">
+              <Undo2 size={16} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                ลบ {deletedItems.length} รายการแล้ว
+              </p>
+              <p className="text-xs text-blue-600">
+                กด Undo เพื่อกู้คืนภายใน 30 วินาที
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={undoDelete}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-1"
+            >
+              <Undo2 size={14} />
+              Undo
+            </button>
+            <button
+              onClick={() => {
+                if (undoTimeout) clearTimeout(undoTimeout);
+                setShowUndo(false);
+                setDeletedItems([]);
+              }}
+              className="px-3 py-2 text-slate-400 hover:text-slate-600"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="apple-panel overflow-hidden">

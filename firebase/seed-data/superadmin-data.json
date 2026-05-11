@@ -1,0 +1,11 @@
+{
+  "pongsakon.be1@gmail.com": {
+    "email": "pongsakon.be1@gmail.com",
+    "role": "superadmin",
+    "active": true,
+    "displayName": "พงศกร",
+    "fullName": "พงศกร ราวังวง",
+    "createdAt": { "__type__": "timestamp" },
+    "lastLoginAt": { "__type__": "timestamp" }
+  }
+}

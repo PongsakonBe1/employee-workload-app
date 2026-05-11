@@ -127,23 +127,29 @@ export default function NewWorkLogPage() {
     });
   }, []);
 
-  // Auto-update mainDuty when minorTask changes
-  const handleMinorTaskChange = useCallback(
-    (minorTask) => {
-      const mainDuty = getMainDutyFromMinorTask(minorTask);
-      const dutyGroup =
-        categories?.dutyGroups?.find((g) => g.duties.includes(mainDuty))?.key ||
-        "main";
+  // Auto-update mainDuty and dutyGroup when minorTask changes
+  const handleMinorTaskChange = useCallback((minorTask) => {
+    const mainDuty = getMainDutyFromMinorTask(minorTask);
+    const dutyGroup = getDutyGroupFromMinorTask(minorTask);
 
-      setForm((current) => ({
-        ...current,
-        minorTask,
-        mainDuty,
-        dutyGroup,
-      }));
-    },
-    [categories],
-  );
+    setForm((current) => ({
+      ...current,
+      minorTask,
+      mainDuty,
+      dutyGroup,
+    }));
+  }, []);
+
+  function getDutyGroupFromMinorTask(minorTask) {
+    const mainDuty = getMainDutyFromMinorTask(minorTask);
+    // ทั้งสองหน้าที่หลักถือเป็น "งานในหน้าที่หลัก"
+    if (mainDuty === "ดูแลห้องบริการคอมพิวเตอร์") {
+      return "งานในหน้าที่หลัก (ห้องบริการ)";
+    } else if (mainDuty === "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ") {
+      return "งานในหน้าที่หลัก (รับแจ้งปัญหา)";
+    }
+    return "งานอื่นๆ ที่ได้รับมอบหมาย";
+  }
 
   // Handle comment suggestion selection
   const handleCommentSuggestion = useCallback((suggestion) => {
@@ -180,6 +186,13 @@ export default function NewWorkLogPage() {
         throw new Error(Object.values(validation.errors)[0]);
       }
 
+      // ใช้ชื่อที่แสดง (displayName) ก่อน ถ้าไม่มีค่อยใช้ nickname
+      const employeeDisplayName =
+        user?.displayName ||
+        user?.nickname ||
+        user?.fullName?.split(" ")?.[0] ||
+        "";
+
       await addDoc(collection(db, "worklogs"), {
         date: form.date,
         time: form.time,
@@ -190,6 +203,8 @@ export default function NewWorkLogPage() {
         comment: sanitizeInput(form.comment),
         employeeId: user.uid,
         employeeNickname: user.nickname,
+        employeeDisplayName: employeeDisplayName,
+        employeeFullName: user.fullName || "",
         status: "บันทึกแล้ว",
         createdAt: serverTimestamp(),
       });

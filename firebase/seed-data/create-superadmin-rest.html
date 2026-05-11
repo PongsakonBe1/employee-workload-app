@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>สร้าง Superadmin - ICIT Workload</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    h1 { color: #2563eb; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .success { background: #d1fae5; padding: 15px; border-radius: 5px; color: #065f46; }
+    .error { background: #fee2e2; padding: 15px; border-radius: 5px; color: #991b1b; }
+    .hidden { display: none; }
+    code { background: #f1f5f9; padding: 2px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>🚀 สร้าง Superadmin ด้วย Firestore REST API</h1>
+  
+  <div class="form-group">
+    <label>Project ID:</label>
+    <input type="text" id="projectId" value="labboy-workload-app" />
+  </div>
+
+  <div class="form-group">
+    <label>Email:</label>
+    <input type="email" id="email" value="pongsakon.be1@gmail.com" />
+  </div>
+
+  <div class="form-group">
+    <label>Display Name (ชื่อที่แสดง):</label>
+    <input type="text" id="displayName" value="พงศกร" />
+  </div>
+
+  <div class="form-group">
+    <label>Full Name (ชื่อ-นามสกุล):</label>
+    <input type="text" id="fullName" value="พงศกร ราวังวง" />
+  </div>
+
+  <button onclick="createSuperadmin()">สร้าง Superadmin</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function createSuperadmin() {
+      const projectId = document.getElementById('projectId').value;
+      const email = document.getElementById('email').value;
+      const displayName = document.getElementById('displayName').value;
+      const fullName = document.getElementById('fullName').value;
+
+      // ใช้ email เป็น document ID (แทนที่จะใช้ UID)
+      const docId = email.replace(/[@.]/g, '_');
+      
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${docId}`;
+      
+      const data = {
+        fields: {
+          email: { stringValue: email },
+          role: { stringValue: "superadmin" },
+          active: { booleanValue: true },
+          displayName: { stringValue: displayName },
+          fullName: { stringValue: fullName },
+          createdAt: { timestampValue: new Date().toISOString() }
+        }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          document.getElementById('result').innerHTML = `
+            <div class="success">
+              ✅ Superadmin สร้างสำเร็จ!<br>
+              Email: ${email}<br>
+              กรุณา <strong>รีเฟรชหน้าเว็บ</strong> แล้ว login ใหม่
+            </div>
+          `;
+        } else {
+          const error = await response.json();
+          document.getElementById('result').innerHTML = `
+            <div class="error">
+              ❌ Error: ${error.error?.message || 'Unknown error'}<br>
+              <small>กรุณาตรวจสอบว่า Firestore Database ถูกสร้างแล้ว และเปิดใช้งาน</small>
+            </div>
+          `;
+        }
+      } catch (err) {
+        document.getElementById('result').innerHTML = `
+          <div class="error">
+            ❌ Error: ${err.message}<br>
+            <small>หมายเหตุ: วิธีนี้ต้อง login ในแท็บอื่นก่อน หรือใช้ Firebase Console</small>
+          </div>
+        `;
+      }
+    }
+  </script>
+
+  <hr style="margin-top: 30px;">
+  <h3>🔧 วิธีสร้างด้วยตนเอง (แนะนำ)</h3>
+  <ol>
+    <li>ไปที่ <a href="https://console.firebase.google.com/project/labboy-workload-app/firestore/data" target="_blank">Firestore Database</a></li>
+    <li>กด "Start collection" → Collection ID: <code>users</code></li>
+    <li>กด "Next" → Document ID: <code>pongsakon_be1_gmail_com</code></li>
+    <li>เพิ่ม Fields:
+      <ul>
+        <li><code>email</code> (string): <code>pongsakon.be1@gmail.com</code></li>
+        <li><code>role</code> (string): <code>superadmin</code></li>
+        <li><code>active</code> (boolean): <code>true</code></li>
+        <li><code>displayName</code> (string): <code>พงศกร</code></li>
+      </ul>
+    </li>
+    <li>กด "Save"</li>
+  </ol>
+</body>
+</html>

@@ -1,0 +1,23 @@
+// ============================================================================
+// TEMPORARY RULES - อนุญาตทุกอย่างชั่วคราว
+// ใช้เฉพาะตอน setup/reset เท่านั้น อย่าใช้ใน production!
+// ============================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      // อนุญาตทุก operation สำหรับทุกคนที่ authenticated
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+
+/* 
+วิธีใช้:
+1. Copy rules นี้ไปวางใน Firebase Console > Firestore > Rules
+2. กด Publish
+3. ทำการ seed users และ test
+4. เปลี่ยนกลับไปใช้ rules จริง
+5. Deploy rules จริง
+*/

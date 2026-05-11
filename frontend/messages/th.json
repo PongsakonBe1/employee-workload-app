@@ -64,6 +64,7 @@
       "mainDuty": "หัวข้อหลัก",
       "minorTask": "หัวข้อรอง",
       "comment": "รายละเอียด",
+      "status": "สถานะ",
       "search": "ค้นหา",
       "editable": "แก้ไขได้",
       "locked": "ล็อกแล้ว",

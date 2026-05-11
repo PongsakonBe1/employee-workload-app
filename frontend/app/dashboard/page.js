@@ -55,14 +55,17 @@ export default function DashboardPage() {
     async function loadStats() {
       const worklogsRef = collection(db, "worklogs");
 
-      // Query based on fiscal year
-      const q =
-        user?.role === "admin"
-          ? query(worklogsRef) // Admin sees all
-          : query(worklogsRef, where("employeeId", "==", user.uid));
+      // Query based on role - admin/superadmin sees all, staff sees own
+      const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+      const q = isAdmin
+        ? query(worklogsRef) // Admin/Superadmin sees all
+        : query(worklogsRef, where("employeeId", "==", user.uid));
 
       const snapshot = await getDocs(q);
-      const worklogs = snapshot.docs.map((doc) => doc.data());
+      const worklogs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
       // Calculate stats (client-side)
       const total = worklogs.length;
@@ -72,8 +75,13 @@ export default function DashboardPage() {
       const byDate = {};
 
       worklogs.forEach((log) => {
-        // Count by employee
-        const empName = log.employeeNickname || log.employeeId || "ไม่ระบุ";
+        // Count by employee (ใช้ displayName ก่อน ถ้าไม่มีค่อยใช้ fullName หรือ nickname)
+        const empName =
+          log.employeeDisplayName ||
+          log.employeeFullName ||
+          log.employeeNickname ||
+          log.employeeId ||
+          "ไม่ระบุ";
         byEmployee[empName] = (byEmployee[empName] || 0) + 1;
 
         // Count by main duty
@@ -219,8 +227,10 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
-                  {item.employeeNickname} ·{" "}
-                  {item.minorTask || t("common.noData")}
+                  {item.employeeDisplayName ||
+                    item.employeeFullName ||
+                    item.employeeNickname}{" "}
+                  · {item.minorTask || t("common.noData")}
                 </p>
                 {item.comment ? (
                   <p className="mt-2 text-sm text-slate-600">{item.comment}</p>

@@ -12,16 +12,21 @@ import {
   LogOut,
   PlusCircle,
   Shield,
+  User,
+  UserPlus,
+  Users,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Breadcrumb } from "./Breadcrumb";
+import { NotificationBell } from "./NotificationBell";
 
 const getNav = (t, isAdmin) => {
   const items = [
     { href: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
     { href: "/worklogs", label: t("navigation.worklogs"), icon: ListChecks },
     { href: "/export", label: t("navigation.export"), icon: Download },
+    { href: "/profile", label: "โปรไฟล์", icon: User },
   ];
 
   // Only show Record Work for non-admin users
@@ -36,10 +41,21 @@ const getNav = (t, isAdmin) => {
   // Show Admin menu for admin users
   if (isAdmin) {
     items.push({
-      href: "/admin",
-      label: t("navigation.admin"),
-      icon: Shield,
+      href: "/admin/users",
+      label: "จัดการผู้ใช้",
+      icon: Users,
     });
+    items.push({
+      href: "/admin/record",
+      label: "บันทึกงานให้พนักงาน",
+      icon: UserPlus,
+    });
+    // ลบเมนู ผู้ดูแลระบบ เพราะมี จัดการผู้ใช้ โดยตรงแล้ว
+    // items.push({
+    //   href: "/admin",
+    //   label: t("navigation.admin"),
+    //   icon: Shield,
+    // });
   }
 
   return items;
@@ -48,16 +64,39 @@ const getNav = (t, isAdmin) => {
 export function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, booting, logout } = useAuth();
+  const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
 
   useEffect(() => {
-    if (!booting && !user) {
-      router.replace("/login");
+    if (!loading) {
+      if (pendingApproval && pathname !== "/pending") {
+        // ถ้ารออนุมัติ ให้ไปหน้า pending
+        router.replace("/pending");
+      } else if (!user && !pendingApproval) {
+        // ถ้าไม่มี user และไม่ได้ pending ให้ไป login
+        // แต่ถ้าอยู่ในหน้า admin ให้รอสักครู่ก่อน redirect (อาจกำลังโหลด)
+        const isAdminPage = pathname?.startsWith("/admin");
+        if (!isAdminPage) {
+          router.replace("/login");
+        } else {
+          console.log("[AppShell] On admin page without user, waiting...");
+        }
+      }
     }
-  }, [booting, user, router]);
+  }, [loading, user, pendingApproval, pathname, router]);
 
-  if (booting) {
+  // Debug log
+  useEffect(() => {
+    console.log("[AppShell] State:", {
+      pathname,
+      user: user?.email,
+      role: user?.role,
+      loading,
+      pendingApproval,
+    });
+  }, [pathname, user, loading, pendingApproval]);
+
+  if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <div className="apple-panel px-8 py-6 text-sm font-medium text-slate-600">
@@ -67,7 +106,7 @@ export function AppShell({ children }) {
     );
   }
 
-  if (!user) {
+  if (!user || pendingApproval) {
     return null;
   }
 
@@ -94,31 +133,34 @@ export function AppShell({ children }) {
         </Link>
 
         <div className="hidden items-center gap-2 lg:flex">
-          {getNav(t, user?.role === "admin").map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  active
-                    ? "bg-slate-950 text-white"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950"
-                }`}
-              >
-                <Icon size={16} />
-                {item.label}
-              </Link>
-            );
-          })}
+          {getNav(t, user?.role === "admin" || user?.role === "superadmin").map(
+            (item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+                    active
+                      ? "bg-slate-950 text-white"
+                      : "text-slate-600 hover:bg-white hover:text-slate-950"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              );
+            },
+          )}
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <LanguageSwitcher />
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold text-slate-950">
-              {user.nickname}
+              {user.displayName || user.nickname || user.fullName || "User"}
             </p>
             <p className="text-xs text-slate-500">{user.role}</p>
           </div>
@@ -133,24 +175,26 @@ export function AppShell({ children }) {
       </header>
 
       <nav className="mx-auto mb-6 grid max-w-7xl grid-cols-2 gap-2 lg:hidden">
-        {getNav(t, user?.role === "admin").map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium ${
-                active
-                  ? "bg-slate-950 text-white"
-                  : "bg-white/70 text-slate-600"
-              }`}
-            >
-              <Icon size={16} />
-              {item.label}
-            </Link>
-          );
-        })}
+        {getNav(t, user?.role === "admin" || user?.role === "superadmin").map(
+          (item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-medium ${
+                  active
+                    ? "bg-slate-950 text-white"
+                    : "bg-white/70 text-slate-600"
+                }`}
+              >
+                <Icon size={16} />
+                {item.label}
+              </Link>
+            );
+          },
+        )}
       </nav>
 
       <main className="mx-auto max-w-7xl">
