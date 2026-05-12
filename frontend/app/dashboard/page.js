@@ -107,9 +107,15 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   // Filter states
-  const [timeFilter, setTimeFilter] = useState("all"); // "all" | "today" | "week" | "month" | "quarter" | "fiscal"
+  const [timeFilter, setTimeFilter] = useState("month"); // Default: 1 month to save quota
+  const [showAllData, setShowAllData] = useState(false); // Toggle for loading all data
   const [selectedEmployee, setSelectedEmployee] = useState("all");
   const [staffList, setStaffList] = useState([]);
+
+  // Modal state for limit warning
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [actualCount, setActualCount] = useState(0);
+  const [hasMoreData, setHasMoreData] = useState(false); // True if there might be more records than we queried
 
   // Load staff list for admin filter
   useEffect(() => {
@@ -227,34 +233,101 @@ export default function DashboardPage() {
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
 
-      // Query without orderBy เพื่อหลีกเลี่ยง composite index + limit 1000 records
-      q = query(worklogsRef, ...constraints, limit(1000));
+      // STEP 1: Count actual records in date range (for accurate display)
+      let totalInRange = 0;
+      let allWorklogsInRange = [];
+      let worklogs = [];
 
-      // Get total count (with limit 1000 to save quota)
-      const countQuery = query(worklogsRef, ...constraints, limit(1000));
-      const countSnapshot = await getDocs(countQuery);
-      const actualTotal = countSnapshot.size;
+      let hasMoreThanLimit = false;
 
-      const snapshot = await getDocs(q);
-      let worklogs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      if (!showAllData) {
+        // Query up to 1000 records to get accurate count (for both dateRange and all time)
+        let countQuery;
+        if (dateRange) {
+          // With date range filter
+          countQuery = query(
+            worklogsRef,
+            ...constraints,
+            where("date", ">=", dateRange.start),
+            where("date", "<=", dateRange.end),
+            limit(1000),
+          );
+        } else {
+          // All time - just query with constraints and limit
+          countQuery = query(worklogsRef, ...constraints, limit(1000));
+        }
 
-      // Client-side sort by date (descending)
-      worklogs.sort((a, b) => {
-        if (!a.date) return 1;
-        if (!b.date) return -1;
-        return b.date.localeCompare(a.date);
-      });
+        const countSnapshot = await getDocs(countQuery);
+        totalInRange = countSnapshot.size;
 
-      // Filter by date range (client-side)
-      if (dateRange) {
-        worklogs = worklogs.filter((log) => {
-          if (!log.date) return false;
-          return log.date >= dateRange.start && log.date <= dateRange.end;
+        // If we got exactly 1000, there might be more records
+        hasMoreThanLimit = totalInRange >= 1000;
+        allWorklogsInRange = countSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        if (dateRange) {
+          console.log(
+            "[Dashboard] Count in date range:",
+            totalInRange,
+            "records between",
+            dateRange.start,
+            "and",
+            dateRange.end,
+          );
+        } else {
+          console.log("[Dashboard] Count all time:", totalInRange, "records");
+        }
+
+        // Sort and take only first 300 for display
+        allWorklogsInRange.sort((a, b) => {
+          if (!a.date) return 1;
+          if (!b.date) return -1;
+          return b.date.localeCompare(a.date);
         });
+        worklogs = allWorklogsInRange.slice(0, 300);
+      } else {
+        // Showing all data - load up to 1000
+        const dataLimit = 1000;
+        q = query(worklogsRef, ...constraints, limit(dataLimit));
+
+        const snapshot = await getDocs(q);
+        worklogs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Client-side sort
+        worklogs.sort((a, b) => {
+          if (!a.date) return 1;
+          if (!b.date) return -1;
+          return b.date.localeCompare(a.date);
+        });
+
+        // Filter by date range if specified
+        if (dateRange) {
+          worklogs = worklogs.filter((log) => {
+            if (!log.date) return false;
+            return log.date >= dateRange.start && log.date <= dateRange.end;
+          });
+        }
+
+        totalInRange = worklogs.length;
       }
+
+      setActualCount(totalInRange);
+      setHasMoreData(hasMoreThanLimit);
+
+      // Show modal if count > 300
+      if (totalInRange > 300 && !showAllData) {
+        setShowLimitModal(true);
+      } else {
+        setShowLimitModal(false);
+      }
+
+      // Use actual count for display
+      const actualTotal = totalInRange;
 
       // Calculate stats (client-side)
       const total = worklogs.length;
@@ -335,7 +408,12 @@ export default function DashboardPage() {
     if (user) {
       loadStats();
     }
-  }, [fiscalYear, user, timeFilter, selectedEmployee]);
+  }, [fiscalYear, user, timeFilter, selectedEmployee, showAllData]);
+
+  // Reset showAllData when filters change to save quota
+  useEffect(() => {
+    setShowAllData(false);
+  }, [fiscalYear, timeFilter, selectedEmployee]);
 
   const topDuty = useMemo(() => data?.byMainDuty?.[0]?.label || "—", [data]);
 
@@ -395,6 +473,32 @@ export default function DashboardPage() {
               </button>
             ))}
 
+            {/* Load All Data Button (for expanding quota) */}
+            <button
+              onClick={() => actualCount > 300 && setShowAllData(!showAllData)}
+              disabled={actualCount <= 300}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition border ${
+                showAllData
+                  ? "bg-amber-100 text-amber-700 border-amber-300"
+                  : actualCount > 300
+                    ? "bg-white text-amber-600 border-amber-300 hover:bg-amber-50 animate-pulse"
+                    : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+              }`}
+              title={
+                actualCount <= 300
+                  ? "ข้อมูลในช่วงนี้ไม่เกิน 300 รายการ"
+                  : showAllData
+                    ? "กำลังแสดงข้อมูลทั้งหมด (ใช้ quota มาก)"
+                    : `มี ${actualCount} รายการ - คลิกเพื่อแสดงทั้งหมด`
+              }
+            >
+              {actualCount <= 300
+                ? `✓ ครบแล้ว (${actualCount})`
+                : showAllData
+                  ? `📊 แสดงทั้งหมด (${actualCount}${hasMoreData ? "+" : ""})`
+                  : `➕ โหลดเพิ่ม (${actualCount}${hasMoreData ? "+" : ""})`}
+            </button>
+
             {/* Fiscal Year Selector (show when fiscal filter is active) */}
             {timeFilter === "fiscal" && (
               <select
@@ -443,6 +547,17 @@ export default function DashboardPage() {
           ) : (
             <span>ช่วงวันที่: ทั้งหมด</span>
           )}
+          {actualCount > 0 && (
+            <span className="ml-2">
+              • จำนวน: {actualCount}
+              {hasMoreData ? "+" : ""} รายการ
+              {actualCount > 300 && !showAllData && (
+                <span className="text-amber-600 ml-1">
+                  (แสดง 300 รายการล่าสุด)
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </section>
 
@@ -455,17 +570,21 @@ export default function DashboardPage() {
       <section className="grid gap-5 md:grid-cols-3">
         <MetricCard
           label={t("dashboard.totalRecords")}
-          value={data?.total ?? "…"}
+          value={`${actualCount}${hasMoreData ? "+" : ""}`}
           hint={
-            data?.scope === "all" ? t("common.all") : t("dashboard.byEmployee")
+            actualCount > 300 && !showAllData
+              ? `แสดง 300 จาก ${actualCount}${hasMoreData ? "+" : ""} รายการ`
+              : data?.scope === "all"
+                ? t("common.all")
+                : t("dashboard.byEmployee")
           }
         />
         <MetricCard
           label={t("dashboard.fiscalPeriod")}
-          value={data?.fiscalYear?.startDate ?? "…"}
+          value={data?.dateRange?.start ?? data?.fiscalYear?.startDate ?? "…"}
           hint={
-            data?.fiscalYear?.endDate
-              ? `${t("common.to") || "to"} ${data.fiscalYear.endDate}`
+            data?.dateRange?.end || data?.fiscalYear?.endDate
+              ? `${t("common.to") || "to"} ${data?.dateRange?.end || data?.fiscalYear?.endDate}`
               : ""
           }
         />
@@ -475,6 +594,55 @@ export default function DashboardPage() {
           hint={t("dashboard.byMainDuty")}
         />
       </section>
+      {error ? (
+        <div className="mb-6 rounded-2xl bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      ) : null}
+
+      {/* Limit Warning Modal */}
+      {showLimitModal && (
+        <div className="my-6 rounded-2xl bg-amber-50 border border-amber-200 p-5">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">⚠️</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 mb-1">
+                แสดงข้อมูลบางส่วน
+              </h3>
+              <p className="text-sm text-amber-800 mb-3">
+                ช่วงเวลาที่เลือกมี{" "}
+                <strong>
+                  {actualCount}
+                  {hasMoreData ? "+" : ""} รายการ
+                </strong>
+                <br />
+                กำลังแสดง <strong>300 รายการล่าสุด</strong> เพื่อประหยัด quota
+                <br />
+                <span className="text-xs text-amber-700">
+                  กดโหลดเพิ่มเพื่อดูข้อมูลทั้งหมด
+                  {hasMoreData
+                    ? " (อาจมีมากกว่า 1000 รายการ)"
+                    : ` (${actualCount} รายการ)`}
+                </span>
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAllData(true)}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
+                >
+                  📊 โหลดทั้งหมด ({actualCount} รายการ)
+                </button>
+                <button
+                  onClick={() => setShowLimitModal(false)}
+                  className="px-4 py-2 bg-white text-amber-700 border border-amber-300 rounded-lg text-sm font-medium hover:bg-amber-50 transition"
+                >
+                  ปิด (แสดง 300 รายการ)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts Section */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
