@@ -11,6 +11,7 @@ import {
   LogOut,
   PlusCircle,
   Shield,
+  Settings,
   User,
   UserPlus,
   Users,
@@ -53,6 +54,7 @@ const getNav = (t, role) => {
       label: "จัดการผู้ใช้",
       icon: Users,
     });
+    // หมายเหตุ: จัดการระบบเป็นไอคอนแยกต่างหาก (ไม่มีชื่อ)
   }
 
   return items;
@@ -109,7 +111,35 @@ export function AppShell({ children }) {
 
   return (
     <div className="min-h-screen px-5 py-5 sm:px-8">
-      <header className="mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl">
+      {/* Profile Alert Banner for Staff without displayName */}
+      {user?.role === "staff" &&
+        !user?.displayName &&
+        pathname !== "/profile" && (
+          <div className="mx-auto mb-4 max-w-7xl rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-white">
+                <User size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-amber-900">
+                  กรุณาตั้งชื่อที่ใช้ลงงาน (ภาษาไทย)
+                </p>
+                <p className="text-xs text-amber-700">
+                  ชื่อนี้จะแสดงใน Dashboard และรายงานงาน เช่น พงศกร, สมชาย
+                  (ไม่ต้องมีนามสกุล)
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/profile"
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
+            >
+              ไปตั้งชื่อ →
+            </Link>
+          </div>
+        )}
+
+      <header className="relative z-50 mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
             <BarChart3 size={22} />
@@ -146,7 +176,23 @@ export function AppShell({ children }) {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Notification Bell - ทุก role */}
           <NotificationBell />
+
+          {/* Settings icon for admin/superadmin - tooltip style */}
+          {(user?.role === "admin" || user?.role === "superadmin") && (
+            <Link
+              href="/admin/system"
+              className="rounded-full border border-slate-200 bg-white/80 p-3 text-slate-600 transition hover:text-slate-950 relative group"
+              title="จัดการระบบ"
+            >
+              <Settings size={18} />
+              {/* Tooltip */}
+              <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
+                จัดการระบบ
+              </span>
+            </Link>
+          )}
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold text-slate-950">
               {user.displayName || user.nickname || user.fullName || "User"}

@@ -17,6 +17,7 @@ import {
 import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
 import { db } from "../../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -210,6 +211,13 @@ export default function NewWorkLogPage() {
         status: "บันทึกแล้ว",
         createdAt: serverTimestamp(),
       });
+
+      // Log action
+      await logSystemAction(
+        SystemActions.CREATE_WORKLOG,
+        `Created worklog: ${form.date} ${form.time} - ${form.recipient}`,
+        user.uid,
+      );
 
       clearDraft();
       setMessage(t("form.saved"));

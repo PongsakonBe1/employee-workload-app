@@ -32,8 +32,9 @@ import {
   writeBatch,
   getDoc,
   setDoc,
+  addDoc,
 } from "firebase/firestore";
-import { addDoc } from "firebase/firestore";
+import { logSystemAction, SystemActions } from "../../lib/systemLog";
 import { MinorTaskSelector } from "../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../components/CommentSuggestions";
 import { TableSkeleton } from "../../components/LoadingSkeleton";
@@ -299,6 +300,13 @@ export default function WorkLogsPage() {
         ...editForm,
         updatedAt: new Date(),
       });
+
+      // Log action
+      await logSystemAction(
+        SystemActions.UPDATE_WORKLOG,
+        `Updated worklog: ${editForm.date} ${editForm.time} - ${editForm.recipient}`,
+        user?.uid,
+      );
       setEditingId(null);
       load(data.page);
     } catch (err) {
@@ -431,6 +439,14 @@ export default function WorkLogsPage() {
       }
 
       await deleteDoc(docRef);
+
+      // Log action
+      await logSystemAction(
+        SystemActions.DELETE_WORKLOG,
+        `Deleted worklog: ${deletedItems[0]?.date} ${deletedItems[0]?.time} - ${deletedItems[0]?.recipient || deletedItems[0]?.requesterName}`,
+        user?.uid,
+      );
+
       setDeleteConfirmId(null);
       setShowUndo(true);
 

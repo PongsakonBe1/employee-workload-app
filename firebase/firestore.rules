@@ -146,29 +146,36 @@ service cloud.firestore {
 
     // Notifications collection
     match /notifications/{notificationId} {
-      // Users can read their own notifications + broadcast to all + role-based
-      // Superadmin can read all notifications
-      allow read: if isAuthenticated() && 
+      // get: Users can read their own notifications + broadcast to all + role-based
+      allow get: if isAuthenticated() && 
         (resource.data.userId == request.auth.uid || 
          resource.data.userId == "all" ||
+         resource.data.userId == "staff" && isStaff() ||
          resource.data.userId == "admin" && isAdmin() ||
          resource.data.userId == "superadmin" && isSuperAdmin());
+      
+      // list: Allow all authenticated to list (filter at client side for quota optimization)
+      allow list: if isAuthenticated();
       
       // System/Admin/Superadmin can create notifications
       // TEMPORARY: Allow all authenticated for setup
       allow create: if isAuthenticated(); // && (isAdmin() || request.resource.data.userId == request.auth.uid);
       
-      // Users can update (mark as read) their own + broadcast notifications
+      // Users can update (mark as read) their own + broadcast + role-based notifications
       allow update: if isAuthenticated() &&
         (resource.data.userId == request.auth.uid || 
          resource.data.userId == "all" ||
+         resource.data.userId == "staff" && isStaff() ||
+         resource.data.userId == "admin" && isAdmin() ||
          isSuperAdmin()) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
       
-      // Users can delete their own + broadcast notifications, superadmin can delete any
+      // Users can delete their own + broadcast + role-based notifications, superadmin can delete any
       allow delete: if isAuthenticated() &&
         (resource.data.userId == request.auth.uid || 
          resource.data.userId == "all" ||
+         resource.data.userId == "staff" && isStaff() ||
+         resource.data.userId == "admin" && isAdmin() ||
          isSuperAdmin());
     }
 
@@ -192,6 +199,42 @@ service cloud.firestore {
       
       // Superadmin can delete requests
       allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    // Export Requests collection (for staff export approval workflow)
+    match /exportRequests/{requestId} {
+      // Staff can read their own requests (check resource.data for single doc)
+      // Admin/Superadmin can read all requests
+      // Note: For list queries, staff must filter client-side
+      allow get: if isAuthenticated() && 
+        (resource.data.staffId == request.auth.uid || isAdmin());
+      
+      // Staff can list all but will filter client-side (simpler for rules)
+      // Alternative: Only allow admin to list, staff must use specific doc ID
+      allow list: if isAuthenticated() && isAdmin();
+      
+      // Staff can create their own requests (simplified - trust client)
+      allow create: if isAuthenticated();
+      
+      // Admin/Superadmin can update (approve/reject) any request
+      allow update: if isAuthenticated() && 
+        isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy', 'approvedByName', 'rejectedAt', 'rejectedBy', 'rejectedByName']);
+      
+      // Admin/Superadmin can delete requests
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // System Logs collection (for superadmin audit)
+    match /systemLogs/{logId} {
+      // Only superadmin can read system logs
+      allow read: if isSuperAdmin();
+      
+      // System/Admin can create logs
+      allow create: if isAuthenticated() && isAdmin();
+      
+      // No updates/deletes
+      allow update, delete: if false;
     }
   }
 }

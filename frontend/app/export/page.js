@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { Download, FileSpreadsheet, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Download,
+  FileSpreadsheet,
+  Calendar,
+  Clock,
+  CheckCircle,
+  Users,
+  User,
+} from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { downloadCsv } from "../../lib/api";
 import { db } from "../../lib/firebase";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  addDoc,
+  doc,
+  updateDoc,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { useAuth } from "../../components/AuthProvider";
 
 export default function ExportPage() {
+  const { user } = useAuth();
   const [exportMode, setExportMode] = useState("fiscal"); // "fiscal" | "range"
   const [fiscalYear, setFiscalYear] = useState("2569");
   const [startDate, setStartDate] = useState("");
@@ -15,6 +36,103 @@ export default function ExportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
+
+  // Admin: เลือกส่งออกข้อมูลทั้งหมดหรือตัวเอง
+  const [exportScope, setExportScope] = useState("all"); // "all" | "self"
+
+  // Staff: สถานะคำขอส่งออก
+  const [pendingRequest, setPendingRequest] = useState(null);
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestReason, setRequestReason] = useState("");
+
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isStaff = user?.role === "staff";
+
+  // Staff: โหลดคำขอส่งออกล่าสุดจาก localStorage (ไม่สามารถ query ได้ตาม rules)
+  async function loadPendingRequest() {
+    if (!isStaff || !user) return;
+
+    try {
+      // อ่าน requestId ล่าสุดจาก localStorage
+      const savedRequestId = localStorage.getItem(`exportRequest_${user.uid}`);
+      if (savedRequestId) {
+        const docRef = doc(db, "exportRequests", savedRequestId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // ตรวจสอบว่าเป็นของตัวเองและยังไม่ถูก reject
+          if (data.staffId === user.uid && data.status !== "rejected") {
+            setPendingRequest({ id: docSnap.id, ...data });
+            return;
+          }
+        }
+        // ถ้าไม่ valid ให้ลบออก
+        localStorage.removeItem(`exportRequest_${user.uid}`);
+      }
+      setPendingRequest(null);
+    } catch (err) {
+      console.error("Error loading request:", err);
+      setPendingRequest(null);
+    }
+  }
+
+  useEffect(() => {
+    loadPendingRequest();
+    // Refresh ทุก 2 นาที (ประหยัด quota)
+    const interval = setInterval(loadPendingRequest, 120000);
+    return () => clearInterval(interval);
+  }, [isStaff, user]);
+
+  // Staff: สร้างคำขอส่งออก
+  async function createExportRequest() {
+    if (!requestReason.trim()) {
+      setError("กรุณาระบุเหตุผลในการส่งออกข้อมูล");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const start =
+        exportMode === "fiscal"
+          ? getFiscalYearDates(fiscalYear).start
+          : startDate;
+      const end =
+        exportMode === "fiscal" ? getFiscalYearDates(fiscalYear).end : endDate;
+
+      const requestData = {
+        staffId: user.uid,
+        staffEmail: user.email,
+        staffName: user.displayName || user.email,
+        exportMode,
+        fiscalYear: exportMode === "fiscal" ? fiscalYear : null,
+        startDate: exportMode === "range" ? startDate : null,
+        endDate: exportMode === "range" ? endDate : null,
+        dateRange: { start, end },
+        reason: requestReason,
+        status: "pending",
+        createdAt: new Date(),
+      };
+      console.log("[Export] Creating request with data:", requestData);
+      console.log("[Export] User UID:", user.uid);
+      const docRef = await addDoc(
+        collection(db, "exportRequests"),
+        requestData,
+      );
+
+      // บันทึก requestId ลง localStorage เพื่อให้สามารถอ่านกลับมาได้
+      localStorage.setItem(`exportRequest_${user.uid}`, docRef.id);
+
+      setDone("ส่งคำขอส่งออกข้อมูลแล้ว รอการอนุมัติจากแอดมิน");
+      setShowRequestForm(false);
+      setRequestReason("");
+      // โหลดสถานะทันที
+      loadPendingRequest();
+    } catch (err) {
+      setError("ไม่สามารถส่งคำขอได้: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // คำนวณวันเริ่มต้นและสิ้นสุดของปีงบประมาฐไทย
   const getFiscalYearDates = (fy) => {
@@ -26,13 +144,33 @@ export default function ExportPage() {
   };
 
   // Client-side CSV export from Firestore
-  async function exportFromFirestore(start, end, filename) {
+  async function exportFromFirestore(
+    start,
+    end,
+    filename,
+    isApprovedRequest = false,
+  ) {
     const worklogsRef = collection(db, "worklogs");
-    const q = query(
-      worklogsRef,
-      where("date", ">=", start),
-      where("date", "<=", end),
-    );
+
+    // Build query constraints
+    const constraints = [where("date", ">=", start), where("date", "<=", end)];
+
+    // Admin เลือกส่งออกเฉพาะตัวเอง
+    if (isAdmin && exportScope === "self") {
+      constraints.push(where("employeeId", "==", user.uid));
+    }
+
+    // Staff ต้องมีการอนุมัติก่อน (isApprovedRequest = true เมื่อกดดาวน์โหลดจากคำขอที่อนุมัติแล้ว)
+    if (isStaff && !isApprovedRequest) {
+      throw new Error("กรุณารอการอนุมัติจากแอดมินก่อนดาวน์โหลดข้อมูล");
+    }
+
+    // Staff ที่อนุมัติแล้ว ดึงเฉพาะข้อมูลตัวเอง
+    if (isStaff && isApprovedRequest) {
+      constraints.push(where("employeeId", "==", user.uid));
+    }
+
+    const q = query(worklogsRef, ...constraints);
 
     const snapshot = await getDocs(q);
     const worklogs = snapshot.docs.map((doc) => ({
@@ -171,6 +309,34 @@ export default function ExportPage() {
             </div>
           ) : null}
 
+          {/* Admin: Export Scope Selection */}
+          {isAdmin && (
+            <div className="mb-4 flex gap-2 rounded-2xl bg-indigo-50 p-2">
+              <button
+                className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
+                  exportScope === "all"
+                    ? "bg-white text-slate-950 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+                onClick={() => setExportScope("all")}
+              >
+                <Users size={16} className="inline mr-2" />
+                ข้อมูลทั้งหมด
+              </button>
+              <button
+                className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
+                  exportScope === "self"
+                    ? "bg-white text-slate-950 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+                onClick={() => setExportScope("self")}
+              >
+                <User size={16} className="inline mr-2" />
+                เฉพาะของตัวเอง
+              </button>
+            </div>
+          )}
+
           {/* Export Mode Selection */}
           <div className="mb-6 flex gap-2 rounded-2xl bg-slate-50 p-2">
             <button
@@ -194,6 +360,63 @@ export default function ExportPage() {
               ตามช่วงวันที่
             </button>
           </div>
+
+          {/* Staff: Pending Request Alert */}
+          {isStaff && pendingRequest && (
+            <div className="mb-6 rounded-2xl bg-amber-50 border border-amber-200 p-4">
+              <div className="flex items-start gap-3">
+                <Clock className="text-amber-600 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-900">
+                    {pendingRequest.status === "pending"
+                      ? "รอการอนุมัติ"
+                      : "อนุมัติแล้ว"}
+                  </h4>
+                  <p className="text-sm text-amber-800 mt-1">
+                    {pendingRequest.status === "pending"
+                      ? `คำขอส่งออกข้อมูล (${pendingRequest.dateRange?.start} ถึง ${pendingRequest.dateRange?.end}) กำลังรอการอนุมัติจากแอดมิน`
+                      : `คำขอส่งออกข้อมูล (${pendingRequest.dateRange?.start} ถึง ${pendingRequest.dateRange?.end}) ได้รับการอนุมัติแล้ว กดดาวน์โหลดด้านล่าง`}
+                  </p>
+                  {pendingRequest.reason && (
+                    <p className="text-xs text-amber-700 mt-1">
+                      เหตุผล: {pendingRequest.reason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Staff: Request Form */}
+          {isStaff && showRequestForm && (
+            <div className="mb-6 rounded-2xl bg-slate-50 p-4">
+              <h4 className="font-semibold text-slate-900 mb-3">
+                ส่งคำขอส่งออกข้อมูล
+              </h4>
+              <textarea
+                className="apple-input w-full mb-3"
+                rows={3}
+                placeholder="ระบุเหตุผลในการส่งออกข้อมูล..."
+                value={requestReason}
+                onChange={(e) => setRequestReason(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={createExportRequest}
+                  disabled={loading}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                >
+                  {loading ? "กำลังส่ง..." : "ส่งคำขอ"}
+                </button>
+                <button
+                  onClick={() => setShowRequestForm(false)}
+                  className="px-4 py-2 bg-white text-slate-600 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            </div>
+          )}
 
           {exportMode === "fiscal" ? (
             <>
@@ -245,18 +468,56 @@ export default function ExportPage() {
             <p className="font-semibold text-slate-950">CSV includes</p>
             <p className="mt-2">
               วันที่, เวลา, ผู้ให้บริการ, ผู้รับบริการ, กลุ่มงาน,
-              หัวข้อการให้บริการ, หัวข้อรอง, Comment, สถานะ, แหล่งข้อมูล
+              หัวข้อการให้บริการ, หัวข้อรอง, Comment, สถานะ
             </p>
           </div>
 
-          <button
-            onClick={exportCsv}
-            disabled={loading}
-            className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2"
-          >
-            <Download size={18} />
-            {loading ? "Exporting…" : "Download CSV"}
-          </button>
+          {/* Staff: Request Export Button */}
+          {isStaff && !pendingRequest && (
+            <button
+              onClick={() => setShowRequestForm(true)}
+              disabled={loading}
+              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Clock size={18} />
+              ขออนุมาติส่งออกข้อมูล
+            </button>
+          )}
+
+          {/* Staff: Download Approved Request */}
+          {isStaff && pendingRequest?.status === "approved" && (
+            <button
+              onClick={() =>
+                exportFromFirestore(
+                  pendingRequest.dateRange.start,
+                  pendingRequest.dateRange.end,
+                  `workload-${pendingRequest.dateRange.start}_to_${pendingRequest.dateRange.end}.csv`,
+                  true, // isApprovedRequest
+                )
+              }
+              disabled={loading}
+              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <CheckCircle size={18} />
+              ดาวน์โหลดข้อมูล (อนุมัติแล้ว)
+            </button>
+          )}
+
+          {/* Admin: Export Button */}
+          {isAdmin && (
+            <button
+              onClick={exportCsv}
+              disabled={loading}
+              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2"
+            >
+              <Download size={18} />
+              {loading
+                ? "Exporting…"
+                : exportScope === "self"
+                  ? "Download My Data"
+                  : "Download All Data"}
+            </button>
+          )}
         </div>
       </section>
     </AppShell>

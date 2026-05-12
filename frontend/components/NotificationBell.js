@@ -77,7 +77,7 @@ export function NotificationBell() {
       console.error("[Notification] Failed to subscribe q1:", err);
     }
 
-    // Query 2: notifications ส่งถึงทุกคน (all) - staff อ่านได้
+    // Query 2: notifications ส่งถึงทุกคน (all) - ทุก role อ่านได้
     try {
       const q2 = query(
         collection(db, "notifications"),
@@ -89,17 +89,31 @@ export function NotificationBell() {
       console.error("[Notification] Failed to subscribe q2:", err);
     }
 
-    // Query 3: notifications ตาม role (เฉพาะ admin/superadmin)
-    if (user.role === "admin" || user.role === "superadmin") {
+    // Query 3: notifications ส่งถึง staff ทั้งหมด
+    if (user.role === "staff") {
       try {
         const q3 = query(
           collection(db, "notifications"),
-          where("userId", "==", user.role),
+          where("userId", "==", "staff"),
           where("read", "==", false),
         );
         unsubscribes.push(onSnapshot(q3, handleSnapshot, handleError));
       } catch (err) {
-        console.error("[Notification] Failed to subscribe q3:", err);
+        console.error("[Notification] Failed to subscribe q3 (staff):", err);
+      }
+    }
+
+    // Query 4: notifications ส่งถึง admin ทั้งหมด (รวม superadmin)
+    if (user.role === "admin" || user.role === "superadmin") {
+      try {
+        const q4 = query(
+          collection(db, "notifications"),
+          where("userId", "==", "admin"),
+          where("read", "==", false),
+        );
+        unsubscribes.push(onSnapshot(q4, handleSnapshot, handleError));
+      } catch (err) {
+        console.error("[Notification] Failed to subscribe q4 (admin):", err);
       }
     }
 
@@ -208,7 +222,7 @@ export function NotificationBell() {
         </div>
       )}
 
-      <div className="relative">
+      <div className="relative z-[999]">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="relative p-2 rounded-full hover:bg-slate-100 transition"
@@ -222,7 +236,7 @@ export function NotificationBell() {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-80 apple-panel z-[100]">
+          <div className="absolute right-0 top-full mt-2 w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
               <button

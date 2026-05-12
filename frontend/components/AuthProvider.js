@@ -5,16 +5,17 @@ import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import {
   doc,
   getDoc,
+  addDoc,
+  collection,
   setDoc,
   deleteDoc,
   updateDoc,
   query,
-  collection,
   where,
   getDocs,
-  addDoc,
 } from "firebase/firestore";
 import { auth, db, googleProvider } from "../lib/firebase";
+import { logSystemAction, SystemActions } from "../lib/systemLog";
 
 // Email ที่อนุญาตให้ login ได้โดยไม่ต้องเป็น @icit.kmutnb.ac.th
 const WHITELIST_EMAILS = [
@@ -295,6 +296,8 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle() {
     const result = await signInWithPopup(auth, googleProvider);
+    // บันทึก log login
+    await logSystemAction(SystemActions.LOGIN, "User logged in via Google");
     return result.user;
   }
 
@@ -310,37 +313,31 @@ export function AuthProvider({ children }) {
   async function approveUser(uid, role = "staff") {
     const pendingRef = doc(db, "pendingUsers", uid);
     const pendingDoc = await getDoc(pendingRef);
+    const pendingData = pendingDoc.data();
 
     if (pendingDoc.exists()) {
-      const pendingData = pendingDoc.data();
+      const userRef = doc(db, "users", uid);
       const newUser = {
-        uid: pendingData.uid,
         email: pendingData.email,
-        nickname: pendingData.nickname,
-        fullName: pendingData.fullName,
-        displayName: pendingData.displayName || "",
-        photoURL: pendingData.photoURL || "",
+        displayName: pendingData.displayName || pendingData.email.split("@")[0],
         role: role,
         active: true,
         createdAt: new Date(),
-        approvedBy: user?.uid || "system",
         approvedAt: new Date(),
+        approvedBy: user.uid,
       };
 
-      // สร้าง user จริง
-      await setDoc(doc(db, "users", uid), newUser);
+      // สร้าง user ใหม่
+      await setDoc(userRef, newUser);
       // ลบจาก pending
       await deleteDoc(pendingRef);
 
-      // สร้าง notification แจ้ง user ที่ได้รับการอนุมัติ
-      await addDoc(collection(db, "notifications"), {
-        userId: pendingData.uid, // ส่งถึง user ที่ถูกอนุมัติ
-        title: "บัญชีของคุณได้รับการอนุมัติแล้ว",
-        message: `ยินดีต้อนรับ! บัญชี ${pendingData.email} ได้รับการอนุมัติและสามารถใช้งานระบบได้แล้ว`,
-        type: "approval",
-        read: false,
-        timestamp: new Date(),
-      });
+      // Log action
+      await logSystemAction(
+        SystemActions.APPROVE_USER,
+        `Approved user ${pendingData.email} as ${role}`,
+        uid,
+      );
 
       // สร้าง notification แจ้ง admin ทุกคน
       const adminNotif = {
@@ -361,7 +358,20 @@ export function AuthProvider({ children }) {
   // ฟังก์ชันสำหรับ admin ปฏิเสธ user
   async function rejectUser(uid) {
     try {
-      await deleteDoc(doc(db, "pendingUsers", uid));
+      // ดึงข้อมูลก่อนลบเพื่อ log
+      const pendingRef = doc(db, "pendingUsers", uid);
+      const pendingDoc = await getDoc(pendingRef);
+      const pendingData = pendingDoc.data();
+
+      await deleteDoc(pendingRef);
+
+      // Log action
+      await logSystemAction(
+        SystemActions.REJECT_USER,
+        `Rejected user ${pendingData?.email || uid}`,
+        uid,
+      );
+
       return true;
     } catch (err) {
       console.error("[Auth] Error rejecting user:", err);

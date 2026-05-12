@@ -24,6 +24,7 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import {
@@ -255,6 +256,16 @@ export default function AdminRecordPage() {
       };
 
       await addDoc(collection(db, "worklogs"), worklogData);
+
+      // Log action
+      const staffName =
+        staffList.find((s) => s.id === form.employeeId)?.name ||
+        form.employeeId;
+      await logSystemAction(
+        SystemActions.ADMIN_CREATE_WORKLOG,
+        `Admin created worklog for ${staffName}: ${form.date} ${form.time} - ${form.recipient}`,
+        form.employeeId,
+      );
 
       setSuccess(true);
       setMessage(t("form.saved"));

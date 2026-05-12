@@ -644,18 +644,23 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Charts Section */}
+      {/* Charts Section - ซ่อน WorkloadByEmployeeChart และ BarList byEmployee เพราะซ้ำกับข้อมูลอื่น */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        <WorkloadByEmployeeChart data={data?.byEmployee || []} />
+        {/* <WorkloadByEmployeeChart data={data?.byEmployee || []} /> */}
         <WorkloadByDutyChart data={data?.byMainDuty || []} />
-      </section>
-
-      <section className="mt-5 grid gap-5 lg:grid-cols-2">
         <DailyWorkloadTrend data={data?.byDate || []} />
-        <MinorTaskDistribution data={data?.byMinorTask || []} />
       </section>
 
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
+        <MinorTaskDistribution data={data?.byMinorTask || []} />
+        <BarList
+          title={t("dashboard.byMainDuty")}
+          items={data?.byMainDuty || []}
+        />
+      </section>
+
+      {/* ซ่อน BarList byEmployee เพราะซ้ำกับข้อมูลอื่น */}
+      {/* <section className="mt-5 grid gap-5 lg:grid-cols-2">
         <BarList
           title={t("dashboard.byEmployee")}
           items={data?.byEmployee || []}
@@ -664,7 +669,7 @@ export default function DashboardPage() {
           title={t("dashboard.byMainDuty")}
           items={data?.byMainDuty || []}
         />
-      </section>
+      </section> */}
 
       <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <BarList
