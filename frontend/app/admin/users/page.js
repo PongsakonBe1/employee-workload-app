@@ -219,7 +219,8 @@ export default function AdminUsersPage() {
   async function loadUsers() {
     try {
       console.log("[AdminUsers] Loading users...");
-      const usersSnapshot = await getDocs(collection(db, "users"));
+      const usersQuery = query(collection(db, "users"), limit(100));
+      const usersSnapshot = await getDocs(usersQuery);
       console.log("[AdminUsers] Users loaded:", usersSnapshot.size);
       const usersData = usersSnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -243,7 +244,8 @@ export default function AdminUsersPage() {
   async function loadPendingUsers() {
     try {
       console.log("[AdminUsers] Loading pending users...");
-      const pendingSnapshot = await getDocs(collection(db, "pendingUsers"));
+      const pendingQuery = query(collection(db, "pendingUsers"), limit(100));
+      const pendingSnapshot = await getDocs(pendingQuery);
       console.log("[AdminUsers] Pending users loaded:", pendingSnapshot.size);
       const pendingData = pendingSnapshot.docs.map((doc) => ({
         id: doc.id,

@@ -230,8 +230,8 @@ export default function DashboardPage() {
       // Query without orderBy เพื่อหลีกเลี่ยง composite index + limit 1000 records
       q = query(worklogsRef, ...constraints, limit(1000));
 
-      // Get actual total count (without limit) for display
-      const countQuery = query(worklogsRef, ...constraints);
+      // Get total count (with limit 1000 to save quota)
+      const countQuery = query(worklogsRef, ...constraints, limit(1000));
       const countSnapshot = await getDocs(countQuery);
       const actualTotal = countSnapshot.size;
 

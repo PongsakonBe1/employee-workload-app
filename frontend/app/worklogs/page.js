@@ -73,7 +73,8 @@ export default function WorkLogsPage() {
     async function loadUsers() {
       try {
         const usersRef = collection(db, "users");
-        const snapshot = await getDocs(usersRef);
+        const q = query(usersRef, limit(100)); // Limit to reduce quota usage
+        const snapshot = await getDocs(q);
         const usersMap = {};
         snapshot.docs.forEach((doc) => {
           const userData = doc.data();

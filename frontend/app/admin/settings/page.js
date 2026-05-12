@@ -40,32 +40,32 @@ const DEFAULT_SETTINGS = {
   lockTime: "23:59",
   autoLockEnabled: true,
   allowEditDays: 3,
-  
+
   // Notification Settings
   enableDeadlineReminder: true,
   reminderTime: "22:00",
   enableSlackNotifications: false,
   slackWebhookUrl: "",
-  
+
   // Backup Settings
   backupFrequency: "daily", // daily, weekly, monthly
   backupRetentionCount: 7,
-  
+
   // User Settings
   defaultUserRole: "staff",
   requireAdminApproval: true,
   allowedEmailDomain: "@icit.kmutnb.ac.th",
-  
+
   // Export Settings
   exportFormat: "csv", // csv only
   defaultFiscalYearStart: "10-01", // MM-DD
-  
+
   // Security Settings
   sessionTimeoutMinutes: 30,
   maxLoginAttempts: 5,
   enable2FAForAdmin: false,
   logIpAddress: true,
-  
+
   // Display Settings
   defaultLanguage: "th",
   dateFormat: "DD/MM/YYYY",
@@ -117,8 +117,12 @@ export default function SettingsPage() {
   async function loadStats() {
     try {
       const worklogsQuery = query(collection(db, "worklogs"), limit(1));
-      const usersQuery = query(collection(db, "users"), where("active", "==", true));
-      
+      const usersQuery = query(
+        collection(db, "users"),
+        where("active", "==", true),
+        limit(100),
+      );
+
       const [worklogsSnap, usersSnap] = await Promise.all([
         getDocs(worklogsQuery),
         getDocs(usersQuery),
@@ -271,15 +275,19 @@ export default function SettingsPage() {
 
                   {/* User Defaults */}
                   <div className="space-y-4 border-b border-slate-100 pb-6">
-                    <h3 className="font-medium text-slate-900">ผู้ใช้เริ่มต้น</h3>
-                    
+                    <h3 className="font-medium text-slate-900">
+                      ผู้ใช้เริ่มต้น
+                    </h3>
+
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <label className="apple-label">บทบาทเริ่มต้น</label>
                         <select
                           className="apple-input"
                           value={settings.defaultUserRole}
-                          onChange={(e) => updateSetting("defaultUserRole", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting("defaultUserRole", e.target.value)
+                          }
                         >
                           <option value="staff">พนักงาน (Staff)</option>
                           <option value="admin">ผู้ดูแลระบบ (Admin)</option>
@@ -287,12 +295,16 @@ export default function SettingsPage() {
                       </div>
 
                       <div>
-                        <label className="apple-label">โดเมนอีเมลที่อนุญาต</label>
+                        <label className="apple-label">
+                          โดเมนอีเมลที่อนุญาต
+                        </label>
                         <input
                           type="text"
                           className="apple-input"
                           value={settings.allowedEmailDomain}
-                          onChange={(e) => updateSetting("allowedEmailDomain", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting("allowedEmailDomain", e.target.value)
+                          }
                           placeholder="@icit.kmutnb.ac.th"
                         />
                       </div>
@@ -304,9 +316,17 @@ export default function SettingsPage() {
                         id="requireApproval"
                         className="w-5 h-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                         checked={settings.requireAdminApproval}
-                        onChange={(e) => updateSetting("requireAdminApproval", e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting(
+                            "requireAdminApproval",
+                            e.target.checked,
+                          )
+                        }
                       />
-                      <label htmlFor="requireApproval" className="text-sm text-slate-700">
+                      <label
+                        htmlFor="requireApproval"
+                        className="text-sm text-slate-700"
+                      >
                         ต้องการอนุมัติจาก admin ก่อนใช้งาน
                       </label>
                     </div>
@@ -326,17 +346,26 @@ export default function SettingsPage() {
                           type="time"
                           className="apple-input"
                           value={settings.lockTime}
-                          onChange={(e) => updateSetting("lockTime", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting("lockTime", e.target.value)
+                          }
                         />
                       </div>
 
                       <div>
-                        <label className="apple-label">วันย้อนหลังที่แก้ไขได้</label>
+                        <label className="apple-label">
+                          วันย้อนหลังที่แก้ไขได้
+                        </label>
                         <input
                           type="number"
                           className="apple-input"
                           value={settings.allowEditDays}
-                          onChange={(e) => updateSetting("allowEditDays", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateSetting(
+                              "allowEditDays",
+                              parseInt(e.target.value),
+                            )
+                          }
                           min="1"
                           max="30"
                         />
@@ -348,9 +377,13 @@ export default function SettingsPage() {
                             type="checkbox"
                             className="w-5 h-5 rounded border-slate-300"
                             checked={settings.autoLockEnabled}
-                            onChange={(e) => updateSetting("autoLockEnabled", e.target.checked)}
+                            onChange={(e) =>
+                              updateSetting("autoLockEnabled", e.target.checked)
+                            }
                           />
-                          <span className="text-sm text-slate-700">เปิดใช้งานการล็อกอัตโนมัติ</span>
+                          <span className="text-sm text-slate-700">
+                            เปิดใช้งานการล็อกอัตโนมัติ
+                          </span>
                         </label>
                       </div>
                     </div>
@@ -369,16 +402,25 @@ export default function SettingsPage() {
                         <select className="apple-input bg-slate-50" disabled>
                           <option value="csv">CSV (ค่าเริ่มต้น)</option>
                         </select>
-                        <p className="text-xs text-slate-400 mt-1">รองรับเฉพาะ CSV เท่านั้น</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          รองรับเฉพาะ CSV เท่านั้น
+                        </p>
                       </div>
 
                       <div>
-                        <label className="apple-label">วันเริ่มปีงบประมาณ (MM-DD)</label>
+                        <label className="apple-label">
+                          วันเริ่มปีงบประมาณ (MM-DD)
+                        </label>
                         <input
                           type="text"
                           className="apple-input"
                           value={settings.defaultFiscalYearStart}
-                          onChange={(e) => updateSetting("defaultFiscalYearStart", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting(
+                              "defaultFiscalYearStart",
+                              e.target.value,
+                            )
+                          }
                           placeholder="10-01"
                         />
                       </div>
@@ -402,21 +444,33 @@ export default function SettingsPage() {
                         id="enableReminder"
                         className="w-5 h-5 rounded border-slate-300"
                         checked={settings.enableDeadlineReminder}
-                        onChange={(e) => updateSetting("enableDeadlineReminder", e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting(
+                            "enableDeadlineReminder",
+                            e.target.checked,
+                          )
+                        }
                       />
-                      <label htmlFor="enableReminder" className="text-sm text-slate-700">
+                      <label
+                        htmlFor="enableReminder"
+                        className="text-sm text-slate-700"
+                      >
                         เปิดใช้งานการแจ้งเตือนใกล้ 23:59
                       </label>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="apple-label">เวลาแจ้งเตือนล่วงหน้า</label>
+                        <label className="apple-label">
+                          เวลาแจ้งเตือนล่วงหน้า
+                        </label>
                         <input
                           type="time"
                           className="apple-input"
                           value={settings.reminderTime}
-                          onChange={(e) => updateSetting("reminderTime", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting("reminderTime", e.target.value)
+                          }
                           disabled={!settings.enableDeadlineReminder}
                         />
                       </div>
@@ -424,7 +478,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-medium text-slate-900">การแจ้งเตือน Slack</h3>
+                    <h3 className="font-medium text-slate-900">
+                      การแจ้งเตือน Slack
+                    </h3>
 
                     <div className="flex items-center gap-3">
                       <input
@@ -432,9 +488,17 @@ export default function SettingsPage() {
                         id="enableSlack"
                         className="w-5 h-5 rounded border-slate-300"
                         checked={settings.enableSlackNotifications}
-                        onChange={(e) => updateSetting("enableSlackNotifications", e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting(
+                            "enableSlackNotifications",
+                            e.target.checked,
+                          )
+                        }
                       />
-                      <label htmlFor="enableSlack" className="text-sm text-slate-700">
+                      <label
+                        htmlFor="enableSlack"
+                        className="text-sm text-slate-700"
+                      >
                         เปิดใช้งานการแจ้งเตือน Slack
                       </label>
                     </div>
@@ -445,7 +509,9 @@ export default function SettingsPage() {
                         type="text"
                         className="apple-input"
                         value={settings.slackWebhookUrl}
-                        onChange={(e) => updateSetting("slackWebhookUrl", e.target.value)}
+                        onChange={(e) =>
+                          updateSetting("slackWebhookUrl", e.target.value)
+                        }
                         placeholder="https://hooks.slack.com/services/..."
                         disabled={!settings.enableSlackNotifications}
                       />
@@ -465,20 +531,28 @@ export default function SettingsPage() {
                   <div className="grid gap-4 md:grid-cols-3 mb-6">
                     <div className="apple-panel p-4 text-center">
                       <p className="text-sm text-slate-500">จำนวนรายการงาน</p>
-                      <p className="text-2xl font-semibold text-slate-950">{stats.totalWorklogs}</p>
+                      <p className="text-2xl font-semibold text-slate-950">
+                        {stats.totalWorklogs}
+                      </p>
                     </div>
                     <div className="apple-panel p-4 text-center">
                       <p className="text-sm text-slate-500">จำนวนผู้ใช้</p>
-                      <p className="text-2xl font-semibold text-slate-950">{stats.totalUsers}</p>
+                      <p className="text-2xl font-semibold text-slate-950">
+                        {stats.totalUsers}
+                      </p>
                     </div>
                     <div className="apple-panel p-4 text-center">
                       <p className="text-sm text-slate-500">ขนาดข้อมูล</p>
-                      <p className="text-2xl font-semibold text-slate-950">{stats.backupSize}</p>
+                      <p className="text-2xl font-semibold text-slate-950">
+                        {stats.backupSize}
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 border-b border-slate-100 pb-6">
-                    <h3 className="font-medium text-slate-900">ตั้งค่าการสำรอง</h3>
+                    <h3 className="font-medium text-slate-900">
+                      ตั้งค่าการสำรอง
+                    </h3>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
@@ -486,7 +560,9 @@ export default function SettingsPage() {
                         <select
                           className="apple-input"
                           value={settings.backupFrequency}
-                          onChange={(e) => updateSetting("backupFrequency", e.target.value)}
+                          onChange={(e) =>
+                            updateSetting("backupFrequency", e.target.value)
+                          }
                         >
                           <option value="daily">รายวัน</option>
                           <option value="weekly">รายสัปดาห์</option>
@@ -495,12 +571,19 @@ export default function SettingsPage() {
                       </div>
 
                       <div>
-                        <label className="apple-label">จำนวน backup ที่เก็บไว้</label>
+                        <label className="apple-label">
+                          จำนวน backup ที่เก็บไว้
+                        </label>
                         <input
                           type="number"
                           className="apple-input"
                           value={settings.backupRetentionCount}
-                          onChange={(e) => updateSetting("backupRetentionCount", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateSetting(
+                              "backupRetentionCount",
+                              parseInt(e.target.value),
+                            )
+                          }
                           min="1"
                           max="30"
                         />
@@ -522,7 +605,11 @@ export default function SettingsPage() {
 
                       {isSuperAdmin && (
                         <button
-                          onClick={() => alert("ฟีเจอร์กู้คืนข้อมูลจะเชื่อมต่อกับ Cloud Function")}
+                          onClick={() =>
+                            alert(
+                              "ฟีเจอร์กู้คืนข้อมูลจะเชื่อมต่อกับ Cloud Function",
+                            )
+                          }
                           className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition"
                         >
                           <Trash2 size={18} />
@@ -532,7 +619,8 @@ export default function SettingsPage() {
                     </div>
 
                     <p className="text-sm text-slate-500">
-                      การสำรองข้อมูลจะทำงานอัตโนมัติผ่าน Firebase Cloud Functions
+                      การสำรองข้อมูลจะทำงานอัตโนมัติผ่าน Firebase Cloud
+                      Functions
                     </p>
                   </div>
                 </div>
@@ -547,28 +635,44 @@ export default function SettingsPage() {
                   </h2>
 
                   <div className="space-y-4 border-b border-slate-100 pb-6">
-                    <h3 className="font-medium text-slate-900">การเข้าสู่ระบบ</h3>
+                    <h3 className="font-medium text-slate-900">
+                      การเข้าสู่ระบบ
+                    </h3>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="apple-label">ระยะเวลา Session (นาที)</label>
+                        <label className="apple-label">
+                          ระยะเวลา Session (นาที)
+                        </label>
                         <input
                           type="number"
                           className="apple-input"
                           value={settings.sessionTimeoutMinutes}
-                          onChange={(e) => updateSetting("sessionTimeoutMinutes", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateSetting(
+                              "sessionTimeoutMinutes",
+                              parseInt(e.target.value),
+                            )
+                          }
                           min="5"
                           max="480"
                         />
                       </div>
 
                       <div>
-                        <label className="apple-label">จำนวนครั้ง Login ผิดพลาดสูงสุด</label>
+                        <label className="apple-label">
+                          จำนวนครั้ง Login ผิดพลาดสูงสุด
+                        </label>
                         <input
                           type="number"
                           className="apple-input"
                           value={settings.maxLoginAttempts}
-                          onChange={(e) => updateSetting("maxLoginAttempts", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateSetting(
+                              "maxLoginAttempts",
+                              parseInt(e.target.value),
+                            )
+                          }
                           min="3"
                           max="10"
                         />
@@ -577,7 +681,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-medium text-slate-900">การตรวจสอบสิทธิ์</h3>
+                    <h3 className="font-medium text-slate-900">
+                      การตรวจสอบสิทธิ์
+                    </h3>
 
                     <div className="flex items-center gap-3">
                       <input
@@ -585,10 +691,15 @@ export default function SettingsPage() {
                         id="enable2FA"
                         className="w-5 h-5 rounded border-slate-300"
                         checked={settings.enable2FAForAdmin}
-                        onChange={(e) => updateSetting("enable2FAForAdmin", e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("enable2FAForAdmin", e.target.checked)
+                        }
                         disabled={!isSuperAdmin}
                       />
-                      <label htmlFor="enable2FA" className="text-sm text-slate-700">
+                      <label
+                        htmlFor="enable2FA"
+                        className="text-sm text-slate-700"
+                      >
                         บังคับใช้ 2FA สำหรับ Admin (เฉพาะ Superadmin)
                       </label>
                     </div>
@@ -599,7 +710,9 @@ export default function SettingsPage() {
                         id="logIp"
                         className="w-5 h-5 rounded border-slate-300"
                         checked={settings.logIpAddress}
-                        onChange={(e) => updateSetting("logIpAddress", e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting("logIpAddress", e.target.checked)
+                        }
                       />
                       <label htmlFor="logIp" className="text-sm text-slate-700">
                         บันทึก IP Address ใน Audit Log
@@ -614,7 +727,8 @@ export default function SettingsPage() {
                         คุณกำลังใช้งานในฐานะ Superadmin
                       </p>
                       <p className="text-sm text-amber-700 mt-1">
-                        คุณมีสิทธิ์จัดการผู้ใช้ทั้งหมดรวมถึงลบบัญชี Admin และ Staff
+                        คุณมีสิทธิ์จัดการผู้ใช้ทั้งหมดรวมถึงลบบัญชี Admin และ
+                        Staff
                       </p>
                     </div>
                   )}
