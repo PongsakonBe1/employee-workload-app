@@ -5,8 +5,9 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Note: next-intl requires SSR, cannot use static export
-  // output: "export" // Disabled - use Vercel for hosting instead
+  // Static export for Firebase Hosting
+  output: "export",
+  distDir: "out",
   images: {
     unoptimized: true,
   },
