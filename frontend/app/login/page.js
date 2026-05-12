@@ -11,11 +11,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // ถ้า login แล้ว ให้ redirect ไป dashboard
+  // ถ้า login แล้ว ให้ redirect ตาม role
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.replace("/dashboard");
+        // Admin -> dashboard, Staff -> worklogs
+        if (user.role === "admin" || user.role === "superadmin") {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/worklogs/new");
+        }
       } else if (pendingApproval) {
         router.replace("/pending");
       }
