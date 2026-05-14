@@ -1,7 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+} from "firebase/auth";
 import {
   doc,
   getDoc,
@@ -14,7 +20,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { auth, db, googleProvider } from "../lib/firebase";
+import { auth, db, googleProvider, authReady } from "../lib/firebase";
 import { logSystemAction, SystemActions } from "../lib/systemLog";
 
 // Email ที่อนุญาตให้ login ได้โดยไม่ต้องเป็น @icit.kmutnb.ac.th
@@ -49,209 +55,238 @@ export function AuthProvider({ children }) {
     console.log("[Auth] AuthProvider mounted, starting auth state listener...");
     let isFirstCall = true;
     let timeoutId = null;
+    let unsubscribe = () => {};
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log(
-        "[Auth] onAuthStateChanged fired:",
-        firebaseUser?.email || "null",
-      );
+    async function init() {
+      // รอให้ setPersistence เสร็จก่อน — ป้องกัน race condition บน iOS
+      await authReady;
 
-      if (!firebaseUser) {
-        // ถ้าเป็นการเรียกครั้งแรก ให้รอสักครู่เพื่อ restore session
-        if (isFirstCall) {
-          console.log("[Auth] First call with null, waiting for session...");
-
-          timeoutId = setTimeout(() => {
-            // ถ้ายังไม่มี user ให้ clear localStorage
-            if (!auth.currentUser) {
-              console.log("[Auth] No session found, clearing storage");
-              localStorage.removeItem("icit_user");
-              setUser(null);
-              setLoading(false);
-            }
-          }, 500); // ลดเหลือ 500ms เท่านั้น
-
-          isFirstCall = false;
-          return;
-        }
-
-        // Logout จริง ๆ
-        console.log("[Auth] User logged out");
-        localStorage.removeItem("icit_user");
-        setUser(null);
-        setPendingApproval(false);
-        setLoading(false);
-        return;
-      }
-
-      // ถ้า user login ให้ clear timeout ที่รออยู่
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-
-      isFirstCall = false;
-
+      // handle redirect result สำหรับ iOS Standalone (signInWithRedirect)
       try {
-        // รอให้ Auth state พร้อม (สำคัญ!)
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        const idTokenResult = await firebaseUser.getIdTokenResult();
-        console.log("[Auth] Token ready:", !!idTokenResult.token);
-
-        // 1. ลองหา user ด้วย UID ก่อน
-        console.log("[Auth] Looking for user with UID:", firebaseUser.uid);
-        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-        let userData = userDoc.exists() ? userDoc.data() : null;
-        console.log("[Auth] Found by UID:", userData ? "Yes" : "No");
-
-        // 2. ถ้าไม่เจอ ให้ลองหาด้วย email
-        if (!userData) {
-          console.log("[Auth] Looking for user by email:", firebaseUser.email);
-          // ใช้ simple query แทน
-          const usersRef = collection(db, "users");
-          const q = query(usersRef, where("email", "==", firebaseUser.email));
-          const querySnapshot = await getDocs(q);
-
-          if (!querySnapshot.empty) {
-            // เจอ user ที่มี email ตรงกัน แต่ uid ไม่ตรง
-            console.log("[Auth] Found by email, migrating...");
-            const existingUser = querySnapshot.docs[0];
-            const oldUid = existingUser.id; // UID เก่าจาก seed
-            userData = existingUser.data();
-
-            // สร้าง document ใหม่ด้วย uid จาก Google
-            await setDoc(doc(db, "users", firebaseUser.uid), {
-              ...userData,
-              uid: firebaseUser.uid,
-              lastLoginAt: new Date(),
-              migratedFrom: oldUid,
-            });
-            console.log(
-              "[Auth] Migrated user to new UID:",
-              firebaseUser.uid,
-              "from:",
-              oldUid,
-            );
-
-            // Migrate worklogs จาก old UID ไป new UID
-            await migrateWorklogs(oldUid, firebaseUser.uid);
-          }
-        } else {
-          // อัพเดต lastLoginAt
-          await updateDoc(doc(db, "users", firebaseUser.uid), {
-            lastLoginAt: new Date(),
-          });
+        const redirectResult = await getRedirectResult(auth);
+        if (redirectResult?.user) {
+          console.log(
+            "[Auth] Redirect result received:",
+            redirectResult.user.email,
+          );
         }
+      } catch (err) {
+        console.error("[Auth] getRedirectResult error:", err);
+      }
 
-        // 3. ถ้ามี user data แล้ว
-        if (userData) {
-          if (userData.active) {
-            const fullUser = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              ...userData,
-            };
-            setUser(fullUser);
-            // บันทึกลง localStorage สำหรับ restore เร็วขึ้น
-            localStorage.setItem("icit_user", JSON.stringify(fullUser));
-            setPendingApproval(false);
-            console.log("[Auth] User logged in:", userData.role);
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        console.log(
+          "[Auth] onAuthStateChanged fired:",
+          firebaseUser?.email || "null",
+        );
 
-            // ตรวจสอบว่าต้องตั้งชื่อหรือไม่
-            if (!userData.displayName) {
-              console.log("[Auth] First time login - need to set display name");
-              setShowNameAlert(true);
-            }
-          } else {
-            console.log("[Auth] User inactive, signing out");
-            await signOut(auth);
-            localStorage.removeItem("icit_user");
-            setUser(null);
-            setPendingApproval(false);
+        if (!firebaseUser) {
+          // ถ้าเป็นการเรียกครั้งแรก ให้รอสักครู่เพื่อ restore session
+          if (isFirstCall) {
+            console.log("[Auth] First call with null, waiting for session...");
+
+            timeoutId = setTimeout(() => {
+              // ถ้ายังไม่มี user ให้ clear localStorage
+              if (!auth.currentUser) {
+                console.log("[Auth] No session found, clearing storage");
+                localStorage.removeItem("icit_user");
+                setUser(null);
+                setLoading(false);
+              }
+            }, 500); // ลดเหลือ 500ms เท่านั้น
+
+            isFirstCall = false;
+            return;
           }
+
+          // Logout จริง ๆ
+          console.log("[Auth] User logged out");
+          localStorage.removeItem("icit_user");
+          setUser(null);
+          setPendingApproval(false);
           setLoading(false);
           return;
         }
 
-        // 4. ถ้ายังไม่มีในระบบ -> สร้างใหม่ (First time login)
-        const isWhitelisted = WHITELIST_EMAILS.includes(firebaseUser.email);
-        const isICIT = firebaseUser.email?.endsWith("@icit.kmutnb.ac.th");
+        // ถ้า user login ให้ clear timeout ที่รออยู่
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
 
-        console.log("[Auth] New user (first time login):", {
-          isWhitelisted,
-          isICIT,
-          email: firebaseUser.email,
-        });
+        isFirstCall = false;
 
-        // แสดง alert สำหรับ first time login
-        setShowNameAlert(true);
+        try {
+          // รอให้ Auth state พร้อม (สำคัญ!)
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
-        if (isWhitelisted) {
-          // Whitelist email -> สร้าง user ได้เลยไม่ต้องรออนุมัติ
-          console.log("[Auth] Creating whitelist user...");
-          const newUser = {
-            uid: firebaseUser.uid,
+          const idTokenResult = await firebaseUser.getIdTokenResult();
+          console.log("[Auth] Token ready:", !!idTokenResult.token);
+
+          // 1. ลองหา user ด้วย UID ก่อน
+          console.log("[Auth] Looking for user with UID:", firebaseUser.uid);
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          let userData = userDoc.exists() ? userDoc.data() : null;
+          console.log("[Auth] Found by UID:", userData ? "Yes" : "No");
+
+          // 2. ถ้าไม่เจอ ให้ลองหาด้วย email
+          if (!userData) {
+            console.log(
+              "[Auth] Looking for user by email:",
+              firebaseUser.email,
+            );
+            // ใช้ simple query แทน
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("email", "==", firebaseUser.email));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+              // เจอ user ที่มี email ตรงกัน แต่ uid ไม่ตรง
+              console.log("[Auth] Found by email, migrating...");
+              const existingUser = querySnapshot.docs[0];
+              const oldUid = existingUser.id; // UID เก่าจาก seed
+              userData = existingUser.data();
+
+              // สร้าง document ใหม่ด้วย uid จาก Google
+              await setDoc(doc(db, "users", firebaseUser.uid), {
+                ...userData,
+                uid: firebaseUser.uid,
+                lastLoginAt: new Date(),
+                migratedFrom: oldUid,
+              });
+              console.log(
+                "[Auth] Migrated user to new UID:",
+                firebaseUser.uid,
+                "from:",
+                oldUid,
+              );
+
+              // Migrate worklogs จาก old UID ไป new UID
+              await migrateWorklogs(oldUid, firebaseUser.uid);
+            }
+          } else {
+            // อัพเดต lastLoginAt
+            await updateDoc(doc(db, "users", firebaseUser.uid), {
+              lastLoginAt: new Date(),
+            });
+          }
+
+          // 3. ถ้ามี user data แล้ว
+          if (userData) {
+            if (userData.active) {
+              const fullUser = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                ...userData,
+              };
+              setUser(fullUser);
+              // บันทึกลง localStorage สำหรับ restore เร็วขึ้น
+              localStorage.setItem("icit_user", JSON.stringify(fullUser));
+              setPendingApproval(false);
+              console.log("[Auth] User logged in:", userData.role);
+
+              // ตรวจสอบว่าต้องตั้งชื่อหรือไม่
+              if (!userData.displayName) {
+                console.log(
+                  "[Auth] First time login - need to set display name",
+                );
+                setShowNameAlert(true);
+              }
+            } else {
+              console.log("[Auth] User inactive, signing out");
+              await signOut(auth);
+              localStorage.removeItem("icit_user");
+              setUser(null);
+              setPendingApproval(false);
+            }
+            setLoading(false);
+            return;
+          }
+
+          // 4. ถ้ายังไม่มีในระบบ -> สร้างใหม่ (First time login)
+          const isWhitelisted = WHITELIST_EMAILS.includes(firebaseUser.email);
+          const isICIT = firebaseUser.email?.endsWith("@icit.kmutnb.ac.th");
+
+          console.log("[Auth] New user (first time login):", {
+            isWhitelisted,
+            isICIT,
             email: firebaseUser.email,
-            nickname:
-              firebaseUser.displayName || firebaseUser.email.split("@")[0],
-            fullName: firebaseUser.displayName || "",
-            displayName: firebaseUser.displayName || "",
-            photoURL: firebaseUser.photoURL || "",
-            role: EMAIL_ROLES[firebaseUser.email] || "staff",
-            active: true,
-            createdAt: new Date(),
-            lastLoginAt: new Date(),
-            username: firebaseUser.email.split("@")[0],
-          };
+          });
 
-          await setDoc(doc(db, "users", firebaseUser.uid), newUser);
-          console.log("[Auth] Whitelist user created");
+          // แสดง alert สำหรับ first time login
+          setShowNameAlert(true);
 
-          const fullNewUser = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            ...newUser,
-          };
-          setUser(fullNewUser);
-          localStorage.setItem("icit_user", JSON.stringify(fullNewUser));
-          setPendingApproval(false);
-        } else if (isICIT) {
-          // ICIT domain -> สร้าง pending user
-          console.log("[Auth] Creating pending user...");
-          const pendingUser = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            nickname:
-              firebaseUser.displayName || firebaseUser.email.split("@")[0],
-            fullName: firebaseUser.displayName || "",
-            displayName: firebaseUser.displayName || "",
-            photoURL: firebaseUser.photoURL || "",
-            requestedAt: new Date(),
-            status: "pending",
-          };
+          if (isWhitelisted) {
+            // Whitelist email -> สร้าง user ได้เลยไม่ต้องรออนุมัติ
+            console.log("[Auth] Creating whitelist user...");
+            const newUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              nickname:
+                firebaseUser.displayName || firebaseUser.email.split("@")[0],
+              fullName: firebaseUser.displayName || "",
+              displayName: firebaseUser.displayName || "",
+              photoURL: firebaseUser.photoURL || "",
+              role: EMAIL_ROLES[firebaseUser.email] || "staff",
+              active: true,
+              createdAt: new Date(),
+              lastLoginAt: new Date(),
+              username: firebaseUser.email.split("@")[0],
+            };
 
-          await setDoc(doc(db, "pendingUsers", firebaseUser.uid), pendingUser);
-          console.log("[Auth] Pending user created");
-          setPendingApproval(true);
-          localStorage.removeItem("icit_user");
-          setUser(null);
-        } else {
-          // ไม่อนุญาต
-          console.log("[Auth] Email not allowed:", firebaseUser.email);
+            await setDoc(doc(db, "users", firebaseUser.uid), newUser);
+            console.log("[Auth] Whitelist user created");
+
+            const fullNewUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              ...newUser,
+            };
+            setUser(fullNewUser);
+            localStorage.setItem("icit_user", JSON.stringify(fullNewUser));
+            setPendingApproval(false);
+          } else if (isICIT) {
+            // ICIT domain -> สร้าง pending user
+            console.log("[Auth] Creating pending user...");
+            const pendingUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              nickname:
+                firebaseUser.displayName || firebaseUser.email.split("@")[0],
+              fullName: firebaseUser.displayName || "",
+              displayName: firebaseUser.displayName || "",
+              photoURL: firebaseUser.photoURL || "",
+              requestedAt: new Date(),
+              status: "pending",
+            };
+
+            await setDoc(
+              doc(db, "pendingUsers", firebaseUser.uid),
+              pendingUser,
+            );
+            console.log("[Auth] Pending user created");
+            setPendingApproval(true);
+            localStorage.removeItem("icit_user");
+            setUser(null);
+          } else {
+            // ไม่อนุญาต
+            console.log("[Auth] Email not allowed:", firebaseUser.email);
+            await signOut(auth);
+            setUser(null);
+            setPendingApproval(false);
+          }
+        } catch (err) {
+          console.error("[Auth] Error:", err);
           await signOut(auth);
           setUser(null);
           setPendingApproval(false);
         }
-      } catch (err) {
-        console.error("[Auth] Error:", err);
-        await signOut(auth);
-        setUser(null);
-        setPendingApproval(false);
-      }
 
-      setLoading(false);
-    });
+        setLoading(false);
+      });
+    }
+
+    init();
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
@@ -295,8 +330,19 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithGoogle() {
+    // iOS Standalone PWA (Add to Home Screen) ไม่รองรับ signInWithPopup
+    // ต้องใช้ signInWithRedirect แทน
+    const isIOSStandalone =
+      typeof window !== "undefined" && window.navigator.standalone === true;
+
+    if (isIOSStandalone) {
+      // Redirect flow — หน้าจะถูก redirect ไป Google แล้วกลับมา
+      // getRedirectResult() ใน useEffect จะจัดการ result
+      await signInWithRedirect(auth, googleProvider);
+      return; // ไม่ return user ทันที เพราะจะมี redirect
+    }
+
     const result = await signInWithPopup(auth, googleProvider);
-    // บันทึก log login
     await logSystemAction(SystemActions.LOGIN, "User logged in via Google");
     return result.user;
   }

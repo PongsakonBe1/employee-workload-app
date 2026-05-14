@@ -27,13 +27,18 @@ export default function LoginPage() {
     }
   }, [user, pendingApproval, loading, router]);
 
+  // ตรวจสอบ iOS Standalone mode
+  const isIOSStandalone =
+    typeof window !== "undefined" && window.navigator.standalone === true;
+
   async function handleGoogleLogin() {
     setError("");
     setLoginLoading(true);
 
     try {
       await loginWithGoogle();
-      // รอ AuthProvider อัพเดต state แล้useEffect จะจัดการ redirect
+      // iOS Standalone: หน้าจะ redirect ไป Google ทันที (ไม่ถึง finally)
+      // Browser ปกติ: รอ AuthProvider อัพเดต state แล้ว useEffect จะ redirect
     } catch (err) {
       console.error("Google login error:", err);
       if (err.code === "auth/popup-closed-by-user") {
@@ -43,7 +48,6 @@ export default function LoginPage() {
       } else {
         setError("เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       }
-    } finally {
       setLoginLoading(false);
     }
   }
@@ -100,7 +104,11 @@ export default function LoginPage() {
             className="apple-button mt-8 w-full inline-flex items-center justify-center gap-3"
           >
             <Chrome size={20} />
-            {loginLoading ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบด้วย Google"}
+            {loginLoading
+              ? isIOSStandalone
+                ? "กำลังเปิด Google…"
+                : "กำลังเข้าสู่ระบบ…"
+              : "เข้าสู่ระบบด้วย Google"}
           </button>
 
           <p className="mt-4 text-xs text-center text-slate-400">

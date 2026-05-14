@@ -35,8 +35,8 @@ console.log("[Firebase] Full config (check values):", {
 
 export const auth = getAuth(app);
 
-// ตั้งค่า Persistence Mode ให้ session คงอยู่แม้เปลี่ยนหน้า
-setPersistence(auth, browserLocalPersistence)
+// ตั้งค่า Persistence Mode — export promise เพื่อให้ AuthProvider await ก่อนใช้งาน
+export const authReady = setPersistence(auth, browserLocalPersistence)
   .then(() => console.log("[Firebase] Auth persistence set to LOCAL"))
   .catch((err) =>
     console.error("[Firebase] Error setting auth persistence:", err),
