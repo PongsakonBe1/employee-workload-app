@@ -32,9 +32,16 @@ export function NotificationBell() {
     const unsubscribes = [];
 
     const handleSnapshot = (snapshot) => {
-      // รวม notifications จากทุก query
-      snapshot.docs.forEach((doc) => {
-        allNotifications.set(doc.id, { id: doc.id, ...doc.data() });
+      // รวม notifications จากทุก query (เพิ่ม/ลบตาม change)
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "removed") {
+          allNotifications.delete(change.doc.id);
+        } else {
+          allNotifications.set(change.doc.id, {
+            id: change.doc.id,
+            ...change.doc.data(),
+          });
+        }
       });
 
       // แปลงเป็น array และ sort
@@ -180,18 +187,21 @@ export function NotificationBell() {
 
   async function markAsRead(id) {
     try {
-      await updateDoc(doc(db, "notifications", id), {
-        read: true,
-        readAt: new Date(),
-      });
+      // ลบออกจาก state ทันที (optimistic update)
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      await deleteDoc(doc(db, "notifications", id));
     } catch (err) {
       console.error("[Notification] Error marking as read:", err);
     }
   }
 
   async function deleteNotification(e, id) {
-    e.stopPropagation(); // ป้องกัน trigger markAsRead
+    e.stopPropagation();
     try {
+      // ลบออกจาก state ทันที (optimistic update)
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
       await deleteDoc(doc(db, "notifications", id));
     } catch (err) {
       console.error("[Notification] Error deleting:", err);
@@ -199,7 +209,18 @@ export function NotificationBell() {
   }
 
   async function markAllAsRead() {
-    // อัพเดตทั้งหมดเป็นอ่านแล้ว
+    try {
+      const toDelete = [...notifications];
+      // ลบออกจาก state ทันที
+      setNotifications([]);
+      setUnreadCount(0);
+      // ลบทุกอันจาก Firestore
+      await Promise.all(
+        toDelete.map((n) => deleteDoc(doc(db, "notifications", n.id))),
+      );
+    } catch (err) {
+      console.error("[Notification] Error marking all as read:", err);
+    }
   }
 
   if (!user) return null;

@@ -44,6 +44,18 @@ import {
   hasCommentSuggestions,
 } from "../../lib/commentSuggestions";
 
+// Normalize status: รองรับทั้งค่าเก่า (EN: completed/pending) และใหม่ (TH: บันทึกแล้ว/รอดำเนินการ)
+function normalizeStatus(status) {
+  if (!status) return "บันทึกแล้ว";
+  const map = {
+    completed: "บันทึกแล้ว",
+    pending: "รอดำเนินการ",
+    cancelled: "ยกเลิก",
+    canceled: "ยกเลิก",
+  };
+  return map[status.toLowerCase()] || status;
+}
+
 export default function WorkLogsPage() {
   const t = useTranslations();
   const { user } = useAuth();
@@ -143,20 +155,38 @@ export default function WorkLogsPage() {
     setLoading(true);
     console.log("[Worklogs] Loading... user:", user?.uid, "role:", user?.role);
     try {
+      const isStaffRole = user?.role !== "admin" && user?.role !== "superadmin";
+      const hasDateFilter = filters.from || filters.to;
       let q;
 
-      if (user?.role !== "admin" && user?.role !== "superadmin") {
-        // Staff: ใช้แค่ where ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index
-        // แล้วค่อย sort ฝั่ง client
+      if (isStaffRole) {
+        // Staff: query เฉพาะ employeeId (ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index)
+        // filter วันที่ที่ client แทน
         q = query(
           collection(db, "worklogs"),
           where("employeeId", "==", user.uid),
-          limit(100),
+          limit(500),
         );
       } else {
-        // Admin/Superadmin: ดูงานทั้งหมด ไม่ใช่แค่ของตัวเอง
-        // ใช้ client-side sort แทน orderBy เพื่อหลีกเลี่ยง composite index
-        q = query(collection(db, "worklogs"), limit(100));
+        // Admin/Superadmin: ใช้ orderBy date ได้ (ไม่มี where อื่น)
+        if (hasDateFilter) {
+          const conditions = [];
+          if (filters.from) conditions.push(where("date", ">=", filters.from));
+          if (filters.to) conditions.push(where("date", "<=", filters.to));
+          q = query(
+            collection(db, "worklogs"),
+            ...conditions,
+            orderBy("date", "desc"),
+            limit(500),
+          );
+        } else {
+          // ไม่มี filter: ดึงล่าสุด 100 รายการ ประหยัด quota
+          q = query(
+            collection(db, "worklogs"),
+            orderBy("date", "desc"),
+            limit(100),
+          );
+        }
       }
 
       const snapshot = await getDocs(q);
@@ -166,33 +196,44 @@ export default function WorkLogsPage() {
         id: doc.id,
         ...doc.data(),
       }));
-      console.log("[Worklogs] Items loaded:", items.length);
 
-      // All users: client-side sort by date (descending) ก่อน
-      // (เพราะไม่ใช้ orderBy ในหลีกเลี่ยง composite index)
+      // Client-side filter: date range สำหรับ staff (admin ใช้ Firestore where แล้ว)
+      if (isStaffRole && filters.from) {
+        items = items.filter((item) => item.date && item.date >= filters.from);
+      }
+      if (isStaffRole && filters.to) {
+        items = items.filter((item) => item.date && item.date <= filters.to);
+      }
+
+      // Client-side filter: search keyword
+      if (filters.search) {
+        const kw = filters.search.toLowerCase();
+        items = items.filter(
+          (item) =>
+            (item.employeeDisplayName || item.employeeName || "")
+              .toLowerCase()
+              .includes(kw) ||
+            (item.minorTask || "").toLowerCase().includes(kw) ||
+            (item.mainDuty || "").toLowerCase().includes(kw) ||
+            (item.recipient || "").toLowerCase().includes(kw) ||
+            (item.comment || "").toLowerCase().includes(kw),
+        );
+      }
+
+      // Sort by date+time descending (Firestore orderBy ทำแล้ว แต่ sort time ด้วย)
       items.sort((a, b) => {
         if (!a.date) return 1;
         if (!b.date) return -1;
-        return b.date.localeCompare(a.date);
+        const dateCmp = b.date.localeCompare(a.date);
+        if (dateCmp !== 0) return dateCmp;
+        return (b.time || "").localeCompare(a.time || "");
       });
 
-      // Client-side sorting ถ้าต้องการ sort ตามฟิลด์อื่น (staff only)
-      if (
-        user?.role !== "admin" &&
-        user?.role !== "superadmin" &&
-        sortConfig.key !== "date"
-      ) {
-        items.sort((a, b) => {
-          const aVal = a[sortConfig.key] || "";
-          const bVal = b[sortConfig.key] || "";
-          if (sortConfig.direction === "asc") {
-            return aVal > bVal ? 1 : -1;
-          } else {
-            return aVal < bVal ? 1 : -1;
-          }
-        });
+      if (sortConfig.direction === "asc" && sortConfig.key === "date") {
+        items.reverse();
       }
 
+      console.log("[Worklogs] Items after filter:", items.length);
       setData({ items, total: items.length, page, pages: 1 });
     } catch (err) {
       console.error("[Worklogs] Error loading:", err);
@@ -203,14 +244,14 @@ export default function WorkLogsPage() {
   }
 
   useEffect(() => {
-    load(1);
+    if (user) load(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
-  const submit = useCallback((event) => {
+  function submit(event) {
     event.preventDefault();
     load(1);
-  }, []);
+  }
 
   // Sort functions - memoized
   const handleSort = useCallback((key) => {
@@ -279,6 +320,7 @@ export default function WorkLogsPage() {
       minorTask: item.minorTask || "",
       mainDuty: item.mainDuty || "",
       comment: item.comment || "",
+      status: item.status || "บันทึกแล้ว",
     });
     setActionError("");
   }
@@ -817,14 +859,17 @@ export default function WorkLogsPage() {
                         </td>
                         <td className="whitespace-nowrap px-5 py-4">
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                              item.status === "ล็อกแล้ว" ||
-                              item.status === "locked"
-                                ? "bg-slate-200 text-slate-600"
-                                : "bg-slate-100 text-slate-700"
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                              normalizeStatus(item.status) === "บันทึกแล้ว"
+                                ? "bg-green-50 text-green-700"
+                                : normalizeStatus(item.status) === "รอดำเนินการ"
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : normalizeStatus(item.status) === "ยกเลิก"
+                                    ? "bg-red-50 text-red-600"
+                                    : "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            {item.status}
+                            {normalizeStatus(item.status)}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-5 py-4">
@@ -1058,14 +1103,16 @@ const WorkLogRow = memo(function WorkLogRow({
       <td className="px-5 py-4">
         <span
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-            item.status === "บันทึกแล้ว"
+            normalizeStatus(item.status) === "บันทึกแล้ว"
               ? "bg-green-50 text-green-700"
-              : item.status === "รอดำเนินการ"
+              : normalizeStatus(item.status) === "รอดำเนินการ"
                 ? "bg-yellow-50 text-yellow-700"
-                : "bg-slate-50 text-slate-600"
+                : normalizeStatus(item.status) === "ยกเลิก"
+                  ? "bg-red-50 text-red-600"
+                  : "bg-slate-50 text-slate-600"
           }`}
         >
-          {item.status}
+          {normalizeStatus(item.status)}
         </span>
       </td>
       <td className="px-5 py-4">

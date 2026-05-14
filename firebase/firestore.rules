@@ -28,6 +28,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    function isStaff() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff';
+    }
+    
     function isWorkLogOwner(worklog) {
       return isAuthenticated() && 
         (worklog.employeeId == request.auth.uid || 
@@ -165,8 +171,8 @@ service cloud.firestore {
       allow update: if isAuthenticated() &&
         (resource.data.userId == request.auth.uid || 
          resource.data.userId == "all" ||
-         resource.data.userId == "staff" && isStaff() ||
-         resource.data.userId == "admin" && isAdmin() ||
+         (resource.data.userId == "staff" && isStaff()) ||
+         (resource.data.userId == "admin" && isAdmin()) ||
          isSuperAdmin()) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
       
@@ -174,8 +180,8 @@ service cloud.firestore {
       allow delete: if isAuthenticated() &&
         (resource.data.userId == request.auth.uid || 
          resource.data.userId == "all" ||
-         resource.data.userId == "staff" && isStaff() ||
-         resource.data.userId == "admin" && isAdmin() ||
+         (resource.data.userId == "staff" && isStaff()) ||
+         (resource.data.userId == "admin" && isAdmin()) ||
          isSuperAdmin());
     }
 

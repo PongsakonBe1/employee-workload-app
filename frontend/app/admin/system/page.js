@@ -16,6 +16,18 @@ import {
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { NotificationBell } from "../../../components/NotificationBell";
+import {
+  CheckCircle,
+  XCircle,
+  Download,
+  Clock,
+  FileSpreadsheet,
+  User,
+  Calendar,
+  RefreshCw,
+  Upload,
+  AlertCircle,
+} from "lucide-react";
 
 // Helper function สำหรับบันทึก log
 async function logSystemAction(db, user, action, details = "") {
@@ -39,16 +51,6 @@ function getEmailPrefix(email) {
   if (!email) return "";
   return email.split("@")[0];
 }
-import {
-  CheckCircle,
-  XCircle,
-  Download,
-  Clock,
-  FileSpreadsheet,
-  User,
-  Calendar,
-  RefreshCw,
-} from "lucide-react";
 
 export default function SystemManagementPage() {
   const { user } = useAuth();
@@ -72,6 +74,13 @@ export default function SystemManagementPage() {
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [broadcastTarget, setBroadcastTarget] = useState("all"); // "all" | "staff" | "admin"
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
+
+  // Import worklogs states (superadmin only)
+  const [importText, setImportText] = useState("");
+  const [importPreview, setImportPreview] = useState([]);
+  const [importError, setImportError] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
 
   const isSuperAdmin = user?.role === "superadmin";
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
@@ -430,6 +439,155 @@ export default function SystemManagementPage() {
     }
   }
 
+  // Parse import data จาก tab-separated text
+  function parseImportData(text) {
+    setImportError("");
+    setImportResult(null);
+    if (!text.trim()) {
+      setImportPreview([]);
+      return;
+    }
+
+    const lines = text
+      .trim()
+      .split("\n")
+      .filter((l) => l.trim());
+    const parsed = [];
+    const errors = [];
+
+    lines.forEach((line, i) => {
+      // แยกด้วย tab หรือหลาย space
+      const cols = line.split(/\t/).map((c) => c.trim());
+      // format: date, time, displayName, recipient(optional), minorTask, mainDuty, comment(optional)
+      if (cols.length < 5) {
+        errors.push(`แถว ${i + 1}: ข้อมูลไม่ครบ (ต้องการอย่างน้อย 5 คอลัมน์)`);
+        return;
+      }
+
+      const [
+        dateRaw,
+        time,
+        displayName,
+        recipient,
+        minorTask,
+        mainDuty,
+        comment,
+      ] = cols;
+
+      // แปลงวันที่ dd/m/yyyy หรือ d/m/yyyy -> yyyy-mm-dd
+      let date = "";
+      if (dateRaw) {
+        const parts = dateRaw.split("/");
+        if (parts.length === 3) {
+          const d = parts[0].padStart(2, "0");
+          const m = parts[1].padStart(2, "0");
+          const y = parts[2];
+          date = `${y}-${m}-${d}`;
+        } else {
+          date = dateRaw;
+        }
+      }
+
+      if (!date || !displayName) {
+        errors.push(`แถว ${i + 1}: ไม่มีวันที่หรือชื่อพนักงาน`);
+        return;
+      }
+
+      parsed.push({
+        date,
+        time: time || "",
+        employeeDisplayName: displayName,
+        employeeName: displayName,
+        employeeId: "", // จะหาจาก displayName
+        recipient: recipient || "",
+        minorTask: minorTask || "",
+        mainDuty: mainDuty || "",
+        comment: comment || "",
+      });
+    });
+
+    if (errors.length > 0) {
+      setImportError(errors.join("\n"));
+    }
+    setImportPreview(parsed);
+    return parsed;
+  }
+
+  // นำเข้า worklogs จาก parsed data
+  async function importWorklogs() {
+    if (importPreview.length === 0) {
+      setImportError("ไม่มีข้อมูลที่จะนำเข้า");
+      return;
+    }
+
+    setImporting(true);
+    setImportResult(null);
+    setImportError("");
+
+    try {
+      // โหลด users เพื่อ map displayName -> uid
+      const usersSnap = await getDocs(
+        query(collection(db, "users"), limit(200)),
+      );
+      const usersMap = {};
+      usersSnap.docs.forEach((d) => {
+        const u = d.data();
+        const name = u.displayName || u.nickname || u.fullName;
+        if (name) usersMap[name] = d.id;
+      });
+
+      let success = 0;
+      let failed = 0;
+
+      await Promise.all(
+        importPreview.map(async (row) => {
+          try {
+            const uid = usersMap[row.employeeDisplayName] || "";
+            await addDoc(collection(db, "worklogs"), {
+              date: row.date,
+              time: row.time,
+              employeeId: uid,
+              employeeDisplayName: row.employeeDisplayName,
+              employeeName: row.employeeDisplayName,
+              recipient: row.recipient,
+              minorTask: row.minorTask,
+              mainDuty: row.mainDuty,
+              comment: row.comment || "",
+              status: "บันทึกแล้ว",
+              createdAt: new Date(),
+              createdBy: user.uid,
+              createdByName: user.displayName || user.email,
+              source: "import",
+            });
+            success++;
+          } catch {
+            failed++;
+          }
+        }),
+      );
+
+      await logSystemAction(
+        db,
+        user,
+        "IMPORT_WORKLOGS",
+        `Imported ${success} worklog records`,
+      );
+
+      setImportResult({ success, failed });
+      setImportText("");
+      setImportPreview([]);
+      setMessage({
+        type: "success",
+        text: `นำเข้าสำเร็จ ${success} รายการ${failed > 0 ? ` (ล้มเหลว ${failed} รายการ)` : ""}`,
+      });
+    } catch (err) {
+      console.error("Error importing:", err);
+      setImportError("เกิดข้อผิดพลาด: " + err.message);
+    } finally {
+      setImporting(false);
+    }
+  }
+
   if (!isAdmin) {
     return (
       <AppShell>
@@ -493,6 +651,17 @@ export default function SystemManagementPage() {
             >
               <User size={18} />
               ประกาศ
+            </button>
+            <button
+              onClick={() => setActiveTab("import")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
+                activeTab === "import"
+                  ? "bg-white text-slate-950 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Upload size={18} />
+              นำข้อมูลเข้า
             </button>
           </>
         )}
@@ -929,6 +1098,163 @@ export default function SystemManagementPage() {
                 หรือการแจ้งเตือนทั่วไป
               </li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Import Worklogs Tab */}
+      {activeTab === "import" && isSuperAdmin && (
+        <div className="space-y-6">
+          <div className="apple-panel p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
+                <Upload size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  นำข้อมูลงานเข้าระบบ
+                </h2>
+                <p className="text-sm text-slate-500">
+                  วาง tab-separated data เพื่อนำเข้าหลาย record พร้อมกัน
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm text-slate-600">
+              <p className="font-medium mb-2">
+                รูปแบบข้อมูล (แต่ละคอลัมน์คั่นด้วย Tab):
+              </p>
+              <code className="block bg-white p-3 rounded-lg text-xs font-mono border border-slate-200 whitespace-pre">
+                {`วันที่        เวลา      ชื่อ (displayName)  ผู้รับบริการ  ประเภทงาน (minorTask)  ประเภทหน้าที่ (mainDuty)  หมายเหตุ
+12/5/2026   13:47:22  เพียงธาร                           ให้บริการรับแจ้งฯ       Software ลิขสิทธิ์         Solidworks
+12/5/2026   13:47:23  พงศกร         6701021610197  ให้บริการรับแจ้งฯ       Software ลิขสิทธิ์         Solidworks`}
+              </code>
+              <p className="mt-2 text-xs text-slate-500">
+                * คอลัมน์ที่ไม่บังคับ: ผู้รับบริการ, หมายเหตุ
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                วางข้อมูลที่นี่ <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={8}
+                value={importText}
+                onChange={(e) => {
+                  setImportText(e.target.value);
+                  parseImportData(e.target.value);
+                }}
+                placeholder="วางข้อมูลจาก Excel หรือ Spreadsheet (Tab-separated)..."
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
+              />
+            </div>
+
+            {importError && (
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle
+                    size={16}
+                    className="text-red-500 mt-0.5 flex-shrink-0"
+                  />
+                  <pre className="text-xs text-red-700 whitespace-pre-wrap">
+                    {importError}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {importPreview.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">
+                  ตัวอย่างข้อมูลที่จะนำเข้า ({importPreview.length} รายการ)
+                </h3>
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                      <tr>
+                        <th className="px-3 py-2 text-left">วันที่</th>
+                        <th className="px-3 py-2 text-left">เวลา</th>
+                        <th className="px-3 py-2 text-left">ชื่อ</th>
+                        <th className="px-3 py-2 text-left">ผู้รับบริการ</th>
+                        <th className="px-3 py-2 text-left">ประเภทงาน</th>
+                        <th className="px-3 py-2 text-left">ประเภทหน้าที่</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {importPreview.slice(0, 10).map((row, i) => (
+                        <tr key={i} className="bg-white">
+                          <td className="px-3 py-2">{row.date}</td>
+                          <td className="px-3 py-2">{row.time}</td>
+                          <td className="px-3 py-2 font-medium">
+                            {row.employeeDisplayName}
+                          </td>
+                          <td className="px-3 py-2 text-slate-500">
+                            {row.recipient || "-"}
+                          </td>
+                          <td className="px-3 py-2">{row.minorTask}</td>
+                          <td className="px-3 py-2">{row.mainDuty}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {importPreview.length > 10 && (
+                    <p className="text-xs text-slate-500 p-2 text-center">
+                      ...และอีก {importPreview.length - 10} รายการ
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={importWorklogs}
+                disabled={importing || importPreview.length === 0}
+                className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {importing ? (
+                  <>
+                    <RefreshCw size={18} className="animate-spin" />
+                    กำลังนำเข้า...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    นำเข้า{" "}
+                    {importPreview.length > 0
+                      ? `(${importPreview.length} รายการ)`
+                      : ""}
+                  </>
+                )}
+              </button>
+              {importPreview.length > 0 && (
+                <button
+                  onClick={() => {
+                    setImportText("");
+                    setImportPreview([]);
+                    setImportError("");
+                    setImportResult(null);
+                  }}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition text-sm"
+                >
+                  ล้าง
+                </button>
+              )}
+            </div>
+
+            {importResult && (
+              <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={18} className="text-emerald-600" />
+                  <span className="text-sm font-medium text-emerald-800">
+                    นำเข้าเสร็จสิ้น: สำเร็จ {importResult.success} รายการ
+                    {importResult.failed > 0 &&
+                      `, ล้มเหลว ${importResult.failed} รายการ`}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -535,7 +535,7 @@ export default function AdminUsersPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
                 <tr>
-                  <th className="px-5 py-4">ชื่อเล่น</th>
+                  <th className="px-5 py-4">ชื่อที่ใช้ลงงาน</th>
                   <th className="px-5 py-4">ชื่อเต็ม</th>
                   <th className="px-5 py-4">อีเมล</th>
                   <th className="px-5 py-4">สิทธิ์</th>
@@ -547,7 +547,21 @@ export default function AdminUsersPage() {
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="bg-white/45">
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
-                      {u.displayName || u.nickname || "-"}
+                      <div>
+                        <div>{u.displayName || u.nickname || "-"}</div>
+                        {u.displayName &&
+                          u.nickname &&
+                          u.displayName !== u.nickname && (
+                            <div className="text-xs text-slate-400">
+                              {u.nickname}
+                            </div>
+                          )}
+                        {!u.displayName && (
+                          <div className="text-xs text-amber-500">
+                            ยังไม่ได้ตั้งชื่อลงงาน
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-slate-700">
                       {u.fullName || "-"}

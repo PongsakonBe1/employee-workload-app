@@ -226,10 +226,19 @@ export default function DashboardPage() {
       let q;
       const constraints = [];
 
+      // หา displayName ของ selectedEmployee เพื่อใช้ match worklogs เก่า
+      let selectedDisplayName = null;
+      if (isAdmin && selectedEmployee !== "all") {
+        const sel = staffList.find((s) => s.id === selectedEmployee);
+        selectedDisplayName =
+          sel?.displayName || sel?.nickname || sel?.fullName || null;
+      }
+
       // Role-based filtering
       if (!isAdmin) {
         constraints.push(where("employeeId", "==", user.uid));
       } else if (selectedEmployee !== "all") {
+        // ใช้ employeeId == uid สำหรับ worklogs ใหม่
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
 
@@ -241,10 +250,9 @@ export default function DashboardPage() {
       let hasMoreThanLimit = false;
 
       if (!showAllData) {
-        // Query up to 1000 records to get accurate count (for both dateRange and all time)
+        // Query up to 1000 records
         let countQuery;
         if (dateRange) {
-          // With date range filter
           countQuery = query(
             worklogsRef,
             ...constraints,
@@ -253,19 +261,57 @@ export default function DashboardPage() {
             limit(1000),
           );
         } else {
-          // All time - just query with constraints and limit
           countQuery = query(worklogsRef, ...constraints, limit(1000));
         }
 
         const countSnapshot = await getDocs(countQuery);
-        totalInRange = countSnapshot.size;
+        let docsById = new Map(
+          countSnapshot.docs.map((d) => [d.id, { id: d.id, ...d.data() }]),
+        );
 
-        // If we got exactly 1000, there might be more records
-        hasMoreThanLimit = totalInRange >= 1000;
-        allWorklogsInRange = countSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        // ถ้า filter รายบุคคล: query เพิ่มด้วย employeeDisplayName/employeeName == displayName
+        // เพื่อดึง worklogs เก่าที่บันทึกชื่อแทน uid (ไม่ใช้ where date เพื่อหลีกเลี่ยง composite index)
+        if (isAdmin && selectedEmployee !== "all" && selectedDisplayName) {
+          const nameSnapshots = await Promise.all([
+            getDocs(
+              query(
+                worklogsRef,
+                where("employeeDisplayName", "==", selectedDisplayName),
+                limit(500),
+              ),
+            ),
+            getDocs(
+              query(
+                worklogsRef,
+                where("employeeName", "==", selectedDisplayName),
+                limit(500),
+              ),
+            ),
+          ]);
+          nameSnapshots.forEach((snap) => {
+            snap.docs.forEach((d) => {
+              if (!docsById.has(d.id)) {
+                docsById.set(d.id, { id: d.id, ...d.data() });
+              }
+            });
+          });
+          // filter date ที่ client หลัง merge
+          if (dateRange) {
+            for (const [id, doc] of docsById) {
+              if (
+                !doc.date ||
+                doc.date < dateRange.start ||
+                doc.date > dateRange.end
+              ) {
+                docsById.delete(id);
+              }
+            }
+          }
+        }
+
+        allWorklogsInRange = Array.from(docsById.values());
+        totalInRange = allWorklogsInRange.length;
+        hasMoreThanLimit = countSnapshot.size >= 1000;
 
         if (dateRange) {
           console.log(
@@ -293,10 +339,37 @@ export default function DashboardPage() {
         q = query(worklogsRef, ...constraints, limit(dataLimit));
 
         const snapshot = await getDocs(q);
-        worklogs = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        let docsById = new Map(
+          snapshot.docs.map((d) => [d.id, { id: d.id, ...d.data() }]),
+        );
+
+        // merge worklogs เก่าที่ใช้ชื่อ
+        if (isAdmin && selectedEmployee !== "all" && selectedDisplayName) {
+          const nameSnapshots = await Promise.all([
+            getDocs(
+              query(
+                worklogsRef,
+                where("employeeDisplayName", "==", selectedDisplayName),
+                limit(500),
+              ),
+            ),
+            getDocs(
+              query(
+                worklogsRef,
+                where("employeeName", "==", selectedDisplayName),
+                limit(500),
+              ),
+            ),
+          ]);
+          nameSnapshots.forEach((snap) => {
+            snap.docs.forEach((d) => {
+              if (!docsById.has(d.id))
+                docsById.set(d.id, { id: d.id, ...d.data() });
+            });
+          });
+        }
+
+        worklogs = Array.from(docsById.values());
 
         // Client-side sort
         worklogs.sort((a, b) => {
