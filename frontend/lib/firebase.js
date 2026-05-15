@@ -5,7 +5,7 @@ import {
   setPersistence,
   browserLocalPersistence,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 // ⚠️ DISABLED: No Firebase Functions to save quota
 // import { getFunctions } from "firebase/functions";
 
@@ -42,7 +42,9 @@ export const authReady = setPersistence(auth, browserLocalPersistence)
     console.error("[Firebase] Error setting auth persistence:", err),
   );
 
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: memoryLocalCache(),
+});
 // ⚠️ DISABLED: Functions not used
 // export const functions = getFunctions(app);
 export const googleProvider = new GoogleAuthProvider();
