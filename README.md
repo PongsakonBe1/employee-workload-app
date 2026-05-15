@@ -1,183 +1,134 @@
 # ICIT Employee Workload Recorder
 
-A full-stack workload recording web application built from the provided Excel workbook.
+ระบบบันทึกปริมาณงานสำหรับเจ้าหน้าที่เทคนิค ICIT — สร้างด้วย Next.js + Firebase
 
-- **Frontend:** Next.js + Tailwind CSS, Apple.com-style glass cards and quiet gradients
-- **Backend:** Node.js + Express
-- **Database:** MongoDB via Mongoose
-- **Auth:** simple username/password JWT login now; replaceable with ICIT/SSO later
-- **Export:** annual fiscal-year CSV export with UTF-8 BOM for Thai text in Excel
+**Live:** https://labboy-workload-app.web.app
 
-## Data imported from Excel
+## Stack
 
-Seed files were generated from:
+| Layer    | Technology                                            |
+| -------- | ----------------------------------------------------- |
+| Frontend | Next.js 15 (App Router, Static Export) + Tailwind CSS |
+| Database | Firebase Firestore                                    |
+| Auth     | Firebase Authentication (Google OAuth)                |
+| Hosting  | Firebase Hosting                                      |
+| i18n     | next-intl (Thai default)                              |
 
-`แบบบันทึกปริมาณงานช่างเทคนิค.xlsx`
+## Features
 
-Imported:
+### Staff
 
-- `Main` sheet: **2,099** workload rows
-- `Member` sheet: staff seed users
-- `DataList` sheet: duty groups, main duties, and minor-task dropdowns
+- บันทึกงานรายวัน (วันที่, เวลา, ผู้รับบริการ, หัวข้อหลัก/รอง, รายละเอียด)
+- ดูประวัติงานของตัวเอง
+- แก้ไขงานได้ภายในวันที่บันทึก
 
-> Note: the workbook contains **9 names** in `Member`, while the requirement says there are **8 people** in this position. The seed keeps all 9 names to avoid losing existing records. Remove or deactivate one user in `backend/src/data/seedMembers.json` if needed.
+### Admin
 
-## Fiscal year rule
+- ดูประวัติงานของพนักงานทุกคน แก้ไข/ลบได้
+- Dashboard สรุปปริมาณงานรายเดือน/ปีงบประมาณ
+- ส่งออก CSV รายงานปีงบประมาณ (UTF-8 BOM รองรับ Excel ภาษาไทย)
+- จัดการผู้ใช้งาน อนุมัติ/ปฏิเสธ user ใหม่
+- ระบบแจ้งเตือน (Notification Bell)
+- ส่งประกาศหาพนักงานทุกคนหรือรายกลุ่ม
 
-The Thai fiscal year is treated as:
+### Superadmin
 
-- FY 2569 / FY 2026 = `2025-10-01` through `2026-09-30`
-- API uses an exclusive end date internally: `2026-10-01`
+- ทุกสิทธิ์ของ Admin
+- นำเข้าข้อมูล worklogs แบบ bulk (tab-separated paste)
+- จัดการระบบ, ดู audit logs, ส่งออก system logs
 
-Both Buddhist Era years (`2569`) and Gregorian years (`2026`) are accepted.
+## Worklog Status
 
-## Quick start
+| ค่าในฐานข้อมูล             | แสดงผล         | หมายเหตุ                        |
+| -------------------------- | -------------- | ------------------------------- |
+| `บันทึกแล้ว` / `completed` | 🟢 บันทึกแล้ว  | default สำหรับงานใหม่และ import |
+| `รอดำเนินการ` / `pending`  | 🟡 รอดำเนินการ | งานที่ยังค้างอยู่               |
+| `ยกเลิก` / `cancelled`     | 🔴 ยกเลิก      | งานที่ยกเลิก                    |
 
-### 1) Start MongoDB
+> ระบบ normalize ค่าภาษาอังกฤษจาก import เก่าให้เป็นภาษาไทยอัตโนมัติ
 
-```bash
-docker compose up -d mongo
-```
+## User Roles
 
-### 2) Backend
+| Role         | สิทธิ์                                     |
+| ------------ | ------------------------------------------ |
+| `staff`      | บันทึก/ดูงานของตัวเอง                      |
+| `admin`      | ดู/แก้ไข/ลบงานทุกคน + dashboard + export   |
+| `superadmin` | ทุกอย่าง + bulk import + system management |
 
-```bash
-cd backend
-cp .env.example .env
-npm install
-npm run seed
-npm run dev
-```
-
-Backend runs at:
-
-```text
-http://localhost:4000
-```
-
-### 3) Frontend
+## Quick Start (Local Development)
 
 ```bash
 cd frontend
 cp .env.example .env.local
+# ใส่ Firebase config ใน .env.local
 npm install
 npm run dev
 ```
 
-Frontend runs at:
+เปิดที่ `http://localhost:3000`
 
-```text
-http://localhost:3000
+### Environment Variables
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
-## Demo accounts
+## Build & Deploy
 
-After seeding:
+```bash
+# Build static export
+cd frontend
+npm run build
 
-| Username | Password | Role |
-|---|---|---|
-| `admin` | `admin1234` | admin |
-| `พงศกร` | `icit1234` | staff |
-| any staff nickname from the Member sheet | `icit1234` | staff |
-
-## Core workflow
-
-1. Employee logs in using their simple ICIT-style username and password.
-2. Employee records workload from the form.
-3. The app stores:
-   - date
-   - time
-   - employee
-   - recipient / requester
-   - duty group
-   - main duty
-   - minor task
-   - comment
-   - status
-4. Employee can view their own records.
-5. Admin can view all records, dashboard summaries, and export fiscal-year CSV.
-
-## Main duty mapping
-
-From `DataList`:
-
-### Main Duties
-
-- ดูแลห้องบริการคอมพิวเตอร์
-- ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ
-- คุมสอบ DL
-
-### Secondary Duties
-
-- สนับสนุนการทำงานของสำนักคอมพิวเตอร์(ฝ่ายอื่นๆ)
-
-### Other Tasks
-
-- ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย
-
-### Minor Tasks
-
-Minor tasks from the Excel sheet are stored as `minorTask`.
-This is the best mapping for items such as:
-
-- Assist with computer usage
-- Troubleshoot printers and computers
-- Borrow headphones
-- Return headphones
-- ICIT account
-- Microsoft Authenticator
-- Gmail
-- Wifi
-- Microsoft 365
-- Printing top-up
-- Open/close classroom
-- Install Windows
-- Install software
-- Borrow/return power outlet
-
-## API summary
-
-### Auth
-
-```http
-POST /api/auth/login
-GET /api/auth/me
+# Deploy to Firebase Hosting
+cd ../firebase
+firebase deploy --only hosting
 ```
 
-### Worklogs
+## Fiscal Year
 
-```http
-GET    /api/worklogs
-POST   /api/worklogs
-GET    /api/worklogs/:id
-PUT    /api/worklogs/:id
-DELETE /api/worklogs/:id
+ปีงบประมาณไทย: 1 ตุลาคม — 30 กันยายน
+
+- FY 2569 / FY 2026 = `2025-10-01` ถึง `2026-09-30`
+
+## PWA Support
+
+รองรับ Add to Home Screen บน iOS และ Android:
+
+- `manifest.json` พร้อม icon และ `display: standalone`
+- iOS Standalone: ใช้ `signInWithRedirect` แทน `signInWithPopup` อัตโนมัติ
+
+## Project Structure
+
+```
+employee-workload-app/
+├── frontend/               # Next.js app
+│   ├── app/                # Pages (App Router)
+│   │   ├── login/
+│   │   ├── dashboard/
+│   │   ├── worklogs/
+│   │   ├── admin/
+│   │   └── export/
+│   ├── components/         # Shared components
+│   ├── lib/                # Firebase, systemLog, utils
+│   ├── messages/           # i18n (th.json, en.json)
+│   └── public/             # Static assets + manifest.json
+└── firebase/
+    ├── firestore.rules     # Security rules
+    ├── firebase.json       # Hosting config
+    └── seed-data/          # Import scripts
 ```
 
-### Categories
+## Changelog
 
-```http
-GET /api/categories
-```
-
-### Dashboard
-
-```http
-GET /api/stats/summary?fiscalYear=2569
-```
-
-### CSV export
-
-```http
-GET /api/export/fiscal-year/2569.csv
-```
-
-Admin exports all records. Staff exports only their own records.
-
-## Production notes
-
-- Replace `JWT_SECRET` in `.env`.
-- Use HTTPS in production.
-- Add ICIT SSO/OAuth in `backend/src/routes/auth.js`.
-- Add server-side role management before live use.
-- Use MongoDB Atlas or a managed MongoDB service for deployment.
+| Version | Changes                                                                 |
+| ------- | ----------------------------------------------------------------------- |
+| v1.2.0  | iOS Standalone PWA fix (signInWithRedirect + manifest.json)             |
+| v1.1.1  | Fix worklog status normalization (EN→TH), fix dashboard employee filter |
+| v1.1.0  | Bulk import worklogs, fix notifications, fix Firestore rules isStaff()  |
+| v1.0.0  | Initial release                                                         |

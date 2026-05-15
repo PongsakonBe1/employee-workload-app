@@ -1,8 +1,5 @@
-fix: v1.2.0 - iOS Standalone PWA auth fix
+fix: v1.2.1 - fix worklogs history showing stale data
 
-- Fix loading hang on iOS Add to Home Screen (Standalone mode)
-- Use signInWithRedirect instead of signInWithPopup on iOS Standalone
-- Await authReady (setPersistence) before subscribing onAuthStateChanged
-- Handle getRedirectResult on app init for redirect flow
-- Add PWA manifest.json with icons and display standalone
-- Add apple-mobile-web-app-capable and theme-color meta tags via Next.js metadata
+- Change admin/superadmin default query from orderBy(date) limit(100)
+  to orderBy(createdAt) limit(500) so imported worklogs appear correctly
+- Update README to reflect current Firebase/Next.js stack
