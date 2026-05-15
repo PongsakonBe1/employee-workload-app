@@ -1,4 +1,5 @@
-fix: v1.2.2 - revert createdAt orderBy, keep orderBy date limit 500
+fix: v1.2.3 - fix Firebase Hosting cache headers and routing
 
-Previous build was not deployed — production was still serving limit(100).
-Reverted orderBy(createdAt) back to orderBy(date) to avoid missing index error.
+- Add Cache-Control headers: JS chunks immutable, HTML no-cache
+- Add cleanUrls and trailingSlash:false for correct Next.js static routing
+- Prevents stale JS from being served after deploy
