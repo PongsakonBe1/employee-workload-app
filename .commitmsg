@@ -1,5 +1,4 @@
-fix: v1.2.3 - fix Firebase Hosting cache headers and routing
+fix: v1.2.4 - force clean build to refresh worklogs chunk hash
 
-- Add Cache-Control headers: JS chunks immutable, HTML no-cache
-- Add cleanUrls and trailingSlash:false for correct Next.js static routing
-- Prevents stale JS from being served after deploy
+Clear .next and out cache before build so worklogs page-*.js
+gets new hash and browser loads updated limit(500) code.
