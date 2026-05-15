@@ -1,5 +1,4 @@
-fix: v1.2.1 - fix worklogs history showing stale data
+fix: v1.2.2 - revert createdAt orderBy, keep orderBy date limit 500
 
-- Change admin/superadmin default query from orderBy(date) limit(100)
-  to orderBy(createdAt) limit(500) so imported worklogs appear correctly
-- Update README to reflect current Firebase/Next.js stack
+Previous build was not deployed — production was still serving limit(100).
+Reverted orderBy(createdAt) back to orderBy(date) to avoid missing index error.

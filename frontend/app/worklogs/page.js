@@ -180,12 +180,10 @@ export default function WorkLogsPage() {
             limit(500),
           );
         } else {
-          // ไม่มี filter: ดึงล่าสุด 500 รายการ เรียงตาม createdAt
-          // ใช้ createdAt แทน date เพื่อให้ได้งาน import ล่าสุดด้วย
-          // (บาง doc อาจไม่มี date แต่มี createdAt เสมอ)
+          // ไม่มี filter: ดึงล่าสุด 500 รายการ เรียงตาม date
           q = query(
             collection(db, "worklogs"),
-            orderBy("createdAt", "desc"),
+            orderBy("date", "desc"),
             limit(500),
           );
         }
