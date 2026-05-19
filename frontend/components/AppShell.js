@@ -1,11 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
-  BarChart3,
+  LayoutGrid,
   Download,
   ListChecks,
   LogOut,
@@ -26,7 +27,7 @@ const getNav = (t, role) => {
   const isStaff = role === "staff";
 
   const items = [
-    { href: "/dashboard", label: t("navigation.dashboard"), icon: BarChart3 },
+    { href: "/dashboard", label: t("navigation.dashboard"), icon: LayoutGrid },
     { href: "/worklogs", label: t("navigation.worklogs"), icon: ListChecks },
     { href: "/export", label: t("navigation.export"), icon: Download },
     { href: "/profile", label: "โปรไฟล์", icon: User },
@@ -66,17 +67,26 @@ export function AppShell({ children }) {
   const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
 
+  // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
     if (!loading) {
+      console.log("[AppShell] Auth ready:", { pathname, user: user?.email, pendingApproval });
+      
       if (pendingApproval && pathname !== "/pending") {
         // ถ้ารออนุมัติ ให้ไปหน้า pending
+        console.log("[AppShell] Redirecting to pending...");
         router.replace("/pending");
       } else if (!user && !pendingApproval) {
         // ถ้าไม่มี user และไม่ได้ pending ให้ไป login
         // แต่ถ้าอยู่ในหน้า admin ให้รอสักครู่ก่อน redirect (อาจกำลังโหลด)
         const isAdminPage = pathname?.startsWith("/admin");
-        if (!isAdminPage) {
+        const isLoginPage = pathname === "/login";
+        
+        if (!isAdminPage && !isLoginPage) {
+          console.log("[AppShell] No user, redirecting to login...");
           router.replace("/login");
+        } else if (isLoginPage) {
+          console.log("[AppShell] Already on login page, no redirect");
         } else {
           console.log("[AppShell] On admin page without user, waiting...");
         }
@@ -97,8 +107,8 @@ export function AppShell({ children }) {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="apple-panel px-8 py-6 text-sm font-medium text-slate-600">
+      <main className="flex items-center justify-center min-h-screen">
+        <div className="px-8 py-6 text-sm font-medium apple-panel text-slate-600">
           {t("common.loading")}
         </div>
       </main>
@@ -115,9 +125,9 @@ export function AppShell({ children }) {
       {user?.role === "staff" &&
         !user?.displayName &&
         pathname !== "/profile" && (
-          <div className="mx-auto mb-4 max-w-7xl rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center justify-between px-5 py-3 mx-auto mb-4 border max-w-7xl rounded-2xl bg-amber-50 border-amber-200">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-white">
+              <div className="flex items-center justify-center w-8 h-8 text-white rounded-xl bg-amber-500">
                 <User size={18} />
               </div>
               <div>
@@ -132,7 +142,7 @@ export function AppShell({ children }) {
             </div>
             <Link
               href="/profile"
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
+              className="px-4 py-2 text-sm font-medium text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
             >
               ไปตั้งชื่อ →
             </Link>
@@ -141,8 +151,8 @@ export function AppShell({ children }) {
 
       <header className="relative z-50 mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
-            <BarChart3 size={22} />
+          <div className="flex items-center justify-center w-10 h-10 overflow-hidden text-white rounded-2xl bg-slate-950">
+            <Image src="/labboy-logo.png" alt="labboy logo" width={32} height={32} className="object-contain" />
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-950">
@@ -154,7 +164,7 @@ export function AppShell({ children }) {
           </div>
         </Link>
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="items-center hidden gap-2 lg:flex">
           {getNav(t, user?.role).map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -183,12 +193,12 @@ export function AppShell({ children }) {
           {(user?.role === "admin" || user?.role === "superadmin") && (
             <Link
               href="/admin/system"
-              className="rounded-full border border-slate-200 bg-white/80 p-3 text-slate-600 transition hover:text-slate-950 relative group"
+              className="relative p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 group"
               title="จัดการระบบ"
             >
               <Settings size={18} />
               {/* Tooltip */}
-              <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap">
+              <span className="absolute px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded opacity-0 pointer-events-none top-full left-1/2 bg-slate-800 group-hover:opacity-100 whitespace-nowrap">
                 จัดการระบบ
               </span>
             </Link>
@@ -201,7 +211,7 @@ export function AppShell({ children }) {
           </div>
           <button
             onClick={logout}
-            className="rounded-full border border-slate-200 bg-white/80 p-3 text-slate-600 transition hover:text-slate-950"
+            className="p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950"
             title={t("navigation.logout")}
           >
             <LogOut size={18} />
@@ -209,7 +219,7 @@ export function AppShell({ children }) {
         </div>
       </header>
 
-      <nav className="mx-auto mb-6 grid max-w-7xl grid-cols-2 gap-2 lg:hidden">
+      <nav className="grid grid-cols-2 gap-2 mx-auto mb-6 max-w-7xl lg:hidden">
         {getNav(t, user?.role).map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;

@@ -10,7 +10,12 @@
     "seed": "npm run seed --workspace backend",
     "lint": "npm run lint --workspace frontend",
     "start:backend": "npm start --workspace backend",
-    "start:frontend": "npm start --workspace frontend"
+    "start:frontend": "npm start --workspace frontend",
+    "pre-build-check": "node pre-build-check.js",
+    "copy-env": "copy frontend\\.env.production frontend\\.env.local /y",
+    "test:gray-box": "npm run pre-build-check && npm run copy-env && cd frontend && npx playwright test --project=chromium",
+    "build:prod": "npm run pre-build-check && npm run copy-env && cd frontend && npm run build",
+    "deploy:firebase": "cd firebase && firebase deploy --only hosting"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

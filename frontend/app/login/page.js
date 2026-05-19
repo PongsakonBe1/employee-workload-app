@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ShieldCheck, Chrome, BarChart3 } from "lucide-react";
+import { ShieldCheck, Chrome } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
 
 export default function LoginPage() {
@@ -12,9 +13,13 @@ export default function LoginPage() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   // ถ้า login แล้ว ให้ redirect ตาม role
+  // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
     if (!loading) {
+      console.log("[Login] Auth state ready:", { user: user?.email, pendingApproval });
+      
       if (user) {
+        console.log("[Login] User logged in, redirecting...");
         // Admin -> dashboard, Staff -> worklogs
         if (user.role === "admin" || user.role === "superadmin") {
           router.replace("/dashboard");
@@ -22,7 +27,10 @@ export default function LoginPage() {
           router.replace("/worklogs/new");
         }
       } else if (pendingApproval) {
+        console.log("[Login] Pending approval, redirecting...");
         router.replace("/pending");
+      } else {
+        console.log("[Login] No user, staying on login page");
       }
     }
   }, [user, pendingApproval, loading, router]);
@@ -57,7 +65,7 @@ export default function LoginPage() {
       <section className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="apple-panel overflow-hidden p-8 sm:p-12">
           <div className="mb-10 inline-flex items-center gap-3 rounded-full bg-slate-950 px-4 py-2 text-white">
-            <BarChart3 size={20} />
+            <Image src="/labboy-logo.png" alt="labboy logo" width={24} height={24} className="object-contain" />
             <span className="text-sm font-semibold">Workload Recorder</span>
           </div>
 

@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icit-logo.png",
+      "src": "/labboy-logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icit-logo.png",
+      "src": "/labboy-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
