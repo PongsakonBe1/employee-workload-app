@@ -78,10 +78,31 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
+## Testing
+
+ใช้ [Playwright](https://playwright.dev) สำหรับ Gray Box Testing:
+
+```bash
+cd frontend
+npx playwright test                          # run ทุก tests
+npx playwright test --project=chromium      # เฉพาะ Chrome
+npx playwright test --project="Mobile Chrome"  # Android viewport
+npx playwright test --project="Mobile Safari"  # iOS viewport
+```
+
+Tests ครอบคลุม:
+
+- Login page โหลดถูกต้องบน mobile viewport
+- Logo แสดงผลถูกต้อง
+- Favicon `<link>` tag ถูก inject ใน `<head>`
+- PWA manifest เข้าถึงได้และ valid
+- ไม่มี redirect loop ตอน unauthenticated
+- `matchMedia(display-mode: standalone)` ทำงานบน browser
+
 ## Build & Deploy
 
 ```bash
-# Build static export
+# Build static export + copy ไป firebase/out อัตโนมัติ
 cd frontend
 npm run build
 
