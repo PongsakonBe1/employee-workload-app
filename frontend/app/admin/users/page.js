@@ -30,6 +30,25 @@ import {
   limit,
 } from "firebase/firestore";
 
+function sanitizePhotoURL(url) {
+  if (!url || typeof url !== "string") return null;
+  try {
+    const parsed = new URL(url);
+    const allowed = [
+      "lh3.googleusercontent.com",
+      "lh4.googleusercontent.com",
+      "lh5.googleusercontent.com",
+      "lh6.googleusercontent.com",
+      "googleusercontent.com",
+    ];
+    if (parsed.protocol !== "https:") return null;
+    if (!allowed.some((d) => parsed.hostname.endsWith(d))) return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminUsersPage() {
   const t = useTranslations();
   const router = useRouter();
@@ -471,13 +490,15 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPending.map((u) => (
+                {filteredPending.map((u) => {
+                  const safePhoto = sanitizePhotoURL(u.photoURL);
+                  return (
                   <tr key={u.id} className="bg-white/45">
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
                       <div className="flex items-center gap-3">
-                        {u.photoURL && (
+                        {safePhoto && (
                           <img
-                            src={u.photoURL}
+                            src={safePhoto}
                             alt=""
                             className="w-8 h-8 rounded-full"
                           />
@@ -515,7 +536,8 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
