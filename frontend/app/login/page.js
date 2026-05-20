@@ -16,32 +16,23 @@ export default function LoginPage() {
   // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
     if (!loading) {
-      console.log("[Login] Auth state ready:", { user: user?.email, pendingApproval });
-      
       if (user) {
-        console.log("[Login] User logged in, redirecting...");
-        // Admin -> dashboard, Staff -> worklogs
         if (user.role === "admin" || user.role === "superadmin") {
           router.replace("/dashboard");
         } else {
           router.replace("/worklogs/new");
         }
       } else if (pendingApproval) {
-        console.log("[Login] Pending approval, redirecting...");
         router.replace("/pending");
-      } else {
-        console.log("[Login] No user, staying on login page");
       }
     }
   }, [user, pendingApproval, loading, router]);
 
-  // ตรวจสอบ PWA Standalone mode (iOS + Android)
-  const isIOSStandalone =
-    typeof window !== "undefined" && window.navigator.standalone === true;
+  // ตรวจสอบ PWA Standalone mode
   const isAndroidStandalone =
     typeof window !== "undefined" &&
-    window.matchMedia("(display-mode: standalone)").matches;
-  const isPWAStandalone = isIOSStandalone || isAndroidStandalone;
+    window.matchMedia("(display-mode: standalone)").matches &&
+    !(typeof window !== "undefined" && window.navigator.standalone === true);
 
   async function handleGoogleLogin() {
     setError("");
@@ -49,12 +40,13 @@ export default function LoginPage() {
 
     try {
       await loginWithGoogle();
-      // iOS Standalone: หน้าจะ redirect ไป Google ทันที (ไม่ถึง finally)
-      // Browser ปกติ: รอ AuthProvider อัพเดต state แล้ว useEffect จะ redirect
+      // Android PWA: หน้าจะ redirect ไป Google ทันที (ไม่ถึง finally)
+      // iOS PWA + Browser: รอ popup แล้ว AuthProvider อัพเดต state
     } catch (err) {
-      console.error("Google login error:", err);
-      if (err.code === "auth/popup-closed-by-user") {
+      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         setError("ยกเลิกการเข้าสู่ระบบ");
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Popup ถูกบล็อก กรุณาอนุญาต Popup ใน Safari แล้วลองใหม่");
       } else if (err.code === "auth/unauthorized-domain") {
         setError("โดเมนนี้ไม่ได้รับอนุญาต กรุณาติดต่อผู้ดูแลระบบ");
       } else {
@@ -117,7 +109,7 @@ export default function LoginPage() {
           >
             <Chrome size={20} />
             {loginLoading
-              ? isPWAStandalone
+              ? isAndroidStandalone
                 ? "กำลังเปิด Google…"
                 : "กำลังเข้าสู่ระบบ…"
               : "เข้าสู่ระบบด้วย Google"}

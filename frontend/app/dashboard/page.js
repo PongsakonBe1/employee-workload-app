@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Calendar, Filter, User } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { MetricCard } from "../../components/MetricCard";
 import { useAuth } from "../../components/AuthProvider";
-import {
-  WorkloadByEmployeeChart,
-  WorkloadByDutyChart,
-  DailyWorkloadTrend,
-  MinorTaskDistribution,
-} from "../../components/DashboardCharts";
 import { db } from "../../lib/firebase";
 import {
   collection,
@@ -21,6 +16,29 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
+
+const ChartLoading = () => (
+  <div className="apple-panel flex h-48 items-center justify-center text-slate-400">
+    กำลังโหลดกราฟ…
+  </div>
+);
+
+const WorkloadByEmployeeChart = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.WorkloadByEmployeeChart),
+  { ssr: false, loading: ChartLoading }
+);
+const WorkloadByDutyChart = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.WorkloadByDutyChart),
+  { ssr: false, loading: ChartLoading }
+);
+const DailyWorkloadTrend = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.DailyWorkloadTrend),
+  { ssr: false, loading: ChartLoading }
+);
+const MinorTaskDistribution = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.MinorTaskDistribution),
+  { ssr: false, loading: ChartLoading }
+);
 
 function BarList({ title, items, t }) {
   const max = Math.max(...items.map((item) => item.count), 1);
