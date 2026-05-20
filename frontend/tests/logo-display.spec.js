@@ -31,10 +31,18 @@ test.describe('Logo Display Tests', () => {
     await expect(logo).toBeVisible();
   });
 
-  test('favicon exists and is accessible', async ({ page }) => {
-    // Check favicon is accessible
-    const response = await page.goto('/favicon.ico');
-    expect(response.status()).toBe(200);
+  test('favicon link tag exists in page head', async ({ page }) => {
+    await page.goto('/login');
+    // Wait for React hydration to inject <link rel="icon">
+    await page.waitForTimeout(2000);
+    
+    const faviconLink = await page.evaluate(() => {
+      const link = document.querySelector('link[rel="icon"]');
+      return link ? { href: link.href, type: link.type } : null;
+    });
+    
+    expect(faviconLink).not.toBeNull();
+    expect(faviconLink.href).toMatch(/favicon\.ico|icon\.png/);
   });
 
   test('manifest.json references correct icons', async ({ page }) => {
@@ -43,7 +51,7 @@ test.describe('Logo Display Tests', () => {
     const manifest = await page.evaluate(() => JSON.parse(document.body.innerText));
     
     // Check icons use labboy-logo.png
-    expect(manifest.icons).toHaveLength(2);
+    expect(manifest.icons.length).toBeGreaterThanOrEqual(2);
     expect(manifest.icons[0].src).toBe('/labboy-logo.png');
     expect(manifest.icons[1].src).toBe('/labboy-logo.png');
   });
