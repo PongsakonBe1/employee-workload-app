@@ -330,14 +330,20 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithGoogle() {
-    // iOS Standalone PWA (Add to Home Screen) ไม่รองรับ signInWithPopup
-    // ต้องใช้ signInWithRedirect แทน
+    // PWA Standalone detection:
+    // - iOS Safari: window.navigator.standalone === true
+    // - Android PWA / Chrome: matchMedia('(display-mode: standalone)').matches
     const isIOSStandalone =
       typeof window !== "undefined" && window.navigator.standalone === true;
+    const isAndroidStandalone =
+      typeof window !== "undefined" &&
+      window.matchMedia("(display-mode: standalone)").matches;
+    const isPWAStandalone = isIOSStandalone || isAndroidStandalone;
 
-    if (isIOSStandalone) {
+    if (isPWAStandalone) {
       // Redirect flow — หน้าจะถูก redirect ไป Google แล้วกลับมา
       // getRedirectResult() ใน useEffect จะจัดการ result
+      console.log("[Auth] PWA standalone mode detected, using signInWithRedirect");
       await signInWithRedirect(auth, googleProvider);
       return; // ไม่ return user ทันที เพราะจะมี redirect
     }
