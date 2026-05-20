@@ -8,13 +8,12 @@ export const metadata = {
   description: "Employee workload recording system for labboy technical staff",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/labboy-logo.png",
-    other: {
-      rel: "apple-touch-icon",
-      url: "/labboy-logo.png",
-    },
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "48x48" },
+      { url: "/labboy-logo.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
+    apple: [{ url: "/labboy-logo.png", type: "image/png", sizes: "192x192" }],
   },
   appleWebApp: {
     capable: true,
@@ -39,6 +38,12 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang={locale}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" type="image/x-icon" />
+        <link rel="icon" href="/labboy-logo.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/labboy-logo.png" sizes="192x192" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+      </head>
       <body>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>{children}</AuthProvider>

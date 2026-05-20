@@ -101,7 +101,10 @@ firebase deploy --only hosting
 รองรับ Add to Home Screen บน iOS และ Android:
 
 - `manifest.json` พร้อม icon และ `display: standalone`
-- iOS Standalone: ใช้ `signInWithRedirect` แทน `signInWithPopup` อัตโนมัติ
+- iOS Standalone: detect ด้วย `window.navigator.standalone === true`
+- Android PWA Standalone: detect ด้วย `matchMedia('(display-mode: standalone)').matches`
+- ทั้ง iOS และ Android PWA: ใช้ `signInWithRedirect` แทน `signInWithPopup` อัตโนมัติ
+- Browser ปกติ: ใช้ `signInWithPopup` (popup flow)
 
 ## Project Structure
 
@@ -124,11 +127,20 @@ employee-workload-app/
     └── seed-data/          # Import scripts
 ```
 
+## Security
+
+สแกนด้วย [Snyk](https://snyk.io) ทุก release:
+
+- **Frontend deps**: ไม่มีช่องโหว่ (0 issues)
+- **Firebase Functions deps**: พบ 3 medium issues ใน transitive deps (`protobufjs`, `qs`, `uuid`) — แก้ได้ด้วย `npm update` ใน `firebase/functions`
+- **Hosting**: เพิ่ม Security Headers (`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`)
+
 ## Changelog
 
-| Version | Changes                                                                 |
-| ------- | ----------------------------------------------------------------------- |
-| v1.2.0  | iOS Standalone PWA fix (signInWithRedirect + manifest.json)             |
+| Version | Changes |
+| ------- | ------- |
+| v1.3.0  | Fix favicon บน browser tab, fix Android+iOS PWA login (signInWithRedirect), security headers |
+| v1.2.0  | iOS Standalone PWA fix (signInWithRedirect + manifest.json) |
 | v1.1.1  | Fix worklog status normalization (EN→TH), fix dashboard employee filter |
-| v1.1.0  | Bulk import worklogs, fix notifications, fix Firestore rules isStaff()  |
-| v1.0.0  | Initial release                                                         |
+| v1.1.0  | Bulk import worklogs, fix notifications, fix Firestore rules isStaff() |
+| v1.0.0  | Initial release |

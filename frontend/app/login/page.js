@@ -35,9 +35,13 @@ export default function LoginPage() {
     }
   }, [user, pendingApproval, loading, router]);
 
-  // ตรวจสอบ iOS Standalone mode
+  // ตรวจสอบ PWA Standalone mode (iOS + Android)
   const isIOSStandalone =
     typeof window !== "undefined" && window.navigator.standalone === true;
+  const isAndroidStandalone =
+    typeof window !== "undefined" &&
+    window.matchMedia("(display-mode: standalone)").matches;
+  const isPWAStandalone = isIOSStandalone || isAndroidStandalone;
 
   async function handleGoogleLogin() {
     setError("");
@@ -113,7 +117,7 @@ export default function LoginPage() {
           >
             <Chrome size={20} />
             {loginLoading
-              ? isIOSStandalone
+              ? isPWAStandalone
                 ? "กำลังเปิด Google…"
                 : "กำลังเข้าสู่ระบบ…"
               : "เข้าสู่ระบบด้วย Google"}

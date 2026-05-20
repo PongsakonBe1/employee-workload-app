@@ -1,8 +1,9 @@
 {
-  "name": "Workload Recorder",
+  "name": "labboy Workload Recorder",
   "short_name": "Workload",
   "description": "Employee workload recording system for ICIT staff",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0f172a",
@@ -12,13 +13,19 @@
       "src": "/labboy-logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/labboy-logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/labboy-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
