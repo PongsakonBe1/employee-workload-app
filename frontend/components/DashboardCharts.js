@@ -141,20 +141,16 @@ export function WorkloadByDutyChart({ data }) {
   );
 }
 
-export function DailyWorkloadTrend({ data }) {
-  // ใช้ข้อมูลจริง แสดง 7 วันล่าสุด
-  // data เรียงจากเก่าไปใหม่แล้ว ต้องเอา 7 รายการสุดท้าย (ล่าสุด) แล้ว reverse
-  const chartData =
-    data && data.length > 0
-      ? data.slice(-7) // เอา 7 วันล่าสุด
-      : [];
+export function DailyWorkloadTrend({ data, dateRange }) {
+  // ใช้ข้อมูลทั้งหมดที่กรองมา (ตามช่วงที่เลือกในหน้า dashboard)
+  const chartData = data && data.length > 0 ? data : [];
 
   // ถ้าไม่มีข้อมูล แสดงข้อความแจ้ง
   if (chartData.length === 0) {
     return (
       <div className="apple-panel p-6">
         <h3 className="mb-4 text-lg font-semibold text-slate-950">
-          แนวโน้มงานรายวัน (7 วันล่าสุด)
+          แนวโน้มงานรายวัน
         </h3>
         <div className="flex h-[250px] items-center justify-center text-slate-400 text-sm">
           ไม่มีข้อมูล
@@ -166,7 +162,7 @@ export function DailyWorkloadTrend({ data }) {
   return (
     <div className="apple-panel p-6">
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
-        แนวโน้มงานรายวัน (7 วันล่าสุด)
+        แนวโน้มงานรายวัน {dateRange && `(${dateRange})`}
       </h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={chartData}>

@@ -56,7 +56,7 @@ cd ../firebase && firebase deploy --only hosting
 
 | Version | Changes |
 | ------- | ------- |
-| v1.5.0 | Fix export sort by date+time asc, fix requesterName field mapping, dashboard layout v2 (pie+minor → trend full-width → main+minor bars → workload vs staff stats), favicon black background |
+| v1.5.0 | **Export**: fix sort by date+time asc (น้อย→มาก), fix recipient field mapping (recipient, requesterName, client, customer, receiver, to), **Dashboard**: layout v2 (pie+minor → trend full-width with date range label → main+minor bars → workload vs staff stats), **Favicon**: black background logo |
 | v1.4.0 | Fix iOS PWA ITP login (popup แทน redirect), lazy load recharts, Snyk DOM XSS fix |
 | v1.3.0 | Fix favicon browser tab, Android+iOS PWA login, security headers |
 | v1.2.0 | iOS Standalone PWA fix |

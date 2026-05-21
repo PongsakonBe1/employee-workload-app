@@ -202,7 +202,7 @@ export default function ExportPage() {
         log.employeeNickname ||
         log.employeeId ||
         "",
-      log.requesterName || log.requester || log.clientName || log.customerName || log.receiverName || "",
+      log.recipient || log.requesterName || log.requester || log.clientName || log.customerName || log.receiverName || log.client || log.to || "",
       log.dutyGroup || log.mainDuty || "",
       log.mainDuty || "",
       log.minorTask || "",

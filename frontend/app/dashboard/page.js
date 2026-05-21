@@ -715,7 +715,10 @@ export default function DashboardPage() {
 
       {/* แถว 2: แนวโน้มงานรายวัน (เต็มความกว้าง ตามตัวกรอง) */}
       <section className="mt-5">
-        <DailyWorkloadTrend data={data?.byDate || []} />
+        <DailyWorkloadTrend 
+          data={data?.byDate || []} 
+          dateRange={data?.byDate?.length > 0 ? `${data.byDate[0]?.date} - ${data.byDate[data.byDate.length-1]?.date}` : ''}
+        />
       </section>
 
       {/* แถว 3: จำนวนงานตามหัวข้อหลัก + จำนวนงานตามหัวข้อรอง */}
