@@ -160,6 +160,7 @@ employee-workload-app/
 
 | Version | Changes |
 | ------- | ------- |
+| v1.5.0  | Fix export failed to fetch (ใช้ Firestore client-side), dashboard layout ใหม่ (แนวโน้มรายวัน+สัดส่วนงาน), ปีงบประมาณ default 2569, แก้การคำนวณ date range (week/month/quarter), favicon พื้นหลังดำไอคอนขาว, version footer |
 | v1.4.0  | Fix iOS PWA ITP login (popup แทน redirect), lazy load recharts ใน dashboard, ลบ console.log, Snyk SAST fix (DOM XSS sanitizePhotoURL), favicon ผ่าน app/ directory |
 | v1.3.0  | Fix favicon บน browser tab, fix Android+iOS PWA login (signInWithRedirect), security headers |
 | v1.2.0  | iOS Standalone PWA fix (signInWithRedirect + manifest.json) |
