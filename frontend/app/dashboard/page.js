@@ -65,44 +65,42 @@ const getToday = () => {
   return new Date().toISOString().split("T")[0];
 };
 
+const toLocalDateStr = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 const getThisWeek = () => {
   const today = new Date();
-  const dayOfWeek = today.getDay();
+  const dayOfWeek = today.getDay(); // 0=Sun
   const start = new Date(today);
   start.setDate(today.getDate() - dayOfWeek);
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
-  return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
-  };
+  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
 };
 
 const getThisMonth = () => {
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
-  };
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
+  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
 };
 
 const getThisQuarter = () => {
   const today = new Date();
-  const quarter = Math.floor(today.getMonth() / 3);
-  const start = new Date(today.getFullYear(), quarter * 3, 1);
-  const end = new Date(today.getFullYear(), quarter * 3 + 3, 0);
-  return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
-  };
+  const q = Math.floor(today.getMonth() / 3);
+  const start = new Date(today.getFullYear(), q * 3, 1);
+  const end = new Date(today.getFullYear(), q * 3 + 3, 0); // last day of last month in quarter
+  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
 };
 
 export default function DashboardPage() {
   const t = useTranslations();
   const { user } = useAuth();
-  const [fiscalYear, setFiscalYear] = useState("2568");
+  const [fiscalYear, setFiscalYear] = useState("2569");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
@@ -313,19 +311,6 @@ export default function DashboardPage() {
         totalInRange = allWorklogsInRange.length;
         hasMoreThanLimit = countSnapshot.size >= 1000;
 
-        if (dateRange) {
-          console.log(
-            "[Dashboard] Count in date range:",
-            totalInRange,
-            "records between",
-            dateRange.start,
-            "and",
-            dateRange.end,
-          );
-        } else {
-          console.log("[Dashboard] Count all time:", totalInRange, "records");
-        }
-
         // Sort and take only first 300 for display
         allWorklogsInRange.sort((a, b) => {
           if (!a.date) return 1;
@@ -409,10 +394,6 @@ export default function DashboardPage() {
       const byMinorTask = {};
       const byDate = {};
 
-      // Debug: Log first few worklogs to check date format
-      console.log("Sample worklogs:", worklogs.slice(0, 3));
-      console.log("Date range filter:", dateRange);
-
       worklogs.forEach((log) => {
         // Count by employee (ใช้ displayName ก่อน ถ้าไม่มีค่อยใช้ fullName หรือ nickname)
         const empName =
@@ -421,11 +402,6 @@ export default function DashboardPage() {
           log.employeeNickname ||
           log.employeeId ||
           "ไม่ระบุ";
-
-        // Debug: ถ้าชื่อสั้นกว่า 2 ตัวอักษร ให้ log ดู
-        if (empName && empName.length <= 2) {
-          console.log("Short employee name:", empName, "from", log);
-        }
 
         byEmployee[empName] = (byEmployee[empName] || 0) + 1;
 
@@ -456,10 +432,6 @@ export default function DashboardPage() {
 
       const byDateArray = toArrayByDate(byDate);
 
-      // Debug: Log byDate result
-      console.log("byDate object:", byDate);
-      console.log("byDate array:", byDateArray);
-
       setData({
         total: actualTotal, // แสดงจำนวนรวมจริง (ไม่ถูก limit)
         totalLoaded: worklogs.length, // จำนวนที่โหลดมาจริง
@@ -467,7 +439,7 @@ export default function DashboardPage() {
         byMainDuty: toArray(byMainDuty),
         byMinorTask: toArray(byMinorTask),
         byDate: byDateArray,
-        recent: worklogs.slice(0, 10), // แสดงแค่ 10 รายการล่าสุด
+        recent: [...worklogs].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10),
         scope: isAdmin
           ? selectedEmployee === "all"
             ? "all"
@@ -717,38 +689,35 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Charts Section - ซ่อน WorkloadByEmployeeChart และ BarList byEmployee เพราะซ้ำกับข้อมูลอื่น */}
+      {/* แถว 1: แนวโน้มรายวัน + สัดส่วนหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        {/* <WorkloadByEmployeeChart data={data?.byEmployee || []} /> */}
-        <WorkloadByDutyChart data={data?.byMainDuty || []} />
         <DailyWorkloadTrend data={data?.byDate || []} />
-      </section>
-
-      <section className="mt-5 grid gap-5 lg:grid-cols-2">
         <MinorTaskDistribution data={data?.byMinorTask || []} />
+      </section>
+
+      {/* แถว 2: สัดส่วนงานตามหัวข้อหลัก (pie) + จำนวนงานตามหัวข้อหลัก (bar) */}
+      <section className="mt-5 grid gap-5 lg:grid-cols-2">
+        <WorkloadByDutyChart data={data?.byMainDuty || []} />
         <BarList
           title={t("dashboard.byMainDuty")}
           items={data?.byMainDuty || []}
         />
       </section>
 
-      {/* ซ่อน BarList byEmployee เพราะซ้ำกับข้อมูลอื่น */}
-      {/* <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        <BarList
-          title={t("dashboard.byEmployee")}
-          items={data?.byEmployee || []}
-        />
-        <BarList
-          title={t("dashboard.byMainDuty")}
-          items={data?.byMainDuty || []}
-        />
-      </section> */}
-
+      {/* แถว 3: Admin — ใครลงงานบ่อย (ซ้าย) + รายการล่าสุด (ขวา) */}
+      {/*        Staff — หัวข้อรองยอดนิยม (ซ้าย) + รายการล่าสุด (ขวา) */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <BarList
-          title={t("dashboard.byMinorTask")}
-          items={data?.byMinorTask || []}
-        />
+        {(user?.role === "admin" || user?.role === "superadmin") ? (
+          <BarList
+            title={t("dashboard.byEmployee")}
+            items={data?.byEmployee || []}
+          />
+        ) : (
+          <BarList
+            title={t("dashboard.byMinorTask")}
+            items={data?.byMinorTask || []}
+          />
+        )}
 
         <div className="apple-panel p-6">
           <h2 className="text-xl font-semibold tracking-tight text-slate-950">

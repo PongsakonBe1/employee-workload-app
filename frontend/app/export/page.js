@@ -11,7 +11,6 @@ import {
   User,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
-import { downloadCsv } from "../../lib/api";
 import { db } from "../../lib/firebase";
 import {
   collection,
@@ -30,7 +29,7 @@ import { useAuth } from "../../components/AuthProvider";
 export default function ExportPage() {
   const { user } = useAuth();
   const [exportMode, setExportMode] = useState("fiscal"); // "fiscal" | "range"
-  const [fiscalYear, setFiscalYear] = useState("2569");
+  const [fiscalYear, setFiscalYear] = useState("2569");  // ปีงบประมาณปัจจุบัน
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
@@ -112,8 +111,6 @@ export default function ExportPage() {
         status: "pending",
         createdAt: new Date(),
       };
-      console.log("[Export] Creating request with data:", requestData);
-      console.log("[Export] User UID:", user.uid);
       const docRef = await addDoc(
         collection(db, "exportRequests"),
         requestData,
@@ -235,41 +232,27 @@ export default function ExportPage() {
     setDone("");
 
     try {
-      let url;
       let filename;
+      let start;
+      let end;
 
       if (exportMode === "fiscal") {
-        url = `/export/fiscal-year/${encodeURIComponent(fiscalYear)}.csv`;
         filename = `icit-workload-fy${fiscalYear}.csv`;
+        start = getFiscalYearDates(fiscalYear).start;
+        end = getFiscalYearDates(fiscalYear).end;
       } else {
-        // ตรวจสอบว่ามีวันที่ครบหรือไม่
         if (!startDate || !endDate) {
           throw new Error("กรุณาระบุวันที่เริ่มต้นและสิ้นสุด");
         }
         if (startDate > endDate) {
           throw new Error("วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด");
         }
-        url = `/export/range?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}.csv`;
         filename = `icit-workload-${startDate}_to_${endDate}.csv`;
+        start = startDate;
+        end = endDate;
       }
 
-      // Check if backend is enabled
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      if (apiUrl) {
-        // Use backend API
-        await downloadCsv(url, filename);
-      } else {
-        // Client-side export from Firestore
-        const start =
-          exportMode === "fiscal"
-            ? getFiscalYearDates(fiscalYear).start
-            : startDate;
-        const end =
-          exportMode === "fiscal"
-            ? getFiscalYearDates(fiscalYear).end
-            : endDate;
-        await exportFromFirestore(start, end, filename);
-      }
+      await exportFromFirestore(start, end, filename);
       setDone(`Export สำเร็จ: ${filename}`);
     } catch (err) {
       setError(err.message);

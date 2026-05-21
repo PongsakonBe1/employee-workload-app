@@ -67,43 +67,19 @@ export function AppShell({ children }) {
   const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
 
-  // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
     if (!loading) {
-      console.log("[AppShell] Auth ready:", { pathname, user: user?.email, pendingApproval });
-      
       if (pendingApproval && pathname !== "/pending") {
-        // ถ้ารออนุมัติ ให้ไปหน้า pending
-        console.log("[AppShell] Redirecting to pending...");
         router.replace("/pending");
       } else if (!user && !pendingApproval) {
-        // ถ้าไม่มี user และไม่ได้ pending ให้ไป login
-        // แต่ถ้าอยู่ในหน้า admin ให้รอสักครู่ก่อน redirect (อาจกำลังโหลด)
         const isAdminPage = pathname?.startsWith("/admin");
         const isLoginPage = pathname === "/login";
-        
         if (!isAdminPage && !isLoginPage) {
-          console.log("[AppShell] No user, redirecting to login...");
           router.replace("/login");
-        } else if (isLoginPage) {
-          console.log("[AppShell] Already on login page, no redirect");
-        } else {
-          console.log("[AppShell] On admin page without user, waiting...");
         }
       }
     }
   }, [loading, user, pendingApproval, pathname, router]);
-
-  // Debug log
-  useEffect(() => {
-    console.log("[AppShell] State:", {
-      pathname,
-      user: user?.email,
-      role: user?.role,
-      loading,
-      pendingApproval,
-    });
-  }, [pathname, user, loading, pendingApproval]);
 
   if (loading) {
     return (
@@ -244,6 +220,10 @@ export function AppShell({ children }) {
         <Breadcrumb />
         {children}
       </main>
+
+      <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400">
+        labboy Workload Recorder &mdash; v1.5.0
+      </footer>
     </div>
   );
 }

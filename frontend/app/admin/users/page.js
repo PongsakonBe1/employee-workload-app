@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -471,15 +472,20 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPending.map((u) => (
+                {filteredPending.map((u) => {
+                  const safePhoto = sanitizePhotoURL(u.photoURL);
+                  return (
                   <tr key={u.id} className="bg-white/45">
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
                       <div className="flex items-center gap-3">
-                        {u.photoURL && (
-                          <img
-                            src={u.photoURL}
+                        {safePhoto && (
+                          <Image
+                            src={safePhoto}
                             alt=""
-                            className="w-8 h-8 rounded-full"
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className="rounded-full"
                           />
                         )}
                         <div>
@@ -515,7 +521,8 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
