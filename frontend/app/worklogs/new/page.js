@@ -205,7 +205,7 @@ export default function NewWorkLogPage() {
         minorTask: form.minorTask,
         comment: sanitizeInput(form.comment),
         employeeId: user.uid,
-        employeeNickname: user.nickname,
+        employeeNickname: user.nickname || "",
         employeeDisplayName: employeeDisplayName,
         employeeFullName: user.fullName || "",
         status: "บันทึกแล้ว",
