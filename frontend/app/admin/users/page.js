@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -29,25 +30,6 @@ import {
   addDoc,
   limit,
 } from "firebase/firestore";
-
-function sanitizePhotoURL(url) {
-  if (!url || typeof url !== "string") return null;
-  try {
-    const parsed = new URL(url);
-    const allowed = [
-      "lh3.googleusercontent.com",
-      "lh4.googleusercontent.com",
-      "lh5.googleusercontent.com",
-      "lh6.googleusercontent.com",
-      "googleusercontent.com",
-    ];
-    if (parsed.protocol !== "https:") return null;
-    if (!allowed.some((d) => parsed.hostname.endsWith(d))) return null;
-    return url;
-  } catch {
-    return null;
-  }
-}
 
 export default function AdminUsersPage() {
   const t = useTranslations();
@@ -497,10 +479,13 @@ export default function AdminUsersPage() {
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
                       <div className="flex items-center gap-3">
                         {safePhoto && (
-                          <img
+                          <Image
                             src={safePhoto}
                             alt=""
-                            className="w-8 h-8 rounded-full"
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className="rounded-full"
                           />
                         )}
                         <div>
