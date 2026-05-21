@@ -707,34 +707,86 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* แถว 1: แนวโน้มรายวัน + สัดส่วนหัวข้อรอง */}
+      {/* แถว 1: สัดส่วนงานตามหัวข้อหลัก (pie) + จำนวนงานตามหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        <DailyWorkloadTrend data={data?.byDate || []} />
+        <WorkloadByDutyChart data={data?.byMainDuty || []} />
         <MinorTaskDistribution data={data?.byMinorTask || []} />
       </section>
 
-      {/* แถว 2: สัดส่วนงานตามหัวข้อหลัก (pie) + จำนวนงานตามหัวข้อหลัก (bar) */}
+      {/* แถว 2: แนวโน้มงานรายวัน (เต็มความกว้าง ตามตัวกรอง) */}
+      <section className="mt-5">
+        <DailyWorkloadTrend data={data?.byDate || []} />
+      </section>
+
+      {/* แถว 3: จำนวนงานตามหัวข้อหลัก + จำนวนงานตามหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        <WorkloadByDutyChart data={data?.byMainDuty || []} />
         <BarList
           title={t("dashboard.byMainDuty")}
           items={data?.byMainDuty || []}
         />
+        <BarList
+          title={t("dashboard.byMinorTask")}
+          items={data?.byMinorTask || []}
+        />
       </section>
 
-      {/* แถว 3: Admin — ใครลงงานบ่อย (ซ้าย) + รายการล่าสุด (ขวา) */}
-      {/*        Staff — หัวข้อรองยอดนิยม (ซ้าย) + รายการล่าสุด (ขวา) */}
+      {/* แถว 4: Admin/Superadmin — เปรียบเทียบปริมาณงานกับจำนวน Staff */}
+      {/*        Staff — สถิติส่วนตัว */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         {(user?.role === "admin" || user?.role === "superadmin") ? (
-          <BarList
-            title={t("dashboard.byEmployee")}
-            items={data?.byEmployee || []}
-          />
+          <div className="apple-panel p-6">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
+              ความสัมพันธ์ปริมาณงานกับจำนวน Staff
+            </h2>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                <span className="text-slate-600">จำนวน Staff ทั้งหมด</span>
+                <span className="text-2xl font-bold text-slate-950">{staffList.length} คน</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                <span className="text-slate-600">งานทั้งหมดในช่วงที่เลือก</span>
+                <span className="text-2xl font-bold text-slate-950">{actualCount} งาน</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
+                <span className="text-indigo-700">เฉลี่ยงานต่อคน</span>
+                <span className="text-2xl font-bold text-indigo-700">
+                  {staffList.length > 0 ? (actualCount / staffList.length).toFixed(1) : "0"} งาน/คน
+                </span>
+              </div>
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">Top 3 Staff ลงงานมากสุด</h3>
+                <div className="space-y-2">
+                  {(data?.byEmployee?.slice(0, 3) || []).map((emp, idx) => (
+                    <div key={emp.label} className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs flex items-center justify-center font-medium">
+                        {idx + 1}
+                      </span>
+                      <span className="flex-1 text-sm text-slate-700">{emp.label}</span>
+                      <span className="text-sm font-semibold text-slate-950">{emp.count} งาน</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
-          <BarList
-            title={t("dashboard.byMinorTask")}
-            items={data?.byMinorTask || []}
-          />
+          <div className="apple-panel p-6">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
+              สถิติงานของฉัน
+            </h2>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                <span className="text-slate-600">งานทั้งหมดของคุณ</span>
+                <span className="text-2xl font-bold text-slate-950">{actualCount} งาน</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
+                <span className="text-indigo-700">อันดับในกลุ่ม</span>
+                <span className="text-2xl font-bold text-indigo-700">
+                  {(data?.byEmployee?.findIndex(e => e.label === (user?.displayName || user?.email)) || 0) + 1} / {data?.byEmployee?.length || 0}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="apple-panel p-6">

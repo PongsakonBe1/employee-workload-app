@@ -175,8 +175,12 @@ export default function ExportPage() {
       ...doc.data(),
     }));
 
-    // Sort by date descending
-    worklogs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    // Sort by date ascending, then time ascending (น้อยไปมาก)
+    worklogs.sort((a, b) => {
+      const dateCmp = (a.date || "").localeCompare(b.date || "");
+      if (dateCmp !== 0) return dateCmp;
+      return (a.time || "").localeCompare(b.time || "");
+    });
 
     // Generate CSV
     const headers = [
@@ -198,7 +202,7 @@ export default function ExportPage() {
         log.employeeNickname ||
         log.employeeId ||
         "",
-      log.requesterName || "",
+      log.requesterName || log.requester || log.clientName || log.customerName || log.receiverName || "",
       log.dutyGroup || log.mainDuty || "",
       log.mainDuty || "",
       log.minorTask || "",
