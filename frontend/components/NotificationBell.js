@@ -6,6 +6,8 @@ import {
   collection,
   query,
   where,
+  orderBy,
+  limit,
   onSnapshot,
   getDocs,
   deleteDoc,
@@ -128,24 +130,26 @@ export function NotificationBell() {
       }
     };
 
-    // Query 1: notifications ส่งถึง user นี้โดยตรง (ทุกคน)
+    // Query 1: notifications ส่งถึง user นี้โดยตรง
     try {
       const q1 = query(
         collection(db, "notifications"),
         where("userId", "==", user.uid),
-        where("read", "==", false),
+        orderBy("timestamp", "desc"),
+        limit(20),
       );
       unsubscribes.push(onSnapshot(q1, handleSnapshot, handleError));
     } catch (err) {
       console.error("[Notification] Failed to subscribe q1:", err);
     }
 
-    // Query 2: notifications ส่งถึงทุกคน (all) - ทุก role อ่านได้
+    // Query 2: notifications userId: "all" — ทุก role เห็น (broadcast)
     try {
       const q2 = query(
         collection(db, "notifications"),
         where("userId", "==", "all"),
-        where("read", "==", false),
+        orderBy("timestamp", "desc"),
+        limit(20),
       );
       unsubscribes.push(onSnapshot(q2, handleSnapshot, handleError));
     } catch (err) {
@@ -158,7 +162,8 @@ export function NotificationBell() {
         const q3 = query(
           collection(db, "notifications"),
           where("userId", "==", "staff"),
-          where("read", "==", false),
+          orderBy("timestamp", "desc"),
+          limit(20),
         );
         unsubscribes.push(onSnapshot(q3, handleSnapshot, handleError));
       } catch (err) {
@@ -166,13 +171,14 @@ export function NotificationBell() {
       }
     }
 
-    // Query 4: notifications ส่งถึง admin ทั้งหมด (รวม superadmin)
+    // Query 4: notifications ส่งถึง admin/superadmin
     if (user.role === "admin" || user.role === "superadmin") {
       try {
         const q4 = query(
           collection(db, "notifications"),
           where("userId", "==", "admin"),
-          where("read", "==", false),
+          orderBy("timestamp", "desc"),
+          limit(20),
         );
         unsubscribes.push(onSnapshot(q4, handleSnapshot, handleError));
       } catch (err) {

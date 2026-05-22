@@ -386,11 +386,14 @@ export default function SystemManagementPage() {
     setSendingBroadcast(true);
     try {
       // สร้าง notification ตามกลุ่มเป้าหมาย
+      // "all" → userId: "all" (document เดียว ทุก role เห็น, ไม่ถูกลบโดย role เดียว)
+      // "staff" → userId: "staff", "admin" → userId: "admin"
       const notifications = [];
 
-      if (broadcastTarget === "all" || broadcastTarget === "staff") {
+      if (broadcastTarget === "all") {
+        // document เดียว userId: "all" — ทุก role subscribe
         notifications.push({
-          userId: "staff", // staff ทั้งหมด
+          userId: "all",
           title: broadcastTitle,
           message: broadcastMessage,
           type: "broadcast",
@@ -398,11 +401,19 @@ export default function SystemManagementPage() {
           timestamp: new Date(),
           sentBy: user.email,
         });
-      }
-
-      if (broadcastTarget === "all" || broadcastTarget === "admin") {
+      } else if (broadcastTarget === "staff") {
         notifications.push({
-          userId: "admin", // admin/superadmin
+          userId: "staff",
+          title: broadcastTitle,
+          message: broadcastMessage,
+          type: "broadcast",
+          read: false,
+          timestamp: new Date(),
+          sentBy: user.email,
+        });
+      } else if (broadcastTarget === "admin") {
+        notifications.push({
+          userId: "admin",
           title: broadcastTitle,
           message: broadcastMessage,
           type: "broadcast",
