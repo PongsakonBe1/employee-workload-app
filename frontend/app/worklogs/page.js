@@ -13,6 +13,8 @@ import {
   ChevronUp,
   ChevronDown,
   Undo2,
+  List,
+  CalendarDays,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { EmptyState } from "../../components/EmptyState";
@@ -78,6 +80,14 @@ export default function WorkLogsPage() {
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  // View mode: list | calendar
+  const [viewMode, setViewMode] = useState("list");
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() }; // 0-indexed month
+  });
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
+
   // Users cache for display name lookup
   const [usersCache, setUsersCache] = useState({});
 
@@ -98,10 +108,7 @@ export default function WorkLogsPage() {
             doc.id;
         });
         setUsersCache(usersMap);
-        console.log("[Worklogs] Users loaded:", Object.keys(usersMap).length);
-      } catch (err) {
-        console.error("[Worklogs] Error loading users:", err);
-      }
+      } catch (err) {}
     }
     loadUsers();
   }, []);
@@ -527,6 +534,27 @@ export default function WorkLogsPage() {
     : [];
   const hasEditSuggestions = hasCommentSuggestions(editForm.minorTask);
 
+  // --- Calendar view helper ---
+  function buildCalendarGrid(year, month) {
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // group data.items by date
+    const byDate = {};
+    data.items.forEach((item) => {
+      if (item.date) {
+        byDate[item.date] = byDate[item.date] || [];
+        byDate[item.date].push(item);
+      }
+    });
+    const cells = [];
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      cells.push({ day: d, date: dateStr, items: byDate[dateStr] || [] });
+    }
+    return cells;
+  }
+
   return (
     <AppShell>
       <section className="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -537,6 +565,25 @@ export default function WorkLogsPage() {
           <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
             {t("navigation.worklogs")}
           </h1>
+        </div>
+        {/* View Switcher */}
+        <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+          <button
+            onClick={() => setViewMode("list")}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+              viewMode === "list" ? "bg-white shadow-sm text-slate-950" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <List size={15} /> รายการ
+          </button>
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+              viewMode === "calendar" ? "bg-white shadow-sm text-slate-950" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <CalendarDays size={15} /> ปฏิทิน
+          </button>
         </div>
       </section>
 
@@ -624,13 +671,105 @@ export default function WorkLogsPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="apple-panel overflow-hidden">
-          <TableSkeleton rows={5} columns={9} />
-        </div>
-      ) : data.items.length === 0 ? (
-        <EmptyState />
-      ) : (
+      {/* Calendar View */}
+      {viewMode === "calendar" && (() => {
+        const { year, month } = calendarDate;
+        const cells = buildCalendarGrid(year, month);
+        const thMonths = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        const dayLabels = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+        const selectedDayItems = cells.find(c => c?.date === calendarSelectedDate)?.items || [];
+
+        return (
+          <div className="apple-panel p-4 mb-6">
+            {/* Month navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => {
+                  const d = new Date(year, month - 1, 1);
+                  setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
+                  setCalendarSelectedDate(null);
+                }}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              >‹</button>
+              <h3 className="text-base font-semibold text-slate-900">
+                {thMonths[month]} {year + 543}
+              </h3>
+              <button
+                onClick={() => {
+                  const d = new Date(year, month + 1, 1);
+                  setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
+                  setCalendarSelectedDate(null);
+                }}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              >›</button>
+            </div>
+            {/* Day headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {dayLabels.map((d) => (
+                <div key={d} className="text-center text-xs font-medium text-slate-400 py-1">{d}</div>
+              ))}
+            </div>
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {cells.map((cell, idx) =>
+                cell === null ? (
+                  <div key={`e-${idx}`} />
+                ) : (
+                  <button
+                    key={cell.date}
+                    onClick={() => setCalendarSelectedDate(calendarSelectedDate === cell.date ? null : cell.date)}
+                    className={`relative min-h-[52px] rounded-xl p-1.5 text-left transition border ${ 
+                      calendarSelectedDate === cell.date
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : cell.items.length > 0
+                          ? "border-slate-200 bg-indigo-50 hover:bg-indigo-100"
+                          : "border-slate-100 bg-white hover:bg-slate-50 text-slate-400"
+                    }`}
+                  >
+                    <span className="text-xs font-medium">{cell.day}</span>
+                    {cell.items.length > 0 && (
+                      <span className={`mt-0.5 flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${ 
+                        calendarSelectedDate === cell.date ? "bg-white text-slate-950" : "bg-indigo-600 text-white"
+                      }`}>
+                        {cell.items.length}
+                      </span>
+                    )}
+                  </button>
+                )
+              )}
+            </div>
+            {/* Selected day detail */}
+            {calendarSelectedDate && selectedDayItems.length > 0 && (
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <h4 className="text-sm font-semibold text-slate-700 mb-2">
+                  {calendarSelectedDate} — {selectedDayItems.length} รายการ
+                </h4>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {selectedDayItems.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">{item.mainDuty}</p>
+                        <p className="text-xs text-slate-500">{item.minorTask} · {item.time}</p>
+                        {item.comment && <p className="text-xs text-slate-400 mt-0.5">{item.comment}</p>}
+                      </div>
+                      <span className="text-xs text-slate-400">{getDisplayName(item)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {viewMode === "list" ? (
+        loading ? (
+          <div className="apple-panel overflow-hidden">
+            <TableSkeleton rows={5} columns={9} />
+          </div>
+        ) : data.items.length === 0 ? (
+          <EmptyState />
+        ) : (
         <div className="apple-panel overflow-hidden">
           {/* Bulk Operations Toolbar */}
           {selectedIds.length > 0 && (
@@ -943,7 +1082,8 @@ export default function WorkLogsPage() {
             </div>
           </div>
         </div>
-      )}
+        )
+      ) : null}
     </AppShell>
   );
 }

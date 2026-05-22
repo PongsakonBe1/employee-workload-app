@@ -16,6 +16,116 @@ import {
   Legend,
 } from "recharts";
 
+// Workload Heatmap — calendar grid (date × count)
+export function WorkloadHeatmap({ data }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="apple-panel p-6">
+        <h3 className="mb-4 text-lg font-semibold text-slate-950">Workload Heatmap</h3>
+        <div className="flex h-[200px] items-center justify-center text-slate-400 text-sm">ไม่มีข้อมูล</div>
+      </div>
+    );
+  }
+
+  const max = Math.max(...data.map((d) => d.count), 1);
+
+  // Group data by week row for calendar display
+  const firstDate = new Date(data[0].date);
+  const startDow = firstDate.getDay(); // 0=Sun
+  const cells = [];
+  // pad empty cells at start
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  data.forEach((d) => cells.push(d));
+
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+
+  const dayLabels = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+
+  const getColor = (count) => {
+    if (!count) return "bg-slate-100";
+    const ratio = count / max;
+    if (ratio < 0.25) return "bg-slate-300";
+    if (ratio < 0.5) return "bg-slate-500";
+    if (ratio < 0.75) return "bg-slate-700";
+    return "bg-slate-950";
+  };
+
+  return (
+    <div className="apple-panel p-6">
+      <h3 className="mb-4 text-lg font-semibold text-slate-950">Workload Heatmap</h3>
+      <div className="overflow-x-auto">
+        <div className="flex gap-1 mb-1">
+          {dayLabels.map((d) => (
+            <div key={d} className="w-7 text-center text-xs text-slate-400">{d}</div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-1">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex gap-1">
+              {week.map((cell, di) =>
+                cell ? (
+                  <div
+                    key={cell.date}
+                    title={`${cell.date}: ${cell.count} งาน`}
+                    className={`w-7 h-7 rounded-md ${getColor(cell.count)} transition-colors`}
+                  />
+                ) : (
+                  <div key={`e-${wi}-${di}`} className="w-7 h-7" />
+                )
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
+          <span>น้อย</span>
+          {["bg-slate-100","bg-slate-300","bg-slate-500","bg-slate-700","bg-slate-950"].map((c,i) => (
+            <div key={i} className={`w-4 h-4 rounded-sm ${c}`} />
+          ))}
+          <span>มาก</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Hour-of-day bar chart
+export function HourOfDayChart({ data }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="apple-panel p-6">
+        <h3 className="mb-4 text-lg font-semibold text-slate-950">งานตามช่วงเวลา</h3>
+        <div className="flex h-[200px] items-center justify-center text-slate-400 text-sm">ไม่มีข้อมูล</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="apple-panel p-6">
+      <h3 className="mb-4 text-lg font-semibold text-slate-950">งานตามช่วงเวลา (ชั่วโมง)</h3>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="hour" stroke="#64748b" fontSize={11} />
+          <YAxis stroke="#64748b" fontSize={11} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              fontSize: "12px",
+            }}
+            formatter={(v) => [`${v} งาน`, "จำนวน"]}
+          />
+          <Bar dataKey="count" fill="#0f172a" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 const COLORS = [
   "#0f172a",
   "#334155",

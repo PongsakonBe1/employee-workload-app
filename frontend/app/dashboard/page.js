@@ -39,6 +39,14 @@ const MinorTaskDistribution = dynamic(
   () => import("../../components/DashboardCharts").then((m) => m.MinorTaskDistribution),
   { ssr: false, loading: ChartLoading }
 );
+const WorkloadHeatmap = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.WorkloadHeatmap),
+  { ssr: false, loading: ChartLoading }
+);
+const HourOfDayChart = dynamic(
+  () => import("../../components/DashboardCharts").then((m) => m.HourOfDayChart),
+  { ssr: false, loading: ChartLoading }
+);
 
 function BarList({ title, items, t }) {
   const max = Math.max(...items.map((item) => item.count), 1);
@@ -132,6 +140,7 @@ export default function DashboardPage() {
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
   const [pendingCustomStart, setPendingCustomStart] = useState("");
   const [pendingCustomEnd, setPendingCustomEnd] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]); // staff leaderboard
 
   // Modal state for limit warning
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -245,6 +254,18 @@ export default function DashboardPage() {
       const worklogsRef = collection(db, "worklogs");
       const isAdmin = user?.role === "admin" || user?.role === "superadmin";
       const dateRange = getDateRange();
+
+      // Build uidToName map จาก users collection (ชื่อปัจจุบัน)
+      let uidToName = {};
+      try {
+        const usersSnap = await getDocs(
+          query(collection(db, "users"), where("active", "==", true))
+        );
+        usersSnap.docs.forEach((d) => {
+          const u = d.data();
+          uidToName[d.id] = u.displayName || u.fullName || u.nickname || u.email || d.id;
+        });
+      } catch (_) {}
 
       let q;
       const constraints = [];
@@ -418,17 +439,25 @@ export default function DashboardPage() {
       const byMainDuty = {};
       const byMinorTask = {};
       const byDate = {};
+      const byHour = {};
 
       worklogs.forEach((log) => {
-        // Count by employee (ใช้ displayName ก่อน ถ้าไม่มีค่อยใช้ fullName หรือ nickname)
+        // Count by employee — join ชื่อปัจจุบันจาก users collection
         const empName =
-          log.employeeDisplayName ||
-          log.employeeFullName ||
-          log.employeeNickname ||
-          log.employeeId ||
-          "ไม่ระบุ";
+          (log.employeeId && uidToName[log.employeeId])
+            ? uidToName[log.employeeId]
+            : (log.employeeDisplayName || log.employeeFullName || log.employeeNickname || log.employeeId || "ไม่ระบุ");
 
         byEmployee[empName] = (byEmployee[empName] || 0) + 1;
+
+        // Count by hour-of-day (parse from time field "HH:MM")
+        if (log.time) {
+          const h = parseInt(log.time.split(":")[0], 10);
+          if (!isNaN(h)) {
+            const key = `${String(h).padStart(2,"0")}:00`;
+            byHour[key] = (byHour[key] || 0) + 1;
+          }
+        }
 
         // Count by main duty
         const duty = log.mainDuty || log.dutyGroup || "ไม่ระบุ";
@@ -457,13 +486,19 @@ export default function DashboardPage() {
 
       const byDateArray = toArrayByDate(byDate);
 
+      // Sort byHour chronologically
+      const byHourArray = Object.entries(byHour)
+        .map(([hour, count]) => ({ hour, count }))
+        .sort((a, b) => a.hour.localeCompare(b.hour));
+
       setData({
-        total: actualTotal, // แสดงจำนวนรวมจริง (ไม่ถูก limit)
-        totalLoaded: worklogs.length, // จำนวนที่โหลดมาจริง
+        total: actualTotal,
+        totalLoaded: worklogs.length,
         byEmployee: toArray(byEmployee),
         byMainDuty: toArray(byMainDuty),
         byMinorTask: toArray(byMinorTask),
         byDate: byDateArray,
+        byHour: byHourArray,
         recent: [...worklogs].sort((a, b) => {
           const dateCmp = (b.date || "").localeCompare(a.date || "");
           if (dateCmp !== 0) return dateCmp;
@@ -476,7 +511,31 @@ export default function DashboardPage() {
           : "user",
         fiscalYear: getThaiFiscalYearDates(fiscalYear),
         dateRange,
+        uidToName,
       });
+
+      // Staff leaderboard — query worklogs ทุกคนในช่วงเดียวกัน
+      if (!isAdmin) {
+        try {
+          const lbConstraints = dateRange
+            ? [where("date", ">=", dateRange.start), where("date", "<=", dateRange.end), limit(1000)]
+            : [limit(1000)];
+          const lbSnap = await getDocs(query(worklogsRef, ...lbConstraints));
+          const lbByEmp = {};
+          lbSnap.docs.forEach((d) => {
+            const empId = d.data().employeeId;
+            if (empId) lbByEmp[empId] = (lbByEmp[empId] || 0) + 1;
+          });
+          const lb = Object.entries(lbByEmp)
+            .map(([uid, count]) => ({
+              uid,
+              label: uidToName[uid] || uid,
+              count,
+            }))
+            .sort((a, b) => b.count - a.count);
+          setLeaderboard(lb);
+        } catch (_) {}
+      }
     }
 
     if (user) {
@@ -808,6 +867,12 @@ export default function DashboardPage() {
         />
       </section>
 
+      {/* แถว 2.5: Workload Heatmap + งานตามช่วงเวลา */}
+      <section className="mt-5 grid gap-5 lg:grid-cols-2">
+        <WorkloadHeatmap data={data?.byDate || []} />
+        <HourOfDayChart data={data?.byHour || []} />
+      </section>
+
       {/* แถว 3: จำนวนงานตามหัวข้อหลัก + จำนวนงานตามหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
         <BarList
@@ -878,11 +943,12 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (() => {
-          const myName = user?.displayName || user?.nickname || user?.email || "";
-          const allEmps = data?.byEmployee || [];
-          const myRankIdx = allEmps.findIndex(e => e.label === myName);
-          const myCount = myRankIdx >= 0 ? allEmps[myRankIdx].count : actualCount;
+          const myUid = user?.uid || "";
+          const myEntry = leaderboard.find(e => e.uid === myUid);
+          const myRankIdx = leaderboard.findIndex(e => e.uid === myUid);
+          const myCount = myEntry?.count ?? actualCount;
           const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
+          const myName = myEntry?.label || user?.displayName || user?.email || "";
           return (
             <div className="apple-panel p-6">
               <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
@@ -893,34 +959,37 @@ export default function DashboardPage() {
                   <span className="text-slate-600">งานของฉันในช่วงนี้</span>
                   <span className="text-2xl font-bold text-slate-950">{myCount} งาน</span>
                 </div>
-                {myRank !== null && allEmps.length > 1 && (
+                {myRank !== null && leaderboard.length > 1 && (
                   <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
                     <span className="text-indigo-700">อันดับในกลุ่ม</span>
                     <span className="text-2xl font-bold text-indigo-700">
-                      #{myRank} / {allEmps.length} คน
+                      #{myRank} / {leaderboard.length} คน
                     </span>
                   </div>
                 )}
-                {myRank !== null && allEmps.length > 1 && (
+                {leaderboard.length > 1 && (
                   <div>
                     <h3 className="text-sm font-medium text-slate-700 mb-2 mt-2">ลำดับทั้งหมดในช่วงนี้</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {allEmps.map((emp, idx) => (
+                      {leaderboard.map((emp, idx) => (
                         <div
-                          key={emp.label}
+                          key={emp.uid}
                           className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
-                            emp.label === myName ? "bg-indigo-50 font-semibold" : ""
+                            emp.uid === myUid ? "bg-indigo-50 font-semibold" : ""
                           }`}
                         >
                           <span className="w-5 text-slate-400 text-xs">{idx + 1}.</span>
-                          <span className={`flex-1 truncate ${emp.label === myName ? "text-indigo-700" : "text-slate-600"}`}>
-                            {emp.label} {emp.label === myName ? "← ฉัน" : ""}
+                          <span className={`flex-1 truncate ${emp.uid === myUid ? "text-indigo-700" : "text-slate-600"}`}>
+                            {emp.label} {emp.uid === myUid ? "← ฉัน" : ""}
                           </span>
-                          <span className={emp.label === myName ? "text-indigo-700 font-bold" : "text-slate-700"}>{emp.count}</span>
+                          <span className={emp.uid === myUid ? "text-indigo-700 font-bold" : "text-slate-700"}>{emp.count}</span>
                         </div>
                       ))}
                     </div>
                   </div>
+                )}
+                {leaderboard.length === 0 && (
+                  <p className="text-sm text-slate-400 text-center py-2">กำลังโหลดข้อมูลกลุ่ม…</p>
                 )}
               </div>
             </div>
