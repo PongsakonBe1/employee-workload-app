@@ -20,6 +20,7 @@ import { AppShell } from "../../components/AppShell";
 import { EmptyState } from "../../components/EmptyState";
 import { useAuth } from "../../components/AuthProvider";
 import { db } from "../../lib/firebase";
+import { getThaiHoliday } from "../../lib/thaiHolidays";
 import {
   collection,
   query,
@@ -81,7 +82,7 @@ export default function WorkLogsPage() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
   // View mode: list | calendar
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("calendar");
   const [calendarDate, setCalendarDate] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() }; // 0-indexed month
@@ -589,7 +590,7 @@ export default function WorkLogsPage() {
 
       <form
         onSubmit={submit}
-        className="apple-panel mb-6 grid gap-4 p-4 md:grid-cols-[1.5fr_0.7fr_0.7fr_auto]"
+        className="apple-panel mb-6 flex flex-col gap-3 p-4 sm:grid sm:grid-cols-[1fr_auto] md:grid-cols-[1.5fr_0.7fr_0.7fr_auto]"
       >
         <div className="relative">
           <Search
@@ -603,19 +604,21 @@ export default function WorkLogsPage() {
             placeholder={t("common.search") + "..."}
           />
         </div>
-        <input
-          className="apple-input"
-          type="date"
-          value={filters.from}
-          onChange={(e) => setFilters({ ...filters, from: e.target.value })}
-        />
-        <input
-          className="apple-input"
-          type="date"
-          value={filters.to}
-          onChange={(e) => setFilters({ ...filters, to: e.target.value })}
-        />
-        <button className="apple-button" disabled={loading}>
+        <div className="flex gap-2 sm:contents">
+          <input
+            className="apple-input flex-1"
+            type="date"
+            value={filters.from}
+            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+          />
+          <input
+            className="apple-input flex-1"
+            type="date"
+            value={filters.to}
+            onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+          />
+        </div>
+        <button className="apple-button w-full sm:w-auto" disabled={loading}>
           {loading ? t("common.loading") : t("common.filter")}
         </button>
       </form>
@@ -756,53 +759,70 @@ export default function WorkLogsPage() {
                 {cells.map((cell, idx) =>
                   cell === null ? (
                     <div key={`e-${idx}`} className="bg-white min-h-[64px]" />
-                  ) : (
-                    <button
-                      key={cell.date}
-                      onClick={() => setCalendarSelectedDate(calendarSelectedDate === cell.date ? null : cell.date)}
-                      className={`relative min-h-[64px] p-2 text-left transition-colors focus:outline-none ${
-                        calendarSelectedDate === cell.date
-                          ? "bg-slate-950"
-                          : "bg-white hover:bg-slate-50"
-                      }`}
-                    >
-                      {/* Day number */}
-                      <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                        cell.date === todayStr
-                          ? calendarSelectedDate === cell.date
-                            ? "bg-white text-slate-950 font-bold"
-                            : "bg-slate-950 text-white font-bold"
-                          : calendarSelectedDate === cell.date
-                            ? "text-white"
-                            : new Date(cell.date).getDay() === 0
-                              ? "text-rose-400"
-                              : "text-slate-700"
-                      }`}>
-                        {cell.day}
-                      </span>
+                  ) : (() => {
+                    const holiday = getThaiHoliday(cell.date);
+                    const isSelected = calendarSelectedDate === cell.date;
+                    const isSunday = new Date(cell.date).getDay() === 0;
+                    const isToday = cell.date === todayStr;
+                    return (
+                      <button
+                        key={cell.date}
+                        onClick={() => setCalendarSelectedDate(isSelected ? null : cell.date)}
+                        className={`relative min-h-[64px] p-2 text-left transition-colors focus:outline-none ${
+                          isSelected
+                            ? "bg-slate-950"
+                            : holiday
+                              ? "bg-rose-50 hover:bg-rose-100"
+                              : "bg-white hover:bg-slate-50"
+                        }`}
+                      >
+                        {/* Day number */}
+                        <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                          isToday
+                            ? isSelected
+                              ? "bg-white text-slate-950 font-bold"
+                              : "bg-slate-950 text-white font-bold"
+                            : isSelected
+                              ? "text-white"
+                              : isSunday || holiday
+                                ? "text-rose-500"
+                                : "text-slate-700"
+                        }`}>
+                          {cell.day}
+                        </span>
 
-                      {/* Event dots / count */}
-                      {cell.items.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-[2px]">
-                          {cell.items.length <= 3
-                            ? cell.items.slice(0,3).map((item, ii) => (
-                                <span
-                                  key={ii}
-                                  className={`block w-1.5 h-1.5 rounded-full ${
-                                    calendarSelectedDate === cell.date ? "bg-white/60" : (dutyColorMap[item.mainDuty] || "bg-slate-400")
-                                  }`}
-                                />
-                              ))
-                            : (
-                              <span className={`text-[9px] font-semibold ${calendarSelectedDate === cell.date ? "text-white/70" : "text-indigo-600"}`}>
-                                +{cell.items.length}
-                              </span>
-                            )
-                          }
-                        </div>
-                      )}
-                    </button>
-                  )
+                        {/* Holiday label */}
+                        {holiday && (
+                          <p className={`mt-0.5 text-[8px] leading-tight font-medium truncate ${
+                            isSelected ? "text-rose-300" : "text-rose-400"
+                          }`}>
+                            {holiday}
+                          </p>
+                        )}
+
+                        {/* Event dots / count */}
+                        {cell.items.length > 0 && (
+                          <div className="mt-0.5 flex flex-wrap gap-[2px]">
+                            {cell.items.length <= 3
+                              ? cell.items.slice(0,3).map((item, ii) => (
+                                  <span
+                                    key={ii}
+                                    className={`block w-1.5 h-1.5 rounded-full ${
+                                      isSelected ? "bg-white/60" : (dutyColorMap[item.mainDuty] || "bg-slate-400")
+                                    }`}
+                                  />
+                                ))
+                              : (
+                                <span className={`text-[9px] font-semibold ${isSelected ? "text-white/70" : "text-indigo-600"}`}>
+                                  +{cell.items.length}
+                                </span>
+                              )
+                            }
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })()
                 )}
               </div>
 
@@ -832,6 +852,12 @@ export default function WorkLogsPage() {
                     <p className="text-sm text-slate-400">
                       {thMonths[parseInt(calendarSelectedDate.split("-")[1]) - 1]} {parseInt(calendarSelectedDate.split("-")[0]) + 543}
                     </p>
+                    {getThaiHoliday(calendarSelectedDate) && (
+                      <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-600">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+                        {getThaiHoliday(calendarSelectedDate)}
+                      </span>
+                    )}
                   </div>
 
                   {sortedDayItems.length === 0 ? (

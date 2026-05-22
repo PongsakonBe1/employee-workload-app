@@ -19,7 +19,8 @@ import {
 
 // Workload Heatmap — DOW (Mon–Sun) × Hour-of-day grid
 export function WorkloadHeatmap({ data }) {
-  const [tooltip, setTooltip] = React.useState(null);
+  const [tooltip, setTooltip] = React.useState(null); // { dow, hour, count, top, left }
+  const containerRef = React.useRef(null);
 
   // data = { "0-08": 3, "1-14": 7, … }  key = "displayDow-HH"  Mon=0..Sun=6
   const isEmpty = !data || Object.keys(data).length === 0;
@@ -30,16 +31,16 @@ export function WorkloadHeatmap({ data }) {
 
   const max = isEmpty ? 1 : Math.max(...Object.values(data), 1);
 
-  const getStyle = (dow, hour) => {
+  const getColor = (dow, hour) => {
     const key = `${dow}-${String(hour).padStart(2, "0")}`;
     const count = (data && data[key]) || 0;
-    if (!count) return { bg: "bg-slate-100 dark:bg-slate-800", opacity: 1 };
+    if (!count) return "bg-slate-100";
     const ratio = count / max;
-    if (ratio < 0.2) return { bg: "bg-indigo-200", opacity: 1 };
-    if (ratio < 0.4) return { bg: "bg-indigo-400", opacity: 1 };
-    if (ratio < 0.6) return { bg: "bg-indigo-600", opacity: 1 };
-    if (ratio < 0.8) return { bg: "bg-indigo-800", opacity: 1 };
-    return { bg: "bg-indigo-950", opacity: 1 };
+    if (ratio < 0.2) return "bg-orange-200";
+    if (ratio < 0.4) return "bg-orange-400";
+    if (ratio < 0.6) return "bg-red-500";
+    if (ratio < 0.8) return "bg-red-700";
+    return "bg-red-900";
   };
 
   return (
@@ -50,7 +51,7 @@ export function WorkloadHeatmap({ data }) {
       {isEmpty ? (
         <div className="flex h-[180px] items-center justify-center text-slate-400 text-sm">ไม่มีข้อมูล</div>
       ) : (
-        <div className="overflow-x-auto">
+        <div ref={containerRef} className="overflow-x-auto relative">
           {/* Hour axis labels */}
           <div className="flex">
             <div className="w-7 shrink-0" />
@@ -70,13 +71,20 @@ export function WorkloadHeatmap({ data }) {
               {hours.map((hour) => {
                 const key = `${dow}-${String(hour).padStart(2,"0")}`;
                 const count = (data && data[key]) || 0;
-                const { bg } = getStyle(dow, hour);
+                const bg = getColor(dow, hour);
                 return (
                   <div
                     key={hour}
-                    className={`flex-1 h-5 rounded-sm ${bg} cursor-default transition-transform hover:scale-110 relative`}
+                    className={`flex-1 h-5 rounded-sm ${bg} cursor-default transition-transform hover:scale-110`}
                     onMouseEnter={(e) => {
-                      if (count > 0) setTooltip({ dow, hour, count, x: e.clientX, y: e.clientY });
+                      if (!count) return;
+                      const rect = containerRef.current?.getBoundingClientRect();
+                      const cellRect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({
+                        dow, hour, count,
+                        top: cellRect.top - (rect?.top ?? 0) - 38,
+                        left: cellRect.left - (rect?.left ?? 0) + cellRect.width / 2,
+                      });
                     }}
                     onMouseLeave={() => setTooltip(null)}
                   />
@@ -88,21 +96,21 @@ export function WorkloadHeatmap({ data }) {
           {/* Legend */}
           <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-slate-400">
             <span>น้อย</span>
-            {["bg-slate-100","bg-indigo-200","bg-indigo-400","bg-indigo-600","bg-indigo-800","bg-indigo-950"].map((c,i) => (
+            {["bg-slate-100","bg-orange-200","bg-orange-400","bg-red-500","bg-red-700","bg-red-900"].map((c,i) => (
               <div key={i} className={`w-3.5 h-3.5 rounded-sm ${c}`} />
             ))}
             <span>มาก</span>
           </div>
-        </div>
-      )}
 
-      {/* Floating tooltip */}
-      {tooltip && (
-        <div
-          className="fixed z-50 pointer-events-none bg-slate-950 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-lg"
-          style={{ top: tooltip.y - 40, left: tooltip.x - 30 }}
-        >
-          {["จ","อ","พ","พฤ","ศ","ส","อา"][tooltip.dow]} {String(tooltip.hour).padStart(2,"0")}:00 — {tooltip.count} งาน
+          {/* Tooltip — positioned relative to container */}
+          {tooltip && (
+            <div
+              className="absolute z-50 pointer-events-none bg-slate-900 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-xl -translate-x-1/2 whitespace-nowrap"
+              style={{ top: tooltip.top, left: tooltip.left }}
+            >
+              {["จ","อ","พ","พฤ","ศ","ส","อา"][tooltip.dow]} {String(tooltip.hour).padStart(2,"0")}:00 — {tooltip.count} งาน
+            </div>
+          )}
         </div>
       )}
     </div>
