@@ -319,6 +319,7 @@ firebase deploy
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v1.7.1** | 2026-05-22 | **Heatmap**: เปลี่ยนเป็น DOW × Hour grid (จ–อา × 07:00–21:00) จาก `log.date`+`log.time` พร้อม floating tooltip, indigo gradient 6 ระดับ, **Calendar**: redesign แบบ Apple Calendar — 2-panel layout, event dots สีตาม duty, วันอาทิตย์สีแดง, วันปัจจุบัน highlight, detail panel timeline เรียงตามเวลา |
 | **v1.7.0** | 2026-05-22 | **Dashboard**: fix ชื่อพนักงานเก่าโดย join `displayName` จาก `users` collection แทนค่าใน worklog, Workload Heatmap calendar grid + Hour-of-day bar chart, **Staff rank**: query leaderboard แยกเพื่อแสดงอันดับจริงในกลุ่ม, **Worklogs**: calendar view switcher (List/ปฏิทิน) คลิกวันดู worklog |
 | **v1.6.0** | 2026-05-22 | **Login**: `signInWithRedirect` ทุก platform (ยกเว้น iOS standalone ใช้ popup), **Firestore rules**: staff แก้ไข worklog ได้เฉพาะวันเดียวกัน (`isSameDay` + `isValidWorkLogUpdate`), **Dashboard**: recent sort DESC by date+time, custom date range filter พร้อม quota alert (>90 วัน), staff เห็นอันดับตัวเองในกลุ่ม + admin top3, **Admin/Users**: superadmin แต่งตั้ง admin เป็น superadmin พร้อม confirm modal |
 | **v1.5.0** | 2026-05 | **Export**: fix sort asc, fix recipient field mapping, **Dashboard**: layout v2 (trend full-width, date range label, workload vs staff stats), **Favicon**: black background logo |
