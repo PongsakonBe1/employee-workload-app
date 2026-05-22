@@ -90,6 +90,22 @@ export const commentSuggestionMap = {
 
   // DL Exam Proctoring (คุมสอบ DL)
   "คุมสอบ DL": ["เช้า", "บ่าย", "เช้า/บ่าย"],
+
+  // Microsoft Authenticator
+  "Microsoft Authenticator": ["Reset Microsoft Authenticator"],
+
+  // ICIT account
+  "ICIT account": ["KMUTNB SSO"],
+
+  // ติดตั้ง Software
+  "ติดตั้ง Software": [
+    "Adobe Creative Cloud",
+    "MATLAB",
+    "Microsoft 365",
+    "SolidWorks",
+    "ESET",
+    "Foxit PDF",
+  ],
 };
 
 /**

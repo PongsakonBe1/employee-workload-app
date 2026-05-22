@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Bell, X, AlertCircle, CheckCircle, Info } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bell, X, AlertCircle, BellRing } from "lucide-react";
 import {
   collection,
   query,
   where,
   onSnapshot,
-  orderBy,
-  limit,
   getDocs,
-  updateDoc,
   deleteDoc,
   doc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "./AuthProvider";
@@ -24,6 +22,30 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [notifPermission, setNotifPermission] = useState("default");
+  const [reminderTime, setReminderTime] = useState("22:00");
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const prevNotifIds = useRef(new Set());
+
+  // โหลด permission state ตอน mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  // โหลด reminderTime จาก Firestore settings/system
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "settings", "system")).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.reminderTime) setReminderTime(data.reminderTime);
+        if (typeof data.enableDeadlineReminder === "boolean")
+          setReminderEnabled(data.enableDeadlineReminder);
+      }
+    }).catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -32,15 +54,25 @@ export function NotificationBell() {
     const unsubscribes = [];
 
     const handleSnapshot = (snapshot) => {
-      // รวม notifications จากทุก query (เพิ่ม/ลบตาม change)
+      // ตรวจจับ notification ใหม่เพื่อ trigger OS notification
       snapshot.docChanges().forEach((change) => {
+        if (change.type === "added" && !prevNotifIds.current.has(change.doc.id)) {
+          const data = change.doc.data();
+          const ts = data.timestamp?.toDate ? data.timestamp.toDate().getTime() : 0;
+          if (Date.now() - ts < 10000) {
+            fireOsNotification(data.title || "แจ้งเตือน", data.message || "");
+            showAlertMessage(data.title || "แจ้งเตือน");
+          }
+        }
         if (change.type === "removed") {
           allNotifications.delete(change.doc.id);
+          prevNotifIds.current.delete(change.doc.id);
         } else {
           allNotifications.set(change.doc.id, {
             id: change.doc.id,
             ...change.doc.data(),
           });
+          prevNotifIds.current.add(change.doc.id);
         }
       });
 
@@ -53,16 +85,6 @@ export function NotificationBell() {
 
       setNotifications(notifs.slice(0, 20));
       setUnreadCount(notifs.length);
-
-      // แสดง alert สำหรับ notification ใหม่
-      const newImportantNotif = notifs.find(
-        (n) =>
-          n.timestamp?.toDate &&
-          Date.now() - n.timestamp.toDate().getTime() < 5000,
-      );
-      if (newImportantNotif) {
-        showAlertMessage(newImportantNotif.title);
-      }
     };
 
     const handleError = (err) => {
@@ -136,53 +158,54 @@ export function NotificationBell() {
     setTimeout(() => setShowAlert(false), 3000);
   }
 
-  // ตรวจสอบเวลาใกล้ 23:59
+  // ตรวจสอบเวลา reminder (ใช้ reminderTime จาก Firestore settings)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !reminderEnabled) return;
+
+    // แปลง reminderTime "HH:MM" → { h, m }
+    const [rh, rm] = reminderTime.split(":").map(Number);
+    const reminderMinutes = rh * 60 + (rm || 0);
 
     const checkTime = () => {
       const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-      // แจ้งเตือนถ้าเวลา 22:00-23:59 และยังไม่ได้บันทึกงานวันนี้
-      if (hours >= 22 && hours < 24) {
-        // ตรวจสอบว่ามีการบันทึกงานวันนี้หรือไม่
+      // แจ้งเตือนในช่วง reminderTime ถึง 23:59
+      if (nowMinutes >= reminderMinutes && nowMinutes < 24 * 60) {
         const today = now.toISOString().slice(0, 10);
-        // Simplified query - ไม่ต้องการ index (กรอง date ที่ client)
         const q = query(
           collection(db, "worklogs"),
           where("employeeId", "==", user.uid),
         );
-
         getDocs(q).then((snapshot) => {
-          // กรองเฉพาะงานวันนี้ที่ client side
           const todayWorklogs = snapshot.docs.filter(
-            (doc) => doc.data().date === today,
+            (d) => d.data().date === today,
           );
-
           if (todayWorklogs.length === 0) {
-            // ยังไม่มีการบันทึก ให้แสดง notification
-            showLocalNotification(
-              "อย่าลืมบันทึกงานวันนี้",
-              "เหลือเวลาอีกไม่กี่ชั่วโมงก่อนระบบล็อก",
-            );
+            const title = "อย่าลืมบันทึกงานวันนี้";
+            const body = "คุณยังไม่ได้ลงบันทึกงานใช่หรือไม่? อย่าลืมลงบันทึกงานด้วยนะ";
+            fireOsNotification(title, body);
+            showAlertMessage(title);
           }
         });
       }
     };
 
-    // เช็คทุก 30 นาที
     const interval = setInterval(checkTime, 30 * 60 * 1000);
-    checkTime(); // เช็คทันทีตอน mount
-
+    checkTime();
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, reminderEnabled, reminderTime]);
 
-  function showLocalNotification(title, message) {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, { body: message });
+  function fireOsNotification(title, body) {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      new Notification(title, { body, icon: "/labboy-logo.png" });
     }
+  }
+
+  async function requestPermission() {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    const result = await Notification.requestPermission();
+    setNotifPermission(result);
   }
 
   async function markAsRead(id) {
@@ -229,15 +252,37 @@ export function NotificationBell() {
     <>
       {/* Alert Banner สำหรับ notification สำคัญ */}
       {showAlert && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
-          <div className="bg-amber-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
-            <AlertCircle size={20} />
-            <span className="font-medium">{alertMessage}</span>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm px-2">
+          <div className="bg-amber-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <AlertCircle size={20} className="shrink-0" />
+            <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
             <button
               onClick={() => setShowAlert(false)}
-              className="ml-2 hover:bg-white/20 rounded p-1"
+              className="shrink-0 hover:bg-white/20 rounded p-1"
             >
               <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Banner ขอ permission Browser Notification */}
+      {notifPermission === "default" && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-2rem)] max-w-sm px-2">
+          <div className="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+            <BellRing size={20} className="shrink-0 text-amber-400" />
+            <span className="text-sm flex-1 min-w-0">เปิดการแจ้งเตือนเพื่อรับแจ้งเตือนแม้ปิดแอปไว้</span>
+            <button
+              onClick={requestPermission}
+              className="shrink-0 bg-amber-400 text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-amber-300 transition"
+            >
+              เปิด
+            </button>
+            <button
+              onClick={() => setNotifPermission("dismissed")}
+              className="shrink-0 hover:bg-white/20 rounded p-1"
+            >
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -257,65 +302,78 @@ export function NotificationBell() {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-slate-100 rounded"
-              >
-                <X size={16} className="text-slate-400" />
-              </button>
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-slate-500">
-                  ไม่มีการแจ้งเตือน
-                </div>
-              ) : (
-                notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group"
-                    onClick={() => markAsRead(notif.id)}
+          <>
+            {/* Backdrop สำหรับปิด dropdown */}
+            <div
+              className="fixed inset-0 z-[9998]"
+              onClick={() => setIsOpen(false)}
+            />
+            {/* Dropdown — fixed on mobile, absolute on desktop */}
+            <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-xs sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
+                <div className="flex items-center gap-2">
+                  {notifPermission === "granted" && (
+                    <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">แจ้งเตือนเปิดอยู่</span>
+                  )}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1 hover:bg-slate-100 rounded"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-900">
-                          {notif.title}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {notif.message}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {notif.timestamp
-                            ?.toDate?.()
-                            .toLocaleString("th-TH") || ""}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => deleteNotification(e, notif.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-opacity"
-                        title="ลบการแจ้งเตือน"
-                      >
-                        <X size={14} className="text-red-500" />
-                      </button>
-                    </div>
+                    <X size={16} className="text-slate-400" />
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-slate-500">
+                    ไม่มีการแจ้งเตือน
                   </div>
-                ))
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group"
+                      onClick={() => markAsRead(notif.id)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {notif.title}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                            {notif.message}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {notif.timestamp
+                              ?.toDate?.()
+                              .toLocaleString("th-TH") || ""}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => deleteNotification(e, notif.id)}
+                          className="shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-opacity"
+                          title="ลบการแจ้งเตือน"
+                        >
+                          <X size={14} className="text-red-500" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <div className="p-2 border-t border-slate-100">
+                  <button
+                    onClick={markAllAsRead}
+                    className="w-full py-2 text-xs text-slate-600 hover:bg-slate-50 rounded transition"
+                  >
+                    ทำเครื่องหมายว่าอ่านทั้งหมด
+                  </button>
+                </div>
               )}
             </div>
-            {notifications.length > 0 && (
-              <div className="p-2 border-t border-slate-100">
-                <button
-                  onClick={markAllAsRead}
-                  className="w-full py-2 text-xs text-slate-600 hover:bg-slate-50 rounded transition"
-                >
-                  ทำเครื่องหมายว่าอ่านทั้งหมด
-                </button>
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
     </>
