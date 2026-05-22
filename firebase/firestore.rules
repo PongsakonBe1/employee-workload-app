@@ -60,7 +60,8 @@ service cloud.firestore {
 
     function isSameDay(worklog) {
       // ตรวจสอบว่า worklog date ตรงกับวันนี้ (YYYY-MM-DD)
-      return worklog.date == request.time.toDate().date().toString().split('T')[0];
+      // request.time.toDate().toString() returns ISO string — take first 10 chars
+      return worklog.date == request.time.toDate().toString()[0:10];
     }
 
     // Users collection
@@ -247,8 +248,8 @@ service cloud.firestore {
       // Only superadmin can read system logs
       allow read: if isSuperAdmin();
       
-      // System/Admin can create logs
-      allow create: if isAuthenticated() && isAdmin();
+      // Any authenticated user can create logs (needed for login/logout events)
+      allow create: if isAuthenticated();
       
       // No updates/deletes
       allow update, delete: if false;

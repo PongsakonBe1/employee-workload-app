@@ -130,10 +130,10 @@ export function AuthProvider({ children }) {
               await migrateWorklogs(oldUid, firebaseUser.uid);
             }
           } else {
-            // อัพเดต lastLoginAt
-            await updateDoc(doc(db, "users", firebaseUser.uid), {
+            // อัพเดต lastLoginAt (ไม่ให้ block login ถ้า fail)
+            updateDoc(doc(db, "users", firebaseUser.uid), {
               lastLoginAt: new Date(),
-            });
+            }).catch((e) => console.warn("[Auth] lastLoginAt update skipped:", e.code));
           }
 
           // 3. ถ้ามี user data แล้ว
@@ -220,9 +220,13 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.error("[Auth] Error:", err);
-          await signOut(auth);
-          setUser(null);
-          setPendingApproval(false);
+          // เฉพาะ signOut ถ้า error ที่เกี่ยวกับ auth จริง ไม่ใช่ Firestore permission
+          const isFirestoreErr = err.code?.startsWith("firestore/") || err.code?.includes("permission");
+          if (!isFirestoreErr) {
+            await signOut(auth);
+            setUser(null);
+            setPendingApproval(false);
+          }
         }
 
         setLoading(false);
@@ -271,7 +275,7 @@ export function AuthProvider({ children }) {
 
     if (isIOSStandalone) {
       const result = await signInWithPopup(auth, googleProvider);
-      await logSystemAction(SystemActions.LOGIN, "User logged in via Google");
+      logSystemAction(SystemActions.LOGIN, "User logged in via Google").catch(() => {});
       return result.user;
     }
 
