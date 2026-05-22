@@ -20,7 +20,7 @@ import { AppShell } from "../../components/AppShell";
 import { EmptyState } from "../../components/EmptyState";
 import { useAuth } from "../../components/AuthProvider";
 import { db } from "../../lib/firebase";
-import { getThaiHoliday } from "../../lib/thaiHolidays";
+import { getThaiHoliday, prefetchHolidaysForYear } from "../../lib/thaiHolidays";
 import {
   collection,
   query,
@@ -88,6 +88,19 @@ export default function WorkLogsPage() {
     return { year: now.getFullYear(), month: now.getMonth() }; // 0-indexed month
   });
   const [calendarSelectedDate, setCalendarSelectedDate] = useState(null);
+  const [, setHolidaysReady] = useState(0); // bump to re-render after API fetch
+
+  // Pre-fetch holidays from iApp API whenever the visible year changes
+  useEffect(() => {
+    prefetchHolidaysForYear(calendarDate.year).then(() => {
+      setHolidaysReady((n) => n + 1);
+    });
+    if (calendarDate.month >= 10) {
+      prefetchHolidaysForYear(calendarDate.year + 1).then(() => {
+        setHolidaysReady((n) => n + 1);
+      });
+    }
+  }, [calendarDate.year]);
 
   // Users cache for display name lookup
   const [usersCache, setUsersCache] = useState({});
