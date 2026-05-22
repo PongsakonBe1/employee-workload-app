@@ -96,7 +96,9 @@ employee-workload-app/
 │   ├── lib/
 │   │   ├── firebase.js         # Firebase init + googleProvider
 │   │   ├── commentSuggestions.js
-│   │   └── systemLog.js
+│   │   ├── thaiHolidays.js     # Thai public holidays (iApp API + localStorage cache + fallback)
+│   │   ├── validation.js       # Form validation helpers
+│   │   └── systemLog.js        # Audit log helper
 │   └── public/
 │       ├── manifest.json       # PWA manifest
 │       └── sw.js               # Service Worker
@@ -215,9 +217,15 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# iApp Thai Holiday API (optional — ถ้าไม่ใส่จะใช้ข้อมูล fallback hardcoded)
+# ขอ API key ได้ที่ https://iapp.co.th/control/api-keys
+NEXT_PUBLIC_IAPP_HOLIDAY_API_KEY=your_iapp_api_key
 ```
 
-> ค่าเหล่านี้ได้จาก Firebase Console → Project Settings → Your apps → Web app
+> ค่า Firebase ได้จาก Firebase Console → Project Settings → Your apps → Web app
+
+> **iApp Holiday API key**: ใช้สำหรับดึงวันหยุดนักขัตฤกษ์ไทยแบบ live จาก [iApp Technology](https://iapp.co.th/docs/data/holiday/thai) — มี localStorage cache 30 วัน ใช้ประมาณ 1 IC/user/ปี ถ้าไม่ใส่ key จะใช้ข้อมูล hardcode 2024–2026 แทน
 
 ### 4. ติดตั้ง dependencies
 
@@ -269,6 +277,8 @@ cd ../firebase
 firebase deploy --only hosting,firestore:rules
 ```
 
+> **Convention**: ทุกครั้งที่ deploy ให้อัพเดท version ใน `frontend/components/AppShell.js` บรรทัด footer (`v1.x.x`) และ Changelog ใน README พร้อมกันด้วย
+
 ---
 
 ## Deployment
@@ -319,6 +329,10 @@ firebase deploy
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v1.7.5** | 2026-05-22 | **iOS fix**: แก้ date/time input overflow บน iOS PWA ใน /worklogs/new — ใช้ `flex-col`+`min-w-0`+CSS `-webkit-appearance:none`, **Footer**: อัพเดท version ใน AppShell footer ทุก release, **README**: เพิ่มรายละเอียด env setup + deploy convention |
+| **v1.7.4** | 2026-05-22 | **Holiday cache**: เพิ่ม localStorage 30-day TTL cache สำหรับ iApp API เพื่อลด API call — 1 IC/user/ปี |
+| **v1.7.3** | 2026-05-22 | **iApp Holiday API**: เปลี่ยนจาก hardcode เป็น live fetch จาก iApp Technology API พร้อม fallback + `prefetchHolidaysForYear` hook |
+| **v1.7.2** | 2026-05-22 | **Heatmap**: tooltip fix (absolute relative to container, ไม่จมใต้ element อื่น), เปลี่ยนสีเป็น orange-red gradient, **Dashboard**: ลบ emoji ออก, **Worklogs**: default view = calendar, filter bar mobile overflow fix, **Thai Holidays**: เพิ่ม tag วันหยุดนักขัตฤกษ์ใน calendar |
 | **v1.7.1** | 2026-05-22 | **Heatmap**: เปลี่ยนเป็น DOW × Hour grid (จ–อา × 07:00–21:00) จาก `log.date`+`log.time` พร้อม floating tooltip, indigo gradient 6 ระดับ, **Calendar**: redesign แบบ Apple Calendar — 2-panel layout, event dots สีตาม duty, วันอาทิตย์สีแดง, วันปัจจุบัน highlight, detail panel timeline เรียงตามเวลา |
 | **v1.7.0** | 2026-05-22 | **Dashboard**: fix ชื่อพนักงานเก่าโดย join `displayName` จาก `users` collection แทนค่าใน worklog, Workload Heatmap calendar grid + Hour-of-day bar chart, **Staff rank**: query leaderboard แยกเพื่อแสดงอันดับจริงในกลุ่ม, **Worklogs**: calendar view switcher (List/ปฏิทิน) คลิกวันดู worklog |
 | **v1.6.0** | 2026-05-22 | **Login**: `signInWithRedirect` ทุก platform (ยกเว้น iOS standalone ใช้ popup), **Firestore rules**: staff แก้ไข worklog ได้เฉพาะวันเดียวกัน (`isSameDay` + `isValidWorkLogUpdate`), **Dashboard**: recent sort DESC by date+time, custom date range filter พร้อม quota alert (>90 วัน), staff เห็นอันดับตัวเองในกลุ่ม + admin top3, **Admin/Users**: superadmin แต่งตั้ง admin เป็น superadmin พร้อม confirm modal |

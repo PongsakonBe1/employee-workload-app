@@ -357,11 +357,11 @@ export default function NewWorkLogPage() {
           ) : null}
 
           {/* Date & Time */}
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
+          <div className="flex flex-col gap-5 sm:flex-row">
+            <div className="min-w-0 flex-1">
               <label className="apple-label">{t("form.date")}</label>
               <input
-                className="apple-input"
+                className="apple-input w-full min-w-0 max-w-full"
                 type="date"
                 value={form.date}
                 onChange={(e) =>
@@ -369,10 +369,10 @@ export default function NewWorkLogPage() {
                 }
               />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <label className="apple-label">{t("form.time")}</label>
               <input
-                className="apple-input"
+                className="apple-input w-full min-w-0 max-w-full"
                 type="time"
                 value={form.time}
                 onChange={(e) =>

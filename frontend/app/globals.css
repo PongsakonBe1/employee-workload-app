@@ -43,6 +43,17 @@ body {
 
 .apple-input {
   @apply w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix iOS PWA date/time input native picker overflow */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .apple-label {
