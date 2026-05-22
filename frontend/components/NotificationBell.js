@@ -11,8 +11,9 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  setDoc,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, getFCMToken, onFCMMessage } from "../lib/firebase";
 import { useAuth } from "./AuthProvider";
 
 export function NotificationBell() {
@@ -33,6 +34,39 @@ export function NotificationBell() {
       setNotifPermission(Notification.permission);
     }
   }, []);
+
+  // FCM: ลงทะเบียน token + รับ foreground message
+  useEffect(() => {
+    if (!user) return;
+    let unsubFCM = () => {};
+
+    async function initFCM() {
+      if (typeof window === "undefined") return;
+      // ต้อง granted ก่อน
+      if (Notification.permission !== "granted") return;
+
+      const token = await getFCMToken();
+      if (token) {
+        // บันทึก token ลง Firestore users/{uid}.fcmToken
+        setDoc(
+          doc(db, "users", user.uid),
+          { fcmToken: token, fcmUpdatedAt: new Date() },
+          { merge: true }
+        ).catch(() => {});
+      }
+
+      // Foreground message handler
+      unsubFCM = await onFCMMessage((payload) => {
+        const title = payload.notification?.title || payload.data?.title || "แจ้งเตือน";
+        const body = payload.notification?.body || payload.data?.body || "";
+        fireOsNotification(title, body);
+        showAlertMessage(title);
+      });
+    }
+
+    initFCM();
+    return () => { if (typeof unsubFCM === "function") unsubFCM(); };
+  }, [user, notifPermission]);
 
   // โหลด reminderTime จาก Firestore settings/system
   useEffect(() => {
@@ -206,6 +240,17 @@ export function NotificationBell() {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     const result = await Notification.requestPermission();
     setNotifPermission(result);
+    // ถ้า granted ให้ init FCM token ทันที
+    if (result === "granted" && user) {
+      const token = await getFCMToken();
+      if (token) {
+        setDoc(
+          doc(db, "users", user.uid),
+          { fcmToken: token, fcmUpdatedAt: new Date() },
+          { merge: true }
+        ).catch(() => {});
+      }
+    }
   }
 
   async function markAsRead(id) {

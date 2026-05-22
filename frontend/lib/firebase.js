@@ -6,6 +6,7 @@ import {
   browserLocalPersistence,
 } from "firebase/auth";
 import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
+import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 // ⚠️ DISABLED: No Firebase Functions to save quota
 // import { getFunctions } from "firebase/functions";
 
@@ -41,7 +42,36 @@ export const googleProvider = new GoogleAuthProvider();
 // Mock functions object for compatibility (does nothing)
 export const functions = null;
 
-// Test Firestore connection disabled to avoid permission errors during auth init
+// FCM Messaging — lazy init เพราะต้องรันใน browser เท่านั้น
+export async function getFCMToken() {
+  try {
+    const supported = await isSupported();
+    if (!supported) return null;
 
-// ไม่บังคับ domain - ตรวจสอบที่ AuthProvider แทน
-// ทำให้ whitelist emails (เช่น Gmail) สามารถ login ได้
+    const messaging = getMessaging(app);
+
+    // Register service worker ก่อนขอ token
+    if ("serviceWorker" in navigator) {
+      await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+    });
+    return token || null;
+  } catch (err) {
+    console.warn("[FCM] getToken failed:", err.code || err.message);
+    return null;
+  }
+}
+
+export async function onFCMMessage(callback) {
+  try {
+    const supported = await isSupported();
+    if (!supported) return () => {};
+    const messaging = getMessaging(app);
+    return onMessage(messaging, callback);
+  } catch {
+    return () => {};
+  }
+}
