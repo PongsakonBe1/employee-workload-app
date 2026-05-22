@@ -81,30 +81,61 @@ const FALLBACK_HOLIDAYS = {
   "2026-12-31": "วันสิ้นปี",
 };
 
-// ─── In-memory cache: year → { "YYYY-MM-DD": "name" } ───────────────────────
-const _cache = {};
+// ─── Cache layer ─────────────────────────────────────────────────────────────
+// L1: in-memory (per page session)
+// L2: localStorage with 30-day TTL (survives page reloads, costs 0 IC)
+const _memCache = {};
 const _fetchedYears = new Set();
 const _pendingFetches = {};
 
 const API_KEY = process.env.NEXT_PUBLIC_IAPP_HOLIDAY_API_KEY;
 const BASE_URL = "https://api.iapp.co.th/v3/store/data/thai-holiday";
+const LS_PREFIX = "thai_holidays_";
+const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+function lsKey(year) { return `${LS_PREFIX}${year}`; }
+
+/** Read from localStorage, returns map or null if missing/expired */
+function lsRead(year) {
+  try {
+    const raw = localStorage.getItem(lsKey(year));
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > TTL_MS) { localStorage.removeItem(lsKey(year)); return null; }
+    return data;
+  } catch { return null; }
+}
+
+/** Write to localStorage */
+function lsWrite(year, map) {
+  try { localStorage.setItem(lsKey(year), JSON.stringify({ ts: Date.now(), data: map })); }
+  catch { /* storage full — ignore */ }
+}
 
 /**
- * Fetch all holidays for a given year from iApp API and cache them.
- * Returns a map { "YYYY-MM-DD": "ชื่อวันหยุด" } or null on error.
+ * Fetch holidays for a year. Uses localStorage cache first (0 IC),
+ * only hits API when cache is missing or expired.
  */
 async function fetchYearHolidays(year) {
   if (!API_KEY) return null;
-  if (_fetchedYears.has(year)) return _cache[year] || null;
-
-  // deduplicate concurrent calls for same year
+  // L1 hit
+  if (_fetchedYears.has(year)) return _memCache[year] || null;
+  // L2 hit — localStorage (costs 0 IC)
+  if (typeof window !== "undefined") {
+    const stored = lsRead(year);
+    if (stored) {
+      _memCache[year] = stored;
+      _fetchedYears.add(year);
+      return stored;
+    }
+  }
+  // deduplicate concurrent fetches
   if (_pendingFetches[year]) return _pendingFetches[year];
 
   _pendingFetches[year] = (async () => {
     try {
       const res = await fetch(`${BASE_URL}/year/${year}?holiday_type=both`, {
         headers: { apikey: API_KEY },
-        next: { revalidate: 86400 }, // Next.js cache 24h
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
@@ -112,11 +143,12 @@ async function fetchYearHolidays(year) {
       (json.holidays || []).forEach((h) => {
         if (h.date && h.name) map[h.date] = h.name;
       });
-      _cache[year] = map;
+      _memCache[year] = map;
       _fetchedYears.add(year);
+      if (typeof window !== "undefined") lsWrite(year, map);
       return map;
     } catch {
-      _fetchedYears.add(year); // mark as attempted to avoid retry loops
+      _fetchedYears.add(year);
       return null;
     } finally {
       delete _pendingFetches[year];
@@ -126,11 +158,9 @@ async function fetchYearHolidays(year) {
   return _pendingFetches[year];
 }
 
-// Pre-warm cache for current year and next year on module load (client-side only)
+// Pre-warm current year only on module load (1 IC per browser, not per reload)
 if (typeof window !== "undefined" && API_KEY) {
-  const now = new Date();
-  fetchYearHolidays(now.getFullYear());
-  fetchYearHolidays(now.getFullYear() + 1);
+  fetchYearHolidays(new Date().getFullYear());
 }
 
 /**
@@ -140,7 +170,7 @@ if (typeof window !== "undefined" && API_KEY) {
  */
 export function getThaiHoliday(dateStr) {
   const year = parseInt(dateStr.slice(0, 4), 10);
-  if (_cache[year]) return _cache[year][dateStr] || null;
+  if (_memCache[year]) return _memCache[year][dateStr] || null;
   return FALLBACK_HOLIDAYS[dateStr] || null;
 }
 
