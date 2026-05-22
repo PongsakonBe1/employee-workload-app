@@ -675,89 +675,214 @@ export default function WorkLogsPage() {
       {viewMode === "calendar" && (() => {
         const { year, month } = calendarDate;
         const cells = buildCalendarGrid(year, month);
-        const thMonths = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        const thMonths = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
         const dayLabels = ["อา","จ","อ","พ","พฤ","ศ","ส"];
-        const selectedDayItems = cells.find(c => c?.date === calendarSelectedDate)?.items || [];
+        const todayStr = new Date().toISOString().slice(0,10);
+        const sortedDayItems = [...(cells.find(c => c?.date === calendarSelectedDate)?.items || [])]
+          .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+
+        // duty color palette (cycle through)
+        const dutyColors = [
+          "bg-blue-500","bg-violet-500","bg-emerald-500","bg-amber-500",
+          "bg-rose-500","bg-cyan-500","bg-orange-500","bg-indigo-500",
+        ];
+        const dutyColorMap = {};
+        let colorIdx = 0;
+        cells.forEach(cell => {
+          if (!cell) return;
+          cell.items.forEach(item => {
+            if (item.mainDuty && !dutyColorMap[item.mainDuty]) {
+              dutyColorMap[item.mainDuty] = dutyColors[colorIdx % dutyColors.length];
+              colorIdx++;
+            }
+          });
+        });
 
         return (
-          <div className="apple-panel p-4 mb-6">
-            {/* Month navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => {
-                  const d = new Date(year, month - 1, 1);
-                  setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
-                  setCalendarSelectedDate(null);
-                }}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-              >‹</button>
-              <h3 className="text-base font-semibold text-slate-900">
-                {thMonths[month]} {year + 543}
-              </h3>
-              <button
-                onClick={() => {
-                  const d = new Date(year, month + 1, 1);
-                  setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
-                  setCalendarSelectedDate(null);
-                }}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
-              >›</button>
-            </div>
-            {/* Day headers */}
-            <div className="grid grid-cols-7 mb-1">
-              {dayLabels.map((d) => (
-                <div key={d} className="text-center text-xs font-medium text-slate-400 py-1">{d}</div>
-              ))}
-            </div>
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {cells.map((cell, idx) =>
-                cell === null ? (
-                  <div key={`e-${idx}`} />
-                ) : (
+          <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_340px]">
+            {/* Calendar panel */}
+            <div className="apple-panel p-5">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
+                    {thMonths[month]}
+                  </h3>
+                  <p className="text-sm text-slate-400">{year + 543}</p>
+                </div>
+                <div className="flex items-center gap-1">
                   <button
-                    key={cell.date}
-                    onClick={() => setCalendarSelectedDate(calendarSelectedDate === cell.date ? null : cell.date)}
-                    className={`relative min-h-[52px] rounded-xl p-1.5 text-left transition border ${ 
-                      calendarSelectedDate === cell.date
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : cell.items.length > 0
-                          ? "border-slate-200 bg-indigo-50 hover:bg-indigo-100"
-                          : "border-slate-100 bg-white hover:bg-slate-50 text-slate-400"
-                    }`}
+                    onClick={() => {
+                      const d = new Date(year, month - 1, 1);
+                      setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
+                      setCalendarSelectedDate(null);
+                    }}
+                    className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition"
                   >
-                    <span className="text-xs font-medium">{cell.day}</span>
-                    {cell.items.length > 0 && (
-                      <span className={`mt-0.5 flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${ 
-                        calendarSelectedDate === cell.date ? "bg-white text-slate-950" : "bg-indigo-600 text-white"
-                      }`}>
-                        {cell.items.length}
-                      </span>
-                    )}
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
-                )
-              )}
-            </div>
-            {/* Selected day detail */}
-            {calendarSelectedDate && selectedDayItems.length > 0 && (
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                  {calendarSelectedDate} — {selectedDayItems.length} รายการ
-                </h4>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {selectedDayItems.map((item) => (
-                    <div key={item.id} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-900">{item.mainDuty}</p>
-                        <p className="text-xs text-slate-500">{item.minorTask} · {item.time}</p>
-                        {item.comment && <p className="text-xs text-slate-400 mt-0.5">{item.comment}</p>}
-                      </div>
-                      <span className="text-xs text-slate-400">{getDisplayName(item)}</span>
-                    </div>
-                  ))}
+                  <button
+                    onClick={() => {
+                      const now = new Date();
+                      setCalendarDate({ year: now.getFullYear(), month: now.getMonth() });
+                      setCalendarSelectedDate(now.toISOString().slice(0,10));
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+                  >
+                    วันนี้
+                  </button>
+                  <button
+                    onClick={() => {
+                      const d = new Date(year, month + 1, 1);
+                      setCalendarDate({ year: d.getFullYear(), month: d.getMonth() });
+                      setCalendarSelectedDate(null);
+                    }}
+                    className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
                 </div>
               </div>
-            )}
+
+              {/* Day-of-week headers */}
+              <div className="grid grid-cols-7 mb-1">
+                {dayLabels.map((d, i) => (
+                  <div key={d} className={`text-center text-xs font-semibold py-1 ${i === 0 ? "text-rose-400" : "text-slate-400"}`}>{d}</div>
+                ))}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-px bg-slate-100 rounded-2xl overflow-hidden border border-slate-100">
+                {cells.map((cell, idx) =>
+                  cell === null ? (
+                    <div key={`e-${idx}`} className="bg-white min-h-[64px]" />
+                  ) : (
+                    <button
+                      key={cell.date}
+                      onClick={() => setCalendarSelectedDate(calendarSelectedDate === cell.date ? null : cell.date)}
+                      className={`relative min-h-[64px] p-2 text-left transition-colors focus:outline-none ${
+                        calendarSelectedDate === cell.date
+                          ? "bg-slate-950"
+                          : "bg-white hover:bg-slate-50"
+                      }`}
+                    >
+                      {/* Day number */}
+                      <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                        cell.date === todayStr
+                          ? calendarSelectedDate === cell.date
+                            ? "bg-white text-slate-950 font-bold"
+                            : "bg-slate-950 text-white font-bold"
+                          : calendarSelectedDate === cell.date
+                            ? "text-white"
+                            : new Date(cell.date).getDay() === 0
+                              ? "text-rose-400"
+                              : "text-slate-700"
+                      }`}>
+                        {cell.day}
+                      </span>
+
+                      {/* Event dots / count */}
+                      {cell.items.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-[2px]">
+                          {cell.items.length <= 3
+                            ? cell.items.slice(0,3).map((item, ii) => (
+                                <span
+                                  key={ii}
+                                  className={`block w-1.5 h-1.5 rounded-full ${
+                                    calendarSelectedDate === cell.date ? "bg-white/60" : (dutyColorMap[item.mainDuty] || "bg-slate-400")
+                                  }`}
+                                />
+                              ))
+                            : (
+                              <span className={`text-[9px] font-semibold ${calendarSelectedDate === cell.date ? "text-white/70" : "text-indigo-600"}`}>
+                                +{cell.items.length}
+                              </span>
+                            )
+                          }
+                        </div>
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
+
+              {/* Footer summary */}
+              <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
+                <span>{data.items.filter(i => {
+                  const d = new Date(i.date);
+                  return d.getFullYear() === year && d.getMonth() === month;
+                }).length} รายการในเดือนนี้</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-slate-950 inline-block" /> วันนี้
+                </span>
+              </div>
+            </div>
+
+            {/* Detail panel */}
+            <div className="apple-panel p-5 flex flex-col">
+              {calendarSelectedDate ? (
+                <>
+                  <div className="mb-4">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                      {["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"][new Date(calendarSelectedDate).getDay()]}
+                    </p>
+                    <h4 className="text-3xl font-semibold tracking-tight text-slate-950">
+                      {parseInt(calendarSelectedDate.split("-")[2])}
+                    </h4>
+                    <p className="text-sm text-slate-400">
+                      {thMonths[parseInt(calendarSelectedDate.split("-")[1]) - 1]} {parseInt(calendarSelectedDate.split("-")[0]) + 543}
+                    </p>
+                  </div>
+
+                  {sortedDayItems.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-300">
+                      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="5" y="10" width="30" height="25" rx="4" stroke="currentColor" strokeWidth="1.5"/><path d="M5 16h30" stroke="currentColor" strokeWidth="1.5"/><path d="M14 6v6M26 6v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                      <p className="text-sm text-slate-400">ไม่มีรายการวันนี้</p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 space-y-2 overflow-y-auto max-h-[400px] pr-0.5">
+                      {sortedDayItems.map((item) => (
+                        <div key={item.id} className="flex gap-3 group">
+                          {/* Time column */}
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs font-mono text-slate-400 mt-0.5 w-10 text-center shrink-0">
+                              {item.time || "--:--"}
+                            </span>
+                            <div className="flex-1 w-px bg-slate-100 mt-1" />
+                          </div>
+                          {/* Card */}
+                          <div className={`flex-1 mb-2 rounded-xl p-3 border-l-[3px] bg-slate-50 group-hover:bg-white transition-colors ${
+                            dutyColorMap[item.mainDuty]
+                              ? dutyColorMap[item.mainDuty].replace("bg-","border-")
+                              : "border-slate-300"
+                          }`}>
+                            <p className="text-sm font-semibold text-slate-900 leading-tight">{item.mainDuty}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{item.minorTask}</p>
+                            {item.recipient && (
+                              <p className="text-xs text-slate-400 mt-0.5">ผู้รับบริการ: {item.recipient}</p>
+                            )}
+                            {item.comment && (
+                              <p className="text-xs text-slate-400 mt-1 italic">{item.comment}</p>
+                            )}
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                                item.status === "บันทึกแล้ว" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
+                              }`}>{item.status}</span>
+                              <span className="text-[10px] text-slate-400">{getDisplayName(item)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-300">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="12" width="36" height="30" rx="5" stroke="currentColor" strokeWidth="1.5"/><path d="M6 20h36" stroke="currentColor" strokeWidth="1.5"/><path d="M16 7v8M32 7v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="24" cy="34" r="1.5" fill="currentColor"/></svg>
+                  <p className="text-sm text-slate-400">เลือกวันเพื่อดูรายการ</p>
+                </div>
+              )}
+            </div>
           </div>
         );
       })()}

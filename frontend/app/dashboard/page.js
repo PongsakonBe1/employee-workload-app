@@ -440,6 +440,7 @@ export default function DashboardPage() {
       const byMinorTask = {};
       const byDate = {};
       const byHour = {};
+      const byDayHour = {}; // DOW (1=Mon..7=Sun) × hour key "D-HH"
 
       worklogs.forEach((log) => {
         // Count by employee — join ชื่อปัจจุบันจาก users collection
@@ -456,6 +457,14 @@ export default function DashboardPage() {
           if (!isNaN(h)) {
             const key = `${String(h).padStart(2,"0")}:00`;
             byHour[key] = (byHour[key] || 0) + 1;
+
+            // Count DOW × hour for heatmap (Mon=0..Sun=6 in display order)
+            if (log.date) {
+              const dow = new Date(log.date).getDay(); // 0=Sun..6=Sat
+              const displayDow = dow === 0 ? 6 : dow - 1; // Mon=0..Sun=6
+              const dhKey = `${displayDow}-${String(h).padStart(2,"0")}`;
+              byDayHour[dhKey] = (byDayHour[dhKey] || 0) + 1;
+            }
           }
         }
 
@@ -499,6 +508,7 @@ export default function DashboardPage() {
         byMinorTask: toArray(byMinorTask),
         byDate: byDateArray,
         byHour: byHourArray,
+        byDayHour,
         recent: [...worklogs].sort((a, b) => {
           const dateCmp = (b.date || "").localeCompare(a.date || "");
           if (dateCmp !== 0) return dateCmp;
@@ -869,7 +879,7 @@ export default function DashboardPage() {
 
       {/* แถว 2.5: Workload Heatmap + งานตามช่วงเวลา */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
-        <WorkloadHeatmap data={data?.byDate || []} />
+        <WorkloadHeatmap data={data?.byDayHour || {}} />
         <HourOfDayChart data={data?.byHour || []} />
       </section>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -16,77 +17,94 @@ import {
   Legend,
 } from "recharts";
 
-// Workload Heatmap — calendar grid (date × count)
+// Workload Heatmap — DOW (Mon–Sun) × Hour-of-day grid
 export function WorkloadHeatmap({ data }) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="apple-panel p-6">
-        <h3 className="mb-4 text-lg font-semibold text-slate-950">Workload Heatmap</h3>
-        <div className="flex h-[200px] items-center justify-center text-slate-400 text-sm">ไม่มีข้อมูล</div>
-      </div>
-    );
-  }
+  const [tooltip, setTooltip] = React.useState(null);
 
-  const max = Math.max(...data.map((d) => d.count), 1);
+  // data = { "0-08": 3, "1-14": 7, … }  key = "displayDow-HH"  Mon=0..Sun=6
+  const isEmpty = !data || Object.keys(data).length === 0;
 
-  // Group data by week row for calendar display
-  const firstDate = new Date(data[0].date);
-  const startDow = firstDate.getDay(); // 0=Sun
-  const cells = [];
-  // pad empty cells at start
-  for (let i = 0; i < startDow; i++) cells.push(null);
-  data.forEach((d) => cells.push(d));
+  // Show hours 07:00–21:00 (office range)
+  const hours = Array.from({ length: 15 }, (_, i) => i + 7); // 7..21
+  const dayLabels = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
 
-  const weeks = [];
-  for (let i = 0; i < cells.length; i += 7) {
-    weeks.push(cells.slice(i, i + 7));
-  }
+  const max = isEmpty ? 1 : Math.max(...Object.values(data), 1);
 
-  const dayLabels = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
-
-  const getColor = (count) => {
-    if (!count) return "bg-slate-100";
+  const getStyle = (dow, hour) => {
+    const key = `${dow}-${String(hour).padStart(2, "0")}`;
+    const count = (data && data[key]) || 0;
+    if (!count) return { bg: "bg-slate-100 dark:bg-slate-800", opacity: 1 };
     const ratio = count / max;
-    if (ratio < 0.25) return "bg-slate-300";
-    if (ratio < 0.5) return "bg-slate-500";
-    if (ratio < 0.75) return "bg-slate-700";
-    return "bg-slate-950";
+    if (ratio < 0.2) return { bg: "bg-indigo-200", opacity: 1 };
+    if (ratio < 0.4) return { bg: "bg-indigo-400", opacity: 1 };
+    if (ratio < 0.6) return { bg: "bg-indigo-600", opacity: 1 };
+    if (ratio < 0.8) return { bg: "bg-indigo-800", opacity: 1 };
+    return { bg: "bg-indigo-950", opacity: 1 };
   };
 
   return (
     <div className="apple-panel p-6">
-      <h3 className="mb-4 text-lg font-semibold text-slate-950">Workload Heatmap</h3>
-      <div className="overflow-x-auto">
-        <div className="flex gap-1 mb-1">
-          {dayLabels.map((d) => (
-            <div key={d} className="w-7 text-center text-xs text-slate-400">{d}</div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-1">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex gap-1">
-              {week.map((cell, di) =>
-                cell ? (
+      <h3 className="mb-1 text-lg font-semibold text-slate-950">Workload Heatmap</h3>
+      <p className="mb-4 text-xs text-slate-400">วันในสัปดาห์ × ช่วงเวลา</p>
+
+      {isEmpty ? (
+        <div className="flex h-[180px] items-center justify-center text-slate-400 text-sm">ไม่มีข้อมูล</div>
+      ) : (
+        <div className="overflow-x-auto">
+          {/* Hour axis labels */}
+          <div className="flex">
+            <div className="w-7 shrink-0" />
+            <div className="flex flex-1 gap-[2px]">
+              {hours.map((h) => (
+                <div key={h} className="flex-1 text-center text-[9px] text-slate-400 leading-none mb-1">
+                  {h % 2 === 0 ? `${h}` : ""}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid rows */}
+          {dayLabels.map((label, dow) => (
+            <div key={dow} className="flex items-center gap-[2px] mb-[2px]">
+              <div className="w-7 shrink-0 text-[10px] text-slate-500 font-medium text-right pr-1">{label}</div>
+              {hours.map((hour) => {
+                const key = `${dow}-${String(hour).padStart(2,"0")}`;
+                const count = (data && data[key]) || 0;
+                const { bg } = getStyle(dow, hour);
+                return (
                   <div
-                    key={cell.date}
-                    title={`${cell.date}: ${cell.count} งาน`}
-                    className={`w-7 h-7 rounded-md ${getColor(cell.count)} transition-colors`}
+                    key={hour}
+                    className={`flex-1 h-5 rounded-sm ${bg} cursor-default transition-transform hover:scale-110 relative`}
+                    onMouseEnter={(e) => {
+                      if (count > 0) setTooltip({ dow, hour, count, x: e.clientX, y: e.clientY });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
                   />
-                ) : (
-                  <div key={`e-${wi}-${di}`} className="w-7 h-7" />
-                )
-              )}
+                );
+              })}
             </div>
           ))}
+
+          {/* Legend */}
+          <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-slate-400">
+            <span>น้อย</span>
+            {["bg-slate-100","bg-indigo-200","bg-indigo-400","bg-indigo-600","bg-indigo-800","bg-indigo-950"].map((c,i) => (
+              <div key={i} className={`w-3.5 h-3.5 rounded-sm ${c}`} />
+            ))}
+            <span>มาก</span>
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-          <span>น้อย</span>
-          {["bg-slate-100","bg-slate-300","bg-slate-500","bg-slate-700","bg-slate-950"].map((c,i) => (
-            <div key={i} className={`w-4 h-4 rounded-sm ${c}`} />
-          ))}
-          <span>มาก</span>
+      )}
+
+      {/* Floating tooltip */}
+      {tooltip && (
+        <div
+          className="fixed z-50 pointer-events-none bg-slate-950 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-lg"
+          style={{ top: tooltip.y - 40, left: tooltip.x - 30 }}
+        >
+          {["จ","อ","พ","พฤ","ศ","ส","อา"][tooltip.dow]} {String(tooltip.hour).padStart(2,"0")}:00 — {tooltip.count} งาน
         </div>
-      </div>
+      )}
     </div>
   );
 }
