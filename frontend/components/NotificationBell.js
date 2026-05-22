@@ -29,6 +29,7 @@ export function NotificationBell() {
   const [reminderTime, setReminderTime] = useState("22:00");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const prevNotifIds = useRef(new Set());
+  const allNotificationsRef = useRef(new Map()); // shared across all 4 queries
 
   // โหลด permission state ตอน mount
   useEffect(() => {
@@ -86,34 +87,41 @@ export function NotificationBell() {
   useEffect(() => {
     if (!user) return;
 
-    const allNotifications = new Map();
+    // reset shared map when user changes
+    allNotificationsRef.current = new Map();
+    prevNotifIds.current = new Set();
     const unsubscribes = [];
+    let initialLoadDone = false;
 
     const handleSnapshot = (snapshot) => {
-      // ตรวจจับ notification ใหม่เพื่อ trigger OS notification
+      const isFirstLoad = !initialLoadDone;
       snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" && !prevNotifIds.current.has(change.doc.id)) {
-          const data = change.doc.data();
-          const ts = data.timestamp?.toDate ? data.timestamp.toDate().getTime() : 0;
-          if (Date.now() - ts < 10000) {
-            fireOsNotification(data.title || "แจ้งเตือน", data.message || "");
-            showAlertMessage(data.title || "แจ้งเตือน");
-          }
-        }
         if (change.type === "removed") {
-          allNotifications.delete(change.doc.id);
+          allNotificationsRef.current.delete(change.doc.id);
           prevNotifIds.current.delete(change.doc.id);
         } else {
-          allNotifications.set(change.doc.id, {
+          allNotificationsRef.current.set(change.doc.id, {
             id: change.doc.id,
             ...change.doc.data(),
           });
+          // trigger OS notification เฉพาะ doc ใหม่ (ไม่ใช่ initial load) + ไม่เคยเห็นมาก่อน
+          if (
+            change.type === "added" &&
+            !isFirstLoad &&
+            !prevNotifIds.current.has(change.doc.id)
+          ) {
+            const data = change.doc.data();
+            fireOsNotification(data.title || "แจ้งเตือน", data.message || "");
+            showAlertMessage(data.title || "แจ้งเตือน");
+          }
           prevNotifIds.current.add(change.doc.id);
         }
       });
 
+      if (isFirstLoad) initialLoadDone = true;
+
       // แปลงเป็น array และ sort
-      const notifs = Array.from(allNotifications.values()).sort((a, b) => {
+      const notifs = Array.from(allNotificationsRef.current.values()).sort((a, b) => {
         const timeA = a.timestamp?.toDate?.() || 0;
         const timeB = b.timestamp?.toDate?.() || 0;
         return timeB - timeA;
