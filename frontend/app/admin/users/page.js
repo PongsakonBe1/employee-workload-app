@@ -42,20 +42,12 @@ export default function AdminUsersPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active"); // "active" | "pending" | "role-requests"
+  const [promoteModal, setPromoteModal] = useState(null); // { uid, name } of target user
 
   // Redirect non-admin users (allow admin and superadmin)
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
   const isSuperAdmin = user?.role === "superadmin";
 
-  // Debug: log user state changes
-  useEffect(() => {
-    console.log("[AdminUsers] User state changed:", {
-      user: user?.email,
-      role: user?.role,
-      isAdmin,
-      loading,
-    });
-  }, [user, isAdmin, loading]);
 
   useEffect(() => {
     // รอ loading เสร็จก่อนค่อย redirect (กัน redirect ระหว่างโหลด)
@@ -67,15 +59,12 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     if (user?.role === "admin" || user?.role === "superadmin") {
-      console.log("[AdminUsers] User is admin/superadmin, loading data...");
       loadUsers();
       loadPendingUsers();
-      // โหลดคำขอเพิ่มสิทธิ์ (เฉพาะ superadmin)
       if (user?.role === "superadmin") {
         loadRoleChangeRequests();
       }
     } else if (user) {
-      console.log("[AdminUsers] User role:", user?.role);
       // ถ้ามี user แต่ไม่ใช่ admin ให้หยุด loading
       setLoading(false);
     }
@@ -94,7 +83,6 @@ export default function AdminUsersPage() {
 
   async function loadRoleChangeRequests() {
     try {
-      console.log("[AdminUsers] Loading role change requests...");
       const q = query(
         collection(db, "adminPromotionRequests"),
         where("status", "==", "pending"),
@@ -104,12 +92,8 @@ export default function AdminUsersPage() {
         id: doc.id,
         ...doc.data(),
       }));
-      console.log("[AdminUsers] Role change requests loaded:", requests.length);
       setRoleChangeRequests(requests);
     } catch (err) {
-      console.error("[AdminUsers] Error loading role change requests:", err);
-      console.error("[AdminUsers] Error code:", err.code);
-      console.error("[AdminUsers] Error message:", err.message);
       // ไม่ throw error เพื่อให้โหลดส่วนอื่นได้
     }
   }
@@ -188,6 +172,23 @@ export default function AdminUsersPage() {
     } catch (err) {
       console.error("Error approving request:", err);
       setError("ไม่สามารถอนุมัติได้: " + err.message);
+    }
+  }
+
+  // สำหรับ Superadmin: แต่งตั้ง Admin เป็น Superadmin โดยตรง
+  async function promoteToSuperAdmin(targetUid) {
+    try {
+      await updateDoc(doc(db, "users", targetUid), {
+        role: "superadmin",
+        updatedAt: serverTimestamp(),
+        promotedBy: user.uid,
+        promotedAt: serverTimestamp(),
+      });
+      setPromoteModal(null);
+      await loadUsers();
+    } catch (err) {
+      console.error("Error promoting to superadmin:", err);
+      setError("ไม่สามารถแต่งตั้งได้: " + err.message);
     }
   }
 
@@ -607,6 +608,16 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex gap-2">
+                        {/* Superadmin สามารถ promote admin → superadmin */}
+                        {isSuperAdmin && u.role === "admin" && u.id !== user?.uid && (
+                          <button
+                            onClick={() => setPromoteModal({ uid: u.id, name: u.displayName || u.nickname || u.email })}
+                            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 flex items-center gap-1"
+                          >
+                            <Shield size={12} />
+                            แต่งตั้ง Superadmin
+                          </button>
+                        )}
                         {u.role !== "admin" &&
                           u.role !== "superadmin" &&
                           u.id !== user?.uid && (
@@ -759,6 +770,40 @@ export default function AdminUsersPage() {
           </p>
         </div>
       </div>
+
+      {/* Promote to Superadmin Confirmation Modal */}
+      {promoteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="apple-panel w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center">
+                <Shield size={20} className="text-amber-700" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-950">แต่งตั้ง Superadmin</h3>
+            </div>
+            <p className="text-slate-600 text-sm mb-2">
+              คุณกำลังจะแต่งตั้ง <strong className="text-slate-900">{promoteModal.name}</strong> ให้มีสิทธิ์ <strong className="text-amber-700">Superadmin</strong>
+            </p>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700 mb-5">
+              ⚠️ Superadmin มีสิทธิ์สูงสุดในระบบ สามารถจัดการ user ทุกคนและตั้งค่าระบบได้ทั้งหมด กรุณายืนยันก่อนดำเนินการ
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => promoteToSuperAdmin(promoteModal.uid)}
+                className="flex-1 rounded-xl bg-amber-600 text-white px-4 py-2 text-sm font-medium hover:bg-amber-700 transition"
+              >
+                ยืนยัน แต่งตั้ง Superadmin
+              </button>
+              <button
+                onClick={() => setPromoteModal(null)}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

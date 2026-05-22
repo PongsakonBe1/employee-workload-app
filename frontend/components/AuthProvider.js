@@ -264,28 +264,20 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithGoogle() {
-    // PWA Standalone detection:
-    // - iOS Safari: window.navigator.standalone === true
-    // - Android PWA / Chrome: matchMedia('(display-mode: standalone)').matches
+    // iOS Safari standalone: ITP บล็อก cross-domain cookies ใน redirect flow
+    // ทำให้ getRedirectResult() return null → ต้องใช้ popup
     const isIOSStandalone =
       typeof window !== "undefined" && window.navigator.standalone === true;
-    const isAndroidStandalone =
-      typeof window !== "undefined" &&
-      window.matchMedia("(display-mode: standalone)").matches;
 
-    if (isAndroidStandalone && !isIOSStandalone) {
-      // Android PWA: ใช้ redirect flow — ITP ไม่เป็นปัญหาบน Android
-      // getRedirectResult() ใน useEffect จะจัดการ result
-      await signInWithRedirect(auth, googleProvider);
-      return;
+    if (isIOSStandalone) {
+      const result = await signInWithPopup(auth, googleProvider);
+      await logSystemAction(SystemActions.LOGIN, "User logged in via Google");
+      return result.user;
     }
 
-    // iOS PWA standalone หรือ browser ปกติ:
-    // ใช้ popup เพราะ ITP บน Safari/iOS บล็อก cross-domain cookies ใน redirect flow
-    // ทำให้ getRedirectResult() return null เสมอ
-    const result = await signInWithPopup(auth, googleProvider);
-    await logSystemAction(SystemActions.LOGIN, "User logged in via Google");
-    return result.user;
+    // ทุก platform อื่น (Android PWA, Android browser, PC browser):
+    // ใช้ redirect — ไม่ถูกบล็อกโดย popup blocker, ทำงานได้ดีบน mobile
+    await signInWithRedirect(auth, googleProvider);
   }
 
   async function logout() {

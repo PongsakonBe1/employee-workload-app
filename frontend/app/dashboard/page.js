@@ -127,6 +127,11 @@ export default function DashboardPage() {
   const [showAllData, setShowAllData] = useState(false); // Toggle for loading all data
   const [selectedEmployee, setSelectedEmployee] = useState("all");
   const [staffList, setStaffList] = useState([]);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [pendingCustomStart, setPendingCustomStart] = useState("");
+  const [pendingCustomEnd, setPendingCustomEnd] = useState("");
 
   // Modal state for limit warning
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -228,6 +233,8 @@ export default function DashboardPage() {
         return getThisQuarter();
       case "fiscal":
         return getThaiFiscalYearDates(fiscalYear);
+      case "custom":
+        return customStart && customEnd ? { start: customStart, end: customEnd } : null;
       default:
         return null; // all time
     }
@@ -457,7 +464,11 @@ export default function DashboardPage() {
         byMainDuty: toArray(byMainDuty),
         byMinorTask: toArray(byMinorTask),
         byDate: byDateArray,
-        recent: [...worklogs].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10),
+        recent: [...worklogs].sort((a, b) => {
+          const dateCmp = (b.date || "").localeCompare(a.date || "");
+          if (dateCmp !== 0) return dateCmp;
+          return (b.time || "").localeCompare(a.time || "");
+        }).slice(0, 10),
         scope: isAdmin
           ? selectedEmployee === "all"
             ? "all"
@@ -471,12 +482,12 @@ export default function DashboardPage() {
     if (user) {
       loadStats();
     }
-  }, [fiscalYear, user, timeFilter, selectedEmployee, showAllData]);
+  }, [fiscalYear, user, timeFilter, selectedEmployee, showAllData, customStart, customEnd]);
 
   // Reset showAllData when filters change to save quota
   useEffect(() => {
     setShowAllData(false);
-  }, [fiscalYear, timeFilter, selectedEmployee]);
+  }, [fiscalYear, timeFilter, selectedEmployee, customStart, customEnd]);
 
   const topDuty = useMemo(() => data?.byMainDuty?.[0]?.label || "—", [data]);
 
@@ -562,6 +573,22 @@ export default function DashboardPage() {
                   : `➕ โหลดเพิ่ม (${actualCount}${hasMoreData ? "+" : ""})`}
             </button>
 
+            {/* Custom Date Range Button */}
+            <button
+              onClick={() => {
+                setPendingCustomStart(customStart || getToday().slice(0, 7) + "-01");
+                setPendingCustomEnd(customEnd || getToday());
+                setShowCustomDateModal(true);
+              }}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                timeFilter === "custom"
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              📅 {timeFilter === "custom" && customStart ? `${customStart} → ${customEnd}` : "กำหนดช่วงเอง"}
+            </button>
+
             {/* Fiscal Year Selector (show when fiscal filter is active) */}
             {timeFilter === "fiscal" && (
               <select
@@ -623,6 +650,66 @@ export default function DashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Custom Date Range Modal */}
+      {showCustomDateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="apple-panel w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-slate-950 mb-4">กำหนดช่วงเวลาเอง</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">วันเริ่มต้น</label>
+                <input
+                  type="date"
+                  value={pendingCustomStart}
+                  onChange={(e) => setPendingCustomStart(e.target.value)}
+                  className="apple-input w-full"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">วันสิ้นสุด</label>
+                <input
+                  type="date"
+                  value={pendingCustomEnd}
+                  onChange={(e) => setPendingCustomEnd(e.target.value)}
+                  className="apple-input w-full"
+                />
+              </div>
+              {pendingCustomStart && pendingCustomEnd && (() => {
+                const days = Math.round((new Date(pendingCustomEnd) - new Date(pendingCustomStart)) / 86400000);
+                return days > 90 ? (
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
+                    ⚠️ ช่วงวันที่เลือก <strong>{days} วัน</strong> อาจใช้ Firestore quota มาก
+                    ระบบจะดึงข้อมูลสูงสุด 1,000 รายการ
+                  </div>
+                ) : null;
+              })()}
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => {
+                  if (pendingCustomStart && pendingCustomEnd && pendingCustomStart <= pendingCustomEnd) {
+                    setCustomStart(pendingCustomStart);
+                    setCustomEnd(pendingCustomEnd);
+                    setTimeFilter("custom");
+                    setShowCustomDateModal(false);
+                  }
+                }}
+                disabled={!pendingCustomStart || !pendingCustomEnd || pendingCustomStart > pendingCustomEnd}
+                className="apple-button flex-1"
+              >
+                ยืนยัน
+              </button>
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error ? (
         <div className="mb-6 rounded-2xl bg-red-50 p-4 text-red-700">
@@ -733,21 +820,21 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* แถว 4: Admin/Superadmin — เปรียบเทียบปริมาณงานกับจำนวน Staff */}
-      {/*        Staff — สถิติส่วนตัว */}
+      {/* แถว 4: Admin/Superadmin — สถิติการลงงานทุกคน + Top 3 */}
+      {/*        Staff — สถิติส่วนตัวในกลุ่ม */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         {(user?.role === "admin" || user?.role === "superadmin") ? (
           <div className="apple-panel p-6">
             <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
-              ความสัมพันธ์ปริมาณงานกับจำนวน Staff
+              สถิติการลงงานของทีม
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600">จำนวน Staff ทั้งหมด</span>
+                <span className="text-slate-600">Staff ทั้งหมด</span>
                 <span className="text-2xl font-bold text-slate-950">{staffList.length} คน</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600">งานทั้งหมดในช่วงที่เลือก</span>
+                <span className="text-slate-600">งานรวมในช่วงที่เลือก</span>
                 <span className="text-2xl font-bold text-slate-950">{actualCount} งาน</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
@@ -756,41 +843,89 @@ export default function DashboardPage() {
                   {staffList.length > 0 ? (actualCount / staffList.length).toFixed(1) : "0"} งาน/คน
                 </span>
               </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-slate-700 mb-2">Top 3 Staff ลงงานมากสุด</h3>
+              <div className="pt-1">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">🏆 Top 3 ลงงานมากสุด</h3>
                 <div className="space-y-2">
                   {(data?.byEmployee?.slice(0, 3) || []).map((emp, idx) => (
-                    <div key={emp.label} className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs flex items-center justify-center font-medium">
+                    <div key={emp.label} className="flex items-center gap-3 p-2 rounded-xl bg-slate-50">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                        idx === 0 ? "bg-yellow-100 text-yellow-700" :
+                        idx === 1 ? "bg-slate-200 text-slate-600" :
+                        "bg-orange-100 text-orange-600"
+                      }`}>
                         {idx + 1}
                       </span>
-                      <span className="flex-1 text-sm text-slate-700">{emp.label}</span>
+                      <span className="flex-1 text-sm text-slate-700 truncate">{emp.label}</span>
                       <span className="text-sm font-semibold text-slate-950">{emp.count} งาน</span>
                     </div>
                   ))}
                 </div>
               </div>
+              {(data?.byEmployee?.length || 0) > 3 && (
+                <div className="pt-1">
+                  <h3 className="text-sm font-medium text-slate-500 mb-2">ทั้งหมด ({data.byEmployee.length} คน)</h3>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {(data?.byEmployee || []).map((emp, idx) => (
+                      <div key={emp.label} className="flex items-center gap-2 px-2 py-1 text-sm">
+                        <span className="w-5 text-slate-400 text-xs">{idx + 1}.</span>
+                        <span className="flex-1 text-slate-600 truncate">{emp.label}</span>
+                        <span className="font-medium text-slate-800">{emp.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="apple-panel p-6">
-            <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
-              สถิติงานของฉัน
-            </h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600">งานทั้งหมดของคุณ</span>
-                <span className="text-2xl font-bold text-slate-950">{actualCount} งาน</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
-                <span className="text-indigo-700">อันดับในกลุ่ม</span>
-                <span className="text-2xl font-bold text-indigo-700">
-                  {(data?.byEmployee?.findIndex(e => e.label === (user?.displayName || user?.email)) || 0) + 1} / {data?.byEmployee?.length || 0}
-                </span>
+        ) : (() => {
+          const myName = user?.displayName || user?.nickname || user?.email || "";
+          const allEmps = data?.byEmployee || [];
+          const myRankIdx = allEmps.findIndex(e => e.label === myName);
+          const myCount = myRankIdx >= 0 ? allEmps[myRankIdx].count : actualCount;
+          const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
+          return (
+            <div className="apple-panel p-6">
+              <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
+                สถิติงานของฉัน
+              </h2>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                  <span className="text-slate-600">งานของฉันในช่วงนี้</span>
+                  <span className="text-2xl font-bold text-slate-950">{myCount} งาน</span>
+                </div>
+                {myRank !== null && allEmps.length > 1 && (
+                  <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
+                    <span className="text-indigo-700">อันดับในกลุ่ม</span>
+                    <span className="text-2xl font-bold text-indigo-700">
+                      #{myRank} / {allEmps.length} คน
+                    </span>
+                  </div>
+                )}
+                {myRank !== null && allEmps.length > 1 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 mb-2 mt-2">ลำดับทั้งหมดในช่วงนี้</h3>
+                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                      {allEmps.map((emp, idx) => (
+                        <div
+                          key={emp.label}
+                          className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm ${
+                            emp.label === myName ? "bg-indigo-50 font-semibold" : ""
+                          }`}
+                        >
+                          <span className="w-5 text-slate-400 text-xs">{idx + 1}.</span>
+                          <span className={`flex-1 truncate ${emp.label === myName ? "text-indigo-700" : "text-slate-600"}`}>
+                            {emp.label} {emp.label === myName ? "← ฉัน" : ""}
+                          </span>
+                          <span className={emp.label === myName ? "text-indigo-700 font-bold" : "text-slate-700"}>{emp.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="apple-panel p-6">
           <h2 className="text-xl font-semibold tracking-tight text-slate-950">

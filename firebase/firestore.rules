@@ -52,6 +52,17 @@ service cloud.firestore {
              request.resource.data.mainDuty is string;
     }
 
+    function isValidWorkLogUpdate() {
+      // Update ไม่จำเป็นต้องส่งทุกฟิลด์ — ตรวจแค่ว่าฟิลด์ที่ส่งมาถูกชนิด
+      return request.resource.data.date is string &&
+             request.resource.data.time is string;
+    }
+
+    function isSameDay(worklog) {
+      // ตรวจสอบว่า worklog date ตรงกับวันนี้ (YYYY-MM-DD)
+      return worklog.date == request.time.toDate().date().toString().split('T')[0];
+    }
+
     // Users collection
     match /users/{userId} {
       // Allow all authenticated users to read
@@ -99,9 +110,9 @@ service cloud.firestore {
       // Create: Any authenticated user can create
       allow create: if isAuthenticated() && isValidWorkLog();
       
-      // Update: Admin or owner (if not locked)
+      // Update: Admin anytime, staff/owner same-day only (if not locked)
       allow update: if isAdmin() || 
-        (isWorkLogOwner(resource.data) && isNotLocked(resource.data) && isValidWorkLog());
+        (isWorkLogOwner(resource.data) && isNotLocked(resource.data) && isSameDay(resource.data) && isValidWorkLogUpdate());
       
       // Delete: Admin or owner (if not locked)
       allow delete: if isAdmin() || 

@@ -56,6 +56,7 @@ cd ../firebase && firebase deploy --only hosting
 
 | Version | Changes |
 | ------- | ------- |
+| v1.6.0 | **Login**: signInWithRedirect ทุก platform (ยกเว้น iOS standalone ใช้ popup), **Firestore rules**: staff แก้ไข worklog ได้เฉพาะวันเดียวกัน (isSameDay), **Dashboard**: recent sort DESC by date+time, custom date range filter พร้อม quota alert (>90 วัน), staff เห็นอันดับตัวเองในกลุ่ม, admin เห็น top3+ทุกคน, **Admin/Users**: superadmin แต่งตั้ง admin เป็น superadmin พร้อม confirm modal |
 | v1.5.0 | **Export**: fix sort by date+time asc (น้อย→มาก), fix recipient field mapping (recipient, requesterName, client, customer, receiver, to), **Dashboard**: layout v2 (pie+minor → trend full-width with date range label → main+minor bars → workload vs staff stats), **Favicon**: black background logo |
 | v1.4.0 | Fix iOS PWA ITP login (popup แทน redirect), lazy load recharts, Snyk DOM XSS fix |
 | v1.3.0 | Fix favicon browser tab, Android+iOS PWA login, security headers |
