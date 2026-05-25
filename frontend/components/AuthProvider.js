@@ -220,9 +220,11 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.error("[Auth] Error:", err);
-          // เฉพาะ signOut ถ้า error ที่เกี่ยวกับ auth จริง ไม่ใช่ Firestore permission
-          const isFirestoreErr = err.code?.startsWith("firestore/") || err.code?.includes("permission");
-          if (!isFirestoreErr) {
+          // ถ้าเป็น Firestore error (permission, unavailable, เป็นต้น) หรือ error ไม่มี code → อย่า signOut
+          // signOut เฉพาะ auth errors ที่ชัดเจนเท่านั้น
+          const isFirestoreErr = err.code?.startsWith("firestore/") || err.code?.includes("permission") || err.code?.includes("unavailable") || !err.code;
+          const isExplicitAuthErr = err.code?.startsWith("auth/");
+          if (isExplicitAuthErr && !isFirestoreErr) {
             await signOut(auth);
             setUser(null);
             setPendingApproval(false);
