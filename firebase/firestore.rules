@@ -60,8 +60,8 @@ service cloud.firestore {
 
     function isSameDay(worklog) {
       // ตรวจสอบว่า worklog date ตรงกับวันนี้ (YYYY-MM-DD)
-      // request.time.toDate().toString() returns ISO string — take first 10 chars
-      return worklog.date == request.time.toDate().toString()[0:10];
+      // request.time is Timestamp; format as YYYY-MM-DD string
+      return worklog.date == request.time.toDate().format('yyyy-MM-dd');
     }
 
     // Users collection
