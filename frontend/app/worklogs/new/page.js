@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, Zap } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { apiFetch } from "../../../lib/api";
@@ -243,205 +243,211 @@ export default function NewWorkLogPage() {
     }
   }
 
+  const textareaRef = useRef(null);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(80, el.scrollHeight)}px`;
+  }, [form.comment]);
+
   return (
     <AppShell>
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
-      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
 
-        {/* Form — order-first on mobile so it's immediately visible */}
-        <form onSubmit={onSubmit} className="apple-panel p-5 sm:p-7 order-first lg:order-last">
-          {message ? (
-            <div className="mb-6 flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              <CheckCircle2 size={18} />
-              {message}
-            </div>
-          ) : null}
-
-          {error ? (
-            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          {/* Date & Time */}
-          <div className="flex flex-col gap-5 sm:flex-row">
-            <div className="min-w-0 flex-1">
-              <label className="apple-label">{t("form.date")}</label>
-              <input
-                className="apple-input w-full min-w-0 max-w-full"
-                type="date"
-                value={form.date}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, date: e.target.value }))
-                }
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <label className="apple-label">{t("form.time")}</label>
-              <input
-                className="apple-input w-full min-w-0 max-w-full"
-                type="time"
-                value={form.time}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, time: e.target.value }))
-                }
-              />
-            </div>
+      {/* Toast messages — floating, doesn't push layout */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
+        {message && (
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 size={16} className="shrink-0" />
+            {message}
           </div>
+        )}
+        {error && (
+          <div className="pointer-events-auto rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+            {error}
+          </div>
+        )}
+        {draftRestored && (
+          <div className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-slate-800 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 size={14} className="shrink-0 text-slate-300" />
+            กู้คืนร่างอัตโนมัติแล้ว
+          </div>
+        )}
+      </div>
 
-          {/* Quick Log Templates */}
-          <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
-            if (type === 'error') {
-              setError(msg);
-              setTimeout(() => setError(""), 3000);
-            } else {
-              setMessage(msg);
-              setTimeout(() => setMessage(""), 3000);
-            }
-          }} />
+      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] pb-24 lg:pb-0">
 
-          {/* Recipient */}
-          <div className="mt-5">
-            <label className="apple-label">{t("form.recipient")}</label>
-            <input
-              className="apple-input"
-              value={form.recipient}
-              onChange={(e) =>
-                setForm((c) => ({ ...c, recipient: e.target.value }))
+        {/* ── Right: Form ── order-first on mobile */}
+        <div className="order-first lg:order-last flex flex-col gap-4">
+
+          {/* Quick Log — prominent card ที่ด้านบนสุด */}
+          <div className="apple-panel p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={15} className="text-amber-500" />
+              <span className="text-sm font-semibold text-slate-700">บันทึกด่วน</span>
+              <span className="ml-auto text-xs text-slate-400">กดครั้งเดียวบันทึกได้เลย</span>
+            </div>
+            <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
+              if (type === 'error') {
+                setError(msg);
+                setTimeout(() => setError(""), 3000);
+              } else {
+                setMessage(msg);
+                setTimeout(() => setMessage(""), 3000);
               }
-              placeholder={t("form.recipientPlaceholder")}
-            />
+            }} />
           </div>
 
-          {/* Minor Task - PRIMARY FIELD */}
-          <div className="mt-5">
-            <MinorTaskSelector
-              value={form.minorTask}
-              onChange={handleMinorTaskChange}
-              label={t("form.minorTask")}
-              placeholder={t("form.minorTaskPlaceholder")}
-            />
-          </div>
+          {/* Form card */}
+          <form onSubmit={onSubmit} className="apple-panel p-5 sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">บันทึกงานแบบกรอกฟอร์ม</p>
 
-          {/* Main Duty - Auto-populated, read-only display */}
-          {form.minorTask && (
-            <div className="mt-5">
-              <label className="apple-label">{t("form.mainDuty")}</label>
-              <div className="apple-input bg-slate-50 text-slate-700 flex items-center">
-                <span className="text-slate-950 font-medium">
-                  {form.mainDuty}
-                </span>
-                <span className="ml-auto text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded-full">
-                  กรอกอัตโนมัติ
-                </span>
+            {/* Date & Time — compact row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="apple-label">{t("form.date")}</label>
+                <input
+                  className="apple-input w-full min-w-0"
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm((c) => ({ ...c, date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="apple-label">{t("form.time")}</label>
+                <input
+                  className="apple-input w-full min-w-0"
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => setForm((c) => ({ ...c, time: e.target.value }))}
+                />
               </div>
             </div>
-          )}
 
-          {/* Comment with Suggestions */}
-          <div className="mt-5">
-            <label className="apple-label">{t("form.comment")}</label>
-            <textarea
-              className="apple-input min-h-24 resize-y"
-              value={form.comment}
-              onChange={(e) =>
-                setForm((c) => ({ ...c, comment: e.target.value }))
-              }
-              placeholder={t("form.commentPlaceholder")}
-            />
+            {/* Recipient */}
+            <div className="mt-4">
+              <label className="apple-label">{t("form.recipient")}</label>
+              <input
+                className="apple-input"
+                value={form.recipient}
+                onChange={(e) => setForm((c) => ({ ...c, recipient: e.target.value }))}
+                placeholder={t("form.recipientPlaceholder")}
+              />
+            </div>
 
-            {/* Comment Suggestions */}
-            <CommentSuggestions
-              minorTask={form.minorTask}
-              selected={form.comment}
-              onSelect={handleCommentSuggestion}
-            />
-          </div>
+            {/* Minor Task */}
+            <div className="mt-4">
+              <MinorTaskSelector
+                value={form.minorTask}
+                onChange={handleMinorTaskChange}
+                label={t("form.minorTask")}
+                placeholder={t("form.minorTaskPlaceholder")}
+              />
+            </div>
 
-          {/* Lock Deadline Notice */}
-          <div className="mt-6 flex items-center gap-3 text-sm text-slate-500 bg-slate-50 rounded-2xl p-4">
-            <Clock size={16} />
-            <span>
-              รายการนี้จะถูกล็อกเวลา{" "}
-              {lockDeadline.toLocaleTimeString("th-TH", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              น. ของวันที่ {new Date(form.date).toLocaleDateString("th-TH")}
-            </span>
-          </div>
+            {/* Main Duty — compact badge instead of full input */}
+            {form.minorTask && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-slate-400">หัวข้อหลัก:</span>
+                <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">{form.mainDuty}</span>
+              </div>
+            )}
 
-          {/* Submit Button */}
-          <button
-            disabled={saving || !form.minorTask}
-            className="apple-button mt-8 w-full disabled:opacity-50"
-          >
-            {saving ? t("form.saving") : t("form.save")}
-          </button>
-        </form>
+            {/* Comment */}
+            <div className="mt-4">
+              <label className="apple-label">{t("form.comment")}</label>
+              <CommentSuggestions
+                minorTask={form.minorTask}
+                selected={form.comment}
+                onSelect={handleCommentSuggestion}
+              />
+              <textarea
+                ref={textareaRef}
+                className="apple-input mt-2 resize-none overflow-hidden"
+                style={{ minHeight: "80px" }}
+                value={form.comment}
+                onChange={(e) => setForm((c) => ({ ...c, comment: e.target.value }))}
+                placeholder={t("form.commentPlaceholder")}
+              />
+            </div>
 
-        {/* Left panel — info + RoomEquipmentStatus (below form on mobile, left on desktop) */}
-        <div className="flex flex-col gap-4 order-last lg:order-first">
-
-          {/* Draft indicator */}
-          {(lastSaved || draftRestored) && (
-            <div className={`rounded-2xl p-4 ${draftRestored ? "bg-blue-50 border border-blue-100" : "bg-slate-50 border border-slate-100"}`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className={draftRestored ? "text-blue-500" : "text-slate-400"} />
-                  <span className={`text-sm ${draftRestored ? "text-blue-700 font-medium" : "text-slate-500"}`}>
-                    {draftRestored
-                      ? "กู้คืนข้อมูลที่บันทึกไว้อัตโนมัติ"
-                      : lastSaved
-                        ? `บันทึกร่างล่าสุด ${lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`
-                        : ""}
-                  </span>
-                </div>
+            {/* Auto-save indicator — subtle, inside form */}
+            {lastSaved && !draftRestored && (
+              <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+                <CheckCircle2 size={12} />
+                ร่างบันทึกอัตโนมัติ {lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
                 {(form.recipient || form.minorTask || form.comment) && (
                   <button
-                    onClick={() => {
-                      clearDraft();
-                      setForm((c) => ({ ...c, recipient: "", minorTask: "", mainDuty: "", dutyGroup: "main", comment: "" }));
-                    }}
-                    className="text-xs text-slate-400 hover:text-red-500 transition shrink-0"
+                    type="button"
+                    onClick={() => { clearDraft(); setForm((c) => ({ ...c, recipient: "", minorTask: "", mainDuty: "", dutyGroup: "main", comment: "" })); }}
+                    className="ml-auto text-slate-300 hover:text-red-400 transition"
                   >
                     ล้างร่าง
                   </button>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Quick guide */}
-          <div className="rounded-2xl bg-slate-950 p-5 text-white">
-            <p className="text-sm font-semibold mb-2">วิธีการบันทึก</p>
-            <ol className="text-sm leading-6 text-white/70 list-decimal list-inside space-y-1">
-              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span> เป็นหลัก</li>
-              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> ให้อัตโนมัติ</li>
-              <li>เลือกหรือกรอก <span className="text-white font-medium">รายละเอียด</span></li>
-              <li>กด <span className="text-white font-medium">บันทึก</span></li>
-            </ol>
-          </div>
+            {/* Submit — hidden on mobile (shown in sticky bar below), visible on desktop */}
+            <button
+              disabled={saving || !form.minorTask}
+              className="apple-button mt-5 w-full disabled:opacity-40 hidden lg:flex items-center justify-center gap-2"
+            >
+              {saving
+                ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t("form.saving")}</>
+                : t("form.save")
+              }
+            </button>
+          </form>
+        </div>
 
-          {/* Lock notice */}
-          <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 flex items-start gap-3">
-            <Clock size={16} className="text-amber-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-700 leading-relaxed">
-              แก้ไขได้ถึง <strong>23:59</strong> ของวันที่บันทึก หลังจากนั้นรายการจะถูกล็อก
+        {/* ── Left: Sidebar ── below form on mobile, left on desktop */}
+        <div className="flex flex-col gap-4 order-last lg:order-first">
+
+          {/* Lock notice — top of sidebar */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
+            <Clock size={15} className="text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-700">
+              แก้ไขได้ถึง <strong>23:59</strong> วันที่{" "}
+              <strong>{new Date(form.date).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
             </p>
           </div>
 
-          {/* Room & Equipment Status — collapsible on mobile */}
+          {/* Room & Equipment Status — open by default on lg, collapsible on mobile */}
           <RoomEquipmentStatusCollapsible />
         </div>
       </section>
+
+      {/* ── Sticky Save Bar — mobile only ── */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 py-3">
+        <button
+          form="worklog-form"
+          disabled={saving || !form.minorTask}
+          onClick={(e) => { e.preventDefault(); document.querySelector('form')?.requestSubmit(); }}
+          className="apple-button w-full disabled:opacity-40 flex items-center justify-center gap-2 py-3.5 text-base"
+        >
+          {saving
+            ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+            : !form.minorTask
+              ? <span className="text-white/60">เลือกหัวข้อรองก่อนบันทึก</span>
+              : "บันทึก"
+          }
+        </button>
+      </div>
     </AppShell>
   );
 }
 
 function RoomEquipmentStatusCollapsible() {
-  const [open, setOpen] = useState(false);
+  // Default open on desktop (lg = 1024px+), collapsed on mobile
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth >= 1024;
+    return false;
+  });
   return (
     <div className="rounded-2xl border border-slate-200 overflow-hidden">
       <button
