@@ -123,8 +123,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
                      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
                      template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4');
       if (template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
-          template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ')) {
-        setShowEquipmentModal(true);
+          template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ') ||
+          template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ')) {
+        setShowSmartEquipmentModal(true);
       } else if (isRoom) {
         setShowSmartRoomModal(true);
       } else {
