@@ -224,98 +224,167 @@ export default function RoomEquipmentStatus() {
     }
   };
 
-  const roomStats = Object.values(roomStatus).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
   const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
   const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
 
-  const allRooms = ['303','304','305','306','401','402','406','407'];
+  const allRooms3 = ['303','304','305','306'];
+  const allRooms4 = ['401','402','406','407'];
+  const allRooms = [...allRooms3, ...allRooms4];
   const allHeadphones = Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
   const allPower = ['ICIT21','ICIT22','ICIT23'];
 
   const roomsInUse = allRooms.filter(r => roomStatus[r] === 'in_use');
   const hpInUse = allHeadphones.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use');
   const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
-
   const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0;
 
+  // --- Compact bar: กลุ่มละ dots + label ---
+  const groups = [
+    {
+      key: 'room3',
+      label: 'ห้อง ชั้น 3',
+      items: allRooms3,
+      getStatus: r => roomStatus[r] === 'in_use',
+      inUseCount: allRooms3.filter(r => roomStatus[r] === 'in_use').length,
+    },
+    {
+      key: 'room4',
+      label: 'ห้อง ชั้น 4',
+      items: allRooms4,
+      getStatus: r => roomStatus[r] === 'in_use',
+      inUseCount: allRooms4.filter(r => roomStatus[r] === 'in_use').length,
+    },
+    {
+      key: 'hp',
+      label: 'หูฟัง',
+      items: allHeadphones,
+      getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
+      inUseCount: hpInUse.length,
+    },
+    {
+      key: 'pw',
+      label: 'ปลั๊ก',
+      items: allPower,
+      getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
+      inUseCount: pwInUse.length,
+    },
+  ];
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-      {/* ── Compact header bar: กดเพื่อขยาย ── */}
+    <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm">
+
+      {/* ── Compact bar ── */}
       <button
         onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition text-left"
+        className="w-full flex items-center gap-0 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
       >
-        {/* Status dots */}
-        <div className="flex items-center gap-1.5">
-          {loading ? (
-            <Activity className="w-3.5 h-3.5 text-slate-400 animate-pulse" />
-          ) : (
-            <>
-              {/* Rooms: one dot per room */}
-              {allRooms.map(r => (
-                <div key={r} className={`w-2.5 h-2.5 rounded-full ${roomStatus[r] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={`ห้อง ${r}`} />
-              ))}
-              {/* divider */}
-              <div className="w-px h-3 bg-slate-200 mx-0.5" />
-              {/* Headphones: one dot per unit */}
-              {allHeadphones.map(h => (
-                <div key={h} className={`w-2 h-2 rounded-full ${(equipmentStatus.headphones||{})[h] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={h} />
-              ))}
-              {/* divider */}
-              <div className="w-px h-3 bg-slate-200 mx-0.5" />
-              {/* Power */}
-              {allPower.map(p => (
-                <div key={p} className={`w-2 h-2 rounded-full ${(equipmentStatus.power||{})[p] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={p} />
-              ))}
-            </>
+        {loading ? (
+          <div className="flex items-center gap-2 flex-1">
+            <Activity className="w-3.5 h-3.5 text-slate-300 animate-pulse" />
+            <span className="text-xs text-slate-400">กำลังโหลด...</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
+            {groups.map((g, i) => (
+              <div key={g.key} className="flex items-center gap-1.5 shrink-0">
+                {/* dots */}
+                <div className="flex items-center gap-0.5">
+                  {g.items.map(item => (
+                    <div
+                      key={item}
+                      className={`rounded-full transition-colors ${
+                        g.getStatus(item)
+                          ? 'bg-red-400 w-2 h-2'
+                          : 'bg-emerald-400 w-2 h-2'
+                      }`}
+                    />
+                  ))}
+                </div>
+                {/* label */}
+                <span className={`text-[11px] font-medium whitespace-nowrap ${
+                  g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'
+                }`}>
+                  {g.label}
+                  {g.inUseCount > 0 && (
+                    <span className="ml-0.5 text-red-400">·{g.inUseCount}</span>
+                  )}
+                </span>
+                {/* divider */}
+                {i < groups.length - 1 && (
+                  <div className="w-px h-3 bg-slate-200 ml-1.5" />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {!loading && (
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              anyInUse
+                ? 'bg-red-50 text-red-500'
+                : 'bg-emerald-50 text-emerald-600'
+            }`}>
+              {anyInUse ? 'มีการใช้งาน' : 'ว่างทั้งหมด'}
+            </span>
           )}
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"
+            className={`text-slate-300 transition-transform ${expanded ? 'rotate-180' : ''}`}>
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-
-        <div className="flex-1 min-w-0">
-          <span className="text-xs font-medium text-slate-600">
-            {loading ? 'โหลดสถานะ...' : anyInUse
-              ? <span className="text-red-600">มีการใช้งานอยู่</span>
-              : <span className="text-green-600">ทุกห้องและอุปกรณ์ว่าง</span>
-            }
-          </span>
-        </div>
-
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-          className={`text-slate-400 transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}>
-          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
       </button>
 
-      {/* ── Expanded detail ── */}
+      {/* ── Expanded: Apple iOS card style ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100 p-4 space-y-4">
+        <div className="border-t border-slate-100 bg-slate-50/60 p-4 space-y-5">
 
-          {/* ห้อง ชั้น 3 */}
+          {/* ห้องแลกเปลี่ยน ชั้น 3 */}
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ห้องแลกเปลี่ยน (ชั้น 3)</p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {['303','304','305','306'].map(r => {
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-xs font-semibold text-slate-500">ห้องแลกเปลี่ยน ชั้น 3</p>
+              <span className="text-[11px] text-slate-400">
+                {allRooms3.filter(r => roomStatus[r] !== 'in_use').length} ว่าง
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {allRooms3.map(r => {
                 const inUse = roomStatus[r] === 'in_use';
                 return (
-                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{roomOsMap[r]}</div>
+                  <div key={r} className={`rounded-2xl p-3 text-center transition-all ${
+                    inUse
+                      ? 'bg-red-500 shadow-sm shadow-red-200'
+                      : 'bg-white border border-slate-200/80 shadow-sm'
+                  }`}>
+                    <div className={`text-base font-bold tracking-tight ${inUse ? 'text-white' : 'text-slate-800'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 font-medium ${inUse ? 'text-red-100' : 'text-slate-400'}`}>{roomOsMap[r]}</div>
+                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* ห้อง ชั้น 4 */}
+          {/* ห้องเรียน ชั้น 4 */}
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ห้องเรียน (ชั้น 4)</p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {['401','402','406','407'].map(r => {
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-xs font-semibold text-slate-500">ห้องเรียน ชั้น 4</p>
+              <span className="text-[11px] text-slate-400">
+                {allRooms4.filter(r => roomStatus[r] !== 'in_use').length} ว่าง
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {allRooms4.map(r => {
                 const inUse = roomStatus[r] === 'in_use';
                 return (
-                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
+                  <div key={r} className={`rounded-2xl p-3 text-center transition-all ${
+                    inUse
+                      ? 'bg-red-500 shadow-sm shadow-red-200'
+                      : 'bg-white border border-slate-200/80 shadow-sm'
+                  }`}>
+                    <div className={`text-base font-bold tracking-tight ${inUse ? 'text-white' : 'text-slate-800'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 font-medium ${inUse ? 'text-red-100' : 'text-slate-400'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
+                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
                   </div>
                 );
               })}
@@ -324,29 +393,46 @@ export default function RoomEquipmentStatus() {
 
           {/* หูฟัง */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">หูฟัง</p>
-              <span className="text-[11px] text-slate-400">ว่าง {headphoneStats.available||0} / ใช้ {headphoneStats.in_use||0}</span>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-xs font-semibold text-slate-500">หูฟัง</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  ว่าง {headphoneStats.available||0}
+                </span>
+                {(headphoneStats.in_use||0) > 0 && (
+                  <span className="text-[11px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+                    ใช้ {headphoneStats.in_use}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-6 gap-1">
+            <div className="grid grid-cols-6 gap-1.5">
               {allHeadphones.map(h => {
                 const inUse = (equipmentStatus.headphones||{})[h] === 'in_use';
                 const detail = equipmentDetails[h];
                 return (
-                  <div key={h} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
-                    className={`rounded-lg py-1.5 text-center text-[11px] font-medium ${inUse ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-                    {h.replace('ICIT','')}
+                  <div key={h}
+                    title={inUse && detail ? `${detail.user} · ${detail.time}` : 'ว่าง'}
+                    className={`rounded-xl py-2 text-center transition-all ${
+                      inUse
+                        ? 'bg-red-500 shadow-sm shadow-red-200'
+                        : 'bg-white border border-slate-200/80 shadow-sm'
+                    }`}>
+                    <div className={`text-xs font-bold ${inUse ? 'text-white' : 'text-slate-700'}`}>
+                      {h.replace('ICIT','')}
+                    </div>
                   </div>
                 );
               })}
             </div>
             {hpInUse.length > 0 && (
-              <div className="mt-2 space-y-1">
+              <div className="mt-2.5 space-y-1.5">
                 {hpInUse.map(h => equipmentDetails[h] && (
-                  <div key={h} className="flex items-center gap-2 text-[11px] text-red-600 bg-red-50 rounded-lg px-2 py-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                    <span className="font-medium">{h}</span>
-                    <span className="text-red-400">— {equipmentDetails[h].user} ({equipmentDetails[h].time})</span>
+                  <div key={h} className="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-slate-200/80 shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                    <span className="text-xs font-semibold text-slate-700">{h}</span>
+                    <span className="text-[11px] text-slate-400 ml-auto">{equipmentDetails[h].user}</span>
+                    <span className="text-[11px] text-slate-300">{equipmentDetails[h].time}</span>
                   </div>
                 ))}
               </div>
@@ -355,19 +441,40 @@ export default function RoomEquipmentStatus() {
 
           {/* ปลั๊กไฟ */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ปลั๊กไฟ</p>
-              <span className="text-[11px] text-slate-400">ว่าง {powerStats.available||0} / ใช้ {powerStats.in_use||0}</span>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-xs font-semibold text-slate-500">ปลั๊กไฟ</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  ว่าง {powerStats.available||0}
+                </span>
+                {(powerStats.in_use||0) > 0 && (
+                  <span className="text-[11px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+                    ใช้ {powerStats.in_use}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {allPower.map(p => {
                 const inUse = (equipmentStatus.power||{})[p] === 'in_use';
                 const detail = equipmentDetails[p];
                 return (
-                  <div key={p} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
-                    className={`rounded-xl py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{p.replace('ICIT','')}</div>
-                    {inUse && detail && <div className="text-[10px] text-red-500 mt-0.5 truncate px-1">{detail.user}</div>}
+                  <div key={p}
+                    title={inUse && detail ? `${detail.user} · ${detail.time}` : 'ว่าง'}
+                    className={`rounded-2xl p-3 text-center transition-all ${
+                      inUse
+                        ? 'bg-red-500 shadow-sm shadow-red-200'
+                        : 'bg-white border border-slate-200/80 shadow-sm'
+                    }`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-white' : 'text-slate-800'}`}>
+                      {p.replace('ICIT','')}
+                    </div>
+                    {inUse && detail ? (
+                      <div className="text-[10px] text-red-100 mt-0.5 truncate">{detail.user}</div>
+                    ) : (
+                      <div className="text-[10px] text-slate-400 mt-0.5">ว่าง</div>
+                    )}
+                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
                   </div>
                 );
               })}
@@ -375,7 +482,9 @@ export default function RoomEquipmentStatus() {
           </div>
 
           {lastUpdated && (
-            <p className="text-[10px] text-slate-300 text-right">อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}</p>
+            <p className="text-[10px] text-slate-300 text-right pt-1">
+              อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}
+            </p>
           )}
         </div>
       )}
