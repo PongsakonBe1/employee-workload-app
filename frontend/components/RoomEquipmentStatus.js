@@ -317,26 +317,26 @@ export default function RoomEquipmentStatus() {
             {/* ชั้น 3: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
               <div className="flex gap-[2px]">{allHeadphones3.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>🎧</span>
+              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* ชั้น 3: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
               <div className="flex gap-[3px]">{allPower3.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>🔌</span>
+              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>ปลั๊ก</span>
             </div>
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* Finn: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-[9px] text-slate-300 font-medium">Finn</span>
               <div className="flex gap-[2px]">{allHeadphonesFinn.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>🎧</span>
+              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* Finn: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
               <div className="flex gap-[3px]">{allPowerFinn.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>🔌</span>
+              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>ปลั๊ก</span>
             </div>
           </div>
         )}
@@ -358,80 +358,90 @@ export default function RoomEquipmentStatus() {
         </div>
       </button>
 
-      {/* ── Expanded detail: Find My style ── */}
+      {/* ── Expanded detail: grid card style ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100">
-          {/* Section: ห้อง */}
-          <div className="px-4 pt-3 pb-1">
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">ห้อง</p>
-            <div className="space-y-0">
-              {[...allRooms3.map(r=>({id:r,label:r,sub:roomOsMap[r]||'',inUse:roomStatus[r]==='in_use',detail:null})),
-                ...allRooms4.map(r=>({id:r,label:r,sub:r.startsWith('4')?'ชั้น 4':'',inUse:roomStatus[r]==='in_use',detail:null}))
-              ].map(({id,label,sub,inUse,detail}) => (
-                <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                  <span className="text-[12px] font-semibold text-slate-700 w-10 shrink-0">{label}</span>
-                  <span className="text-[11px] text-slate-400 flex-1">{sub}</span>
-                  <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {inUse ? 'เปิดอยู่' : 'ว่าง'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="border-t border-slate-100 px-3 py-3 space-y-3">
 
-          {/* Section: ชั้น 3 */}
-          <div className="px-4 pt-2 pb-1 border-t border-slate-100">
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">ชั้น 3 — อุปกรณ์</p>
-            <div className="space-y-0">
-              {[...allHeadphones3.map(h=>({id:h,icon:'🎧',inUse:(equipmentStatus.headphones||{})[h]==='in_use'})),
-                ...allPower3.map(p=>({id:p,icon:'🔌',inUse:(equipmentStatus.power||{})[p]==='in_use'}))
-              ].map(({id,icon,inUse}) => {
-                const num = parseInt(id.replace('ICIT',''),10);
-                const det = equipmentDetails[id];
+          {/* ── ห้อง ── */}
+          <div>
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">ห้อง</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[...allRooms3, ...allRooms4].map(r => {
+                const inUse = roomStatus[r] === 'in_use';
                 return (
-                  <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className="text-[10px] shrink-0">{icon}</span>
-                    <span className="text-[12px] font-semibold text-slate-700 w-6 shrink-0">{num}</span>
-                    <span className="text-[11px] text-slate-400 flex-1 truncate">{inUse && det ? det.user : ''}</span>
-                    <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
-                      {inUse ? (det?.time || 'ใช้งาน') : 'ว่าง'}
-                    </span>
+                  <div key={r} className={`rounded-xl px-2 py-2 flex flex-col items-center gap-0.5 ${
+                    inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
+                  }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span className={`text-[11px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
+                    <span className={`text-[9px] ${inUse ? 'text-red-400' : 'text-emerald-400'}`}>{inUse ? 'เปิด' : 'ว่าง'}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Section: Finn Space */}
-          <div className="px-4 pt-2 pb-3 border-t border-slate-100">
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">Finn Space — อุปกรณ์</p>
-            <div className="space-y-0">
-              {[...allHeadphonesFinn.map(h=>({id:h,icon:'🎧',inUse:(equipmentStatus.headphones||{})[h]==='in_use'})),
-                ...allPowerFinn.map(p=>({id:p,icon:'🔌',inUse:(equipmentStatus.power||{})[p]==='in_use'}))
-              ].map(({id,icon,inUse}) => {
-                const num = parseInt(id.replace('ICIT',''),10);
+          {/* ── ชั้น 3: อุปกรณ์ ── */}
+          <div className="border-t border-slate-100 pt-2">
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">ชั้น 3</p>
+            <div className="grid grid-cols-5 gap-1">
+              {[...allHeadphones3, ...allPower3].map(id => {
+                const isHP = id.startsWith('ICIT0') || parseInt(id.replace('ICIT',''),10) <= 12;
+                const inUse = isHP
+                  ? (equipmentStatus.headphones||{})[id] === 'in_use'
+                  : (equipmentStatus.power||{})[id] === 'in_use';
                 const det = equipmentDetails[id];
+                const num = parseInt(id.replace('ICIT',''),10);
                 return (
-                  <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className="text-[10px] shrink-0">{icon}</span>
-                    <span className="text-[12px] font-semibold text-slate-700 w-6 shrink-0">{num}</span>
-                    <span className="text-[11px] text-slate-400 flex-1 truncate">{inUse && det ? det.user : ''}</span>
-                    <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
-                      {inUse ? (det?.time || 'ใช้งาน') : 'ว่าง'}
-                    </span>
+                  <div key={id} title={inUse && det ? `${det.user} ${det.time}` : 'ว่าง'}
+                    className={`rounded-lg py-1.5 flex flex-col items-center gap-0.5 ${
+                      inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                    }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span className={`text-[10px] font-bold leading-none ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                    {inUse && det
+                      ? <span className="text-[8px] text-red-400 truncate w-full text-center px-0.5">{det.user.split(' ')[0]}</span>
+                      : <span className="text-[8px] text-slate-300">{isHP ? 'หูฟัง' : 'ปลั๊ก'}</span>
+                    }
                   </div>
                 );
               })}
             </div>
-            {lastUpdated && (
-              <p className="text-[9px] text-slate-200 text-right mt-2">
-                อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
-              </p>
-            )}
           </div>
+
+          {/* ── Finn Space: อุปกรณ์ ── */}
+          <div className="border-t border-slate-100 pt-2">
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">Finn Space</p>
+            <div className="grid grid-cols-5 gap-1">
+              {[...allHeadphonesFinn, ...allPowerFinn].map(id => {
+                const num = parseInt(id.replace('ICIT',''),10);
+                const isHP = num <= 20;
+                const inUse = isHP
+                  ? (equipmentStatus.headphones||{})[id] === 'in_use'
+                  : (equipmentStatus.power||{})[id] === 'in_use';
+                const det = equipmentDetails[id];
+                return (
+                  <div key={id} title={inUse && det ? `${det.user} ${det.time}` : 'ว่าง'}
+                    className={`rounded-lg py-1.5 flex flex-col items-center gap-0.5 ${
+                      inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                    }`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span className={`text-[10px] font-bold leading-none ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                    {inUse && det
+                      ? <span className="text-[8px] text-red-400 truncate w-full text-center px-0.5">{det.user.split(' ')[0]}</span>
+                      : <span className="text-[8px] text-slate-300">{isHP ? 'หูฟัง' : 'ปลั๊ก'}</span>
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {lastUpdated && (
+            <p className="text-[9px] text-slate-200 text-right pt-0.5">
+              อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
+            </p>
+          )}
         </div>
       )}
     </div>
