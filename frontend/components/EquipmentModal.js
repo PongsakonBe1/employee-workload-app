@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
-import { X, Headphones, Plug } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 export default function EquipmentModal({ 
   isOpen, 
@@ -11,8 +12,11 @@ export default function EquipmentModal({
   templateMinorTask 
 }) {
   const [selectedEquipment, setSelectedEquipment] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!isOpen || !mounted) return null;
 
   // กำหนดรายการอุปกรณ์ตามประเภท
   const getEquipmentList = () => {
@@ -45,81 +49,62 @@ export default function EquipmentModal({
     setSelectedEquipment('');
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+  const modal = (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
+
+      {/* Sheet */}
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-              {isHeadphones ? (
-                <Headphones className="w-5 h-5 text-white" />
-              ) : (
-                <Plug className="w-5 h-5 text-white" />
-              )}
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">{templateName}</h3>
-              <p className="text-sm text-slate-500">เลือกรายการอุปกรณ์</p>
-            </div>
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-950">{templateName}</h3>
+            <p className="text-sm text-slate-400 mt-0.5">เลือกรายการอุปกรณ์</p>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Equipment List */}
-        <div className="p-6">
-          <div className="grid grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-6 pb-2">
+          <div className={`grid gap-2 ${isHeadphones ? 'grid-cols-4' : 'grid-cols-3'}`}>
             {equipmentList.map((equipment) => (
               <button
                 key={equipment}
                 onClick={() => handleSelect(equipment)}
-                className={`p-3 rounded-xl border-2 transition-all ${
+                className={`py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
                   selectedEquipment === equipment
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                <div className="text-sm font-medium">{equipment}</div>
+                {equipment.replace('ICIT', '')}
               </button>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-          <div className="text-sm text-slate-500">
-            {selectedEquipment ? (
-              <span>เลือก: <span className="font-medium text-slate-700">{selectedEquipment}</span></span>
-            ) : (
-              <span>กรุณาเลือกรายการ</span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={!selectedEquipment}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                selectedEquipment
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              ยืนยัน
-            </button>
-          </div>
+        <div className="px-6 py-5 flex gap-3">
+          <button
+            onClick={handleConfirm}
+            disabled={!selectedEquipment}
+            className="apple-button flex-1 disabled:opacity-40"
+          >
+            {selectedEquipment ? `ยืนยัน ${selectedEquipment}` : 'เลือกอุปกรณ์ก่อน'}
+          </button>
+          <button
+            onClick={handleClose}
+            className="apple-button-secondary px-5"
+          >
+            ยกเลิก
+          </button>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }

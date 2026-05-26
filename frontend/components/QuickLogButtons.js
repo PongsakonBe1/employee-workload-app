@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { getTemplatesForUser, logFromTemplate } from '../lib/quickLogTemplates';
 import { useAuth } from './AuthProvider';
@@ -32,6 +33,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
   const holdTimerRef = useState(null);
   const holdRafRef = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -467,7 +471,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       )}
 
       {/* Modal สำหรับกรอกผู้รับบริการ */}
-      {showRecipientModal && selectedTemplate && (
+      {showRecipientModal && selectedTemplate && mounted && createPortal(
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }} />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
@@ -502,7 +506,8 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Equipment Modal */}

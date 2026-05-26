@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, DoorOpen, DoorClosed, Clock } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
@@ -14,6 +15,9 @@ export default function SmartRoomModal({
   const [selectedRoom, setSelectedRoom] = useState('');
   const [roomStatus, setRoomStatus] = useState({});
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // ดึงข้อมูลสถานะห้องจาก Firestore worklogs
   useEffect(() => {
@@ -88,8 +92,6 @@ export default function SmartRoomModal({
 
     loadRoomStatus();
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   // กรองห้องตามชั้นที่เลือก
   const getFilteredRooms = () => {
@@ -187,7 +189,9 @@ export default function SmartRoomModal({
   const openCount = filteredRooms.filter(room => roomStatus[room] === 'closed').length;
   const closedCount = filteredRooms.filter(room => roomStatus[room] === 'open').length;
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] flex flex-col overflow-hidden">
@@ -286,6 +290,7 @@ export default function SmartRoomModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

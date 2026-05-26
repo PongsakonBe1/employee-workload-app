@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Headphones, Plug, User, Clock } from 'lucide-react';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
@@ -16,6 +17,9 @@ export default function SmartEquipmentModal({
   const [equipmentDetails, setEquipmentDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // กำหนดประเภทอุปกรณ์
   const getEquipmentType = () => {
@@ -168,9 +172,6 @@ export default function SmartEquipmentModal({
     return () => window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
   }, [equipmentType, isOpen]);
 
-  // Early return AFTER all hooks
-  if (!isOpen) return null;
-
   // แสดงอุปกรณ์ทั้งหมดเหมือน SmartRoomModal
   const getFilteredEquipment = () => {
     const equipmentList = isHeadphones 
@@ -234,7 +235,9 @@ export default function SmartEquipmentModal({
   const availableCount = filteredEquipment.filter(eq => equipmentStatus[eq] === 'available').length;
   const inUseCount = filteredEquipment.filter(eq => equipmentStatus[eq] === 'in_use').length;
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
@@ -350,6 +353,7 @@ export default function SmartEquipmentModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
