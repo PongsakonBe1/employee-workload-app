@@ -22,152 +22,101 @@ export default function SmartEquipmentModal({
   useEffect(() => { setMounted(true); }, []);
 
   // กำหนดประเภทอุปกรณ์
-  const getEquipmentType = () => {
-    if (templateMinorTask.includes('หูฟัง')) return 'headphones';
-    if (templateMinorTask.includes('ปลั๊กไฟ')) return 'power';
-    return null;
-  };
-
-  const equipmentType = getEquipmentType();
+  const tName = templateName || '';
+  const tTask = templateMinorTask || '';
+  const equipmentType = (tTask.includes('หูฟัง') || tName.includes('หูฟัง')) ? 'headphones'
+                      : (tTask.includes('ปลั๊กไฟ') || tName.includes('ปลั๊กไฟ')) ? 'power'
+                      : null;
   const isHeadphones = equipmentType === 'headphones';
 
+  // ตรวจว่า template เป็นของห้องไหน
+  const isFinn   = tName.toLowerCase().includes('finn') || tTask.toLowerCase().includes('finn');
+  const isFloor3 = tName.includes('ชั้น 3') || tTask.includes('ชั้น 3');
 
-  // คำนวณสถานะอุปกรณ์จาก worklogs เหมือน RoomEquipmentStatus
+  // full ranges สำหรับ scan worklogs
+  const ALL_HP = Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
+  const ALL_PW = ['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'];
+
+  // range ที่แสดงใน grid ตาม template
+  const getEquipmentRange = () => {
+    if (isHeadphones) {
+      if (isFinn)   return Array.from({length:8},  (_,i) => `ICIT${String(i+13).padStart(2,'0')}`);
+      if (isFloor3) return Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
+      return ALL_HP;
+    }
+    if (isFinn)   return ['ICIT24','ICIT25'];
+    if (isFloor3) return ['ICIT21','ICIT22','ICIT23'];
+    return ALL_PW;
+  };
+
+  // คำนวณสถานะจาก worklogs
   useEffect(() => {
     const calculateStatusFromWorklogs = async () => {
       setLoading(true);
-      
       try {
         const db = getFirestore();
         const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-        
-        // ดึงข้อมูล worklogs ล่าสุด
-        const worklogsQuery = query(
-          collection(db, 'worklogs'),
-          orderBy('createdAt', 'desc'),
-          limit(100)
-        );
-        
+        const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(200));
         const querySnapshot = await getDocs(worklogsQuery);
         const logs = [];
-        
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          logs.push({
-            id: doc.id,
-            ...data,
-            date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0, 10) || ''
-          });
+          logs.push({ ...data, date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0,10) || '' });
         });
 
-
-        // คำนวณสถานะเหมือน RoomEquipmentStatus
-        const equipmentStatus = {
-          headphones: {
-            'ICIT01': 'available', 'ICIT02': 'available', 'ICIT03': 'available', 'ICIT04': 'available',
-            'ICIT05': 'available', 'ICIT06': 'available', 'ICIT07': 'available', 'ICIT08': 'available',
-            'ICIT09': 'available', 'ICIT10': 'available', 'ICIT11': 'available', 'ICIT12': 'available'
-          },
-          power: {
-            'ICIT21': 'available', 'ICIT22': 'available', 'ICIT23': 'available'
-          }
+        const status = {
+          headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
+          power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
         };
-
-        // ประมวลผล logs เฉพาะวันนี้เท่านั้น (เหมือน RoomEquipmentStatus)
-        const today = new Date().toISOString().slice(0, 10);
-        const todayLogs = logs.filter(log => log.date === today);
+        const today = new Date().toISOString().slice(0,10);
         const details = {};
 
-        for (const log of todayLogs) {
-          const comment = (log.comment || '');
-          const commentLower = comment.toLowerCase();
+        logs.filter(l => l.date === today).forEach(log => {
+          const commentLower = (log.comment || '').toLowerCase();
           const minorTask = (log.minorTask || '').toLowerCase();
-
           const userName = log.recipient || log.employeeDisplayName || log.employeeNickname || log.employeeFullName || '-';
           const userTime = log.time || '';
 
-          // ตรวจสอบหูฟัง
           if (minorTask.includes('ยืมหูฟัง')) {
-            for (let i = 1; i <= 12; i++) {
-              const equipment = `ICIT${String(i).padStart(2, '0')}`;
-              if (commentLower.includes(equipment.toLowerCase())) {
-                equipmentStatus.headphones[equipment] = 'in_use';
-                details[equipment] = { user: userName, time: userTime };
-              }
-            }
+            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
           }
           if (minorTask.includes('คืนหูฟัง')) {
-            for (let i = 1; i <= 12; i++) {
-              const equipment = `ICIT${String(i).padStart(2, '0')}`;
-              if (commentLower.includes(equipment.toLowerCase())) {
-                equipmentStatus.headphones[equipment] = 'available';
-                delete details[equipment];
-              }
-            }
+            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='available'; delete details[eq]; } });
           }
-
-          // ตรวจสอบปลั๊กไฟ
           if (minorTask.includes('ยืมปลั๊กไฟ')) {
-            for (let i = 21; i <= 23; i++) {
-              const equipment = `ICIT${i}`;
-              if (commentLower.includes(equipment.toLowerCase())) {
-                equipmentStatus.power[equipment] = 'in_use';
-                details[equipment] = { user: userName, time: userTime };
-              }
-            }
+            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
           }
           if (minorTask.includes('คืนปลั๊กไฟ')) {
-            for (let i = 21; i <= 23; i++) {
-              const equipment = `ICIT${i}`;
-              if (commentLower.includes(equipment.toLowerCase())) {
-                equipmentStatus.power[equipment] = 'available';
-                delete details[equipment];
-              }
-            }
+            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='available'; delete details[eq]; } });
           }
-        }
+        });
 
-        setEquipmentStatus(equipmentStatus[equipmentType] || {});
+        setEquipmentStatus(status[equipmentType] || {});
         setEquipmentDetails(details);
-
       } catch (error) {
-        // ใช้ค่าเริ่มต้นถ้าเกิดข้อผิดพลาด
-        const defaultStatus = equipmentType === 'headphones' 
-          ? {
-              'ICIT01': 'available', 'ICIT02': 'available', 'ICIT03': 'available', 'ICIT04': 'available',
-              'ICIT05': 'available', 'ICIT06': 'available', 'ICIT07': 'available', 'ICIT08': 'available',
-              'ICIT09': 'available', 'ICIT10': 'available', 'ICIT11': 'available', 'ICIT12': 'available'
-            }
-          : {
-              'ICIT21': 'available', 'ICIT22': 'available', 'ICIT23': 'available'
-            };
-        setEquipmentStatus(defaultStatus);
+        const fallback = isHeadphones
+          ? Object.fromEntries(ALL_HP.map(e=>[e,'available']))
+          : Object.fromEntries(ALL_PW.map(e=>[e,'available']));
+        setEquipmentStatus(fallback);
       } finally {
         setLoading(false);
       }
     };
 
-    if (equipmentType && isOpen) {
-      calculateStatusFromWorklogs();
-    }
+    if (equipmentType && isOpen) calculateStatusFromWorklogs();
   }, [equipmentType, isOpen]);
 
-  // Event listener สำหรับรับการอัปเดตสถานะแบบ real-time
   useEffect(() => {
     if (!isOpen) return;
-    const handleEquipmentStatusUpdate = (event) => {
+    const handler = (event) => {
       const { equipmentType: updatedType, equipment, status } = event.detail;
-      if (updatedType === equipmentType) {
-        setEquipmentStatus(prev => ({ ...prev, [equipment]: status }));
-      }
+      if (updatedType === equipmentType) setEquipmentStatus(prev => ({...prev, [equipment]: status}));
     };
-    window.addEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
-    return () => window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
+    window.addEventListener('equipmentStatusUpdated', handler);
+    return () => window.removeEventListener('equipmentStatusUpdated', handler);
   }, [equipmentType, isOpen]);
 
-  const equipmentList = isHeadphones
-    ? Array.from({ length: 12 }, (_, i) => `ICIT${String(i + 1).padStart(2, '0')}`)
-    : ['ICIT21', 'ICIT22', 'ICIT23'];
+  const equipmentList = getEquipmentRange();
 
   // กรองเหมือน SmartRoomModal: ถ้ามีทั้งว่างและใช้งาน แสดงทั้งหมด
   const availableItems = equipmentList.filter(e => equipmentStatus[e] === 'available');
@@ -231,7 +180,7 @@ export default function SmartEquipmentModal({
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
@@ -265,7 +214,7 @@ export default function SmartEquipmentModal({
               </div>
 
               {/* Equipment Grid */}
-              <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-4 sm:grid-cols-6' : 'grid-cols-3 sm:grid-cols-5'}`}>
+              <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-5 sm:grid-cols-8' : 'grid-cols-3 sm:grid-cols-5'}`}>
                 {filteredEquipment.map((equipment) => {
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);

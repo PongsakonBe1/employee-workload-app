@@ -301,38 +301,42 @@ export default function RoomEquipmentStatus() {
             <span className="text-xs text-slate-400">กำลังโหลด...</span>
           </div>
         ) : (
-          <div className="flex-1 min-w-0 space-y-1">
-            {/* แถวที่ 1: ห้อง */}
-            <div className="flex items-center gap-2">
-              {groups.filter(g => g.key.startsWith('room')).map((g, i, arr) => (
-                <div key={g.key} className="flex items-center gap-1 shrink-0">
-                  <div className="flex items-center gap-[3px]">
-                    {g.items.map(item => (
-                      <div key={item} className={`w-1.5 h-1.5 rounded-full ${g.getStatus(item) ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    ))}
-                  </div>
-                  <span className={`text-[10px] font-medium whitespace-nowrap ${g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {g.label}{g.inUseCount > 0 && <span className="text-red-400"> ·{g.inUseCount}</span>}
-                  </span>
-                  {i < arr.length - 1 && <div className="w-px h-2.5 bg-slate-200" />}
-                </div>
-              ))}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden flex-wrap">
+            {/* ห้อง ชั้น 3 */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[3px]">{allRooms3.map(r=><div key={r} className={`w-1.5 h-1.5 rounded-full ${roomStatus[r]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allRooms3.some(r=>roomStatus[r]==='in_use')?'text-red-500':'text-slate-400'}`}>ชั้น 3</span>
             </div>
-            {/* แถวที่ 2: อุปกรณ์ */}
-            <div className="flex items-center gap-2">
-              {groups.filter(g => !g.key.startsWith('room')).map((g, i, arr) => (
-                <div key={g.key} className="flex items-center gap-1 shrink-0">
-                  <div className="flex items-center gap-[3px]">
-                    {g.items.map(item => (
-                      <div key={item} className={`w-1.5 h-1.5 rounded-full ${g.getStatus(item) ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    ))}
-                  </div>
-                  <span className={`text-[10px] font-medium whitespace-nowrap ${g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {g.label}{g.inUseCount > 0 && <span className="text-red-400"> ·{g.inUseCount}</span>}
-                  </span>
-                  {i < arr.length - 1 && <div className="w-px h-2.5 bg-slate-200" />}
-                </div>
-              ))}
+            <span className="text-slate-200 text-[10px] shrink-0">|</span>
+            {/* ห้อง ชั้น 4 */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[3px]">{allRooms4.map(r=><div key={r} className={`w-1.5 h-1.5 rounded-full ${roomStatus[r]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allRooms4.some(r=>roomStatus[r]==='in_use')?'text-red-500':'text-slate-400'}`}>ชั้น 4</span>
+            </div>
+            <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
+            {/* ชั้น 3: หูฟัง */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[2px]">{allHeadphones3.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>🎧</span>
+            </div>
+            <span className="text-slate-200 text-[10px] shrink-0">|</span>
+            {/* ชั้น 3: ปลั๊ก */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[3px]">{allPower3.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>🔌</span>
+            </div>
+            <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
+            {/* Finn: หูฟัง */}
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-[9px] text-slate-300 font-medium">Finn</span>
+              <div className="flex gap-[2px]">{allHeadphonesFinn.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>🎧</span>
+            </div>
+            <span className="text-slate-200 text-[10px] shrink-0">|</span>
+            {/* Finn: ปลั๊ก */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[3px]">{allPowerFinn.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
+              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>🔌</span>
             </div>
           </div>
         )}
@@ -354,111 +358,80 @@ export default function RoomEquipmentStatus() {
         </div>
       </button>
 
-      {/* ── Expanded detail ── */}
+      {/* ── Expanded detail: Find My style ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100 px-4 py-3 space-y-3">
+        <div className="border-t border-slate-100">
+          {/* Section: ห้อง */}
+          <div className="px-4 pt-3 pb-1">
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">ห้อง</p>
+            <div className="space-y-0">
+              {[...allRooms3.map(r=>({id:r,label:r,sub:roomOsMap[r]||'',inUse:roomStatus[r]==='in_use',detail:null})),
+                ...allRooms4.map(r=>({id:r,label:r,sub:r.startsWith('4')?'ชั้น 4':'',inUse:roomStatus[r]==='in_use',detail:null}))
+              ].map(({id,label,sub,inUse,detail}) => (
+                <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                  <span className="text-[12px] font-semibold text-slate-700 w-10 shrink-0">{label}</span>
+                  <span className="text-[11px] text-slate-400 flex-1">{sub}</span>
+                  <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {inUse ? 'เปิดอยู่' : 'ว่าง'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          {/* helper: แถวสถานะ 1 บรรทัด */}
-          {(() => {
-            const StatusRow = ({ label, items, getInUse, getLabel, inUseDetails }) => {
-              const inUseList = items.filter(getInUse);
-              return (
-                <div>
-                  <div className="flex items-center gap-2 min-h-[22px]">
-                    <span className="text-[11px] text-slate-400 w-24 shrink-0">{label}</span>
-                    <div className="flex items-center gap-0.5 flex-wrap flex-1">
-                      {items.map(item => (
-                        <div
-                          key={item}
-                          title={getLabel ? getLabel(item) : item}
-                          className={`h-4 rounded text-[9px] font-bold flex items-center justify-center transition-colors px-1 ${
-                            getInUse(item) ? 'bg-red-400 text-white' : 'bg-emerald-100 text-emerald-600'
-                          } ${item.startsWith('ICIT') ? 'w-4' : 'min-w-[1.75rem]'}`}
-                        >
-                          {item.startsWith('ICIT') ? String(parseInt(item.replace('ICIT',''),10)) : item}
-                        </div>
-                      ))}
-                    </div>
-                    <span className={`text-[10px] font-semibold shrink-0 ${inUseList.length > 0 ? 'text-red-400' : 'text-slate-300'}`}>
-                      {inUseList.length > 0 ? `ใช้ ${inUseList.length}` : 'ว่าง'}
+          {/* Section: ชั้น 3 */}
+          <div className="px-4 pt-2 pb-1 border-t border-slate-100">
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">ชั้น 3 — อุปกรณ์</p>
+            <div className="space-y-0">
+              {[...allHeadphones3.map(h=>({id:h,icon:'🎧',inUse:(equipmentStatus.headphones||{})[h]==='in_use'})),
+                ...allPower3.map(p=>({id:p,icon:'🔌',inUse:(equipmentStatus.power||{})[p]==='in_use'}))
+              ].map(({id,icon,inUse}) => {
+                const num = parseInt(id.replace('ICIT',''),10);
+                const det = equipmentDetails[id];
+                return (
+                  <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span className="text-[10px] shrink-0">{icon}</span>
+                    <span className="text-[12px] font-semibold text-slate-700 w-6 shrink-0">{num}</span>
+                    <span className="text-[11px] text-slate-400 flex-1 truncate">{inUse && det ? det.user : ''}</span>
+                    <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
+                      {inUse ? (det?.time || 'ใช้งาน') : 'ว่าง'}
                     </span>
                   </div>
-                  {inUseList.length > 0 && inUseDetails && (
-                    <div className="ml-26 mt-1 space-y-0.5 pl-[6.5rem]">
-                      {inUseList.map(item => inUseDetails[item] && (
-                        <div key={item} className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                          <span className="font-semibold text-red-500">{item.replace('ICIT','')}</span>
-                          <span className="text-slate-400 truncate">{inUseDetails[item].user}</span>
-                          <span className="text-slate-300 ml-auto shrink-0">{inUseDetails[item].time}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            };
+                );
+              })}
+            </div>
+          </div>
 
-            return (
-              <>
-                {/* ห้อง ชั้น 3 */}
-                <StatusRow
-                  label="ห้อง ชั้น 3"
-                  items={allRooms3}
-                  getInUse={r => roomStatus[r] === 'in_use'}
-                  getLabel={r => `${r} ${roomOsMap[r] || ''}`}
-                />
-                {/* ห้อง ชั้น 4 */}
-                <StatusRow
-                  label="ห้อง ชั้น 4"
-                  items={allRooms4}
-                  getInUse={r => roomStatus[r] === 'in_use'}
-                />
-
-                <div className="border-t border-slate-100 pt-2 space-y-2">
-                  <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">ชั้น 3</p>
-                  {/* หูฟัง ชั้น 3 */}
-                  <StatusRow
-                    label="หูฟัง 01–12"
-                    items={allHeadphones3}
-                    getInUse={h => (equipmentStatus.headphones||{})[h] === 'in_use'}
-                    inUseDetails={equipmentDetails}
-                  />
-                  {/* ปลั๊กไฟ ชั้น 3 */}
-                  <StatusRow
-                    label="ปลั๊กไฟ 21–23"
-                    items={allPower3}
-                    getInUse={p => (equipmentStatus.power||{})[p] === 'in_use'}
-                    inUseDetails={equipmentDetails}
-                  />
-                </div>
-
-                <div className="border-t border-slate-100 pt-2 space-y-2">
-                  <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Finn Space</p>
-                  {/* หูฟัง Finn */}
-                  <StatusRow
-                    label="หูฟัง 13–20"
-                    items={allHeadphonesFinn}
-                    getInUse={h => (equipmentStatus.headphones||{})[h] === 'in_use'}
-                    inUseDetails={equipmentDetails}
-                  />
-                  {/* ปลั๊กไฟ Finn */}
-                  <StatusRow
-                    label="ปลั๊กไฟ 24–25"
-                    items={allPowerFinn}
-                    getInUse={p => (equipmentStatus.power||{})[p] === 'in_use'}
-                    inUseDetails={equipmentDetails}
-                  />
-                </div>
-
-                {lastUpdated && (
-                  <p className="text-[10px] text-slate-300 text-right pt-1">
-                    อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
-                  </p>
-                )}
-              </>
-            );
-          })()}
-
+          {/* Section: Finn Space */}
+          <div className="px-4 pt-2 pb-3 border-t border-slate-100">
+            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5">Finn Space — อุปกรณ์</p>
+            <div className="space-y-0">
+              {[...allHeadphonesFinn.map(h=>({id:h,icon:'🎧',inUse:(equipmentStatus.headphones||{})[h]==='in_use'})),
+                ...allPowerFinn.map(p=>({id:p,icon:'🔌',inUse:(equipmentStatus.power||{})[p]==='in_use'}))
+              ].map(({id,icon,inUse}) => {
+                const num = parseInt(id.replace('ICIT',''),10);
+                const det = equipmentDetails[id];
+                return (
+                  <div key={id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50 last:border-0">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    <span className="text-[10px] shrink-0">{icon}</span>
+                    <span className="text-[12px] font-semibold text-slate-700 w-6 shrink-0">{num}</span>
+                    <span className="text-[11px] text-slate-400 flex-1 truncate">{inUse && det ? det.user : ''}</span>
+                    <span className={`text-[10px] font-medium shrink-0 ${inUse ? 'text-red-500' : 'text-emerald-500'}`}>
+                      {inUse ? (det?.time || 'ใช้งาน') : 'ว่าง'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {lastUpdated && (
+              <p className="text-[9px] text-slate-200 text-right mt-2">
+                อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>
