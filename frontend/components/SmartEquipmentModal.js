@@ -17,8 +17,6 @@ export default function SmartEquipmentModal({
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState('');
 
-  if (!isOpen) return null;
-
   // กำหนดประเภทอุปกรณ์
   const getEquipmentType = () => {
     if (templateMinorTask.includes('หูฟัง')) return 'headphones';
@@ -159,28 +157,19 @@ export default function SmartEquipmentModal({
 
   // Event listener สำหรับรับการอัปเดตสถานะแบบ real-time
   useEffect(() => {
+    if (!isOpen) return;
     const handleEquipmentStatusUpdate = (event) => {
-      console.log('🎧 SmartEquipmentModal: Received equipment status update', event.detail);
       const { equipmentType: updatedType, equipment, status } = event.detail;
-      
-      // อัปเดตเฉพาะถ้าเป็น equipment type เดียวกัน
       if (updatedType === equipmentType) {
-        setEquipmentStatus(prev => ({
-          ...prev,
-          [equipment]: status
-        }));
-        console.log(`✅ SmartEquipmentModal: Updated ${equipment} status to ${status}`);
+        setEquipmentStatus(prev => ({ ...prev, [equipment]: status }));
       }
     };
-
-    // เพิ่ม event listener
     window.addEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
+    return () => window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
+  }, [equipmentType, isOpen]);
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
-    };
-  }, [equipmentType]);
+  // Early return AFTER all hooks
+  if (!isOpen) return null;
 
   // แสดงอุปกรณ์ทั้งหมดเหมือน SmartRoomModal
   const getFilteredEquipment = () => {
@@ -246,8 +235,9 @@ export default function SmartEquipmentModal({
   const inUseCount = filteredEquipment.filter(eq => equipmentStatus[eq] === 'in_use').length;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[95vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
@@ -274,9 +264,9 @@ export default function SmartEquipmentModal({
         </div>
 
         {/* Equipment List */}
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className="px-5 pb-2 pt-4 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
@@ -284,17 +274,17 @@ export default function SmartEquipmentModal({
               {/* Status Legend */}
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-slate-600">ว่าง</span>
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                  <span className="text-slate-500">ว่าง (กดเพื่อยืม)</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                  <span className="text-slate-600">ใช้งาน</span>
+                  <div className="w-2.5 h-2.5 bg-orange-400 rounded-full"></div>
+                  <span className="text-slate-500">ใช้งานอยู่ (กดเพื่อคืน)</span>
                 </div>
               </div>
 
               {/* Equipment Grid */}
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
                 {filteredEquipment.map((equipment) => {
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);
@@ -306,116 +296,72 @@ export default function SmartEquipmentModal({
                     <button
                       key={equipment}
                       onClick={() => handleSelect(equipment)}
-                      className={`p-4 rounded-xl border-2 transition-all relative ${
+                      className={`p-3 rounded-2xl border-2 transition-all relative active:scale-95 ${
                         selectedEquipment === equipment
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
                           : isAvailable
-                          ? 'border-green-200 bg-green-50 text-green-700 hover:border-green-300 hover:bg-green-100'
-                          : 'border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300 hover:bg-orange-100'
+                          ? 'border-green-200 bg-green-50 hover:border-green-300'
+                          : 'border-orange-200 bg-orange-50 hover:border-orange-300'
                       }`}
                     >
+                      <div className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
+                        isAvailable ? 'bg-green-500' : 'bg-orange-400'
+                      }`} />
                       <div className="text-center">
-                        <div className="text-lg font-bold">{equipment}</div>
-                        <div className="text-xs mt-1 opacity-75">{action}</div>
-                        
-                        {/* Icon */}
-                        <div className="mt-2 flex justify-center">
-                          {isAvailable ? (
-                            <Headphones className="w-4 h-4" />
-                          ) : (
-                            <User className="w-4 h-4" />
-                          )}
-                        </div>
+                        <div className={`text-sm font-bold ${
+                          selectedEquipment === equipment ? 'text-blue-700'
+                          : isAvailable ? 'text-green-700' : 'text-orange-700'
+                        }`}>{equipment}</div>
+                        <div className={`text-[10px] mt-0.5 ${
+                          selectedEquipment === equipment ? 'text-blue-500'
+                          : isAvailable ? 'text-green-500' : 'text-orange-500'
+                        }`}>{action}</div>
                       </div>
-                      
-                      {/* Status indicator */}
-                      <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-                        isAvailable ? 'bg-green-500' : 'bg-orange-500'
-                      }`}></div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* User info for in-use equipment */}
-              {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-sm text-amber-800">
-                    <User className="w-4 h-4" />
-                    <span>ผู้ยืม: {equipmentDetails[selectedEquipment]?.user || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-amber-600 mt-1">
-                    <Clock className="w-3 h-3" />
-                    <span>เวลา: {equipmentDetails[selectedEquipment]?.time || '-'}</span>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Recipient Input */}
-        <div className="px-6 pb-4 flex-shrink-0">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <label className="block text-sm font-medium text-amber-900 mb-2">
-              ผู้รับบริการ *
-            </label>
+        {/* Sticky footer: recipient + confirm */}
+        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-4 space-y-3">
+          {/* User info for in-use */}
+          {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use' && equipmentDetails[selectedEquipment] && (
+            <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>ผู้ยืม: <strong>{equipmentDetails[selectedEquipment].user}</strong></span>
+              <Clock className="w-3 h-3 ml-2 shrink-0" />
+              <span>{equipmentDetails[selectedEquipment].time}</span>
+            </div>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              readOnly={selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${
+              readOnly={!!(selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use')}
+              className={`apple-input text-sm ${
                 selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
-                  ? 'bg-amber-100 border-amber-300 text-amber-800 cursor-default'
-                  : 'border-amber-300'
+                  ? 'bg-slate-50 text-slate-500 cursor-default'
+                  : ''
               }`}
-              placeholder="กรอกชื่อผู้รับบริการ"
+              placeholder={selectedEquipment ? 'กรอกชื่อผู้รับบริการ' : 'เลือกรายการก่อน'}
             />
-            <p className="mt-1 text-xs text-amber-600">
-              {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
-                ? 'ชื่อผู้ยืมถูกกรอกอัตโนมัติ'
-                : 'กรุณาระบุชื่อผู้มารับบริการ (ยืม/คืนอุปกรณ์)'}
-            </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-          <div className="text-sm text-slate-500">
-            {selectedEquipment && recipient.trim() ? (
-              <span>
-                เลือก: <span className="font-medium text-slate-700">{selectedEquipment}</span>
-                <span className="ml-2 text-xs">
-                  ({getActionForEquipment(selectedEquipment)})
-                </span>
-                <span className="ml-2 text-xs text-amber-600">
-                  ผู้รับบริการ: {recipient}
-                </span>
-              </span>
-            ) : selectedEquipment ? (
-              <span className="text-amber-600">กรุณากรอกผู้รับบริการ</span>
-            ) : (
-              <span>กรุณาเลือกรายการ</span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
+          <div className="flex gap-2">
             <button
               onClick={handleConfirm}
               disabled={!selectedEquipment || !recipient.trim()}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                selectedEquipment && recipient.trim()
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
+              className="apple-button flex-1 disabled:opacity-40"
             >
-              ยืนยัน
+              ยืนยัน{selectedEquipment ? ` — ${getActionForEquipment(selectedEquipment)} ${selectedEquipment}` : ''}
+            </button>
+            <button onClick={handleClose} className="apple-button-secondary px-4">
+              ยกเลิก
             </button>
           </div>
         </div>

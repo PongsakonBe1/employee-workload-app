@@ -408,127 +408,77 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   }
 
   return (
-    <div className="mb-3 mt-4">
-      {/* วาวล์ชัวล */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-blue-900">⚡ Quick Log - คลิกเพื่อบันทึกงานทันที</span>
-          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-            {templates.length} templates
-          </span>
+    <div>
+      {templates.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {templates.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              onClick={() => handleQuickLog(template)}
+              disabled={loading}
+              title={template.minorTask}
+              className={`
+                relative p-3 text-left rounded-2xl border-2 transition-all active:scale-95
+                ${loggingTemplate === template.id
+                  ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                }
+                ${loading && loggingTemplate !== template.id ? 'opacity-50 pointer-events-none' : ''}
+              `}
+            >
+              {loggingTemplate === template.id && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
+              <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
+              <div className="text-[11px] mt-0.5 opacity-60 truncate">{template.minorTask}</div>
+              {template.requireRecipient && (
+                <span className="mt-1 inline-block text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">
+                  กรอกชื่อ
+                </span>
+              )}
+            </button>
+          ))}
         </div>
-      </div>
-      
-      {/* Templates Container */}
-      <div className="bg-white rounded-lg border border-slate-200 p-4">
-        {templates.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {templates.map((template) => (
-              <button
-                key={template.id}
-                type="button"
-                onClick={() => handleQuickLog(template)}
-                disabled={loading}
-                title={`${template.name}\nหัวข้อรอง: ${template.minorTask}\nหัวข้อหลัก: ${template.mainDuty}${template.comment ? `\nความคิดเห็น: ${template.comment}` : ''}${template.requireRecipient ? '\nต้องกรอกผู้รับบริการ' : ''}`}
-                className={`
-                  relative p-3 text-left rounded-lg border transition-all duration-300 transform hover:scale-105 hover:shadow-md
-                  ${loggingTemplate === template.id
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-500 text-white shadow-lg scale-105'
-                    : 'bg-gradient-to-r from-white to-slate-50 border-slate-200 hover:border-blue-300 hover:from-blue-50 hover:to-indigo-50 text-slate-700 hover:text-blue-900'
-                  }
-                  ${loading ? 'cursor-not-allowed opacity-50 scale-95' : 'cursor-pointer active:scale-95'}
-                `}
-              >
-                {loggingTemplate === template.id && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg backdrop-blur-sm">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-                
-                <div className="flex flex-col gap-1">
-                  <div className="font-medium text-sm flex items-center gap-1 min-w-0">
-                    <span className="truncate flex-1">
-                      {template.name}
-                    </span>
-                    {template.requireRecipient && (
-                      <span className="text-xs bg-orange-100 text-orange-600 px-1 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
-                        กรอก
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-500 truncate">
-                    {template.minorTask}
-                  </div>
-                                  </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 px-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="text-slate-500 text-sm">
-              <div className="mb-2">ยังไม่มี Quick Log Templates</div>
-              <div className="text-xs">Admin สามารถสร้าง templates ได้ในหน้าจัดการ</div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="mt-2 text-xs text-slate-500">
-        คลิกปุ่มด้านบนเพื่อบันทึกงานทันที หรือกรอกแบบปกติด้านล่าง
-      </div>
+      ) : (
+        <div className="text-center py-6 text-sm text-slate-400">
+          ยังไม่มี Quick Log Templates — Admin สร้างได้ในหน้าจัดการ
+        </div>
+      )}
 
       {/* Modal สำหรับกรอกผู้รับบริการ */}
       {showRecipientModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-100 animate-slide-up">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600">👤</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  กรอกผู้รับบริการ
-                </h3>
-                <p className="text-sm text-slate-600">
-                  Template: <span className="font-medium text-blue-600">{selectedTemplate.name}</span>
-                </p>
-              </div>
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                ผู้รับบริการ *
-              </label>
-              <input
-                type="text"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                placeholder="กรอกชื่อผู้รับบริการ"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }} />
+          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">{selectedTemplate.name}</h3>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
+            <input
+              type="text"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && recipient.trim() && handleLogWithRecipient()}
+              className="apple-input"
+              placeholder="กรอกชื่อผู้รับบริการ"
+              autoFocus
+            />
+            <div className="flex gap-2 mt-5">
               <button
                 onClick={handleLogWithRecipient}
                 disabled={loading || !recipient.trim()}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                className="apple-button flex-1 disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    กำลังบันทึก...
-                  </span>
-                ) : (
-                  'บันทึก'
-                )}
+                {loading
+                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+                  : 'บันทึก'
+                }
               </button>
               <button
-                onClick={() => {
-                  setShowRecipientModal(false);
-                  setSelectedTemplate(null);
-                  setRecipient('');
-                }}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }}
+                className="apple-button-secondary px-4"
               >
                 ยกเลิก
               </button>

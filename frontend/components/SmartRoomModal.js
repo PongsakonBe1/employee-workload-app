@@ -195,8 +195,9 @@ export default function SmartRoomModal({
   const closedCount = filteredRooms.filter(room => roomStatus[room] === 'open').length;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
@@ -219,9 +220,9 @@ export default function SmartRoomModal({
         </div>
 
         {/* Room List */}
-        <div className="p-6">
+        <div className="px-5 pt-4 pb-2 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
@@ -229,17 +230,17 @@ export default function SmartRoomModal({
               {/* Status Legend */}
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-slate-600">ปิด (เปิดได้)</span>
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                  <span className="text-slate-500">ปิด (กดเพื่อเปิด)</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                  <span className="text-slate-600">เปิด (ปิดได้)</span>
+                  <div className="w-2.5 h-2.5 bg-orange-400 rounded-full"></div>
+                  <span className="text-slate-500">เปิดอยู่ (กดเพื่อปิด)</span>
                 </div>
               </div>
 
               {/* Room Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {filteredRooms.map((room) => {
                   const status = roomStatus[room];
                   const action = getActionForRoom(room);
@@ -250,90 +251,54 @@ export default function SmartRoomModal({
                     <button
                       key={room}
                       onClick={() => handleSelect(room)}
-                      className={`p-4 rounded-xl border-2 transition-all relative ${
+                      className={`p-4 rounded-2xl border-2 transition-all relative active:scale-95 ${
                         selectedRoom === room
-                          ? 'border-purple-500 bg-purple-50 text-purple-700'
+                          ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
                           : canOpen
-                          ? 'border-green-200 bg-green-50 text-green-700 hover:border-green-300 hover:bg-green-100'
-                          : 'border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300 hover:bg-orange-100'
+                          ? 'border-green-200 bg-green-50 hover:border-green-300'
+                          : 'border-orange-200 bg-orange-50 hover:border-orange-300'
                       }`}
                     >
+                      <div className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
+                        canOpen ? 'bg-green-500' : 'bg-orange-400'
+                      }`} />
                       <div className="text-center">
-                        <div className="text-lg font-bold">{room}</div>
+                        <div className={`text-xl font-bold ${
+                          selectedRoom === room ? 'text-purple-700'
+                          : canOpen ? 'text-green-700' : 'text-orange-700'
+                        }`}>{room}</div>
                         {roomInfo && (
-                          <div className="text-xs font-medium text-blue-600 mt-1">{roomInfo}</div>
+                          <div className="text-xs font-medium text-blue-500 mt-0.5">{roomInfo}</div>
                         )}
-                        <div className="text-xs mt-1 opacity-75">{action}</div>
-                        
-                        {/* Icon */}
-                        <div className="mt-2 flex justify-center">
-                          {canOpen ? (
-                            <DoorClosed className="w-4 h-4" />
-                          ) : (
-                            <DoorOpen className="w-4 h-4" />
-                          )}
+                        <div className={`text-[11px] mt-1 flex items-center justify-center gap-1 ${
+                          selectedRoom === room ? 'text-purple-500'
+                          : canOpen ? 'text-green-500' : 'text-orange-500'
+                        }`}>
+                          {canOpen ? <DoorClosed className="w-3 h-3" /> : <DoorOpen className="w-3 h-3" />}
+                          {action}
                         </div>
                       </div>
-                      
-                      {/* Status indicator */}
-                      <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
-                        canOpen ? 'bg-green-500' : 'bg-orange-500'
-                      }`}></div>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Room Info */}
-              {selectedRoom && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-purple-800">
-                      ห้อง {selectedRoom} - {getActionForRoom(selectedRoom)}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-purple-600">
-                      {getRoomInfo(selectedRoom) && (
-                        <span className="font-medium text-blue-600">{getRoomInfo(selectedRoom)}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-          <div className="text-sm text-slate-500">
-            {selectedRoom ? (
-              <span>
-                เลือก: <span className="font-medium text-slate-700">ห้อง {selectedRoom}</span>
-                <span className="ml-2 text-xs">
-                  ({getActionForRoom(selectedRoom)})
-                </span>
-              </span>
-            ) : (
-              <span>กรุณาเลือกห้องเรียน</span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
+        {/* Sticky footer */}
+        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-4">
+          <div className="flex gap-2">
             <button
               onClick={handleConfirm}
               disabled={!selectedRoom}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                selectedRoom
-                  ? 'bg-purple-500 text-white hover:bg-purple-600'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
+              className="apple-button flex-1 disabled:opacity-40"
             >
-              ยืนยัน
+              ยืนยัน{selectedRoom ? ` — ${getActionForRoom(selectedRoom)}ห้อง ${selectedRoom}` : ''}
+            </button>
+            <button onClick={handleClose} className="apple-button-secondary px-4">
+              ยกเลิก
             </button>
           </div>
         </div>
