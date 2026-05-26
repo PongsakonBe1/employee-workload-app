@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Headphones, Plug, User, Clock } from 'lucide-react';
+import { X, Headphones, Plug, User, Clock, RotateCcw } from 'lucide-react';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
 export default function SmartEquipmentModal({ 
@@ -271,6 +271,7 @@ export default function SmartEquipmentModal({
                   const action = getActionForEquipment(equipment);
                   const isAvailable = status === 'available';
                   const detail = equipmentDetails[equipment];
+                  const numLabel = equipment.replace('ICIT', '');
                   return (
                     <button
                       key={equipment}
@@ -290,17 +291,17 @@ export default function SmartEquipmentModal({
                         <div className={`text-xl font-bold ${
                           selectedEquipment === equipment ? 'text-purple-700'
                           : isAvailable ? 'text-green-700' : 'text-orange-700'
-                        }`}>{equipment.replace('ICIT', '')}</div>
-                        {!isAvailable && detail && (
-                          <div className="text-xs font-medium text-blue-500 mt-0.5 truncate">{detail.user}</div>
-                        )}
+                        }`}>{numLabel}</div>
+                        <div className="text-xs font-medium text-blue-500 mt-0.5 truncate">
+                          {!isAvailable && detail ? detail.user : <span className="opacity-0">-</span>}
+                        </div>
                         <div className={`text-[11px] mt-1 flex items-center justify-center gap-1 ${
                           selectedEquipment === equipment ? 'text-purple-500'
                           : isAvailable ? 'text-green-500' : 'text-orange-500'
                         }`}>
                           {isAvailable
-                            ? <Headphones className="w-3 h-3" />
-                            : <Clock className="w-3 h-3" />
+                            ? (isHeadphones ? <Headphones className="w-3 h-3" /> : <Plug className="w-3 h-3" />)
+                            : <RotateCcw className="w-3 h-3" />
                           }
                           {action}
                         </div>
