@@ -222,7 +222,7 @@ export function AppShell({ children }) {
       </main>
 
       <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400">
-        labboy Workload Recorder &mdash; v1.8.0
+        labboy Workload Recorder &mdash; v1.8.1
       </footer>
     </div>
   );

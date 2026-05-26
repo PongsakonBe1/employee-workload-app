@@ -870,7 +870,7 @@ export default function WorkLogsPage() {
                       <p className="text-sm text-slate-400">ไม่มีรายการวันนี้</p>
                     </div>
                   ) : (
-                    <div className="flex-1 space-y-2 overflow-y-auto max-h-[400px] pr-0.5">
+                    <div className="flex-1 space-y-2 overflow-y-auto max-h-[500px] pr-0.5">
                       {sortedDayItems.map((item) => (
                         <div key={item.id} className="flex gap-3 group">
                           {/* Time column */}
@@ -886,22 +886,41 @@ export default function WorkLogsPage() {
                               ? dutyColorMap[item.mainDuty].replace("bg-","border-")
                               : "border-slate-300"
                           }`}>
-                            <p className="text-sm text-slate-600 leading-tight">{item.mainDuty}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{item.minorTask}</p>
-                            {item.recipient && (
-                              <p className="text-xs text-slate-400 mt-0.5">ผู้รับบริการ: {item.recipient}</p>
-                            )}
-                            {/* สำหรับ QuickLog (มี equipment/room) แสดงเฉพาะชื่ออุปกรณ์/ห้องเรียน */}
-                            {(item.equipment || item.room) ? (
-                              <p className="text-xs text-slate-600 mt-1">
-                                {item.equipment || item.room}
-                              </p>
-                            ) : (
-                              /* สำหรับการบันทึกปกติ แสดง comment */
-                              item.comment && (
-                                <p className="text-xs text-slate-400 mt-1 italic">{item.comment}</p>
-                              )
-                            )}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-slate-600 leading-tight">{item.mainDuty}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{item.minorTask}</p>
+                                {item.recipient && (
+                                  <p className="text-xs text-slate-400 mt-0.5">ผู้รับบริการ: {item.recipient}</p>
+                                )}
+                                {(item.equipment || item.room) ? (
+                                  <p className="text-xs text-slate-600 mt-1">{item.equipment || item.room}</p>
+                                ) : (
+                                  item.comment && (
+                                    <p className="text-xs text-slate-400 mt-1 italic">{item.comment}</p>
+                                  )
+                                )}
+                              </div>
+                              {/* Edit/Delete buttons */}
+                              {canEdit(item) && (
+                                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => startEdit(item)}
+                                    className="p-1.5 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition"
+                                    title="แก้ไข"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => confirmDelete(item.id)}
+                                    className="p-1.5 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition"
+                                    title="ลบ"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                             <div className="mt-1.5 flex items-center justify-between">
                               <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                                 item.status === "บันทึกแล้ว" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
@@ -1255,6 +1274,113 @@ export default function WorkLogsPage() {
         </div>
         )
       ) : null}
+
+      {/* ── Edit Modal (Calendar view) ── */}
+      {editingId && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={cancelEdit} />
+          {/* Sheet */}
+          <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold text-slate-950">แก้ไขรายการ</h3>
+              <button onClick={cancelEdit} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
+                <X size={18} />
+              </button>
+            </div>
+
+            {actionError && (
+              <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+                <AlertCircle size={15} /> {actionError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Recipient */}
+              <div>
+                <label className="apple-label">ผู้รับบริการ</label>
+                <input
+                  className="apple-input"
+                  value={editForm.recipient || ""}
+                  onChange={(e) => setEditForm((p) => ({ ...p, recipient: e.target.value }))}
+                  placeholder="ระบุผู้รับบริการ"
+                />
+              </div>
+
+              {/* Minor Task */}
+              <MinorTaskSelector
+                value={editForm.minorTask || ""}
+                onChange={handleMinorTaskChange}
+                label="หัวข้อรอง"
+              />
+
+              {/* Main Duty (read-only) */}
+              {editForm.mainDuty && (
+                <div>
+                  <label className="apple-label">หัวข้อหลัก</label>
+                  <div className="apple-input bg-slate-50 text-slate-600 flex items-center justify-between">
+                    <span>{editForm.mainDuty}</span>
+                    <span className="text-xs text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full ml-2 shrink-0">อัตโนมัติ</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Comment */}
+              <div>
+                <label className="apple-label">รายละเอียด</label>
+                <textarea
+                  className="apple-input min-h-20 resize-y"
+                  value={editForm.comment || ""}
+                  onChange={(e) => setEditForm((p) => ({ ...p, comment: e.target.value }))}
+                  placeholder="รายละเอียดเพิ่มเติม"
+                />
+                <CommentSuggestions
+                  minorTask={editForm.minorTask}
+                  selected={editForm.comment}
+                  onSelect={(s) => setEditForm((p) => ({ ...p, comment: s }))}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => saveEdit(editingId)}
+                className="apple-button flex-1"
+              >
+                <Check size={16} className="inline mr-1" /> บันทึก
+              </button>
+              <button onClick={cancelEdit} className="apple-button-secondary flex-1">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirm Modal (Calendar view — mobile friendly) ── */}
+      {deleteConfirmId && viewMode === "calendar" && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={cancelDelete} />
+          <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6">
+            <h3 className="text-base font-semibold text-slate-950 mb-2">ยืนยันการลบ</h3>
+            <p className="text-sm text-slate-500 mb-5">รายการนี้จะถูกลบถาวร คุณสามารถ Undo ได้ภายใน 30 วินาที</p>
+            {actionError && (
+              <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{actionError}</div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => executeDelete(deleteConfirmId)}
+                className="flex-1 rounded-2xl bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 transition"
+              >
+                ลบรายการ
+              </button>
+              <button onClick={cancelDelete} className="flex-1 apple-button-secondary">
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

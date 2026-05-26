@@ -247,109 +247,10 @@ export default function NewWorkLogPage() {
     <AppShell>
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
-      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        {/* Room Equipment Status - Top */}
-        <div className="lg:col-span-2">
-          <RoomEquipmentStatus />
-        </div>
-        {/* Left panel - Info */}
-        <div className="apple-panel p-8">
-                    <p className="mb-8 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-            {t("newRecord")}
-          </p>
-          <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
-            {t("title")}
-          </h1>
-          <p className="mt-5 text-slate-600">
-            {t("form.recipientPlaceholder")}
-          </p>
+      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
 
-          {/* Draft indicator */}
-          {(lastSaved || draftRestored) && (
-            <div
-              className={`mt-6 rounded-3xl p-4 ${draftRestored ? "bg-blue-50 border border-blue-200" : "bg-slate-50"}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2
-                    size={18}
-                    className={
-                      draftRestored ? "text-blue-600" : "text-slate-500"
-                    }
-                  />
-                  <span
-                    className={`text-sm ${draftRestored ? "text-blue-700 font-medium" : "text-slate-600"}`}
-                  >
-                    {draftRestored
-                      ? "กู้คืนข้อมูลที่บันทึกไว้อัตโนมัติ"
-                      : lastSaved
-                        ? `บันทึกร่างล่าสุด: ${lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`
-                        : ""}
-                  </span>
-                </div>
-                {(form.recipient || form.minorTask || form.comment) && (
-                  <button
-                    onClick={() => {
-                      clearDraft();
-                      setForm((c) => ({
-                        ...c,
-                        recipient: "",
-                        minorTask: "",
-                        mainDuty: "",
-                        dutyGroup: "main",
-                        comment: "",
-                      }));
-                    }}
-                    className="text-xs text-slate-400 hover:text-red-600 transition"
-                  >
-                    ล้างร่าง
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Lock deadline notice */}
-          <div className="mt-6 rounded-3xl bg-amber-50 border border-amber-200 p-5">
-            <div className="flex items-start gap-3">
-              <Clock
-                size={20}
-                className="text-amber-600 mt-0.5 flex-shrink-0"
-              />
-              <div>
-                <p className="text-sm font-semibold text-amber-800">
-                  หมายเหตุการแก้ไข
-                </p>
-                <p className="mt-1 text-sm text-amber-700 leading-relaxed">
-                  คุณสามารถแก้ไขรายการได้จนถึง <strong>23:59</strong>{" "}
-                  ของวันที่บันทึก หลังจากนั้นรายการจะถูกล็อกและไม่สามารถแก้ไขได้
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-3xl bg-slate-950 p-5 text-white">
-            <p className="text-sm font-semibold">วิธีการบันทึก</p>
-            <ol className="mt-2 text-sm leading-6 text-white/75 list-decimal list-inside space-y-1">
-              <li>
-                เลือก <strong>หัวข้อรอง (Minor Task)</strong> เป็นหลัก
-              </li>
-              <li>
-                ระบบจะกรอก <strong>หัวข้อหลัก</strong> ให้อัตโนมัติ
-              </li>
-              <li>
-                เลือก <strong>รายละเอียด</strong> จากตัวเลือกที่แนะนำ
-                หรือเขียนเอง
-              </li>
-              <li>
-                กด <strong>บันทึก</strong> เมื่อเสร็จสิ้น
-              </li>
-            </ol>
-          </div>
-        </div>
-
-        {/* Right panel - Form */}
-        <form onSubmit={onSubmit} className="apple-panel p-6 sm:p-8">
+        {/* Form — order-first on mobile so it's immediately visible */}
+        <form onSubmit={onSubmit} className="apple-panel p-5 sm:p-7 order-first lg:order-last">
           {message ? (
             <div className="mb-6 flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
               <CheckCircle2 size={18} />
@@ -479,7 +380,90 @@ export default function NewWorkLogPage() {
             {saving ? t("form.saving") : t("form.save")}
           </button>
         </form>
+
+        {/* Left panel — info + RoomEquipmentStatus (below form on mobile, left on desktop) */}
+        <div className="flex flex-col gap-4 order-last lg:order-first">
+
+          {/* Draft indicator */}
+          {(lastSaved || draftRestored) && (
+            <div className={`rounded-2xl p-4 ${draftRestored ? "bg-blue-50 border border-blue-100" : "bg-slate-50 border border-slate-100"}`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={16} className={draftRestored ? "text-blue-500" : "text-slate-400"} />
+                  <span className={`text-sm ${draftRestored ? "text-blue-700 font-medium" : "text-slate-500"}`}>
+                    {draftRestored
+                      ? "กู้คืนข้อมูลที่บันทึกไว้อัตโนมัติ"
+                      : lastSaved
+                        ? `บันทึกร่างล่าสุด ${lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}`
+                        : ""}
+                  </span>
+                </div>
+                {(form.recipient || form.minorTask || form.comment) && (
+                  <button
+                    onClick={() => {
+                      clearDraft();
+                      setForm((c) => ({ ...c, recipient: "", minorTask: "", mainDuty: "", dutyGroup: "main", comment: "" }));
+                    }}
+                    className="text-xs text-slate-400 hover:text-red-500 transition shrink-0"
+                  >
+                    ล้างร่าง
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Quick guide */}
+          <div className="rounded-2xl bg-slate-950 p-5 text-white">
+            <p className="text-sm font-semibold mb-2">วิธีการบันทึก</p>
+            <ol className="text-sm leading-6 text-white/70 list-decimal list-inside space-y-1">
+              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span> เป็นหลัก</li>
+              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> ให้อัตโนมัติ</li>
+              <li>เลือกหรือกรอก <span className="text-white font-medium">รายละเอียด</span></li>
+              <li>กด <span className="text-white font-medium">บันทึก</span></li>
+            </ol>
+          </div>
+
+          {/* Lock notice */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 flex items-start gap-3">
+            <Clock size={16} className="text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-700 leading-relaxed">
+              แก้ไขได้ถึง <strong>23:59</strong> ของวันที่บันทึก หลังจากนั้นรายการจะถูกล็อก
+            </p>
+          </div>
+
+          {/* Room & Equipment Status — collapsible on mobile */}
+          <RoomEquipmentStatusCollapsible />
+        </div>
       </section>
     </AppShell>
+  );
+}
+
+function RoomEquipmentStatusCollapsible() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 transition text-sm font-medium text-slate-700"
+      >
+        <span className="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/><path d="M5 6h6M5 9h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+          สถานะห้องและอุปกรณ์
+        </span>
+        <svg
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-slate-100">
+          <RoomEquipmentStatus />
+        </div>
+      )}
+    </div>
   );
 }
