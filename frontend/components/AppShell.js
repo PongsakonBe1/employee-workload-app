@@ -84,6 +84,11 @@ export function AppShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const currentPageLabel = PAGE_LABELS[pathname] || "";
 
+  const navItems = user ? getNav(t, user.role) : [];
+  const currentNavIdx = navItems.findIndex(n => n.href === pathname);
+  const prevPage = currentNavIdx > 0 ? navItems[currentNavIdx - 1] : null;
+  const nextPage = currentNavIdx >= 0 && currentNavIdx < navItems.length - 1 ? navItems[currentNavIdx + 1] : null;
+
   useEffect(() => {
     if (!loading) {
       if (pendingApproval && pathname !== "/pending") {
@@ -212,27 +217,37 @@ export function AppShell({ children }) {
         </div>
       </header>
 
-      {/* Mobile nav — compact bar showing current page + hamburger */}
-      <div className="lg:hidden mx-auto mb-4 max-w-7xl flex items-center gap-3">
-        {/* Back button if not on dashboard */}
-        {pathname !== "/dashboard" && (
-          <button
-            onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/70 text-slate-600 shrink-0"
-          >
-            <ChevronLeft size={20} />
-          </button>
-        )}
-        {/* Current page label */}
-        <div className="flex-1 px-4 py-2.5 rounded-2xl bg-white/70 text-sm font-semibold text-slate-800 truncate">
-          {currentPageLabel}
-        </div>
-        {/* Hamburger */}
+      {/* Mobile nav — prev / title / next */}
+      <div className="lg:hidden mx-auto mb-4 max-w-7xl flex items-center gap-2">
+        {/* Prev page */}
+        <button
+          onClick={() => prevPage && router.push(prevPage.href)}
+          disabled={!prevPage}
+          title={prevPage?.label}
+          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95"
+        >
+          <ChevronLeft size={18} />
+          <span className="text-[9px] mt-0.5 leading-none truncate w-12 text-center">{prevPage?.label ?? ''}</span>
+        </button>
+
+        {/* Current page — tappable to open drawer */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/70 text-slate-600 shrink-0"
+          className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/70 hover:bg-white/90 transition"
         >
-          <Menu size={20} />
+          <span className="text-sm font-semibold text-slate-800 truncate">{currentPageLabel}</span>
+          <Menu size={16} className="text-slate-400 shrink-0 ml-2" />
+        </button>
+
+        {/* Next page */}
+        <button
+          onClick={() => nextPage && router.push(nextPage.href)}
+          disabled={!nextPage}
+          title={nextPage?.label}
+          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95"
+        >
+          <ChevronLeft size={18} className="rotate-180" />
+          <span className="text-[9px] mt-0.5 leading-none truncate w-12 text-center">{nextPage?.label ?? ''}</span>
         </button>
       </div>
 

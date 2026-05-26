@@ -335,30 +335,23 @@ export default function RoomEquipmentStatus() {
         </div>
       </button>
 
-      {/* ── Expanded: Apple iOS card style ── */}
+      {/* ── Expanded detail ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100 bg-slate-50/60 p-4 space-y-5">
+        <div className="border-t border-slate-100 p-4 space-y-4">
 
           {/* ห้องแลกเปลี่ยน ชั้น 3 */}
           <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-xs font-semibold text-slate-500">ห้องแลกเปลี่ยน ชั้น 3</p>
-              <span className="text-[11px] text-slate-400">
-                {allRooms3.filter(r => roomStatus[r] !== 'in_use').length} ว่าง
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ห้องแลกเปลี่ยน (ชั้น 3)</p>
+              <span className="text-[11px] text-slate-400">{allRooms3.filter(r => roomStatus[r] !== 'in_use').length} ว่าง</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {allRooms3.map(r => {
                 const inUse = roomStatus[r] === 'in_use';
                 return (
-                  <div key={r} className={`rounded-2xl p-3 text-center transition-all ${
-                    inUse
-                      ? 'bg-red-500 shadow-sm shadow-red-200'
-                      : 'bg-white border border-slate-200/80 shadow-sm'
-                  }`}>
-                    <div className={`text-base font-bold tracking-tight ${inUse ? 'text-white' : 'text-slate-800'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 font-medium ${inUse ? 'text-red-100' : 'text-slate-400'}`}>{roomOsMap[r]}</div>
-                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
+                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{roomOsMap[r]}</div>
                   </div>
                 );
               })}
@@ -367,24 +360,17 @@ export default function RoomEquipmentStatus() {
 
           {/* ห้องเรียน ชั้น 4 */}
           <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-xs font-semibold text-slate-500">ห้องเรียน ชั้น 4</p>
-              <span className="text-[11px] text-slate-400">
-                {allRooms4.filter(r => roomStatus[r] !== 'in_use').length} ว่าง
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ห้องเรียน (ชั้น 4)</p>
+              <span className="text-[11px] text-slate-400">{allRooms4.filter(r => roomStatus[r] !== 'in_use').length} ว่าง</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {allRooms4.map(r => {
                 const inUse = roomStatus[r] === 'in_use';
                 return (
-                  <div key={r} className={`rounded-2xl p-3 text-center transition-all ${
-                    inUse
-                      ? 'bg-red-500 shadow-sm shadow-red-200'
-                      : 'bg-white border border-slate-200/80 shadow-sm'
-                  }`}>
-                    <div className={`text-base font-bold tracking-tight ${inUse ? 'text-white' : 'text-slate-800'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 font-medium ${inUse ? 'text-red-100' : 'text-slate-400'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
-                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
+                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
                   </div>
                 );
               })}
@@ -393,46 +379,29 @@ export default function RoomEquipmentStatus() {
 
           {/* หูฟัง */}
           <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-xs font-semibold text-slate-500">หูฟัง</p>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  ว่าง {headphoneStats.available||0}
-                </span>
-                {(headphoneStats.in_use||0) > 0 && (
-                  <span className="text-[11px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
-                    ใช้ {headphoneStats.in_use}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">หูฟัง</p>
+              <span className="text-[11px] text-slate-400">ว่าง {headphoneStats.available||0} / ใช้ {headphoneStats.in_use||0}</span>
             </div>
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-6 gap-1">
               {allHeadphones.map(h => {
                 const inUse = (equipmentStatus.headphones||{})[h] === 'in_use';
                 const detail = equipmentDetails[h];
                 return (
-                  <div key={h}
-                    title={inUse && detail ? `${detail.user} · ${detail.time}` : 'ว่าง'}
-                    className={`rounded-xl py-2 text-center transition-all ${
-                      inUse
-                        ? 'bg-red-500 shadow-sm shadow-red-200'
-                        : 'bg-white border border-slate-200/80 shadow-sm'
-                    }`}>
-                    <div className={`text-xs font-bold ${inUse ? 'text-white' : 'text-slate-700'}`}>
-                      {h.replace('ICIT','')}
-                    </div>
+                  <div key={h} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
+                    className={`rounded-lg py-1.5 text-center text-[11px] font-medium ${inUse ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                    {h.replace('ICIT','')}
                   </div>
                 );
               })}
             </div>
             {hpInUse.length > 0 && (
-              <div className="mt-2.5 space-y-1.5">
+              <div className="mt-2 space-y-1">
                 {hpInUse.map(h => equipmentDetails[h] && (
-                  <div key={h} className="flex items-center gap-2.5 bg-white rounded-xl px-3 py-2 border border-slate-200/80 shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                    <span className="text-xs font-semibold text-slate-700">{h}</span>
-                    <span className="text-[11px] text-slate-400 ml-auto">{equipmentDetails[h].user}</span>
-                    <span className="text-[11px] text-slate-300">{equipmentDetails[h].time}</span>
+                  <div key={h} className="flex items-center gap-2 text-[11px] text-red-600 bg-red-50 rounded-lg px-2 py-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    <span className="font-medium">{h}</span>
+                    <span className="text-red-400 ml-auto">{equipmentDetails[h].user} · {equipmentDetails[h].time}</span>
                   </div>
                 ))}
               </div>
@@ -441,40 +410,20 @@ export default function RoomEquipmentStatus() {
 
           {/* ปลั๊กไฟ */}
           <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-xs font-semibold text-slate-500">ปลั๊กไฟ</p>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  ว่าง {powerStats.available||0}
-                </span>
-                {(powerStats.in_use||0) > 0 && (
-                  <span className="text-[11px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
-                    ใช้ {powerStats.in_use}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ปลั๊กไฟ</p>
+              <span className="text-[11px] text-slate-400">ว่าง {powerStats.available||0} / ใช้ {powerStats.in_use||0}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {allPower.map(p => {
                 const inUse = (equipmentStatus.power||{})[p] === 'in_use';
                 const detail = equipmentDetails[p];
                 return (
-                  <div key={p}
-                    title={inUse && detail ? `${detail.user} · ${detail.time}` : 'ว่าง'}
-                    className={`rounded-2xl p-3 text-center transition-all ${
-                      inUse
-                        ? 'bg-red-500 shadow-sm shadow-red-200'
-                        : 'bg-white border border-slate-200/80 shadow-sm'
-                    }`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-white' : 'text-slate-800'}`}>
-                      {p.replace('ICIT','')}
-                    </div>
-                    {inUse && detail ? (
-                      <div className="text-[10px] text-red-100 mt-0.5 truncate">{detail.user}</div>
-                    ) : (
-                      <div className="text-[10px] text-slate-400 mt-0.5">ว่าง</div>
-                    )}
-                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full mx-auto ${inUse ? 'bg-red-200' : 'bg-emerald-400'}`} />
+                  <div key={p} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
+                    className={`rounded-xl py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{p.replace('ICIT','')}</div>
+                    {inUse && detail && <div className="text-[10px] text-red-500 mt-0.5 truncate px-1">{detail.user}</div>}
+                    {!inUse && <div className="text-[10px] text-green-500 mt-0.5">ว่าง</div>}
                   </div>
                 );
               })}
@@ -482,9 +431,7 @@ export default function RoomEquipmentStatus() {
           </div>
 
           {lastUpdated && (
-            <p className="text-[10px] text-slate-300 text-right pt-1">
-              อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}
-            </p>
+            <p className="text-[10px] text-slate-300 text-right">อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}</p>
           )}
         </div>
       )}

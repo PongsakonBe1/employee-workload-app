@@ -11,10 +11,11 @@ import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
 
+const HOLD_DURATION = 1500; // ms hold to confirm direct-log
+
 export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const t = useTranslations('worklog');
   const { user } = useAuth();
-  // ถ้ามี targetUser (admin log แทน) ใช้ targetUser, ไม่งั้นใช้ user ตัวเอง
   const logAsUser = targetUser || user;
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [equipmentComment, setEquipmentComment] = useState('');
   const [showSmartEquipmentModal, setShowSmartEquipmentModal] = useState(false);
   const [showSmartRoomModal, setShowSmartRoomModal] = useState(false);
+  // hold-to-confirm state
+  const [holdingId, setHoldingId] = useState(null);
+  const [holdProgress, setHoldProgress] = useState(0); // 0-100
+  const holdTimerRef = useState(null);
+  const holdRafRef = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -43,63 +49,86 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     loadTemplates();
   }, [user]);
 
-  const handleQuickLog = async (template) => {
-    if (!user) return;
-    if (!logAsUser) return;
+  const isSmartOrEquipmentTemplate = (template) => {
+    return template.isSmart ||
+      template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4') ||
+      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
+      template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ') ||
+      template.minorTask.includes('หูฟัง') || template.minorTask.includes('ปลั๊กไฟ') ||
+      template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
+      template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ');
+  };
 
-    console.log('🔍 Template clicked:', template);
-    console.log('🔍 isSmart value:', template.isSmart);
+  const isDirectLog = (template) => !isSmartOrEquipmentTemplate(template) && !template.requireRecipient;
 
-    // ตรวจสอบว่าเป็น Smart Template หรือไม่
-    if (template.isSmart || 
-        template.name.includes('ชั้น 3') || 
-        template.name.includes('ชั้น 4') ||
-        template.minorTask.includes('ชั้น 3') || 
-        template.minorTask.includes('ชั้น 4') ||
-        template.name.includes('หูฟัง') ||
-        template.name.includes('ปลั๊กไฟ') ||
-        template.minorTask.includes('หูฟัง') ||
-        template.minorTask.includes('ปลั๊กไฟ')) {
+  // --- Hold-to-confirm handlers ---
+  const handleHoldStart = (template) => {
+    if (!isDirectLog(template)) return;
+    const startTime = Date.now();
+    setHoldingId(template.id);
+    setHoldProgress(0);
+
+    const tick = () => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min((elapsed / HOLD_DURATION) * 100, 100);
+      setHoldProgress(pct);
+      if (pct < 100) {
+        holdRafRef[0] = requestAnimationFrame(tick);
+      } else {
+        setHoldingId(null);
+        setHoldProgress(0);
+        executeDirectLog(template);
+      }
+    };
+    holdRafRef[0] = requestAnimationFrame(tick);
+  };
+
+  const handleHoldEnd = () => {
+    if (holdRafRef[0]) cancelAnimationFrame(holdRafRef[0]);
+    setHoldingId(null);
+    setHoldProgress(0);
+  };
+
+  const executeDirectLog = async (template) => {
+    if (!user || !logAsUser) return;
+    setLoggingTemplate(template.id);
+    setLoading(true);
+    try {
+      const now = new Date();
+      await logFromTemplate(template.id, user.uid, {
+        date: now.toISOString().slice(0, 10),
+        time: now.toTimeString().slice(0, 5),
+      });
+      await logSystemAction(SystemActions.WORKLOG_CREATE, `Quick log: ${template.name}`, { templateId: template.id });
+      if (onLogSuccess) onLogSuccess(`บันทึก “${template.name}” เรียบร้อย`);
+    } catch (error) {
+      if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+      setLoggingTemplate(null);
+    }
+  };
+
+  const handleQuickLog = (template) => {
+    if (!user || !logAsUser) return;
+
+    if (isSmartOrEquipmentTemplate(template)) {
       setSelectedTemplate(template);
       setEquipmentComment('');
-      
-      // ตรวจสอบประเภทของ Smart Template
-      const isRoomTemplate = template.minorTask.includes('ห้องเรียน') || 
-                             template.minorTask.includes('ชั้น 3') || 
-                             template.minorTask.includes('ชั้น 4') ||
-                             template.name.includes('ชั้น 3') ||
-                             template.name.includes('ชั้น 4');
-      
-      console.log('🏢 isRoomTemplate:', isRoomTemplate);
-      console.log('🏢 template.name:', template.name);
-      console.log('🏢 template.minorTask:', template.minorTask);
-      
-      if (isRoomTemplate) {
-        console.log('🏢 Opening SmartRoomModal');
+      const isRoom = template.minorTask.includes('ห้องเรียน') ||
+                     template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
+                     template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4');
+      if (template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
+          template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ')) {
+        setShowEquipmentModal(true);
+      } else if (isRoom) {
         setShowSmartRoomModal(true);
       } else {
-        // หูฟัง หรือ ปลั๊กไฟ
-        console.log('🔌 Opening SmartEquipmentModal');
         setShowSmartEquipmentModal(true);
       }
       return;
     }
 
-    // ตรวจสอบว่าเป็น template อุปกรณ์แบบเดิมหรือไม่
-    const isEquipmentTemplate = template.minorTask.includes('ยืมหูฟัง') || 
-                                template.minorTask.includes('คืนหูฟัง') ||
-                                template.minorTask.includes('ยืมปลั๊กไฟ') || 
-                                template.minorTask.includes('คืนปลั๊กไฟ');
-
-    // ถ้าเป็น template อุปกรณ์ ให้แสดง equipment modal
-    if (isEquipmentTemplate) {
-      setSelectedTemplate(template);
-      setEquipmentComment('');
-      setShowEquipmentModal(true);
-      return;
-    }
-
-    // ถ้า template ต้องการผู้รับบริการ ให้แสดง recipient modal
     if (template.requireRecipient) {
       setSelectedTemplate(template);
       setRecipient('');
@@ -107,41 +136,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
-    setLoggingTemplate(template.id);
-    setLoading(true);
-
-    try {
-      // สร้างข้อมูลสำหรับวันนี้และเวลาปัจจุบัน
-      const now = new Date();
-      const extraData = {
-        date: now.toISOString().slice(0, 10),
-        time: now.toTimeString().slice(0, 5)
-      };
-
-      // บันทึกงานจาก template
-      await logFromTemplate(template.id, user.uid, extraData);
-
-      // บันทึก system log
-      await logSystemAction(
-        SystemActions.WORKLOG_CREATE,
-        `Quick log from template: ${template.name}`,
-        { templateId: template.id }
-      );
-
-      // แจ้งผู้ใช้
-      if (onLogSuccess) {
-        onLogSuccess(`บันทึกงาน "${template.name}" เรียบร้อยแล้ว`);
-      }
-
-    } catch (error) {
-      console.error("Error quick logging:", error);
-      if (onLogSuccess) {
-        onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
-      }
-    } finally {
-      setLoading(false);
-      setLoggingTemplate(null);
-    }
+    // direct-log: handled by hold gesture only
   };
 
   const handleLogWithRecipient = async () => {
@@ -411,36 +406,59 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     <div>
       {templates.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {templates.map((template) => (
+          {templates.map((template) => {
+            const direct = isDirectLog(template);
+            const isHolding = holdingId === template.id;
+            const isLogging = loggingTemplate === template.id;
+            return (
             <button
               key={template.id}
               type="button"
-              onClick={() => handleQuickLog(template)}
-              disabled={loading}
-              title={template.minorTask}
+              onClick={() => { if (!direct) handleQuickLog(template); }}
+              onMouseDown={() => direct && handleHoldStart(template)}
+              onMouseUp={() => direct && handleHoldEnd()}
+              onMouseLeave={() => direct && handleHoldEnd()}
+              onTouchStart={() => direct && handleHoldStart(template)}
+              onTouchEnd={() => direct && handleHoldEnd()}
+              onTouchCancel={() => direct && handleHoldEnd()}
+              disabled={loading && !isLogging}
+              title={direct ? 'กดค้างเพื่อบันทึก' : template.minorTask}
               className={`
-                relative p-3 text-left rounded-2xl border-2 transition-all active:scale-95
-                ${loggingTemplate === template.id
+                relative p-3 text-left rounded-2xl border-2 transition-all overflow-hidden select-none
+                ${isLogging
                   ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
+                  : isHolding
+                  ? 'border-emerald-500 bg-emerald-50 text-slate-700'
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
                 }
-                ${loading && loggingTemplate !== template.id ? 'opacity-50 pointer-events-none' : ''}
+                ${loading && !isLogging ? 'opacity-50 pointer-events-none' : ''}
               `}
             >
-              {loggingTemplate === template.id && (
+              {/* hold progress bar */}
+              {isHolding && (
+                <div
+                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-500 transition-none"
+                  style={{ width: `${holdProgress}%` }}
+                />
+              )}
+              {isLogging && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
                   <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 </div>
               )}
               <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
               <div className="text-[11px] mt-0.5 opacity-60 truncate">{template.minorTask}</div>
-              {template.requireRecipient && (
-                <span className="mt-1 inline-block text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">
-                  กรอกชื่อ
-                </span>
-              )}
+              <div className="mt-1 flex items-center gap-1">
+                {template.requireRecipient && (
+                  <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
+                )}
+                {direct && (
+                  <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง</span>
+                )}
+              </div>
             </button>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-6 text-sm text-slate-400">
@@ -450,8 +468,8 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
 
       {/* Modal สำหรับกรอกผู้รับบริการ */}
       {showRecipientModal && selectedTemplate && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }} />
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }} />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
             <h3 className="text-lg font-semibold text-slate-900 mb-4">{selectedTemplate.name}</h3>

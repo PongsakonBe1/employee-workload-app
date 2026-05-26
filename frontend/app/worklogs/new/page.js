@@ -244,6 +244,13 @@ export default function NewWorkLogPage() {
   }
 
   const textareaRef = useRef(null);
+  const formRef = useRef(null);
+  const minorTaskRef = useRef(null);
+
+  const scrollToForm = () => {
+    const el = minorTaskRef.current || formRef.current;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   // Auto-grow textarea
   useEffect(() => {
@@ -294,7 +301,14 @@ export default function NewWorkLogPage() {
             <div className="flex items-center gap-2 mb-3">
               <Zap size={15} className="text-amber-500" />
               <span className="text-sm font-semibold text-slate-700">บันทึกด่วน</span>
-              <span className="ml-auto text-xs text-slate-400">กดครั้งเดียวบันทึกได้เลย</span>
+              <button
+                type="button"
+                onClick={scrollToForm}
+                className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                กรอกเอง
+              </button>
             </div>
             <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
               if (type === 'error') { setError(msg); setTimeout(() => setError(""), 3000); }
@@ -303,7 +317,7 @@ export default function NewWorkLogPage() {
           </div>
 
           {/* Form card */}
-          <form onSubmit={onSubmit} className="apple-panel p-5 sm:p-6">
+          <form ref={formRef} onSubmit={onSubmit} className="apple-panel p-5 sm:p-6 lg:sticky lg:top-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">บันทึกงานแบบกรอกฟอร์ม</p>
 
             {/* Date/Time — compact collapsible row */}
@@ -321,7 +335,7 @@ export default function NewWorkLogPage() {
             </div>
 
             {/* Minor Task */}
-            <div className="mt-4">
+            <div className="mt-4" ref={minorTaskRef}>
               <MinorTaskSelector
                 value={form.minorTask}
                 onChange={handleMinorTaskChange}
@@ -378,19 +392,19 @@ export default function NewWorkLogPage() {
           </form>
         </div>
 
-        {/* ── Left: Sidebar (desktop only useful content) ── */}
+        {/* ── Left: Sidebar ── */}
         <div className="flex flex-col gap-4 order-last lg:order-first">
 
-          {/* Lock notice */}
-          <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
-            <Clock size={15} className="text-amber-400 shrink-0" />
-            <p className="text-sm text-amber-700">
-              แก้ไขได้ถึง <strong>23:59</strong> วันที่{" "}
-              <strong>{new Date(form.date).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
+          {/* 1. วันที่/เวลา — desktop บนสุด */}
+          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
+            <p className="text-2xl font-bold text-slate-900 leading-tight">
+              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
             </p>
+            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
           </div>
 
-          {/* Quick guide — desktop only */}
+          {/* 2. วิธีบันทึก — desktop only */}
           <div className="hidden lg:block rounded-2xl bg-slate-950 p-5 text-white">
             <p className="text-sm font-semibold mb-3">วิธีบันทึก</p>
             <ol className="text-sm leading-7 text-white/70 list-decimal list-inside space-y-0.5">
@@ -399,16 +413,15 @@ export default function NewWorkLogPage() {
               <li>เลือกหรือกรอก <span className="text-white font-medium">รายละเอียด</span></li>
               <li>กด <span className="text-white font-medium">บันทึก</span></li>
             </ol>
+            <p className="text-[11px] text-white/30 mt-3">เคล็ด: กดค้าง quick log เพื่อยืนยันก่อนบันทึก</p>
           </div>
 
-          {/* Today's date context — desktop */}
-          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">วันนี้</p>
-            <p className="text-2xl font-semibold text-slate-900">
-              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <p className="text-sm text-slate-400 mt-1">
-              ปี {new Date().getFullYear() + 543}
+          {/* 3. Lock notice — ล่างสุด */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
+            <Clock size={15} className="text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-700">
+              แก้ไขได้ถึง <strong>23:59</strong> วันที่{" "}
+              <strong>{new Date(form.date).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
             </p>
           </div>
         </div>
