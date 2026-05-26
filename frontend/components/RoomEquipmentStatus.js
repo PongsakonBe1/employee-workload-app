@@ -29,13 +29,12 @@ export default function RoomEquipmentStatus() {
   };
 
   const initialEquipmentStatus = {
-    headphones: {
-      "ICIT01": "available", "ICIT02": "available", "ICIT03": "available", "ICIT04": "available",
-      "ICIT05": "available", "ICIT06": "available", "ICIT07": "available", "ICIT08": "available",
-      "ICIT09": "available", "ICIT10": "available", "ICIT11": "available", "ICIT12": "available"
-    },
+    headphones: Object.fromEntries(
+      Array.from({length:20}, (_,i) => [`ICIT${String(i+1).padStart(2,'0')}`, 'available'])
+    ),
     power: {
-      "ICIT21": "available", "ICIT22": "available", "ICIT23": "available"
+      "ICIT21": "available", "ICIT22": "available", "ICIT23": "available",
+      "ICIT24": "available", "ICIT25": "available"
     }
   };
 
@@ -72,9 +71,9 @@ export default function RoomEquipmentStatus() {
         if (/\b407\b/.test(comment)) roomStatus['407'] = isOpenAction ? 'in_use' : 'available';
       }
 
-      // ตรวจสอบหูฟัง
+      // ตรวจสอบหูฟัง ICIT01-20
       if (minorTask.includes('ยืมหูฟัง')) {
-        for (let i = 1; i <= 12; i++) {
+        for (let i = 1; i <= 20; i++) {
           const equipment = `ICIT${String(i).padStart(2, '0')}`;
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.headphones[equipment] = 'in_use';
@@ -83,7 +82,7 @@ export default function RoomEquipmentStatus() {
         }
       }
       if (minorTask.includes('คืนหูฟัง')) {
-        for (let i = 1; i <= 12; i++) {
+        for (let i = 1; i <= 20; i++) {
           const equipment = `ICIT${String(i).padStart(2, '0')}`;
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.headphones[equipment] = 'available';
@@ -92,9 +91,9 @@ export default function RoomEquipmentStatus() {
         }
       }
 
-      // ตรวจสอบปลั๊กไฟ
+      // ตรวจสอบปลั๊กไฟ ICIT21-25
       if (minorTask.includes('ยืมปลั๊กไฟ')) {
-        for (let i = 21; i <= 23; i++) {
+        for (let i = 21; i <= 25; i++) {
           const equipment = `ICIT${i}`;
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.power[equipment] = 'in_use';
@@ -103,7 +102,7 @@ export default function RoomEquipmentStatus() {
         }
       }
       if (minorTask.includes('คืนปลั๊กไฟ')) {
-        for (let i = 21; i <= 23; i++) {
+        for (let i = 21; i <= 25; i++) {
           const equipment = `ICIT${i}`;
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.power[equipment] = 'available';
@@ -230,8 +229,12 @@ export default function RoomEquipmentStatus() {
   const allRooms3 = ['303','304','305','306'];
   const allRooms4 = ['401','402','406','407'];
   const allRooms = [...allRooms3, ...allRooms4];
-  const allHeadphones = Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
-  const allPower = ['ICIT21','ICIT22','ICIT23'];
+  const allHeadphones3    = Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);   // ICIT01-12
+  const allHeadphonesFinn = Array.from({length:8},  (_,i) => `ICIT${String(i+13).padStart(2,'0')}`);  // ICIT13-20
+  const allHeadphones     = [...allHeadphones3, ...allHeadphonesFinn];
+  const allPower3    = ['ICIT21','ICIT22','ICIT23'];
+  const allPowerFinn = ['ICIT24','ICIT25'];
+  const allPower     = [...allPower3, ...allPowerFinn];
 
   const roomsInUse = allRooms.filter(r => roomStatus[r] === 'in_use');
   const hpInUse = allHeadphones.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use');
@@ -337,102 +340,109 @@ export default function RoomEquipmentStatus() {
 
       {/* ── Expanded detail ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100 p-4 space-y-4">
+        <div className="border-t border-slate-100 px-4 py-3 space-y-3">
 
-          {/* ห้องแลกเปลี่ยน ชั้น 3 */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ห้องแลกเปลี่ยน (ชั้น 3)</p>
-              <span className="text-[11px] text-slate-400">{allRooms3.filter(r => roomStatus[r] !== 'in_use').length} ว่าง</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {allRooms3.map(r => {
-                const inUse = roomStatus[r] === 'in_use';
-                return (
-                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{roomOsMap[r]}</div>
+          {/* helper: แถวสถานะ 1 บรรทัด */}
+          {(() => {
+            const StatusRow = ({ label, items, getInUse, getLabel, inUseDetails }) => {
+              const inUseList = items.filter(getInUse);
+              return (
+                <div>
+                  <div className="flex items-center gap-2 min-h-[22px]">
+                    <span className="text-[11px] text-slate-400 w-24 shrink-0">{label}</span>
+                    <div className="flex items-center gap-0.5 flex-wrap flex-1">
+                      {items.map(item => (
+                        <div
+                          key={item}
+                          title={getLabel ? getLabel(item) : item}
+                          className={`h-4 rounded text-[9px] font-bold flex items-center justify-center transition-colors px-1 ${
+                            getInUse(item) ? 'bg-red-400 text-white' : 'bg-emerald-100 text-emerald-600'
+                          } ${item.startsWith('ICIT') ? 'w-4' : 'min-w-[1.75rem]'}`}
+                        >
+                          {item.startsWith('ICIT') ? String(parseInt(item.replace('ICIT',''),10)) : item}
+                        </div>
+                      ))}
+                    </div>
+                    <span className={`text-[10px] font-semibold shrink-0 ${inUseList.length > 0 ? 'text-red-400' : 'text-slate-300'}`}>
+                      {inUseList.length > 0 ? `ใช้ ${inUseList.length}` : 'ว่าง'}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                  {inUseList.length > 0 && inUseDetails && (
+                    <div className="ml-26 mt-1 space-y-0.5 pl-[6.5rem]">
+                      {inUseList.map(item => inUseDetails[item] && (
+                        <div key={item} className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                          <span className="font-semibold text-red-500">{item.replace('ICIT','')}</span>
+                          <span className="text-slate-400 truncate">{inUseDetails[item].user}</span>
+                          <span className="text-slate-300 ml-auto shrink-0">{inUseDetails[item].time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            };
 
-          {/* ห้องเรียน ชั้น 4 */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ห้องเรียน (ชั้น 4)</p>
-              <span className="text-[11px] text-slate-400">{allRooms4.filter(r => roomStatus[r] !== 'in_use').length} ว่าง</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {allRooms4.map(r => {
-                const inUse = roomStatus[r] === 'in_use';
-                return (
-                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
-                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            return (
+              <>
+                {/* ห้อง ชั้น 3 */}
+                <StatusRow
+                  label="ห้อง ชั้น 3"
+                  items={allRooms3}
+                  getInUse={r => roomStatus[r] === 'in_use'}
+                  getLabel={r => `${r} ${roomOsMap[r] || ''}`}
+                />
+                {/* ห้อง ชั้น 4 */}
+                <StatusRow
+                  label="ห้อง ชั้น 4"
+                  items={allRooms4}
+                  getInUse={r => roomStatus[r] === 'in_use'}
+                />
 
-          {/* หูฟัง */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">หูฟัง</p>
-              <span className="text-[11px] text-slate-400">ว่าง {headphoneStats.available||0} / ใช้ {headphoneStats.in_use||0}</span>
-            </div>
-            <div className="grid grid-cols-6 gap-1">
-              {allHeadphones.map(h => {
-                const inUse = (equipmentStatus.headphones||{})[h] === 'in_use';
-                const detail = equipmentDetails[h];
-                return (
-                  <div key={h} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
-                    className={`rounded-lg py-1.5 text-center text-[11px] font-medium ${inUse ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-                    {h.replace('ICIT','')}
-                  </div>
-                );
-              })}
-            </div>
-            {hpInUse.length > 0 && (
-              <div className="mt-2 space-y-1">
-                {hpInUse.map(h => equipmentDetails[h] && (
-                  <div key={h} className="flex items-center gap-2 text-[11px] text-red-600 bg-red-50 rounded-lg px-2 py-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                    <span className="font-medium">{h}</span>
-                    <span className="text-red-400 ml-auto">{equipmentDetails[h].user} · {equipmentDetails[h].time}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                <div className="border-t border-slate-100 pt-2 space-y-2">
+                  <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">ชั้น 3</p>
+                  {/* หูฟัง ชั้น 3 */}
+                  <StatusRow
+                    label="หูฟัง 01–12"
+                    items={allHeadphones3}
+                    getInUse={h => (equipmentStatus.headphones||{})[h] === 'in_use'}
+                    inUseDetails={equipmentDetails}
+                  />
+                  {/* ปลั๊กไฟ ชั้น 3 */}
+                  <StatusRow
+                    label="ปลั๊กไฟ 21–23"
+                    items={allPower3}
+                    getInUse={p => (equipmentStatus.power||{})[p] === 'in_use'}
+                    inUseDetails={equipmentDetails}
+                  />
+                </div>
 
-          {/* ปลั๊กไฟ */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ปลั๊กไฟ</p>
-              <span className="text-[11px] text-slate-400">ว่าง {powerStats.available||0} / ใช้ {powerStats.in_use||0}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {allPower.map(p => {
-                const inUse = (equipmentStatus.power||{})[p] === 'in_use';
-                const detail = equipmentDetails[p];
-                return (
-                  <div key={p} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
-                    className={`rounded-xl py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{p.replace('ICIT','')}</div>
-                    {inUse && detail && <div className="text-[10px] text-red-500 mt-0.5 truncate px-1">{detail.user}</div>}
-                    {!inUse && <div className="text-[10px] text-green-500 mt-0.5">ว่าง</div>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                <div className="border-t border-slate-100 pt-2 space-y-2">
+                  <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Finn Space</p>
+                  {/* หูฟัง Finn */}
+                  <StatusRow
+                    label="หูฟัง 13–20"
+                    items={allHeadphonesFinn}
+                    getInUse={h => (equipmentStatus.headphones||{})[h] === 'in_use'}
+                    inUseDetails={equipmentDetails}
+                  />
+                  {/* ปลั๊กไฟ Finn */}
+                  <StatusRow
+                    label="ปลั๊กไฟ 24–25"
+                    items={allPowerFinn}
+                    getInUse={p => (equipmentStatus.power||{})[p] === 'in_use'}
+                    inUseDetails={equipmentDetails}
+                  />
+                </div>
 
-          {lastUpdated && (
-            <p className="text-[10px] text-slate-300 text-right">อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}</p>
-          )}
+                {lastUpdated && (
+                  <p className="text-[10px] text-slate-300 text-right pt-1">
+                    อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
+                  </p>
+                )}
+              </>
+            );
+          })()}
+
         </div>
       )}
     </div>
