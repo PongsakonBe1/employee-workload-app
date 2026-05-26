@@ -231,7 +231,7 @@ export default function SmartEquipmentModal({
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md max-h-[92vh] flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
@@ -265,18 +265,18 @@ export default function SmartEquipmentModal({
               </div>
 
               {/* Equipment Grid */}
-              <div className={`grid gap-2.5 ${isHeadphones ? 'grid-cols-3 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
+              <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-4 sm:grid-cols-6' : 'grid-cols-3 sm:grid-cols-5'}`}>
                 {filteredEquipment.map((equipment) => {
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);
                   const isAvailable = status === 'available';
                   const detail = equipmentDetails[equipment];
-                  const numLabel = equipment.replace('ICIT', '');
+                  const numLabel = String(parseInt(equipment.replace('ICIT',''), 10));
                   return (
                     <button
                       key={equipment}
                       onClick={() => handleSelect(equipment)}
-                      className={`p-4 rounded-2xl border-2 transition-all relative active:scale-95 ${
+                      className={`p-2 rounded-xl border-2 transition-all relative active:scale-95 ${
                         selectedEquipment === equipment
                           ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
                           : isAvailable
@@ -284,24 +284,24 @@ export default function SmartEquipmentModal({
                           : 'border-orange-200 bg-orange-50 hover:border-orange-300'
                       }`}
                     >
-                      <div className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
+                      <div className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
                         isAvailable ? 'bg-green-500' : 'bg-orange-400'
                       }`} />
                       <div className="text-center">
-                        <div className={`text-xl font-bold ${
+                        <div className={`text-base font-bold leading-tight ${
                           selectedEquipment === equipment ? 'text-purple-700'
                           : isAvailable ? 'text-green-700' : 'text-orange-700'
                         }`}>{numLabel}</div>
-                        <div className="text-xs font-medium text-blue-500 mt-0.5 truncate">
+                        <div className="text-[10px] font-medium text-blue-500 truncate leading-tight">
                           {!isAvailable && detail ? detail.user : <span className="opacity-0">-</span>}
                         </div>
-                        <div className={`text-[11px] mt-1 flex items-center justify-center gap-1 ${
+                        <div className={`text-[10px] mt-0.5 flex items-center justify-center gap-0.5 ${
                           selectedEquipment === equipment ? 'text-purple-500'
                           : isAvailable ? 'text-green-500' : 'text-orange-500'
                         }`}>
                           {isAvailable
-                            ? (isHeadphones ? <Headphones className="w-3 h-3" /> : <Plug className="w-3 h-3" />)
-                            : <RotateCcw className="w-3 h-3" />
+                            ? (isHeadphones ? <Headphones className="w-2.5 h-2.5" /> : <Plug className="w-2.5 h-2.5" />)
+                            : <RotateCcw className="w-2.5 h-2.5" />
                           }
                           {action}
                         </div>

@@ -245,31 +245,45 @@ export default function RoomEquipmentStatus() {
   const groups = [
     {
       key: 'room3',
-      label: 'ห้อง ชั้น 3',
+      label: 'ชั้น 3',
       items: allRooms3,
       getStatus: r => roomStatus[r] === 'in_use',
       inUseCount: allRooms3.filter(r => roomStatus[r] === 'in_use').length,
     },
     {
       key: 'room4',
-      label: 'ห้อง ชั้น 4',
+      label: 'ชั้น 4',
       items: allRooms4,
       getStatus: r => roomStatus[r] === 'in_use',
       inUseCount: allRooms4.filter(r => roomStatus[r] === 'in_use').length,
     },
     {
-      key: 'hp',
+      key: 'hp3',
       label: 'หูฟัง',
-      items: allHeadphones,
+      items: allHeadphones3,
       getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
-      inUseCount: hpInUse.length,
+      inUseCount: allHeadphones3.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
     },
     {
-      key: 'pw',
+      key: 'pw3',
       label: 'ปลั๊ก',
-      items: allPower,
+      items: allPower3,
       getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
-      inUseCount: pwInUse.length,
+      inUseCount: allPower3.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
+    },
+    {
+      key: 'hpFinn',
+      label: 'Finn🎧',
+      items: allHeadphonesFinn,
+      getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
+      inUseCount: allHeadphonesFinn.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
+    },
+    {
+      key: 'pwFinn',
+      label: 'Finn🔌',
+      items: allPowerFinn,
+      getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
+      inUseCount: allPowerFinn.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
     },
   ];
 
@@ -287,37 +301,39 @@ export default function RoomEquipmentStatus() {
             <span className="text-xs text-slate-400">กำลังโหลด...</span>
           </div>
         ) : (
-          <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-            {groups.map((g, i) => (
-              <div key={g.key} className="flex items-center gap-1.5 shrink-0">
-                {/* dots */}
-                <div className="flex items-center gap-0.5">
-                  {g.items.map(item => (
-                    <div
-                      key={item}
-                      className={`rounded-full transition-colors ${
-                        g.getStatus(item)
-                          ? 'bg-red-400 w-2 h-2'
-                          : 'bg-emerald-400 w-2 h-2'
-                      }`}
-                    />
-                  ))}
+          <div className="flex-1 min-w-0 space-y-1">
+            {/* แถวที่ 1: ห้อง */}
+            <div className="flex items-center gap-2">
+              {groups.filter(g => g.key.startsWith('room')).map((g, i, arr) => (
+                <div key={g.key} className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-[3px]">
+                    {g.items.map(item => (
+                      <div key={item} className={`w-1.5 h-1.5 rounded-full ${g.getStatus(item) ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    ))}
+                  </div>
+                  <span className={`text-[10px] font-medium whitespace-nowrap ${g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {g.label}{g.inUseCount > 0 && <span className="text-red-400"> ·{g.inUseCount}</span>}
+                  </span>
+                  {i < arr.length - 1 && <div className="w-px h-2.5 bg-slate-200" />}
                 </div>
-                {/* label */}
-                <span className={`text-[11px] font-medium whitespace-nowrap ${
-                  g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'
-                }`}>
-                  {g.label}
-                  {g.inUseCount > 0 && (
-                    <span className="ml-0.5 text-red-400">·{g.inUseCount}</span>
-                  )}
-                </span>
-                {/* divider */}
-                {i < groups.length - 1 && (
-                  <div className="w-px h-3 bg-slate-200 ml-1.5" />
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* แถวที่ 2: อุปกรณ์ */}
+            <div className="flex items-center gap-2">
+              {groups.filter(g => !g.key.startsWith('room')).map((g, i, arr) => (
+                <div key={g.key} className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-[3px]">
+                    {g.items.map(item => (
+                      <div key={item} className={`w-1.5 h-1.5 rounded-full ${g.getStatus(item) ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                    ))}
+                  </div>
+                  <span className={`text-[10px] font-medium whitespace-nowrap ${g.inUseCount > 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {g.label}{g.inUseCount > 0 && <span className="text-red-400"> ·{g.inUseCount}</span>}
+                  </span>
+                  {i < arr.length - 1 && <div className="w-px h-2.5 bg-slate-200" />}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
