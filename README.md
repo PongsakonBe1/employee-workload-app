@@ -1,8 +1,10 @@
 # labboy Workload Recorder
 
-ระบบบันทึกภาระงานพนักงาน สำหรับสำนักคอมพิวเตอร์ ICIT มจพ. รองรับ PWA, Firebase backend และ Google Sign-In
+ระบบบันทึกภาระงานพนักงาน สำหรับสำนักคอมพิวเตอร์ ICIT มจพ.  
+รองรับ PWA, Firebase backend, Google Sign-In และ Quick Log Templates
 
-🌐 **Live:** https://labboy-workload-app.web.app
+🌐 **Live:** https://labboy-workload-app.web.app  
+📦 **Version:** v1.8.0
 
 ---
 
@@ -27,25 +29,35 @@
 - **PWA** ติดตั้งเป็น App ได้บน iOS/Android
 - **การแจ้งเตือน in-app** ผ่าน Firestore `notifications` collection (real-time via `onSnapshot`)
 - **แจ้งเตือนลืมบันทึก** เวลา 22:00+ ถ้ายังไม่มี worklog วันนี้
+- **Thai Public Holidays** แสดงในปฏิทิน — ดึงจาก iApp API พร้อม localStorage cache 30 วัน
 
 ### Staff
 - **บันทึกงาน** ระบุ duty group, หัวข้อหลัก, หัวข้อรอง, เวลา, comment
-- **แก้ไข/ลบ** worklog เฉพาะวันเดียวกัน (Firestore rule: `isSameDay`)
+- **Quick Log Templates** — กดปุ่มเดียวบันทึกงานซ้ำๆ เช่น เปิด/ปิดห้อง, ยืม/คืนหูฟัง, ปลั๊กไฟ
+- **Smart Room Modal** — เลือกห้องแลกเปลี่ยนความรู้ (303–306) หรือห้องเรียนชั้น 4 (401–407) พร้อมแสดงสถานะเปิด/ปิดแบบ real-time
+- **Smart Equipment Modal** — ติดตามสถานะหูฟัง ICIT01–12 และปลั๊กไฟ ICIT21–23 แบบ real-time
+- **Room Equipment Status** — widget แสดงสถานะห้องและอุปกรณ์ทั้งหมดในหน้าบันทึกงาน
+- **Comment Suggestions** — แนะนำค่า comment อัตโนมัติตาม minorTask ที่เลือก
+- **แก้ไข/ลบ** worklog เฉพาะวันเดียวกัน (lock หลัง 23:59)
 - **Undo Delete** ภายใน 30 วินาที
 - **Dashboard ส่วนตัว**: งานของฉันในช่วงนี้ + อันดับในกลุ่ม + leaderboard ทีม
 - **Calendar view** สลับ List/ปฏิทิน — คลิกวันเพื่อดู worklog ของวันนั้น
 
-### Admin / Superadmin
+### Admin
+- **บันทึกงานให้พนักงาน** — เลือก dropdown พนักงานก่อน จากนั้นใช้ form หรือ Quick Log ได้เลย
+- **Quick Log ในนาม staff** — log จะบันทึก `employeeId` และชื่อของ staff ที่เลือก
+- **จัดการ Quick Log Templates** — เพิ่ม/แก้ไข/ลบ templates ผ่านหน้า System → Templates
 - **Dashboard ทีม**: สถิติรวม, เฉลี่ยต่อคน, Top 3 leaderboard, รายชื่อทุกคน
 - **Workload Heatmap** + **Hour-of-day chart** — เห็นว่าวันไหน/เวลาไหนงานเยอะ
 - **Filter แบบ custom date range** พร้อม quota alert ถ้าช่วง > 90 วัน
 - **Export CSV** กรองตามวันที่ / พนักงาน
 - **จัดการ users**: อนุมัติ/ปฏิเสธ, เปิด/ปิดใช้งาน
-- **Admin bulk import** worklogs
-- **Audit logs** บันทึกการเปลี่ยนแปลง
 
 ### Superadmin (เพิ่มเติม)
 - **แต่งตั้ง Admin → Superadmin** พร้อม confirm modal
+- **Broadcast Notification** ส่งประกาศถึง all / staff / admin
+- **System Logs** ดู audit log การใช้งานระบบ
+- **Bulk Import** worklogs จาก tab-separated text
 - อนุมัติคำขอ Admin promotion จาก Admin
 
 ---
@@ -175,16 +187,19 @@ employee-workload-app/
 ## Roles & Permissions
 
 | การกระทำ | Staff | Admin | Superadmin |
-|----------|-------|-------|-----------|
-| บันทึก worklog | ✅ | ✅ | ✅ |
-| แก้ไข worklog ของตัวเอง (วันเดียวกัน) | ✅ | ✅ | ✅ |
-| แก้ไข worklog ของคนอื่น | ❌ | ✅ | ✅ |
+|----------|-------|-------|------------|
+| บันทึก worklog ของตัวเอง | ✅ | ✅ | ✅ |
+| บันทึก worklog ให้พนักงานคนอื่น | ❌ | ✅ | ✅ |
+| Quick Log (ต้องเลือกพนักงานก่อน ถ้าเป็น Admin) | ✅ | ✅ | ✅ |
+| แก้ไข/ลบ worklog ของตัวเอง (วันเดียวกัน) | ✅ | ✅ | ✅ |
+| แก้ไข/ลบ worklog ของคนอื่น | ❌ | ✅ | ✅ |
 | ดู dashboard ส่วนตัว | ✅ | ✅ | ✅ |
 | ดู dashboard ทีม / filter ทุกคน | ❌ | ✅ | ✅ |
 | Export CSV | ✅ (ของตัวเอง) | ✅ (ทุกคน) | ✅ |
 | จัดการ users | ❌ | ✅ | ✅ |
-| แต่งตั้ง Admin | ❌ | ❌ | ✅ |
-| แต่งตั้ง Superadmin | ❌ | ❌ | ✅ |
+| จัดการ Quick Log Templates | ❌ | ✅ | ✅ |
+| ดู System Logs / Broadcast / Import | ❌ | ❌ | ✅ |
+| แต่งตั้ง Admin / Superadmin | ❌ | ❌ | ✅ |
 
 ---
 
@@ -329,6 +344,7 @@ firebase deploy
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v1.8.0** | 2026-05-26 | **Admin Quick Log**: Admin/Superadmin ต้องเลือกพนักงานจาก dropdown ก่อนใช้ Quick Log — log บันทึกในนามพนักงานนั้น, **Comment Suggestions**: suggestion ห้อง 303–306 เปลี่ยนเป็นเลขห้องล้วน (ไม่มี `/Windows`), **Staff Permissions**: แก้ Firestore rules ให้ staff ลบ/แก้ไข worklog ตัวเองในวันเดียวกันได้ (inline condition แทน helper function ที่มี bug), **Templates tab**: Admin เข้าหน้าจัดการ Templates ในหน้า System ได้แล้ว (เดิม superadmin only), **Firestore rules**: เพิ่ม allow update `usageCount`/`lastUsedAt` ใน globalTemplates สำหรับ authenticated user ทุกคน (แก้ error recording template usage) |
 | **v1.7.6** | 2026-05-22 | **Notifications**: แก้ dropdown mobile overflow (fixed positioning), เพิ่ม Browser Notification permission request banner, อ่าน `reminderTime` จาก Firestore settings แทน hardcode 22:00, trigger OS notification เมื่อ broadcast ใหม่มาถึง, **Minor tasks**: เพิ่ม comment suggestions สำหรับ Microsoft Authenticator, ICIT account, ติดตั้ง Software |
 | **v1.7.5** | 2026-05-22 | **iOS fix**: แก้ date/time input overflow บน iOS PWA ใน /worklogs/new — ใช้ `flex-col`+`min-w-0`+CSS `-webkit-appearance:none`, **Footer**: อัพเดท version ใน AppShell footer ทุก release, **README**: เพิ่มรายละเอียด env setup + deploy convention |
 | **v1.7.4** | 2026-05-22 | **Holiday cache**: เพิ่ม localStorage 30-day TTL cache สำหรับ iApp API เพื่อลด API call — 1 IC/user/ปี |

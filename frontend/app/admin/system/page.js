@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../components/AuthProvider";
 import { AppShell } from "../../../components/AppShell";
+import TemplateManager from "../../../components/TemplateManager";
 import {
   collection,
   query,
@@ -57,7 +58,7 @@ export default function SystemManagementPage() {
   const [exportRequests, setExportRequests] = useState([]);
   const [systemLogs, setSystemLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("exports"); // "exports" | "logs"
+  const [activeTab, setActiveTab] = useState("exports"); // "exports" | "logs" | "templates"
 
   // Feedback states
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -639,6 +640,17 @@ export default function SystemManagementPage() {
             </span>
           )}
         </button>
+        <button
+          onClick={() => setActiveTab("templates")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
+            activeTab === "templates"
+              ? "bg-white text-slate-950 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <FileSpreadsheet size={18} />
+          Templates
+        </button>
         {isSuperAdmin && (
           <>
             <button
@@ -1111,6 +1123,11 @@ export default function SystemManagementPage() {
             </ul>
           </div>
         </div>
+      )}
+
+      {/* Templates Tab */}
+      {activeTab === "templates" && (
+        <TemplateManager />
       )}
 
       {/* Import Worklogs Tab */}

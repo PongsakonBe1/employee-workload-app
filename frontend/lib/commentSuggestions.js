@@ -38,16 +38,16 @@ export const MINOR_TASKS = [
 export const commentSuggestionMap = {
   // Knowledge Room (ห้องแลกเปลี่ยนความรู้)
   เช็คอินห้องแลกเปลี่ยนความรู้: [
-    "303/Windows",
-    "304/iOS",
-    "305/Android",
-    "306/Linux",
+    "303",
+    "304",
+    "305",
+    "306",
   ],
   ปิดห้องแลกเปลี่ยนความรู้: [
-    "303/Windows",
-    "304/iOS",
-    "305/Android",
-    "306/Linux",
+    "303",
+    "304",
+    "305",
+    "306",
   ],
 
   // Classroom 4 (ห้องเรียนชั้น 4)
@@ -179,4 +179,87 @@ export function getMainDutyFromMinorTask(minorTask) {
  */
 export function hasCommentSuggestions(minorTask) {
   return minorTask in commentSuggestionMap;
+}
+
+/**
+ * ดึงคำแนะนำ comment จากประวัติการบันทึกงานของ user
+ * @param {string} userId - รหัสผู้ใช้
+ * @param {string} minorTask - minorTask ปัจจุบัน (optional)
+ * @param {number} maxSuggestions - จำนวน suggestions สูงสุด
+ * @returns {Promise<string[]>} - array ของ suggestions
+ */
+export async function getCommentSuggestionsFromHistory(userId, minorTask = null, maxSuggestions = 5) {
+  try {
+    // Import Firestore functions
+    const { collection, query, where, getDocs, orderBy, limit } = await import("firebase/firestore");
+    const { db } = await import("./firebase");
+
+    // ลอง query 30 วันล่าสุดก่อน
+    let suggestions = await getCommentSuggestionsFromDateRange(userId, minorTask, 30, maxSuggestions);
+    
+    // ถ้าไม่มี suggestions ลอง 90 วันล่าสุด
+    if (suggestions.length === 0) {
+      suggestions = await getCommentSuggestionsFromDateRange(userId, minorTask, 90, maxSuggestions);
+    }
+    
+    // ถ้ายังไม่มี ลอง 365 วันล่าสุด
+    if (suggestions.length === 0) {
+      suggestions = await getCommentSuggestionsFromDateRange(userId, minorTask, 365, maxSuggestions);
+    }
+
+    return suggestions;
+  } catch (error) {
+    console.error("Error getting comment suggestions from history:", error);
+    return [];
+  }
+}
+
+/**
+ * Helper function สำหรับ query suggestions จากช่วงเวลาที่กำหนด
+ */
+async function getCommentSuggestionsFromDateRange(userId, minorTask, daysAgo, maxSuggestions) {
+  const { collection, query, where, getDocs, orderBy, limit } = await import("firebase/firestore");
+  const { db } = await import("./firebase");
+
+  // คำนวณวันที่
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - daysAgo);
+  startDate.setHours(0, 0, 0, 0);
+
+  // Query worklogs
+  const worklogsQuery = query(
+    collection(db, "worklogs"),
+    where("employeeId", "==", userId),
+    where("date", ">=", startDate.toISOString().slice(0, 10)),
+    orderBy("date", "desc"),
+    limit(200) // เพิ่ม limit สำหรับช่วงเวลายาวๆ
+  );
+
+  const snapshot = await getDocs(worklogsQuery);
+  const taskSpecificComments = {};
+
+  // นับ frequency ของ comments สำหรับ minorTask ที่เลือก
+  snapshot.docs.forEach((doc) => {
+    const data = doc.data();
+    const comment = data.comment?.trim();
+    const task = data.minorTask;
+
+    if (!comment || comment.length < 3) return;
+
+    // จัดกลุ่มตาม minorTask เฉพาะเมื่อมีการเลือก minorTask
+    if (task && minorTask && task === minorTask) {
+      taskSpecificComments[comment] = (taskSpecificComments[comment] || 0) + 1;
+    }
+  });
+
+  // ถ้ามี minorTask ให้ใช้เฉพาะ task-specific comments
+  const sourceComments = minorTask ? taskSpecificComments : {};
+
+  // เรียงลำดับตาม frequency และส่งกลับ top suggestions
+  const suggestions = Object.entries(sourceComments)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, maxSuggestions)
+    .map(([comment]) => comment);
+
+  return suggestions;
 }

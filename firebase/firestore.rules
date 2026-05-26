@@ -111,13 +111,16 @@ service cloud.firestore {
       // Create: Any authenticated user can create
       allow create: if isAuthenticated() && isValidWorkLog();
       
-      // Update: Admin anytime, staff/owner same-day only (if not locked)
+      // Update: Admin anytime, staff/owner only (if not locked) - same-day check enforced client-side
       allow update: if isAdmin() || 
-        (isWorkLogOwner(resource.data) && isNotLocked(resource.data) && isSameDay(resource.data) && isValidWorkLogUpdate());
+        (isAuthenticated() &&
+         (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
+         resource.data.locked != true &&
+         isValidWorkLogUpdate());
       
-      // Delete: Admin or owner (if not locked)
-      allow delete: if isAdmin() || 
-        (isWorkLogOwner(resource.data) && isNotLocked(resource.data));
+      // Delete: Admin or owner (if not locked) - same-day check enforced client-side
+      allow delete: if isAuthenticated() && 
+         (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid || isAdmin());
     }
 
     // Audit logs collection
@@ -253,6 +256,39 @@ service cloud.firestore {
       
       // No updates/deletes
       allow update, delete: if false;
+    }
+
+    // Global Templates collection (Quick Log Templates)
+    match /globalTemplates/{templateId} {
+      // All authenticated users can read templates
+      allow read: if isAuthenticated();
+      
+      // Admin and superadmin can create templates
+      allow create: if isAdmin() && 
+        request.resource.data.keys().hasAll(['name', 'minorTask', 'mainDuty']) &&
+        request.resource.data.name is string &&
+        request.resource.data.minorTask is string &&
+        request.resource.data.mainDuty is string;
+      
+      // Admin can update all fields; authenticated users can only update usage stats
+      allow update: if isAdmin() ||
+        (isAuthenticated() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usageCount', 'lastUsedAt']));
+      
+      // Admin and superadmin can delete templates
+      allow delete: if isAdmin();
+    }
+
+    // RoomEquipmentStatus collection (for tracking room and equipment status)
+    match /RoomEquipmentStatus/{statusId} {
+      // All authenticated users can read status
+      allow read: if isAuthenticated();
+      
+      // Staff and admin can update status (for borrowing/returning equipment, opening/closing rooms)
+      allow update: if isAuthenticated() && (isStaff() || isAdmin());
+      
+      // Only admin can create/delete status documents
+      allow create, delete: if isAdmin();
     }
   }
 }

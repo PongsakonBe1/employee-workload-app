@@ -27,6 +27,10 @@ import {
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
+import QuickLogButtons from "../../../components/QuickLogButtons";
+import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
+import AddMissingTemplates from "../../../components/AddMissingTemplates";
+import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
   getCommentSuggestions,
   getMainDutyFromMinorTask,
@@ -269,6 +273,52 @@ export default function AdminRecordPage() {
 
       setSuccess(true);
       setMessage(t("form.saved"));
+      
+      // Trigger refresh ของ RoomEquipmentStatus หลังบันทึกปกติ
+      const comment = (form.comment || '').toLowerCase();
+      const minorTask = (form.minorTask || '').toLowerCase();
+      
+      // ตรวจสอบการยืม/คืนหูฟัง
+      if (minorTask.includes('ยืมหูฟัง') || minorTask.includes('คืนหูฟัง')) {
+        for (let i = 1; i <= 12; i++) {
+          const equipment = `ICIT${String(i).padStart(2, '0')}`;
+          if (comment.includes(equipment)) {
+            const newStatus = minorTask.includes('ยืม') ? 'in_use' : 'available';
+            window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
+              detail: { equipmentType: 'headphones', equipment, status: newStatus }
+            }));
+            break;
+          }
+        }
+      }
+      
+      // ตรวจสอบการยืม/คืนปลั๊กไฟ
+      if (minorTask.includes('ยืมปลั๊กไฟ') || minorTask.includes('คืนปลั๊กไฟ')) {
+        for (let i = 21; i <= 23; i++) {
+          const equipment = `ICIT${i}`;
+          if (comment.includes(equipment)) {
+            const newStatus = minorTask.includes('ยืม') ? 'in_use' : 'available';
+            window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
+              detail: { equipmentType: 'power', equipment, status: newStatus }
+            }));
+            break;
+          }
+        }
+      }
+      
+      // ตรวจสอบการเปิด/ปิดห้อง
+      if (minorTask.includes('เปิดห้อง') || minorTask.includes('ปิดห้อง')) {
+        const rooms = ['401', '402', '406', '407'];
+        rooms.forEach(room => {
+          if (comment.includes(room)) {
+            const newStatus = minorTask.includes('เปิด') ? 'in_use' : 'available';
+            window.dispatchEvent(new CustomEvent('roomStatusUpdated', {
+              detail: { room, status: newStatus }
+            }));
+          }
+        });
+      }
+      
       setTimeout(() => {
         setSuccess(false);
         setMessage("");
@@ -338,7 +388,13 @@ export default function AdminRecordPage() {
 
   return (
     <AppShell>
+      <AddMissingTemplates />
+      <SmartTemplatesSeeder />
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        {/* Room Equipment Status - Top */}
+        <div className="lg:col-span-2">
+          <RoomEquipmentStatus />
+        </div>
         {/* Left panel - Info */}
         <div className="apple-panel p-8">
           <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-500 text-white">
@@ -399,9 +455,9 @@ export default function AdminRecordPage() {
               {error}
             </div>
           )}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Select Staff */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 mb-2">
               <label className="apple-label flex items-center gap-2">
                 <User size={16} />
                 เลือกพนักงาน *
@@ -466,6 +522,33 @@ export default function AdminRecordPage() {
                 onChange={(e) => setForm({ ...form, time: e.target.value })}
                 required
               />
+            </div>
+
+            {/* Quick Log Section */}
+            <div className="md:col-span-2">
+              {!form.employeeId ? (
+                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
+                  กรุณาเลือกพนักงานก่อนใช้ Quick Log
+                </div>
+              ) : (
+                <QuickLogButtons
+                  targetUser={staffList.find(s => s.id === form.employeeId)}
+                  onLogSuccess={(message, type) => {
+                    setMessage(message);
+                    if (type === 'error') {
+                      setError(message);
+                      setSuccess(false);
+                    } else {
+                      setSuccess(true);
+                      setError('');
+                      setTimeout(() => {
+                        setSuccess(false);
+                        setMessage('');
+                      }, 3000);
+                    }
+                  }}
+                />
+              )}
             </div>
 
             {/* Minor Task */}
@@ -536,6 +619,25 @@ export default function AdminRecordPage() {
               )}
             </div>
           </div>
+
+          {/* Success/Error Messages */}
+          {success && message && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-green-700">{message}</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span className="text-red-700">{error}</span>
+            </div>
+          )}
 
           {/* Submit Button */}
           <button

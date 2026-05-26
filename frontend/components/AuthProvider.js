@@ -220,14 +220,24 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.error("[Auth] Error:", err);
+          console.log("[Auth] Error details:", {
+            code: err.code,
+            message: err.message,
+            isFirestoreErr: err.code?.startsWith("firestore/") || err.code?.includes("permission") || err.code?.includes("unavailable") || !err.code,
+            isExplicitAuthErr: err.code?.startsWith("auth/"),
+            willSignOut: (err.code?.startsWith("auth/") && !(err.code?.startsWith("firestore/") || err.code?.includes("permission") || err.code?.includes("unavailable") || !err.code))
+          });
           // ถ้าเป็น Firestore error (permission, unavailable, เป็นต้น) หรือ error ไม่มี code → อย่า signOut
           // signOut เฉพาะ auth errors ที่ชัดเจนเท่านั้น
           const isFirestoreErr = err.code?.startsWith("firestore/") || err.code?.includes("permission") || err.code?.includes("unavailable") || !err.code;
           const isExplicitAuthErr = err.code?.startsWith("auth/");
           if (isExplicitAuthErr && !isFirestoreErr) {
+            console.log("[Auth] Signing out due to auth error");
             await signOut(auth);
             setUser(null);
             setPendingApproval(false);
+          } else {
+            console.log("[Auth] NOT signing out - error is Firestore-related or unknown");
           }
         }
 
@@ -270,20 +280,10 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithGoogle() {
-    // iOS Safari standalone: ITP บล็อก cross-domain cookies ใน redirect flow
-    // ทำให้ getRedirectResult() return null → ต้องใช้ popup
-    const isIOSStandalone =
-      typeof window !== "undefined" && window.navigator.standalone === true;
-
-    if (isIOSStandalone) {
-      const result = await signInWithPopup(auth, googleProvider);
-      logSystemAction(SystemActions.LOGIN, "User logged in via Google").catch(() => {});
-      return result.user;
-    }
-
-    // ทุก platform อื่น (Android PWA, Android browser, PC browser):
-    // ใช้ redirect — ไม่ถูกบล็อกโดย popup blocker, ทำงานได้ดีบน mobile
-    await signInWithRedirect(auth, googleProvider);
+    // ใช้ popup ทุก platform เพื่อหลีกเลี่ยง Chrome redirect issues ที่ทำให้ login loop
+    const result = await signInWithPopup(auth, googleProvider);
+    logSystemAction(SystemActions.LOGIN, "User logged in via Google").catch(() => {});
+    return result.user;
   }
 
   async function logout() {

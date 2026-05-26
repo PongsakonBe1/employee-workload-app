@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   setPersistence,
   browserLocalPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
@@ -26,11 +27,14 @@ const app =
 export const auth = getAuth(app);
 
 // ตั้งค่า Persistence Mode — export promise เพื่อให้ AuthProvider await ก่อนใช้งาน
+// ลอง LOCAL ก่อน (คง login ข้าม browser sessions) ถ้า error จะ fallback ไป SESSION
 export const authReady = setPersistence(auth, browserLocalPersistence)
   .then(() => console.log("[Firebase] Auth persistence set to LOCAL"))
-  .catch((err) =>
-    console.error("[Firebase] Error setting auth persistence:", err),
-  );
+  .catch((err) => {
+    console.warn("[Firebase] LOCAL persistence failed, falling back to SESSION:", err);
+    return setPersistence(auth, browserSessionPersistence)
+      .then(() => console.log("[Firebase] Auth persistence set to SESSION (fallback)"));
+  });
 
 export const db = initializeFirestore(app, {
   localCache: memoryLocalCache(),

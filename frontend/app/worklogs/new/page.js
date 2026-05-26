@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Sparkles, Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { apiFetch } from "../../../lib/api";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
+import QuickLogButtons from "../../../components/QuickLogButtons";
+import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
+import AddMissingTemplates from "../../../components/AddMissingTemplates";
+import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
   getCommentSuggestions,
   getMainDutyFromMinorTask,
@@ -241,13 +245,16 @@ export default function NewWorkLogPage() {
 
   return (
     <AppShell>
+      <AddMissingTemplates />
+      <SmartTemplatesSeeder />
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        {/* Room Equipment Status - Top */}
+        <div className="lg:col-span-2">
+          <RoomEquipmentStatus />
+        </div>
         {/* Left panel - Info */}
         <div className="apple-panel p-8">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-950 text-white">
-            <Sparkles size={24} />
-          </div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    <p className="mb-8 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             {t("newRecord")}
           </p>
           <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
@@ -382,6 +389,17 @@ export default function NewWorkLogPage() {
             </div>
           </div>
 
+          {/* Quick Log Templates */}
+          <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
+            if (type === 'error') {
+              setError(msg);
+              setTimeout(() => setError(""), 3000);
+            } else {
+              setMessage(msg);
+              setTimeout(() => setMessage(""), 3000);
+            }
+          }} />
+
           {/* Recipient */}
           <div className="mt-5">
             <label className="apple-label">{t("form.recipient")}</label>
@@ -433,13 +451,11 @@ export default function NewWorkLogPage() {
             />
 
             {/* Comment Suggestions */}
-            {hasSuggestions && (
-              <CommentSuggestions
-                suggestions={suggestions}
-                selected={form.comment}
-                onSelect={handleCommentSuggestion}
-              />
-            )}
+            <CommentSuggestions
+              minorTask={form.minorTask}
+              selected={form.comment}
+              onSelect={handleCommentSuggestion}
+            />
           </div>
 
           {/* Lock Deadline Notice */}

@@ -321,6 +321,7 @@ export default function WorkLogsPage() {
     if (!user) return false;
     if (user.role === "admin" || user.role === "superadmin") return true;
     if (
+      item.employeeId === user.uid ||
       item.employeeId === user.id ||
       item.employeeNickname === user.nickname
     ) {
@@ -499,6 +500,7 @@ export default function WorkLogsPage() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setDeletedItems([{ id, ...docSnap.data() }]);
+        console.log('[Delete Debug] doc.employeeId:', docSnap.data().employeeId, '| user.uid:', user?.uid, '| match:', docSnap.data().employeeId === user?.uid);
       }
 
       await deleteDoc(docRef);
@@ -529,18 +531,7 @@ export default function WorkLogsPage() {
 
   // ฟังก์ชันบันทึก Audit Log
   async function logAuditEvent(action, details) {
-    try {
-      await addDoc(collection(db, "auditLogs"), {
-        action,
-        details,
-        userId: user?.uid,
-        userEmail: user?.email,
-        timestamp: new Date(),
-        path: window.location.pathname,
-      });
-    } catch (err) {
-      console.error("Audit log error:", err);
-    }
+    await logSystemAction(action, JSON.stringify(details), user?.uid);
   }
 
   const editSuggestions = editingId
@@ -895,13 +886,21 @@ export default function WorkLogsPage() {
                               ? dutyColorMap[item.mainDuty].replace("bg-","border-")
                               : "border-slate-300"
                           }`}>
-                            <p className="text-sm font-semibold text-slate-900 leading-tight">{item.mainDuty}</p>
+                            <p className="text-sm text-slate-600 leading-tight">{item.mainDuty}</p>
                             <p className="text-xs text-slate-500 mt-0.5">{item.minorTask}</p>
                             {item.recipient && (
                               <p className="text-xs text-slate-400 mt-0.5">ผู้รับบริการ: {item.recipient}</p>
                             )}
-                            {item.comment && (
-                              <p className="text-xs text-slate-400 mt-1 italic">{item.comment}</p>
+                            {/* สำหรับ QuickLog (มี equipment/room) แสดงเฉพาะชื่ออุปกรณ์/ห้องเรียน */}
+                            {(item.equipment || item.room) ? (
+                              <p className="text-xs text-slate-600 mt-1">
+                                {item.equipment || item.room}
+                              </p>
+                            ) : (
+                              /* สำหรับการบันทึกปกติ แสดง comment */
+                              item.comment && (
+                                <p className="text-xs text-slate-400 mt-1 italic">{item.comment}</p>
+                              )
                             )}
                             <div className="mt-1.5 flex items-center justify-between">
                               <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
@@ -1158,7 +1157,15 @@ export default function WorkLogsPage() {
                           {item.minorTask || "—"}
                         </td>
                         <td className="min-w-64 px-5 py-4 text-slate-600">
-                          {item.comment || "—"}
+                          {/* สำหรับ QuickLog (มี equipment/room) แสดงเฉพาะชื่ออุปกรณ์/ห้องเรียน */}
+                          {(item.equipment || item.room) ? (
+                            <div className="text-slate-600">
+                              {item.equipment || item.room}
+                            </div>
+                          ) : (
+                            /* สำหรับการบันทึกปกติ แสดง comment */
+                            item.comment || "—"
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-5 py-4">
                           <span
@@ -1403,7 +1410,17 @@ const WorkLogRow = memo(function WorkLogRow({
           {item.minorTask || "—"}
         </span>
       </td>
-      <td className="px-5 py-4">{item.comment || "—"}</td>
+      <td className="px-5 py-4">
+                          {/* สำหรับ QuickLog (มี equipment/room) แสดงเฉพาะชื่ออุปกรณ์/ห้องเรียน */}
+                          {(item.equipment || item.room) ? (
+                            <div className="text-slate-600">
+                              {item.equipment || item.room}
+                            </div>
+                          ) : (
+                            /* สำหรับการบันทึกปกติ แสดง comment */
+                            item.comment || "—"
+                          )}
+                        </td>
       <td className="px-5 py-4">
         <span
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${

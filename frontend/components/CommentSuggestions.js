@@ -1,9 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { getCommentSuggestions } from '../lib/commentSuggestions';
 
-export function CommentSuggestions({ suggestions, selected, onSelect }) {
+export function CommentSuggestions({ minorTask, selected, onSelect }) {
   const t = useTranslations('worklog.commentSuggestions');
+  const suggestions = getCommentSuggestions(minorTask);
 
   if (!suggestions || suggestions.length === 0) {
     return null;
