@@ -224,284 +224,159 @@ export default function RoomEquipmentStatus() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="mb-4 bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl p-4 shadow-sm">
-        <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
-          <Activity className="w-4 h-4 animate-pulse" />
-          <span>กำลังโหลดสถานะ...</span>
-        </div>
-      </div>
-    );
-  }
+  const roomStats = Object.values(roomStatus).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+  const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+  const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
 
-  const roomStats = Object.values(roomStatus).reduce((acc, status) => {
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
+  const allRooms = ['303','304','305','306','401','402','406','407'];
+  const allHeadphones = Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
+  const allPower = ['ICIT21','ICIT22','ICIT23'];
 
-  const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, status) => {
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
+  const roomsInUse = allRooms.filter(r => roomStatus[r] === 'in_use');
+  const hpInUse = allHeadphones.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use');
+  const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
 
-  const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, status) => {
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
+  const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0;
 
   return (
-    <div className="mb-4 bg-white/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg shadow-black/5 relative z-10">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/20">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-            <Wifi className="w-4 h-4 text-white" />
-          </div>
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      {/* ── Compact header bar: กดเพื่อขยาย ── */}
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition text-left"
+      >
+        {/* Status dots */}
+        <div className="flex items-center gap-1.5">
+          {loading ? (
+            <Activity className="w-3.5 h-3.5 text-slate-400 animate-pulse" />
+          ) : (
+            <>
+              {/* Rooms: one dot per room */}
+              {allRooms.map(r => (
+                <div key={r} className={`w-2.5 h-2.5 rounded-full ${roomStatus[r] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={`ห้อง ${r}`} />
+              ))}
+              {/* divider */}
+              <div className="w-px h-3 bg-slate-200 mx-0.5" />
+              {/* Headphones: one dot per unit */}
+              {allHeadphones.map(h => (
+                <div key={h} className={`w-2 h-2 rounded-full ${(equipmentStatus.headphones||{})[h] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={h} />
+              ))}
+              {/* divider */}
+              <div className="w-px h-3 bg-slate-200 mx-0.5" />
+              {/* Power */}
+              {allPower.map(p => (
+                <div key={p} className={`w-2 h-2 rounded-full ${(equipmentStatus.power||{})[p] === 'in_use' ? 'bg-red-500' : 'bg-green-500'}`} title={p} />
+              ))}
+            </>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <span className="text-xs font-medium text-slate-600">
+            {loading ? 'โหลดสถานะ...' : anyInUse
+              ? <span className="text-red-600">มีการใช้งานอยู่</span>
+              : <span className="text-green-600">ทุกห้องและอุปกรณ์ว่าง</span>
+            }
+          </span>
+        </div>
+
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
+          className={`text-slate-400 transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}>
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {/* ── Expanded detail ── */}
+      {expanded && !loading && (
+        <div className="border-t border-slate-100 p-4 space-y-4">
+
+          {/* ห้อง ชั้น 3 */}
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">สถานะห้องและอุปกรณ์</h3>
-            {lastUpdated && (
-              <p className="text-xs text-slate-500">
-                อัปเดต {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 rounded-full">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-xs font-medium text-green-700">ว่าง {roomStats.available || 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 rounded-full">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-xs font-medium text-red-700">ใช้ {roomStats.in_use || 0}</span>
-          </div>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-1.5 rounded-lg bg-white/50 hover:bg-white/70 transition-colors"
-          >
-            <svg 
-              className={`w-4 h-4 text-slate-600 transition-transform ${expanded ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Compact View */}
-      {!expanded && (
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Summary Cards */}
-            <div className="bg-slate-50/50 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                  <Monitor className="w-3 h-3 text-slate-600" />
-                </div>
-                <span className="text-xs font-semibold text-slate-800">ห้องแลกเปลี่ยน</span>
-              </div>
-              <div className="flex gap-1">
-                {['303','304','305','306'].map(room => (
-                  <div
-                    key={room}
-                    className={`w-2 h-2 rounded-full ${
-                      (roomStatus[room] || 'available') === 'available' ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                    title={`${room}/${roomOsMap[room] || ''}`}
-                  ></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-50/50 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                  <Monitor className="w-3 h-3 text-slate-600" />
-                </div>
-                <span className="text-xs font-semibold text-slate-800">ห้องเรียนชั้น 4</span>
-              </div>
-              <div className="flex gap-1">
-                {Object.entries(roomStatus).filter(([room]) => 
-                  room.includes('401') || room.includes('402') || room.includes('406') || room.includes('407')
-                ).map(([room, status]) => (
-                  <div
-                    key={room}
-                    className={`w-2 h-2 rounded-full ${
-                      status === 'available' ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                    title={room}
-                  ></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-50/50 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                  <div className="flex gap-0.5">
-                    <Headphones className="w-2.5 h-2.5 text-slate-600" />
-                    <Plug className="w-2.5 h-2.5 text-slate-600" />
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ห้องแลกเปลี่ยน (ชั้น 3)</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {['303','304','305','306'].map(r => {
+                const inUse = roomStatus[r] === 'in_use';
+                return (
+                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{roomOsMap[r]}</div>
                   </div>
-                </div>
-                <span className="text-xs font-semibold text-slate-800">อุปกรณ์</span>
-              </div>
-              <div className="text-xs text-slate-600">
-                หูฟัง: {headphoneStats.available || 0}/{12} | ปลั๊ก: {powerStats.available || 0}/{3}
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Expanded View */}
-      {expanded && (
-        <div className="p-4">
-
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* ห้องแลกเปลี่ยนความรู้ */}
-        <div className="bg-slate-50/50 rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-              <Monitor className="w-3 h-3 text-slate-600" />
+          {/* ห้อง ชั้น 4 */}
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">ห้องเรียน (ชั้น 4)</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {['401','402','406','407'].map(r => {
+                const inUse = roomStatus[r] === 'in_use';
+                return (
+                  <div key={r} className={`rounded-xl px-2 py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{r}</div>
+                    <div className={`text-[10px] mt-0.5 ${inUse ? 'text-red-500' : 'text-green-500'}`}>{inUse ? 'เปิดอยู่' : 'ว่าง'}</div>
+                  </div>
+                );
+              })}
             </div>
-            <span className="text-xs font-semibold text-slate-800">ห้องแลกเปลี่ยน</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(roomStatus).filter(([room]) => 
-              room.includes('303') || room.includes('304') || room.includes('305') || room.includes('306')
-            ).map(([room, status]) => (
-              <div
-                key={room}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  status === 'available' 
-                    ? 'bg-white text-slate-700 shadow-sm hover:shadow-md' 
-                    : 'bg-red-500 text-white shadow-sm'
-                }`}
-              >
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  status === 'available' ? 'bg-green-500' : 'bg-white'
-                }`}></div>
-                <span className="truncate">{room.replace('/Windows', '').replace('/iOS', '').replace('/Android', '').replace('/Linux', '')}</span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ห้องเรียนชั้น 4 */}
-        <div className="bg-slate-50/50 rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-              <Monitor className="w-3 h-3 text-slate-600" />
-            </div>
-            <span className="text-xs font-semibold text-slate-800">ห้องเรียนชั้น 4</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(roomStatus).filter(([room]) => 
-              room.includes('401') || room.includes('402') || room.includes('406') || room.includes('407')
-            ).map(([room, status]) => (
-              <div
-                key={room}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  status === 'available' 
-                    ? 'bg-white text-slate-700 shadow-sm hover:shadow-md' 
-                    : 'bg-red-500 text-white shadow-sm'
-                }`}
-              >
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  status === 'available' ? 'bg-green-500' : 'bg-white'
-                }`}></div>
-                <span>{room}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* อุปกรณ์ */}
-        <div className="bg-slate-50/50 rounded-xl p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm">
-              <div className="flex gap-0.5">
-                <Headphones className="w-2.5 h-2.5 text-slate-600" />
-                <Plug className="w-2.5 h-2.5 text-slate-600" />
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-slate-800">อุปกรณ์</span>
-          </div>
-          
           {/* หูฟัง */}
-          <div className="mb-4">
+          <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-600">หูฟัง</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-green-600 font-medium">{headphoneStats.available || 0}</span>
-                <span className="text-xs text-slate-400">/</span>
-                <span className="text-xs text-red-600 font-medium">{headphoneStats.in_use || 0}</span>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">หูฟัง</p>
+              <span className="text-[11px] text-slate-400">ว่าง {headphoneStats.available||0} / ใช้ {headphoneStats.in_use||0}</span>
+            </div>
+            <div className="grid grid-cols-6 gap-1">
+              {allHeadphones.map(h => {
+                const inUse = (equipmentStatus.headphones||{})[h] === 'in_use';
+                const detail = equipmentDetails[h];
+                return (
+                  <div key={h} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
+                    className={`rounded-lg py-1.5 text-center text-[11px] font-medium ${inUse ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                    {h.replace('ICIT','')}
+                  </div>
+                );
+              })}
+            </div>
+            {hpInUse.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {hpInUse.map(h => equipmentDetails[h] && (
+                  <div key={h} className="flex items-center gap-2 text-[11px] text-red-600 bg-red-50 rounded-lg px-2 py-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    <span className="font-medium">{h}</span>
+                    <span className="text-red-400">— {equipmentDetails[h].user} ({equipmentDetails[h].time})</span>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="grid grid-cols-4 gap-1 mb-2">
-              {Object.entries(equipmentStatus.headphones || {}).map(([equipment, status]) => (
-                <div
-                  key={equipment}
-                  className={`text-xs p-1 rounded text-center ${
-                    status === 'available' 
-                      ? 'bg-green-50 text-green-700' 
-                      : 'bg-red-50 text-red-700'
-                  }`}
-                >
-                  {equipment.replace('ICIT', '')}
-                </div>
-              ))}
-            </div>
-            {/* แสดงผู้ยืมหูฟัง */}
-            <div className="space-y-1">
-              {Object.entries(equipmentDetails).filter(([key]) => key.includes('ICIT') && parseInt(key.replace('ICIT', '')) <= 12).map(([equipment, detail]) => (
-                <div key={equipment} className="text-xs bg-red-50 text-red-700 p-1 rounded">
-                  {equipment}: {detail.user} ({detail.time})
-                </div>
-              ))}
-            </div>
+            )}
           </div>
 
           {/* ปลั๊กไฟ */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-600">ปลั๊กไฟ</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-green-600 font-medium">{powerStats.available || 0}</span>
-                <span className="text-xs text-slate-400">/</span>
-                <span className="text-xs text-red-600 font-medium">{powerStats.in_use || 0}</span>
-              </div>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">ปลั๊กไฟ</p>
+              <span className="text-[11px] text-slate-400">ว่าง {powerStats.available||0} / ใช้ {powerStats.in_use||0}</span>
             </div>
-            <div className="flex gap-1 mb-2">
-              {Object.entries(equipmentStatus.power || {}).map(([equipment, status]) => (
-                <div
-                  key={equipment}
-                  className={`text-xs p-1 rounded flex-1 text-center ${
-                    status === 'available' 
-                      ? 'bg-green-50 text-green-700' 
-                      : 'bg-red-50 text-red-700'
-                  }`}
-                >
-                  {equipment.replace('ICIT', '')}
-                </div>
-              ))}
-            </div>
-            {/* แสดงผู้ยืมปลั๊กไฟ */}
-            <div className="space-y-1">
-              {Object.entries(equipmentDetails).filter(([key]) => key.includes('ICIT') && parseInt(key.replace('ICIT', '')) >= 21).map(([equipment, detail]) => (
-                <div key={equipment} className="text-xs bg-red-50 text-red-700 p-1 rounded">
-                  {equipment}: {detail.user} ({detail.time})
-                </div>
-              ))}
+            <div className="grid grid-cols-3 gap-1.5">
+              {allPower.map(p => {
+                const inUse = (equipmentStatus.power||{})[p] === 'in_use';
+                const detail = equipmentDetails[p];
+                return (
+                  <div key={p} title={inUse && detail ? `${detail.user} (${detail.time})` : 'ว่าง'}
+                    className={`rounded-xl py-2 text-center ${inUse ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                    <div className={`text-sm font-bold ${inUse ? 'text-red-700' : 'text-green-700'}`}>{p.replace('ICIT','')}</div>
+                    {inUse && detail && <div className="text-[10px] text-red-500 mt-0.5 truncate px-1">{detail.user}</div>}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </div>
+
+          {lastUpdated && (
+            <p className="text-[10px] text-slate-300 text-right">อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}</p>
+          )}
         </div>
       )}
     </div>

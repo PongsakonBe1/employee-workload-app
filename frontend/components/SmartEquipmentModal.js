@@ -236,35 +236,21 @@ export default function SmartEquipmentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-              {isHeadphones ? (
-                <Headphones className="w-5 h-5 text-white" />
-              ) : (
-                <Plug className="w-5 h-5 text-white" />
-              )}
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">{templateName}</h3>
-              <p className="text-sm text-slate-500">
-                ว่าง {availableCount} | ใช้ {inUseCount}
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-950">{templateName}</h3>
+            <p className="text-sm text-slate-400 mt-0.5">ว่าง {availableCount} · ใช้งาน {inUseCount}</p>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Equipment List */}
-        <div className="px-5 pb-2 pt-4 flex-1 overflow-y-auto">
+        <div className="px-6 pb-2 pt-2 flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -289,8 +275,6 @@ export default function SmartEquipmentModal({
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);
                   const isAvailable = status === 'available';
-                  
-                  console.log(`🎯 SmartEquipmentModal: ${equipment} - status: ${status}, action: ${action}, isAvailable: ${isAvailable}`);
                   
                   return (
                     <button
@@ -327,7 +311,7 @@ export default function SmartEquipmentModal({
         </div>
 
         {/* Sticky footer: recipient + confirm */}
-        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-4 space-y-3">
+        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-6 py-4 space-y-3">
           {/* User info for in-use */}
           {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use' && equipmentDetails[selectedEquipment] && (
             <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2">

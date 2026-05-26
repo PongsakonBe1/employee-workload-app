@@ -279,12 +279,17 @@ export default function NewWorkLogPage() {
         )}
       </div>
 
+      {/* ── Status bar — full width, always on top ── */}
+      <div className="mb-4">
+        <RoomEquipmentStatusCollapsible />
+      </div>
+
       <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] pb-24 lg:pb-0">
 
-        {/* ── Right: Form ── order-first on mobile */}
+        {/* ── Right: Form + QuickLog ── order-first on mobile */}
         <div className="order-first lg:order-last flex flex-col gap-4">
 
-          {/* Quick Log — prominent card ที่ด้านบนสุด */}
+          {/* Quick Log */}
           <div className="apple-panel p-4">
             <div className="flex items-center gap-2 mb-3">
               <Zap size={15} className="text-amber-500" />
@@ -292,13 +297,8 @@ export default function NewWorkLogPage() {
               <span className="ml-auto text-xs text-slate-400">กดครั้งเดียวบันทึกได้เลย</span>
             </div>
             <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
-              if (type === 'error') {
-                setError(msg);
-                setTimeout(() => setError(""), 3000);
-              } else {
-                setMessage(msg);
-                setTimeout(() => setMessage(""), 3000);
-              }
+              if (type === 'error') { setError(msg); setTimeout(() => setError(""), 3000); }
+              else { setMessage(msg); setTimeout(() => setMessage(""), 3000); }
             }} />
           </div>
 
@@ -306,27 +306,8 @@ export default function NewWorkLogPage() {
           <form onSubmit={onSubmit} className="apple-panel p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">บันทึกงานแบบกรอกฟอร์ม</p>
 
-            {/* Date & Time — compact row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="apple-label">{t("form.date")}</label>
-                <input
-                  className="apple-input w-full min-w-0"
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm((c) => ({ ...c, date: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="apple-label">{t("form.time")}</label>
-                <input
-                  className="apple-input w-full min-w-0"
-                  type="time"
-                  value={form.time}
-                  onChange={(e) => setForm((c) => ({ ...c, time: e.target.value }))}
-                />
-              </div>
-            </div>
+            {/* Date/Time — compact collapsible row */}
+            <DateTimeRow form={form} setForm={setForm} t={t} />
 
             {/* Recipient */}
             <div className="mt-4">
@@ -349,7 +330,6 @@ export default function NewWorkLogPage() {
               />
             </div>
 
-            {/* Main Duty — compact badge instead of full input */}
             {form.minorTask && (
               <div className="mt-3 flex items-center gap-2">
                 <span className="text-xs text-slate-400">หัวข้อหลัก:</span>
@@ -375,40 +355,33 @@ export default function NewWorkLogPage() {
               />
             </div>
 
-            {/* Auto-save indicator — subtle, inside form */}
             {lastSaved && !draftRestored && (
               <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
                 <CheckCircle2 size={12} />
                 ร่างบันทึกอัตโนมัติ {lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
                 {(form.recipient || form.minorTask || form.comment) && (
-                  <button
-                    type="button"
+                  <button type="button"
                     onClick={() => { clearDraft(); setForm((c) => ({ ...c, recipient: "", minorTask: "", mainDuty: "", dutyGroup: "main", comment: "" })); }}
-                    className="ml-auto text-slate-300 hover:text-red-400 transition"
-                  >
+                    className="ml-auto text-slate-300 hover:text-red-400 transition">
                     ล้างร่าง
                   </button>
                 )}
               </div>
             )}
 
-            {/* Submit — hidden on mobile (shown in sticky bar below), visible on desktop */}
             <button
               disabled={saving || !form.minorTask}
               className="apple-button mt-5 w-full disabled:opacity-40 hidden lg:flex items-center justify-center gap-2"
             >
-              {saving
-                ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t("form.saving")}</>
-                : t("form.save")
-              }
+              {saving ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t("form.saving")}</> : t("form.save")}
             </button>
           </form>
         </div>
 
-        {/* ── Left: Sidebar ── below form on mobile, left on desktop */}
+        {/* ── Left: Sidebar (desktop only useful content) ── */}
         <div className="flex flex-col gap-4 order-last lg:order-first">
 
-          {/* Lock notice — top of sidebar */}
+          {/* Lock notice */}
           <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
             <Clock size={15} className="text-amber-400 shrink-0" />
             <p className="text-sm text-amber-700">
@@ -417,8 +390,27 @@ export default function NewWorkLogPage() {
             </p>
           </div>
 
-          {/* Room & Equipment Status — open by default on lg, collapsible on mobile */}
-          <RoomEquipmentStatusCollapsible />
+          {/* Quick guide — desktop only */}
+          <div className="hidden lg:block rounded-2xl bg-slate-950 p-5 text-white">
+            <p className="text-sm font-semibold mb-3">วิธีบันทึก</p>
+            <ol className="text-sm leading-7 text-white/70 list-decimal list-inside space-y-0.5">
+              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span></li>
+              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> อัตโนมัติ</li>
+              <li>เลือกหรือกรอก <span className="text-white font-medium">รายละเอียด</span></li>
+              <li>กด <span className="text-white font-medium">บันทึก</span></li>
+            </ol>
+          </div>
+
+          {/* Today's date context — desktop */}
+          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">วันนี้</p>
+            <p className="text-2xl font-semibold text-slate-900">
+              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+            <p className="text-sm text-slate-400 mt-1">
+              ปี {new Date().getFullYear() + 543}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -443,31 +435,49 @@ export default function NewWorkLogPage() {
 }
 
 function RoomEquipmentStatusCollapsible() {
-  // Default open on desktop (lg = 1024px+), collapsed on mobile
-  const [open, setOpen] = useState(() => {
-    if (typeof window !== "undefined") return window.innerWidth >= 1024;
-    return false;
-  });
+  return <RoomEquipmentStatus />;
+}
+
+function DateTimeRow({ form, setForm, t }) {
+  const [open, setOpen] = useState(false);
+  const isToday = form.date === new Date().toISOString().slice(0, 10);
+  const timeNow = `${String(new Date().getHours()).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')}`;
   return (
-    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+    <div>
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 transition text-sm font-medium text-slate-700"
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between text-left rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 hover:bg-slate-100 transition"
       >
-        <span className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/><path d="M5 6h6M5 9h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
-          สถานะห้องและอุปกรณ์
-        </span>
-        <svg
-          width="16" height="16" viewBox="0 0 16 16" fill="none"
-          className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
-        >
-          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <div className="flex items-center gap-2">
+          <Clock size={14} className="text-slate-400" />
+          <span className="text-sm text-slate-700">
+            {isToday ? 'วันนี้' : new Date(form.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+            <span className="text-slate-400 ml-2">{form.time}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {(!isToday || form.time !== timeNow) && (
+            <span className="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">ปรับแล้ว</span>
+          )}
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
+            className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}>
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </button>
       {open && (
-        <div className="border-t border-slate-100">
-          <RoomEquipmentStatus />
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label className="apple-label">{t('form.date')}</label>
+            <input className="apple-input w-full" type="date" value={form.date}
+              onChange={(e) => setForm((c) => ({ ...c, date: e.target.value }))} />
+          </div>
+          <div>
+            <label className="apple-label">{t('form.time')}</label>
+            <input className="apple-input w-full" type="time" value={form.time}
+              onChange={(e) => setForm((c) => ({ ...c, time: e.target.value }))} />
+          </div>
         </div>
       )}
     </div>

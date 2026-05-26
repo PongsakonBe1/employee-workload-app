@@ -93,14 +93,8 @@ export default function SmartRoomModal({
 
   // กรองห้องตามชั้นที่เลือก
   const getFilteredRooms = () => {
-    console.log('🏢 SmartRoomModal templateName:', templateName);
-    console.log('🏢 SmartRoomModal templateMinorTask:', templateMinorTask);
-    
-    // ตรวจสอบว่าเป็นชั้น 3 หรือชั้น 4
     const isFloor3 = templateName.includes('ชั้น 3') || templateMinorTask.includes('ชั้น 3');
     const isFloor4 = templateName.includes('ชั้น 4') || templateMinorTask.includes('ชั้น 4');
-    
-    console.log('🏢 isFloor3:', isFloor3, 'isFloor4:', isFloor4);
     
     let roomList = [];
     if (isFloor3) {
@@ -133,7 +127,6 @@ export default function SmartRoomModal({
   };
 
   const filteredRooms = getFilteredRooms();
-  console.log('🏢 filteredRooms:', filteredRooms);
   
   // หา action ที่เหมาะสมสำหรับห้องนี้
   const getActionForRoom = (room) => {
@@ -196,31 +189,21 @@ export default function SmartRoomModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <DoorOpen className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">{templateName}</h3>
-              <p className="text-sm text-slate-500">
-                ปิด {closedCount} | เปิดได้ {openCount}
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-950">{templateName}</h3>
+            <p className="text-sm text-slate-400 mt-0.5">เปิดได้ {openCount} · เปิดอยู่ {closedCount}</p>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Room List */}
-        <div className="px-5 pt-4 pb-2 flex-1 overflow-y-auto">
+        <div className="px-6 pt-2 pb-2 flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
@@ -288,7 +271,7 @@ export default function SmartRoomModal({
         </div>
 
         {/* Sticky footer */}
-        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-4">
+        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-6 py-4">
           <div className="flex gap-2">
             <button
               onClick={handleConfirm}
