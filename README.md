@@ -4,7 +4,7 @@
 รองรับ PWA, Firebase backend, Google Sign-In และ Quick Log Templates
 
 🌐 **Live:** https://labboy-workload-app.web.app  
-📦 **Version:** v1.9.0
+📦 **Version:** v1.9.1
 
 ---
 
