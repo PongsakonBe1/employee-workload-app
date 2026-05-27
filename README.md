@@ -4,7 +4,7 @@
 รองรับ PWA, Firebase backend, Google Sign-In และ Quick Log Templates
 
 🌐 **Live:** https://labboy-workload-app.web.app  
-📦 **Version:** v1.8.0
+📦 **Version:** v1.9.0
 
 ---
 
@@ -36,7 +36,7 @@
 - **Quick Log Templates** — กดปุ่มเดียวบันทึกงานซ้ำๆ เช่น เปิด/ปิดห้อง, ยืม/คืนหูฟัง, ปลั๊กไฟ
 - **Smart Room Modal** — เลือกห้องแลกเปลี่ยนความรู้ (303–306) หรือห้องเรียนชั้น 4 (401–407) พร้อมแสดงสถานะเปิด/ปิดแบบ real-time
 - **Smart Equipment Modal** — ติดตามสถานะหูฟัง ICIT01–12 และปลั๊กไฟ ICIT21–23 แบบ real-time
-- **Room Equipment Status** — widget แสดงสถานะห้องและอุปกรณ์ทั้งหมดในหน้าบันทึกงาน
+- **Room Equipment Status** — widget แสดงสถานะห้องและอุปกรณ์ (ห้อง 303–306, 401–407, หูฟัง ICIT01–20, ปลั๊กไฟ ICIT21–25) พร้อม 3D preview, navigation buttons, และ barcode/item number
 - **Comment Suggestions** — แนะนำค่า comment อัตโนมัติตาม minorTask ที่เลือก
 - **แก้ไข/ลบ** worklog เฉพาะวันเดียวกัน (lock หลัง 23:59)
 - **Undo Delete** ภายใน 30 วินาที
