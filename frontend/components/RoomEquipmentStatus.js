@@ -4,6 +4,245 @@ import { useState, useEffect } from 'react';
 import { Monitor, Headphones, Plug, Wifi, Activity } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
+// ─── Equipment Details Data (Barcode & Item Number) ───
+const EQUIPMENT_DETAILS = {
+  // Headphones ICIT01-20
+  'ICIT01': { barcode: '024467AK00017', itemNo: 1, name: 'หูฟัง' },
+  'ICIT02': { barcode: '024467AK00014', itemNo: 2, name: 'หูฟัง' },
+  'ICIT03': { barcode: '024467AK00001', itemNo: 3, name: 'หูฟัง' },
+  'ICIT04': { barcode: '024467AK00007', itemNo: 4, name: 'หูฟัง' },
+  'ICIT05': { barcode: '024467AK00003', itemNo: 5, name: 'หูฟัง' },
+  'ICIT06': { barcode: '024467AK00015', itemNo: 6, name: 'หูฟัง' },
+  'ICIT07': { barcode: '024467AK00002', itemNo: 7, name: 'หูฟัง' },
+  'ICIT08': { barcode: '024467AK00016', itemNo: 8, name: 'หูฟัง' },
+  'ICIT09': { barcode: '024467AK00004', itemNo: 9, name: 'หูฟัง' },
+  'ICIT10': { barcode: '024467AK00013', itemNo: 10, name: 'หูฟัง' },
+  'ICIT11': { barcode: '024467AK00011', itemNo: 11, name: 'หูฟัง' },
+  'ICIT12': { barcode: '024467AK00020', itemNo: 12, name: 'หูฟัง' },
+  'ICIT13': { barcode: '024467AK00008', itemNo: 13, name: 'หูฟัง' },
+  'ICIT14': { barcode: '024467AK00019', itemNo: 14, name: 'หูฟัง' },
+  'ICIT15': { barcode: '024467AK00009', itemNo: 15, name: 'หูฟัง' },
+  'ICIT16': { barcode: '024467AK00005', itemNo: 16, name: 'หูฟัง' },
+  'ICIT17': { barcode: '024467AK00012', itemNo: 17, name: 'หูฟัง' },
+  'ICIT18': { barcode: '024467AK00018', itemNo: 18, name: 'หูฟัง' },
+  'ICIT19': { barcode: '024467AK00006', itemNo: 19, name: 'หูฟัง' },
+  'ICIT20': { barcode: '024467AK00010', itemNo: 20, name: 'หูฟัง' },
+  // Power Plugs ICIT21-25
+  'ICIT21': { barcode: 'BA1614453', itemNo: 21, name: 'ปลั๊กไฟ' },
+  'ICIT22': { barcode: 'BA1614456', itemNo: 22, name: 'ปลั๊กไฟ' },
+  'ICIT23': { barcode: 'BA1614455', itemNo: 23, name: 'ปลั๊กไฟ' },
+  'ICIT24': { barcode: 'BA1614444', itemNo: 24, name: 'ปลั๊กไฟ' },
+  'ICIT25': { barcode: 'BA1614442', itemNo: 25, name: 'ปลั๊กไฟ' },
+};
+
+// ─── 3D Device Preview Components (CSS-based, GPU accelerated) ───
+
+const Device3DContainer = ({ children, color = '#f5f5f5', inUse = false }) => (
+  <div className="relative w-36 h-36 sm:w-40 sm:h-40 mx-auto" style={{ perspective: '600px' }}>
+    <div 
+      className="w-full h-full transition-transform duration-700 ease-out"
+      style={{ 
+        transformStyle: 'preserve-3d',
+        transform: 'rotateY(-15deg) rotateX(5deg)',
+        animation: 'deviceFloat 6s ease-in-out infinite'
+      }}
+    >
+      {/* Shadow */}
+      <div 
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-4 rounded-full blur-md opacity-30"
+        style={{ background: inUse ? '#ef4444' : '#22c55e', transform: 'translateZ(-20px)' }}
+      />
+      {children}
+    </div>
+    <style jsx>{`
+      @keyframes deviceFloat {
+        0%, 100% { transform: rotateY(-15deg) rotateX(5deg) translateY(0px); }
+        50% { transform: rotateY(-15deg) rotateX(5deg) translateY(-8px); }
+      }
+    `}</style>
+  </div>
+);
+
+// AirPods Max style headphones
+const Headphones3D = ({ inUse = false }) => (
+  <Device3DContainer inUse={inUse}>
+    <svg viewBox="0 0 120 100" className="w-full h-full drop-shadow-xl">
+      {/* Headband */}
+      <path 
+        d="M30 55 Q60 15 90 55" 
+        fill="none" 
+        stroke="#d4d4d8" 
+        strokeWidth="12" 
+        strokeLinecap="round"
+      />
+      <path 
+        d="M30 55 Q60 15 90 55" 
+        fill="none" 
+        stroke="#a1a1aa" 
+        strokeWidth="4" 
+        strokeLinecap="round"
+        opacity="0.3"
+      />
+      {/* Left Ear Cup */}
+      <ellipse cx="28" cy="62" rx="14" ry="18" fill="#71717a" />
+      <ellipse cx="28" cy="62" rx="10" ry="14" fill={inUse ? '#ef4444' : '#a1a1aa'} opacity="0.8"/>
+      <ellipse cx="26" cy="60" rx="6" ry="8" fill="#52525b" />
+      {/* Right Ear Cup */}
+      <ellipse cx="92" cy="62" rx="14" ry="18" fill="#71717a" />
+      <ellipse cx="92" cy="62" rx="10" ry="14" fill={inUse ? '#ef4444' : '#a1a1aa'} opacity="0.8"/>
+      <ellipse cx="94" cy="60" rx="6" ry="8" fill="#52525b" />
+      {/* Mesh detail */}
+      <circle cx="28" cy="62" r="3" fill="#27272a" opacity="0.5"/>
+      <circle cx="92" cy="62" r="3" fill="#27272a" opacity="0.5"/>
+    </svg>
+  </Device3DContainer>
+);
+
+// Link PowerConneX style rack power strip
+const PowerStrip3D = ({ inUse = false }) => (
+  <Device3DContainer inUse={inUse}>
+    <svg viewBox="0 0 120 80" className="w-full h-full drop-shadow-xl">
+      {/* Main body - rack mount power strip */}
+      <rect x="10" y="20" width="100" height="40" rx="3" fill="#18181b" />
+      {/* Side mounting flanges */}
+      <rect x="5" y="22" width="6" height="36" rx="1" fill="#27272a" />
+      <rect x="109" y="22" width="6" height="36" rx="1" fill="#27272a" />
+      {/* Screw holes on flanges */}
+      <circle cx="8" cy="30" r="1.5" fill="#52525b" />
+      <circle cx="8" cy="50" r="1.5" fill="#52525b" />
+      <circle cx="112" cy="30" r="1.5" fill="#52525b" />
+      <circle cx="112" cy="50" r="1.5" fill="#52525b" />
+      {/* 6 Power outlets */}
+      {[0,1,2,3,4,5].map(i => (
+        <g key={i}>
+          <rect x={18 + i * 16} y="28" width="12" height="20" rx="1.5" fill="#3f3f46" />
+          <rect x={20 + i * 16} y="30" width="8" height="16" rx="1" fill="#18181b" />
+          {/* Outlet holes */}
+          <circle cx={22 + i * 16} cy="35" r="1.5" fill="#71717a" />
+          <circle cx={26 + i * 16} cy="35" r="1.5" fill="#71717a" />
+          <rect x={23 + i * 16} y="38" width="2" height="4" fill="#71717a" />
+        </g>
+      ))}
+      {/* LED indicator */}
+      <circle cx="110" cy="28" r="2" fill={inUse ? '#ef4444' : '#22c55e'} className="animate-pulse" />
+      {/* Cable */}
+      <path d="M60 60 Q60 75 80 75 L100 75" fill="none" stroke="#27272a" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  </Device3DContainer>
+);
+
+// Room/Monitor icon
+const Room3D = ({ os, inUse = false }) => (
+  <Device3DContainer inUse={inUse}>
+    <svg viewBox="0 0 100 80" className="w-full h-full drop-shadow-xl">
+      {/* Monitor stand */}
+      <path d="M45 65 L55 65 L52 75 L48 75 Z" fill="#71717a" />
+      <rect x="35" y="75" width="30" height="3" rx="1" fill="#52525b" />
+      {/* Monitor frame */}
+      <rect x="15" y="15" width="70" height="50" rx="4" fill="#27272a" />
+      <rect x="18" y="18" width="64" height="44" rx="2" fill={inUse ? '#1a1a2e' : '#0a0a0a'} />
+      {/* Screen content */}
+      {inUse ? (
+        <>
+          <rect x="22" y="22" width="20" height="3" rx="1" fill="#ef4444" opacity="0.8" />
+          <rect x="22" y="28" width="40" height="2" rx="1" fill="#3f3f46" />
+          <rect x="22" y="33" width="35" height="2" rx="1" fill="#3f3f46" />
+          <rect x="22" y="38" width="45" height="2" rx="1" fill="#3f3f46" />
+          <circle cx="75" cy="28" r="4" fill="#ef4444" opacity="0.6" />
+        </>
+      ) : (
+        <>
+          <circle cx="50" cy="40" r="12" fill="#22c55e" opacity="0.1" />
+          <path d="M44 40 L48 44 L56 36" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+        </>
+      )}
+      {/* OS Badge */}
+      <rect x="65" y="55" width="15" height="6" rx="1" fill="#3f3f46" />
+      <text x="72.5" y="59" textAnchor="middle" fill="#a1a1aa" fontSize="4" fontWeight="bold">{os?.slice(0,3) || 'OS'}</text>
+    </svg>
+  </Device3DContainer>
+);
+
+// Preview Panel Component
+const DevicePreview = ({ item }) => {
+  if (!item) return null;
+  
+  const render3D = () => {
+    switch (item.type) {
+      case 'headphones': return <Headphones3D inUse={item.inUse} />;
+      case 'power': return <PowerStrip3D inUse={item.inUse} />;
+      case 'room': return <Room3D os={item.os} inUse={item.inUse} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col space-y-3 sm:space-y-4">
+      {/* 3D Preview */}
+      <div className="relative py-2">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-100/50 to-transparent rounded-2xl" />
+        {render3D()}
+      </div>
+      
+      {/* Status indicator */}
+      <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 ${
+        item.inUse ? 'bg-red-50/80 border border-red-100' : 'bg-emerald-50/80 border border-emerald-100'
+      }`}>
+        <div className={`w-3 h-3 rounded-full ${item.inUse ? 'bg-red-400 animate-pulse' : 'bg-emerald-400'}`} />
+        <span className={`text-sm font-bold ${item.inUse ? 'text-red-700' : 'text-emerald-700'}`}>
+          {item.inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน'}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="text-center space-y-0.5 sm:space-y-1">
+        <p className="text-[10px] text-slate-400 uppercase tracking-wider">{item.location}</p>
+        <p className="text-lg sm:text-xl font-bold text-slate-800 font-mono">{item.id}</p>
+        {item.os && <p className="text-xs text-slate-500">{item.os}</p>}
+        
+        {/* Equipment Details - Barcode & Item No */}
+        {EQUIPMENT_DETAILS[item.id] && (
+          <div className="pt-2 space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-full">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500">
+                <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
+              </svg>
+              <span className="text-[10px] font-mono text-slate-600 tracking-tight">
+                {EQUIPMENT_DETAILS[item.id].barcode}
+              </span>
+            </div>
+            <p className="text-[9px] text-slate-400">Item #{EQUIPMENT_DETAILS[item.id].itemNo}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Usage Details */}
+      {item.inUse && item.detail ? (
+        <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-100 space-y-1.5 sm:space-y-2 shadow-sm">
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400 shrink-0">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span className="text-sm text-slate-700 font-medium truncate">{item.detail.user}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400 shrink-0">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <span className="text-xs text-slate-500">ยืมเมื่อ {item.detail.time}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-sm">
+          <p className="text-xs text-slate-400 text-center">
+            {item.type === 'room' ? 'ห้องว่าง สามารถเช็คอินได้' : 'พร้อมให้ยืมใช้งาน'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function RoomEquipmentStatus() {
   const [roomStatus, setRoomStatus] = useState({});
   const [equipmentStatus, setEquipmentStatus] = useState({});
@@ -11,6 +250,7 @@ export default function RoomEquipmentStatus() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [equipmentDetails, setEquipmentDetails] = useState({});
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // ข้อมูลเริ่มต้นทั้งหมดว่าง - เริ่มต้นที่ 'available' (ไม่ได้ใช้งาน)
   const initialRoomStatus = {
@@ -241,6 +481,31 @@ export default function RoomEquipmentStatus() {
   const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
   const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0;
 
+  // --- Navigation list for preview ---
+  const navItems = [
+    ...allRooms3.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 3', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
+    ...allRooms4.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 4', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
+    ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id] })),
+    ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id] })),
+    ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id] })),
+    ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id] })),
+  ];
+
+  // --- Navigation handlers ---
+  const navigatePrev = () => {
+    if (!selectedItem) return;
+    const currentIndex = navItems.findIndex(i => i.id === selectedItem.id);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : navItems.length - 1;
+    setSelectedItem(navItems[prevIndex]);
+  };
+
+  const navigateNext = () => {
+    if (!selectedItem) return;
+    const currentIndex = navItems.findIndex(i => i.id === selectedItem.id);
+    const nextIndex = currentIndex < navItems.length - 1 ? currentIndex + 1 : 0;
+    setSelectedItem(navItems[nextIndex]);
+  };
+
   // --- Compact bar: กลุ่มละ dots + label ---
   const groups = [
     {
@@ -292,7 +557,23 @@ export default function RoomEquipmentStatus() {
 
       {/* ── Compact bar ── */}
       <button
-        onClick={() => setExpanded(v => !v)}
+        onClick={() => {
+          const next = !expanded;
+          setExpanded(next);
+          if (!next) {
+            setSelectedItem(null);
+          } else if (!selectedItem) {
+            // Default to room 303 on first expand
+            setSelectedItem({
+              type: 'room',
+              id: '303',
+              label: '303',
+              location: 'ห้องบริการ ชั้น 3',
+              inUse: roomStatus['303'] === 'in_use',
+              os: roomOsMap['303']
+            });
+          }
+        }}
         className="w-full flex items-center gap-0 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
       >
         {loading ? (
@@ -358,90 +639,191 @@ export default function RoomEquipmentStatus() {
         </div>
       </button>
 
-      {/* ── Expanded detail: grid card style ── */}
+      {/* ── Expanded detail: 2-column layout ── */}
       {expanded && !loading && (
-        <div className="border-t border-slate-100 px-3 py-3 space-y-3">
+        <div className="border-t border-slate-100">
+          <div className="flex flex-col-reverse md:flex-row">
+            {/* ฝั่งซ้าย: Grid Cards - 40% - Fixed height with smooth scroll */}
+            <div className="w-full md:w-[42%] p-2 space-y-2 overflow-y-auto h-[420px] md:h-[480px] scroll-smooth snap-y snap-mandatory">
 
-          {/* ── ห้อง ── */}
-          <div>
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">ห้อง</p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {[...allRooms3, ...allRooms4].map(r => {
-                const inUse = roomStatus[r] === 'in_use';
-                return (
-                  <div key={r} className={`rounded-xl px-2 py-2 flex flex-col items-center gap-0.5 ${
-                    inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
-                  }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className={`text-[11px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
-                    <span className={`text-[9px] ${inUse ? 'text-red-400' : 'text-emerald-400'}`}>{inUse ? 'เปิด' : 'ว่าง'}</span>
+              {/* Section: ห้อง ชั้น 3 */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 3</p>
+                <div className="grid grid-cols-5 sm:grid-cols-8 gap-1">
+                  {allRooms3.map(r => {
+                    const inUse = roomStatus[r] === 'in_use';
+                    return (
+                      <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 3',inUse,os:roomOsMap[r]})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section: ห้อง ชั้น 4 */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 4</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
+                  {allRooms4.map(r => {
+                    const inUse = roomStatus[r] === 'in_use';
+                    return (
+                      <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 4',inUse,os:roomOsMap[r]})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section: หูฟัง ชั้น 3 */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง ชั้น 3</p>
+                <div className="grid grid-cols-8 sm:grid-cols-10 gap-0.5">
+                  {allHeadphones3.map(id => {
+                    const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
+                    const det = equipmentDetails[id];
+                    const num = parseInt(id.replace('ICIT',''),10);
+                    return (
+                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'ชั้น 3',inUse,detail:det})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section: ปลั๊ก ชั้น 3 */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ปลั๊ก ชั้น 3</p>
+                <div className="grid grid-cols-5 sm:grid-cols-8 gap-0.5">
+                  {allPower3.map(id => {
+                    const inUse = (equipmentStatus.power||{})[id] === 'in_use';
+                    const det = equipmentDetails[id];
+                    const num = parseInt(id.replace('ICIT',''),10);
+                    return (
+                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'ชั้น 3',inUse,detail:det})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section: หูฟัง Finn */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง Finn Space</p>
+                <div className="grid grid-cols-6 sm:grid-cols-10 gap-0.5">
+                  {allHeadphonesFinn.map(id => {
+                    const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
+                    const det = equipmentDetails[id];
+                    const num = parseInt(id.replace('ICIT',''),10);
+                    return (
+                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'Finn Space',inUse,detail:det})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section: ปลั๊ก Finn */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ปลั๊ก Finn Space</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5">
+                  {allPowerFinn.map(id => {
+                    const inUse = (equipmentStatus.power||{})[id] === 'in_use';
+                    const det = equipmentDetails[id];
+                    const num = parseInt(id.replace('ICIT',''),10);
+                    return (
+                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'Finn Space',inUse,detail:det})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
+                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* ฝั่งขวา: 3D Preview Panel - 60% - Fixed height container */}
+            <div className="w-full md:w-[58%] bg-gradient-to-b from-slate-50/80 to-white border-b md:border-b-0 md:border-l border-slate-100 p-3 md:p-4 flex flex-col h-[420px] md:h-[480px] overflow-hidden">
+              {/* Navigation buttons */}
+              <div className="absolute top-4 left-4 right-4 z-10 flex justify-between pointer-events-none">
+                <button
+                  onClick={navigatePrev}
+                  disabled={!selectedItem}
+                  className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 flex items-center justify-center transition-all pointer-events-auto ${
+                    selectedItem ? 'hover:bg-white hover:shadow-md active:scale-95' : 'opacity-30 cursor-not-allowed'
+                  }`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-600">
+                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={navigateNext}
+                  disabled={!selectedItem}
+                  className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 flex items-center justify-center transition-all pointer-events-auto ${
+                    selectedItem ? 'hover:bg-white hover:shadow-md active:scale-95' : 'opacity-30 cursor-not-allowed'
+                  }`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-600">
+                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Fixed content wrapper for smooth transitions */}
+              <div className="flex-1 flex flex-col relative overflow-y-auto overflow-x-hidden pt-12">
+                <div className={`transition-all duration-300 ease-out ${!selectedItem ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
+                  {/* Empty state */}
+                  <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-3">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="4"/>
+                        <circle cx="12" cy="12" r="4"/>
+                      </svg>
+                    </div>
+                    <p className="text-xs text-center">เลือกรายการเพื่อดู<br/>รายละเอียดและ 3D Preview</p>
                   </div>
-                );
-              })}
+                </div>
+                <div className={`transition-all duration-300 ease-out ${selectedItem ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
+                  {/* Preview state */}
+                  {selectedItem && <DevicePreview item={selectedItem} />}
+                </div>
+              </div>
+
+              {lastUpdated && (
+                <p className="text-[9px] text-slate-300 text-center mt-auto pt-4">
+                  อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
+                </p>
+              )}
             </div>
           </div>
-
-          {/* ── ชั้น 3: อุปกรณ์ ── */}
-          <div className="border-t border-slate-100 pt-2">
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">ชั้น 3</p>
-            <div className="grid grid-cols-5 gap-1">
-              {[...allHeadphones3, ...allPower3].map(id => {
-                const isHP = id.startsWith('ICIT0') || parseInt(id.replace('ICIT',''),10) <= 12;
-                const inUse = isHP
-                  ? (equipmentStatus.headphones||{})[id] === 'in_use'
-                  : (equipmentStatus.power||{})[id] === 'in_use';
-                const det = equipmentDetails[id];
-                const num = parseInt(id.replace('ICIT',''),10);
-                return (
-                  <div key={id} title={inUse && det ? `${det.user} ${det.time}` : 'ว่าง'}
-                    className={`rounded-lg py-1.5 flex flex-col items-center gap-0.5 ${
-                      inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                    }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className={`text-[10px] font-bold leading-none ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
-                    {inUse && det
-                      ? <span className="text-[8px] text-red-400 truncate w-full text-center px-0.5">{det.user.split(' ')[0]}</span>
-                      : <span className="text-[8px] text-slate-300">{isHP ? 'หูฟัง' : 'ปลั๊ก'}</span>
-                    }
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Finn Space: อุปกรณ์ ── */}
-          <div className="border-t border-slate-100 pt-2">
-            <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest px-1 mb-1.5">Finn Space</p>
-            <div className="grid grid-cols-5 gap-1">
-              {[...allHeadphonesFinn, ...allPowerFinn].map(id => {
-                const num = parseInt(id.replace('ICIT',''),10);
-                const isHP = num <= 20;
-                const inUse = isHP
-                  ? (equipmentStatus.headphones||{})[id] === 'in_use'
-                  : (equipmentStatus.power||{})[id] === 'in_use';
-                const det = equipmentDetails[id];
-                return (
-                  <div key={id} title={inUse && det ? `${det.user} ${det.time}` : 'ว่าง'}
-                    className={`rounded-lg py-1.5 flex flex-col items-center gap-0.5 ${
-                      inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                    }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className={`text-[10px] font-bold leading-none ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
-                    {inUse && det
-                      ? <span className="text-[8px] text-red-400 truncate w-full text-center px-0.5">{det.user.split(' ')[0]}</span>
-                      : <span className="text-[8px] text-slate-300">{isHP ? 'หูฟัง' : 'ปลั๊ก'}</span>
-                    }
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {lastUpdated && (
-            <p className="text-[9px] text-slate-200 text-right pt-0.5">
-              อัปเดต {lastUpdated.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'})}
-            </p>
-          )}
         </div>
       )}
     </div>
