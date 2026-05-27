@@ -770,9 +770,9 @@ export default function RoomEquipmentStatus() {
             </div>
 
             {/* ฝั่งขวา: 3D Preview Panel - 60% - Fixed height container */}
-            <div className="w-full md:w-[58%] bg-gradient-to-b from-slate-50/80 to-white border-b md:border-b-0 md:border-l border-slate-100 p-3 md:p-4 flex flex-col h-[420px] md:h-[480px] overflow-hidden">
+            <div className="relative w-full md:w-[58%] bg-gradient-to-b from-slate-50/80 to-white border-b md:border-b-0 md:border-l border-slate-100 p-3 md:p-4 flex flex-col h-[420px] md:h-[480px] overflow-hidden">
               {/* Navigation buttons */}
-              <div className="absolute top-4 left-4 right-4 z-10 flex justify-between pointer-events-none">
+              <div className="absolute top-3 left-3 right-3 z-10 flex justify-between pointer-events-none">
                 <button
                   onClick={navigatePrev}
                   disabled={!selectedItem}
