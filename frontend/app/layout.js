@@ -7,6 +7,18 @@ export const metadata = {
   title: "labboy Workload Recorder",
   description: "Employee workload recording system for labboy technical staff",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/labboy-logo.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/labboy-logo.png",
+    apple: "/labboy-logo.png",
+    other: {
+      rel: "apple-touch-icon",
+      url: "/labboy-logo.png",
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

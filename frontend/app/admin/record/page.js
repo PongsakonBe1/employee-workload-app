@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -12,6 +12,8 @@ import {
   Sparkles,
   Shield,
   AlertCircle,
+  Zap,
+  CheckCircle2,
 } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
@@ -57,6 +59,7 @@ export default function AdminRecordPage() {
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [lastSaved, setLastSaved] = useState(null);
 
   // Form state
   const [form, setForm] = useState({
@@ -273,6 +276,7 @@ export default function AdminRecordPage() {
 
       setSuccess(true);
       setMessage(t("form.saved"));
+      setLastSaved(new Date());
       
       // Trigger refresh ของ RoomEquipmentStatus หลังบันทึกปกติ
       const comment = (form.comment || '').toLowerCase();
@@ -386,78 +390,87 @@ export default function AdminRecordPage() {
     );
   }
 
+  // Scroll to form helper
+  const formRef = useRef(null);
+  const scrollToForm = () => {
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <AppShell>
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
-      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        {/* Room Equipment Status - Top */}
-        <div className="lg:col-span-2">
-          <RoomEquipmentStatus />
-        </div>
-        {/* Left panel - Info */}
-        <div className="apple-panel p-8">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-500 text-white">
-            <Shield size={24} />
-          </div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Admin / บันทึกงานแทน
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">
-            บันทึกงานให้พนักงาน
-          </h1>
-          <p className="mt-5 text-slate-600">
-            บันทึกงานแทนพนักงานในกรณีที่พนักงานไม่สามารถบันทึกเองได้ เช่น
-            ลืมรหัสผ่าน, ลาป่วย, หรือระบบมีปัญหา
-          </p>
 
-          {/* Staff count */}
-          <div className="mt-6 rounded-3xl bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-700">
-              พนักงานที่ใช้งานได้
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-slate-950">
-              {staffList.length} คน
-            </p>
+      {/* Toast messages — floating, doesn't push layout */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
+        {message && (
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+            <CheckCircle2 size={16} className="shrink-0" />
+            {message}
           </div>
+        )}
+        {error && (
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-medium text-red-700 shadow-xl animate-in fade-in slide-in-from-top-2">
+            <AlertCircle size={16} className="shrink-0" />
+            {error}
+          </div>
+        )}
+      </div>
 
-          {/* Admin notice */}
-          <div className="mt-6 rounded-3xl bg-emerald-950 p-5 text-white">
-            <div className="flex items-start gap-3">
-              <Sparkles
-                size={20}
-                className="mt-0.5 flex-shrink-0 text-emerald-400"
-              />
-              <div>
-                <p className="text-sm font-semibold">สิทธิพิเศษของ Admin</p>
-                <ul className="mt-2 text-sm leading-6 text-white/75 list-disc list-inside space-y-1">
-                  <li>บันทึกงานแทนพนักงานได้ทุกคน</li>
-                  <li>ไม่ถูกล็อกเวลา แก้ไขได้ตลอด</li>
-                  <li>ระบุสถานะ "บันทึกโดยผู้ดูแลระบบ"</li>
-                </ul>
+      {/* Room Equipment Status - Collapsible */}
+      <div className="mb-5">
+        <RoomEquipmentStatusCollapsible />
+      </div>
+
+      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] pb-24 lg:pb-0">
+        {/* ── Right: Form + QuickLog ── order-first on mobile */}
+        <div className="order-first lg:order-last flex flex-col gap-4">
+          {/* Quick Log */}
+          <div className="apple-panel p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={15} className="text-amber-500" />
+              <span className="text-sm font-semibold text-slate-700">บันทึกด่วน</span>
+              <button
+                type="button"
+                onClick={scrollToForm}
+                className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                กรอกเอง
+              </button>
+            </div>
+            {!form.employeeId ? (
+              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
+                กรุณาเลือกพนักงานก่อนใช้ Quick Log
               </div>
-            </div>
+            ) : (
+              <QuickLogButtons
+                targetUser={staffList.find(s => s.id === form.employeeId)}
+                onLogSuccess={(msg, type) => {
+                  setMessage(msg);
+                  if (type === 'error') {
+                    setError(msg);
+                    setSuccess(false);
+                  } else {
+                    setSuccess(true);
+                    setError('');
+                    setLastSaved(new Date());
+                    setTimeout(() => {
+                      setSuccess(false);
+                      setMessage('');
+                    }, 3000);
+                  }
+                }}
+              />
+            )}
           </div>
-        </div>
 
-        {/* Right panel - Form */}
-        <form onSubmit={handleSubmit} className="apple-panel p-6 sm:p-8">
-          {success && (
-            <div className="mb-6 flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              <CheckCircle size={18} />
-              บันทึกงานสำเร็จ!
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-6 flex items-center gap-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              <AlertCircle size={18} />
-              {error}
-            </div>
-          )}
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Select Staff */}
-            <div className="md:col-span-2 mb-2">
+          {/* Form */}
+          <form ref={formRef} id="worklog-form" onSubmit={handleSubmit} className="apple-panel p-4 lg:p-5">
+            {/* Staff Selector */}
+            <div className="mb-4">
               <label className="apple-label flex items-center gap-2">
                 <User size={16} />
                 เลือกพนักงาน *
@@ -494,98 +507,52 @@ export default function AdminRecordPage() {
               )}
             </div>
 
-            {/* Date */}
-            <div>
-              <label className="apple-label flex items-center gap-2">
-                <Calendar size={16} />
-                วันที่ *
-              </label>
-              <input
-                type="date"
-                className="apple-input"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                required
-              />
-            </div>
-
-            {/* Time */}
-            <div>
-              <label className="apple-label flex items-center gap-2">
-                <Clock size={16} />
-                เวลา *
-              </label>
-              <input
-                type="time"
-                className="apple-input"
-                value={form.time}
-                onChange={(e) => setForm({ ...form, time: e.target.value })}
-                required
-              />
-            </div>
-
-            {/* Quick Log Section */}
-            <div className="md:col-span-2">
-              {!form.employeeId ? (
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
-                  กรุณาเลือกพนักงานก่อนใช้ Quick Log
-                </div>
-              ) : (
-                <QuickLogButtons
-                  targetUser={staffList.find(s => s.id === form.employeeId)}
-                  onLogSuccess={(message, type) => {
-                    setMessage(message);
-                    if (type === 'error') {
-                      setError(message);
-                      setSuccess(false);
-                    } else {
-                      setSuccess(true);
-                      setError('');
-                      setTimeout(() => {
-                        setSuccess(false);
-                        setMessage('');
-                      }, 3000);
-                    }
-                  }}
-                />
-              )}
+            {/* DateTime Row */}
+            <div className="mb-4">
+              <DateTimeRow form={form} setForm={setForm} />
             </div>
 
             {/* Minor Task */}
-            <div className="md:col-span-2">
+            <div className="mb-4">
               <label className="apple-label">หัวข้อรอง (Minor Task) *</label>
               <MinorTaskSelector
                 value={form.minorTask}
                 onChange={handleMinorTaskChange}
               />
+              {form.minorTask && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-slate-400">หัวข้อหลัก:</span>
+                  <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">{form.mainDuty}</span>
+                </div>
+              )}
             </div>
 
-            {/* Main Duty (Auto-populated) */}
-            <div>
-              <label className="apple-label">งานในหน้าที่หลัก</label>
-              <input
-                type="text"
-                className="apple-input bg-slate-50"
-                value={form.mainDuty}
-                readOnly
-                placeholder="เลือกหัวข้อรองเพื่อแสดงงานหลัก"
-              />
-            </div>
-
-            {/* Duty Group (Auto-populated) */}
-            <div>
-              <label className="apple-label">กลุ่มงาน</label>
-              <input
-                type="text"
-                className="apple-input bg-slate-50"
-                value={form.dutyGroup}
-                readOnly
-                placeholder="-"
-              />
+            {/* Main Duty & Duty Group */}
+            <div className="grid gap-4 md:grid-cols-2 mb-4">
+              <div>
+                <label className="apple-label">งานในหน้าที่หลัก</label>
+                <input
+                  type="text"
+                  className="apple-input bg-slate-50"
+                  value={form.mainDuty}
+                  readOnly
+                  placeholder="เลือกหัวข้อรองเพื่อแสดงงานหลัก"
+                />
+              </div>
+              <div>
+                <label className="apple-label">กลุ่มงาน</label>
+                <input
+                  type="text"
+                  className="apple-input bg-slate-50"
+                  value={form.dutyGroup}
+                  readOnly
+                  placeholder="-"
+                />
+              </div>
             </div>
 
             {/* Recipient */}
-            <div className="md:col-span-2">
+            <div className="mb-4">
               <label className="apple-label">ผู้รับบริการ / ผู้ติดต่อ</label>
               <input
                 type="text"
@@ -599,7 +566,7 @@ export default function AdminRecordPage() {
             </div>
 
             {/* Comment */}
-            <div className="md:col-span-2">
+            <div className="mb-4">
               <label className="apple-label">รายละเอียด / หมายเหตุ</label>
               <textarea
                 className="apple-input min-h-[100px]"
@@ -618,42 +585,182 @@ export default function AdminRecordPage() {
                 </div>
               )}
             </div>
+
+            {lastSaved && (
+              <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+                <CheckCircle2 size={12} />
+                บันทึกล่าสุด {lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
+              </div>
+            )}
+
+            {/* Submit Button - desktop */}
+            <button
+              type="submit"
+              disabled={submitting || !form.employeeId || !form.minorTask}
+              className="apple-button mt-5 w-full disabled:opacity-40 hidden lg:flex items-center justify-center gap-2"
+            >
+              {submitting ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t("form.saving")}</> : t("form.save")}
+            </button>
+
+            <p className="mt-4 text-xs text-slate-400 text-center">
+              งานที่บันทึกโดย admin จะมีสถานะ "บันทึกโดยผู้ดูแลระบบ"
+              และไม่ถูกล็อกเวลา
+            </p>
+          </form>
+        </div>
+
+        {/* ── Left: Sidebar ── */}
+        <div className="flex flex-col gap-4 order-last lg:order-first">
+          {/* 1. วันที่/เวลา — desktop บนสุด */}
+          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
+            <p className="text-2xl font-bold text-slate-900 leading-tight">
+              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
           </div>
 
-          {/* Success/Error Messages */}
-          {success && message && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-green-700">{message}</span>
-            </div>
-          )}
-          
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
-              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="text-red-700">{error}</span>
-            </div>
-          )}
+          {/* 2. วิธีบันทึก — desktop only */}
+          <div className="hidden lg:block rounded-2xl bg-slate-950 p-5 text-white">
+            <p className="text-sm font-semibold mb-3">วิธีบันทึก</p>
+            <ol className="text-sm leading-7 text-white/70 list-decimal list-inside space-y-0.5">
+              <li>เลือก <span className="text-white font-medium">พนักงาน</span></li>
+              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span></li>
+              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> อัตโนมัติ</li>
+              <li>กด <span className="text-white font-medium">บันทึก</span></li>
+            </ol>
+            <p className="text-[11px] text-white/30 mt-3">เคล็ด: กดค้าง quick log เพื่อยืนยันก่อนบันทึก</p>
+          </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={submitting || !form.employeeId || !form.minorTask}
-            className="apple-button mt-8 w-full disabled:opacity-50"
-          >
-            {submitting ? t("form.saving") : t("form.save")}
-          </button>
+          {/* 3. Admin notice — ล่างสุด */}
+          <div className="rounded-2xl bg-emerald-950 p-5 text-white">
+            <div className="flex items-start gap-3">
+              <Sparkles size={18} className="mt-0.5 flex-shrink-0 text-emerald-400" />
+              <div>
+                <p className="text-sm font-semibold">สิทธิพิเศษของ Admin</p>
+                <ul className="mt-2 text-sm leading-6 text-white/75 list-disc list-inside space-y-1">
+                  <li>บันทึกงานแทนพนักงานได้ทุกคน</li>
+                  <li>ไม่ถูกล็อกเวลา แก้ไขได้ตลอด</li>
+                  <li>ระบุสถานะ "บันทึกโดยผู้ดูแลระบบ"</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
-          <p className="mt-4 text-xs text-slate-400 text-center">
-            งานที่บันทึกโดย admin จะมีสถานะ "บันทึกโดยผู้ดูแลระบบ"
-            และไม่ถูกล็อกเวลา
-          </p>
-        </form>
+          {/* Staff count */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p className="text-sm font-semibold text-slate-700">
+              พนักงานที่ใช้งานได้
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">
+              {staffList.length} คน
+            </p>
+          </div>
+        </div>
       </section>
+
+      {/* ── Sticky Save Bar — mobile only ── */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 py-3">
+        <button
+          form="worklog-form"
+          disabled={submitting || !form.employeeId || !form.minorTask}
+          onClick={(e) => { e.preventDefault(); document.querySelector('form')?.requestSubmit(); }}
+          className="apple-button w-full disabled:opacity-40 flex items-center justify-center gap-2 py-3.5 text-base"
+        >
+          {submitting
+            ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+            : !form.employeeId
+              ? <span className="text-white/60">เลือกพนักงานก่อนบันทึก</span>
+              : !form.minorTask
+                ? <span className="text-white/60">เลือกหัวข้อรองก่อนบันทึก</span>
+                : "บันทึก"
+          }
+        </button>
+      </div>
     </AppShell>
+  );
+}
+
+function RoomEquipmentStatusCollapsible() {
+  return <RoomEquipmentStatus />;
+}
+
+function DateTimeRow({ form, setForm, t }) {
+  const [open, setOpen] = useState(false);
+  const isToday = form.date === new Date().toISOString().slice(0, 10);
+  const timeNow = `${String(new Date().getHours()).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')}`;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      {/* Collapsed row */}
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-slate-700">
+            <Calendar size={16} />
+            <span className="text-sm font-medium">
+              {new Date(form.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-700">
+            <Clock size={16} />
+            <span className="text-sm font-medium">{form.time}</span>
+          </div>
+          {isToday && (
+            <span className="ml-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              วันนี้
+            </span>
+          )}
+        </div>
+        <svg
+          className={`w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {/* Expanded controls */}
+      {open && (
+        <div className="px-4 pb-4 pt-1 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <label className="text-[11px] font-medium text-slate-500 mb-1.5 block">วันที่</label>
+              <input
+                type="date"
+                className="apple-input"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-slate-500 mb-1.5 block">เวลา</label>
+              <input
+                type="time"
+                className="apple-input"
+                value={form.time}
+                onChange={(e) => setForm({ ...form, time: e.target.value })}
+              />
+            </div>
+          </div>
+          {isToday && (
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, time: timeNow })}
+              className="mt-3 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1.5 transition-colors"
+            >
+              <Clock size={13} />
+              ใช้เวลาปัจจุบัน ({timeNow})
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
