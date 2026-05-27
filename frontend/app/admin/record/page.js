@@ -662,9 +662,9 @@ export default function AdminRecordPage() {
       {/* ── Sticky Save Bar — mobile only ── */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 py-3">
         <button
-          form="worklog-form"
+          type="button"
           disabled={submitting || !form.employeeId || !form.minorTask}
-          onClick={(e) => { e.preventDefault(); document.querySelector('form')?.requestSubmit(); }}
+          onClick={() => { document.getElementById('worklog-form')?.requestSubmit(); }}
           className="apple-button w-full disabled:opacity-40 flex items-center justify-center gap-2 py-3.5 text-base"
         >
           {submitting
