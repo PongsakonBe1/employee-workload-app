@@ -347,6 +347,14 @@ export default function AdminRecordPage() {
     }
   }
 
+  // Scroll to form helper - must be before early returns
+  const formRef = useRef(null);
+  const scrollToForm = useCallback(() => {
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   const suggestions = useMemo(() => {
     return getCommentSuggestions(form.minorTask);
   }, [form.minorTask]);
@@ -389,14 +397,6 @@ export default function AdminRecordPage() {
       </AppShell>
     );
   }
-
-  // Scroll to form helper
-  const formRef = useRef(null);
-  const scrollToForm = () => {
-    if (formRef.current) {
-      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   return (
     <AppShell>
