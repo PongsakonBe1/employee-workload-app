@@ -12,7 +12,7 @@ import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
 
-const HOLD_DURATION = 1500; // ms hold to confirm direct-log
+const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
 
 export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const t = useTranslations('worklog');
@@ -28,11 +28,14 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [equipmentComment, setEquipmentComment] = useState('');
   const [showSmartEquipmentModal, setShowSmartEquipmentModal] = useState(false);
   const [showSmartRoomModal, setShowSmartRoomModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [commentText, setCommentText] = useState('');
   // hold-to-confirm state
   const [holdingId, setHoldingId] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
   const holdTimerRef = useState(null);
   const holdRafRef = useState(null);
+  const executingRef = { current: false }; // guard ป้องกัน double-log
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -68,6 +71,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   // --- Hold-to-confirm handlers ---
   const handleHoldStart = (template) => {
     if (!isDirectLog(template)) return;
+    if (executingRef.current) return; // guard
     const startTime = Date.now();
     setHoldingId(template.id);
     setHoldProgress(0);
@@ -79,9 +83,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (pct < 100) {
         holdRafRef[0] = requestAnimationFrame(tick);
       } else {
+        if (executingRef.current) return; // prevent double fire
+        executingRef.current = true;
         setHoldingId(null);
         setHoldProgress(0);
-        executeDirectLog(template);
+        executeDirectLog(template).finally(() => {
+          executingRef.current = false;
+        });
       }
     };
     holdRafRef[0] = requestAnimationFrame(tick);
@@ -93,15 +101,19 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     setHoldProgress(0);
   };
 
-  const executeDirectLog = async (template) => {
+  const executeDirectLog = async (template, overrideComment) => {
     if (!user || !logAsUser) return;
     setLoggingTemplate(template.id);
     setLoading(true);
     try {
       const now = new Date();
-      await logFromTemplate(template.id, user.uid, {
+      await logFromTemplate(template.id, logAsUser.uid || logAsUser.id, {
         date: now.toISOString().slice(0, 10),
         time: now.toTimeString().slice(0, 5),
+        comment: overrideComment || '',
+        employeeDisplayName: logAsUser.displayName || logAsUser.nickname || (logAsUser.fullName || '').split(' ')[0] || '',
+        employeeNickname: logAsUser.nickname || '',
+        employeeFullName: logAsUser.fullName || ''
       });
       await logSystemAction(SystemActions.WORKLOG_CREATE, `Quick log: ${template.name}`, { templateId: template.id });
       if (onLogSuccess) onLogSuccess(`บันทึก “${template.name}” เรียบร้อย`);
@@ -115,6 +127,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
 
   const handleQuickLog = (template) => {
     if (!user || !logAsUser) return;
+
+    if (template.requireComment) {
+      setSelectedTemplate(template);
+      setCommentText('');
+      setShowCommentModal(true);
+      return;
+    }
 
     if (isSmartOrEquipmentTemplate(template)) {
       setSelectedTemplate(template);
@@ -141,7 +160,37 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
-    // direct-log: handled by hold gesture only
+    // direct-log: handled by hold gesture only (3-second hold)
+  };
+
+  const handleLogWithComment = async () => {
+    if (!selectedTemplate || !commentText.trim()) {
+      if (onLogSuccess) onLogSuccess('กรุณากรอกความคิดเห็น', 'error');
+      return;
+    }
+    setLoggingTemplate(selectedTemplate.id);
+    setLoading(true);
+    try {
+      const now = new Date();
+      await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, {
+        date: now.toISOString().slice(0, 10),
+        time: now.toTimeString().slice(0, 5),
+        comment: commentText.trim(),
+        employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
+        employeeNickname: logAsUser.nickname || '',
+        employeeFullName: logAsUser.fullName || ''
+      });
+      await logSystemAction(SystemActions.WORKLOG_CREATE, `Quick log: ${selectedTemplate.name}`, { templateId: selectedTemplate.id });
+      if (onLogSuccess) onLogSuccess(`บันทึก "${selectedTemplate.name}" เรียบร้อย`);
+      setShowCommentModal(false);
+      setSelectedTemplate(null);
+      setCommentText('');
+    } catch (error) {
+      if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+      setLoggingTemplate(null);
+    }
   };
 
   const handleLogWithRecipient = async () => {
@@ -419,13 +468,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
             <button
               key={template.id}
               type="button"
-              onClick={() => { if (!direct) handleQuickLog(template); }}
-              onMouseDown={() => direct && handleHoldStart(template)}
-              onMouseUp={() => direct && handleHoldEnd()}
-              onMouseLeave={() => direct && handleHoldEnd()}
-              onTouchStart={() => direct && handleHoldStart(template)}
-              onTouchEnd={() => direct && handleHoldEnd()}
-              onTouchCancel={() => direct && handleHoldEnd()}
+              onClick={() => { if (!direct || template.requireComment) handleQuickLog(template); }}
+              onMouseDown={() => direct && !template.requireComment && handleHoldStart(template)}
+              onMouseUp={() => direct && !template.requireComment && handleHoldEnd()}
+              onMouseLeave={() => direct && !template.requireComment && handleHoldEnd()}
+              onTouchStart={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldStart(template); } }}
+              onTouchEnd={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldEnd(); } }}
+              onTouchCancel={() => direct && !template.requireComment && handleHoldEnd()}
               disabled={loading && !isLogging}
               title={direct ? 'กดค้างเพื่อบันทึก' : template.minorTask}
               className={`
@@ -457,8 +506,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
                 {template.requireRecipient && (
                   <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
                 )}
-                {direct && (
-                  <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง</span>
+                {direct && !template.requireComment && (
+                  <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง 3 วิ</span>
+                )}
+                {template.requireComment && (
+                  <span className="text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">กรอก comment</span>
                 )}
               </div>
             </button>
@@ -501,6 +553,46 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
               </button>
               <button
                 onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }}
+                className="apple-button-secondary px-4"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Comment Modal */}
+      {showCommentModal && selectedTemplate && mounted && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); }} />
+          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
+            <p className="text-xs text-slate-500 mb-4">ปฏิบัติงานตามผู้บังคับบัญชา — กรุณาระบุรายละเอียด</p>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">ความคิดเห็น / รายละเอียด *</label>
+            <textarea
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="apple-input w-full resize-none"
+              rows={3}
+              placeholder="กรอกรายละเอียดการปฏิบัติงาน..."
+              autoFocus
+            />
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={handleLogWithComment}
+                disabled={loading || !commentText.trim()}
+                className="apple-button flex-1 disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {loading
+                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+                  : 'บันทึก'
+                }
+              </button>
+              <button
+                onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); }}
                 className="apple-button-secondary px-4"
               >
                 ยกเลิก

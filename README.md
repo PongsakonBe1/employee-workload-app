@@ -4,7 +4,7 @@
 รองรับ PWA, Firebase backend, Google Sign-In และ Quick Log Templates
 
 🌐 **Live:** https://labboy-workload-app.web.app  
-📦 **Version:** v1.9.3
+📦 **Version:** v1.9.4
 
 ---
 
@@ -344,6 +344,7 @@ firebase deploy
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v1.9.4** | 2026-05-29 | **QuickLog fix**: เพิ่ม `executingRef` guard ป้องกัน double-log เมื่อกดค้างบน PWA, ตั้ง `HOLD_DURATION=3000ms` ให้ชัดเจน, เพิ่ม `e.preventDefault()` บน touchStart/touchEnd ป้องกัน onClick ซ้ำ; **Template**: เพิ่ม option `requireComment` สำหรับ template ที่ต้องกรอกความคิดเห็น (ปฏิบัติงานตามผู้บังคับบัญชา) — เปิด modal กรอกรายละเอียดก่อนบันทึก |
 | **v1.8.0** | 2026-05-26 | **Admin Quick Log**: Admin/Superadmin ต้องเลือกพนักงานจาก dropdown ก่อนใช้ Quick Log — log บันทึกในนามพนักงานนั้น, **Comment Suggestions**: suggestion ห้อง 303–306 เปลี่ยนเป็นเลขห้องล้วน (ไม่มี `/Windows`), **Staff Permissions**: แก้ Firestore rules ให้ staff ลบ/แก้ไข worklog ตัวเองในวันเดียวกันได้ (inline condition แทน helper function ที่มี bug), **Templates tab**: Admin เข้าหน้าจัดการ Templates ในหน้า System ได้แล้ว (เดิม superadmin only), **Firestore rules**: เพิ่ม allow update `usageCount`/`lastUsedAt` ใน globalTemplates สำหรับ authenticated user ทุกคน (แก้ error recording template usage) |
 | **v1.7.6** | 2026-05-22 | **Notifications**: แก้ dropdown mobile overflow (fixed positioning), เพิ่ม Browser Notification permission request banner, อ่าน `reminderTime` จาก Firestore settings แทน hardcode 22:00, trigger OS notification เมื่อ broadcast ใหม่มาถึง, **Minor tasks**: เพิ่ม comment suggestions สำหรับ Microsoft Authenticator, ICIT account, ติดตั้ง Software |
 | **v1.7.5** | 2026-05-22 | **iOS fix**: แก้ date/time input overflow บน iOS PWA ใน /worklogs/new — ใช้ `flex-col`+`min-w-0`+CSS `-webkit-appearance:none`, **Footer**: อัพเดท version ใน AppShell footer ทุก release, **README**: เพิ่มรายละเอียด env setup + deploy convention |

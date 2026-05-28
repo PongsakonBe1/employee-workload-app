@@ -27,6 +27,7 @@ export default function TemplateManager() {
     dutyGroup: 'main',
     comment: '',
     requireRecipient: false,
+    requireComment: false,
     isSmart: false
   });
 
@@ -108,6 +109,7 @@ export default function TemplateManager() {
       dutyGroup: template.dutyGroup,
       comment: template.comment,
       requireRecipient: template.requireRecipient || false,
+      requireComment: template.requireComment || false,
       isSmart: template.isSmart || false
     });
     setShowForm(true);
@@ -140,6 +142,7 @@ export default function TemplateManager() {
       dutyGroup: 'main',
       comment: '',
       requireRecipient: false,
+      requireComment: false,
       isSmart: false
     });
     setEditingTemplate(null);
@@ -322,6 +325,25 @@ export default function TemplateManager() {
                   </div>
                 </label>
                 
+                {/* Require Comment */}
+                <label className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.requireComment}
+                    onChange={(e) => setFormData({...formData, requireComment: e.target.checked})}
+                    className="w-5 h-5 text-violet-600 border-slate-300 rounded focus:ring-violet-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-900">ต้องกรอกความคิดเห็น</span>
+                      <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs rounded-full">ปฏิบัติตามคำสั่ง</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">
+                      📝 เมื่อกดปุ่มจะแสดง modal ให้กรอกรายละเอียด เหมาะสำหรับงานตามผู้บังคับบัญชา
+                    </p>
+                  </div>
+                </label>
+
                 {/* Smart Template */}
                 <label className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                   <input
