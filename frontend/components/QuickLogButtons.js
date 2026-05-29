@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { getTemplatesForUser, logFromTemplate } from '../lib/quickLogTemplates';
@@ -33,9 +33,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   // hold-to-confirm state
   const [holdingId, setHoldingId] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
-  const holdTimerRef = useState(null);
-  const holdRafRef = useState(null);
-  const executingRef = { current: false }; // guard ป้องกัน double-log
+  const holdRafRef = useRef(null);
+  const executingRef = useRef(false); // guard ป้องกัน double-log
+  const [currentPage, setCurrentPage] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -81,7 +81,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       const pct = Math.min((elapsed / HOLD_DURATION) * 100, 100);
       setHoldProgress(pct);
       if (pct < 100) {
-        holdRafRef[0] = requestAnimationFrame(tick);
+        holdRafRef.current = requestAnimationFrame(tick);
       } else {
         if (executingRef.current) return; // prevent double fire
         executingRef.current = true;
@@ -92,11 +92,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         });
       }
     };
-    holdRafRef[0] = requestAnimationFrame(tick);
+    holdRafRef.current = requestAnimationFrame(tick);
   };
 
   const handleHoldEnd = () => {
-    if (holdRafRef[0]) cancelAnimationFrame(holdRafRef[0]);
+    if (holdRafRef.current) { cancelAnimationFrame(holdRafRef.current); holdRafRef.current = null; }
     setHoldingId(null);
     setHoldProgress(0);
   };
@@ -456,66 +456,97 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     return null;
   }
 
+  const ITEMS_PER_PAGE = 6;
+  const totalPages = Math.ceil(templates.length / ITEMS_PER_PAGE);
+  const pagedTemplates = templates.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   return (
     <div>
       {templates.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {templates.map((template) => {
-            const direct = isDirectLog(template);
-            const isHolding = holdingId === template.id;
-            const isLogging = loggingTemplate === template.id;
-            return (
-            <button
-              key={template.id}
-              type="button"
-              onClick={() => { if (!direct || template.requireComment) handleQuickLog(template); }}
-              onMouseDown={() => direct && !template.requireComment && handleHoldStart(template)}
-              onMouseUp={() => direct && !template.requireComment && handleHoldEnd()}
-              onMouseLeave={() => direct && !template.requireComment && handleHoldEnd()}
-              onTouchStart={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldStart(template); } }}
-              onTouchEnd={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldEnd(); } }}
-              onTouchCancel={() => direct && !template.requireComment && handleHoldEnd()}
-              disabled={loading && !isLogging}
-              title={direct ? 'กดค้างเพื่อบันทึก' : template.minorTask}
-              className={`
-                relative p-3 text-left rounded-2xl border-2 transition-all overflow-hidden select-none
-                ${isLogging
-                  ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
-                  : isHolding
-                  ? 'border-emerald-500 bg-emerald-50 text-slate-700'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                }
-                ${loading && !isLogging ? 'opacity-50 pointer-events-none' : ''}
-              `}
-            >
-              {/* hold progress bar */}
-              {isHolding && (
-                <div
-                  className="absolute bottom-0 left-0 h-0.5 bg-emerald-500 transition-none"
-                  style={{ width: `${holdProgress}%` }}
-                />
-              )}
-              {isLogging && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
-                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+        <div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {pagedTemplates.map((template) => {
+              const direct = isDirectLog(template);
+              const isHolding = holdingId === template.id;
+              const isLogging = loggingTemplate === template.id;
+              return (
+              <button
+                key={template.id}
+                type="button"
+                onClick={() => { if (!direct || template.requireComment) handleQuickLog(template); }}
+                onMouseDown={() => direct && !template.requireComment && handleHoldStart(template)}
+                onMouseUp={() => direct && !template.requireComment && handleHoldEnd()}
+                onMouseLeave={() => direct && !template.requireComment && handleHoldEnd()}
+                onTouchStart={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldStart(template); } }}
+                onTouchEnd={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldEnd(); } }}
+                onTouchCancel={() => direct && !template.requireComment && handleHoldEnd()}
+                disabled={loading && !isLogging}
+                title={direct ? 'กดค้างเพื่อบันทึก' : template.minorTask}
+                className={`
+                  relative p-3 text-left rounded-2xl border-2 transition-all overflow-hidden select-none
+                  ${isLogging
+                    ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
+                    : isHolding
+                    ? 'border-emerald-500 bg-emerald-50 text-slate-700'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                  }
+                  ${loading && !isLogging ? 'opacity-50 pointer-events-none' : ''}
+                `}
+              >
+                {/* hold progress bar */}
+                {isHolding && (
+                  <div
+                    className="absolute bottom-0 left-0 h-0.5 bg-emerald-500 transition-none"
+                    style={{ width: `${holdProgress}%` }}
+                  />
+                )}
+                {isLogging && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+                <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
+                <div className="text-[11px] mt-0.5 opacity-60 truncate">{template.minorTask}</div>
+                <div className="mt-1 flex items-center gap-1">
+                  {template.requireRecipient && (
+                    <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
+                  )}
+                  {direct && !template.requireComment && (
+                    <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง 3 วิ</span>
+                  )}
+                  {template.requireComment && (
+                    <span className="text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">กรอก comment</span>
+                  )}
                 </div>
-              )}
-              <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
-              <div className="text-[11px] mt-0.5 opacity-60 truncate">{template.minorTask}</div>
-              <div className="mt-1 flex items-center gap-1">
-                {template.requireRecipient && (
-                  <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
-                )}
-                {direct && !template.requireComment && (
-                  <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง 3 วิ</span>
-                )}
-                {template.requireComment && (
-                  <span className="text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">กรอก comment</span>
-                )}
-              </div>
-            </button>
-            );
-          })}
+              </button>
+              );
+            })}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-3 px-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200 transition-colors select-none"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                ก่อนหน้า
+              </button>
+              <span className="text-xs text-slate-400">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage === totalPages - 1}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200 transition-colors select-none"
+              >
+                ถัดไป
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-center py-6 text-sm text-slate-400">
