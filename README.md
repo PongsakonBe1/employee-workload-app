@@ -4,7 +4,7 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.0.0  
+📦 **Current Version:** v2.0.2  
 📅 **Last Updated:** 2026-06-02  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
@@ -1222,6 +1222,8 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.0.2** | 2026-06-02 | **Firestore Rules — `isValidWorkLogUpdate` fix**: แก้ไข helper function ที่บังคับตรวจ `date` และ `time` ทุกครั้ง ทำให้ staff ที่ส่งเฉพาะฟิลด์ที่แก้ไข (partial update) ถูก Firestore ปฏิเสธด้วย `permission-denied` — เปลี่ยนเป็น optional check ด้วย `hasAny()` ตรวจเฉพาะฟิลด์ที่ส่งมาจริง |
+| **v2.0.1** | 2026-06-02 | **Firestore Rules — `isSameDay` fix**: แก้การเรียก `.format()` บน Timestamp ที่ไม่รองรับใน Firestore Rules — เปลี่ยนเป็น manual zero-pad ด้วย `.year()/.month()/.day()`; **QuickLog modal UI**: ปรับ UI ของ modal ใน `QuickLogButtons.js`; **Audit Logs — Superadmin access**: แก้หน้า `audit-logs/page.js` ที่จำกัดเฉพาะ `admin` ให้รองรับ `superadmin` ด้วย — แก้ทั้ง redirect guard, data fetch condition, และ loading fallback; **Audit Logs — details null crash**: แก้ `log.details.toLowerCase()` ที่ crash เมื่อ `details` เป็น `""` หรือ `null` → เพิ่ม `(log.details \|\| "")` |
 | **v2.0.0** | 2026-06-02 | **Security — Firestore Rules (Critical)**: ปิดช่องโหว่ 3 จุด — `pendingUsers` read/delete จำกัดเฉพาะ `isAdmin()`, `notifications create` ล็อคป้องกัน unauthorized write, ลบ `'admin'` ออกจาก self-creation role list; **Security — Auth Guard (Critical)**: แก้ `AppShell.js` ที่ข้ามการ redirect `/admin/*` เมื่อ unauthenticated ทำให้ UI ถูก expose โดยไม่ต้อง login; **Notification Bug Fix**: แก้ broadcast notification ถูกลบพร้อมกันทุก user — เปลี่ยนจาก `deleteDoc` เป็น soft-delete ด้วย `readBy: arrayUnion(uid)` + อัปเดต Firestore rule รองรับ `readBy` field; **FEAT: Print Summary (พิมพ์รายงานประจำเดือน)**: ปุ่มพิมพ์รายงานบน Dashboard (Admin/Superadmin) พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ `@media print` CSS; **UX/Accessibility (WCAG 2.1 AA)**: เพิ่ม `role="status"` บน toast, `role="dialog"` บน custom date modal, `aria-pressed` บน filter buttons, `aria-label` บน icon-only buttons, `role="alert"` บน limit warning; **E2E Tests**: security test suite 11 tests ผ่านทั้งหมด (Playwright) |
 | **v1.9.5** | 2026-05-29 | **QuickLog hold fix**: เปลี่ยน `holdRafRef`/`executingRef` จาก plain object เป็น `useRef` จริง — แก้ปัญหา guard ถูก reset ทุก render ทำให้กดค้างไม่ครบแล้วกดใหม่บันทึกซ้ำ; **Pagination**: แสดง 6 templates ต่อหน้า มีปุ่ม ‹ ก่อนหน้า / ถัดไป › เมื่อมีมากกว่า 6 รายการ |
 | **v1.9.4** | 2026-05-29 | **QuickLog fix**: เพิ่ม `executingRef` guard ป้องกัน double-log เมื่อกดค้างบน PWA, ตั้ง `HOLD_DURATION=3000ms` ให้ชัดเจน, เพิ่ม `e.preventDefault()` บน touchStart/touchEnd ป้องกัน onClick ซ้ำ; **Template**: เพิ่ม option `requireComment` สำหรับ template ที่ต้องกรอกความคิดเห็น (ปฏิบัติงานตามผู้บังคับบัญชา) — เปิด modal กรอกรายละเอียดก่อนบันทึก |
