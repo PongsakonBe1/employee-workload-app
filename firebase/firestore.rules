@@ -53,9 +53,12 @@ service cloud.firestore {
     }
 
     function isValidWorkLogUpdate() {
-      // Update ไม่จำเป็นต้องส่งทุกฟิลด์ — ตรวจแค่ว่าฟิลด์ที่ส่งมาถูกชนิด
-      return request.resource.data.date is string &&
-             request.resource.data.time is string;
+      // Update ไม่จำเป็นต้องส่งทุกฟิลด์ — ตรวจเฉพาะฟิลด์ที่ส่งมาว่าถูกชนิด
+      let hasDate = request.resource.data.keys().hasAny(['date']);
+      let hasTime = request.resource.data.keys().hasAny(['time']);
+      let validDate = !hasDate || (request.resource.data.date is string);
+      let validTime = !hasTime || (request.resource.data.time is string);
+      return validDate && validTime;
     }
 
     function isSameDay(worklog) {
