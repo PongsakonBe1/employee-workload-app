@@ -62,17 +62,24 @@ service cloud.firestore {
     }
 
     function isSameDay(worklog) {
-      // ตรวจสอบว่า worklog date ตรงกับวันนี้ (YYYY-MM-DD)
-      // request.time is Timestamp; extract year/month/day and format as YYYY-MM-DD
-      let requestDate = request.time;
-      let year = requestDate.year();
-      let month = requestDate.month();
-      let day = requestDate.day();
-      // Zero-pad month and day
-      let monthStr = month < 10 ? "0" + month : "" + month;
-      let dayStr = day < 10 ? "0" + day : "" + day;
-      let dateStr = year + "-" + monthStr + "-" + dayStr;
-      return worklog.date == dateStr;
+      // ตรวจสอบว่า worklog ถูกสร้าง/บันทึกในวันเดียวกับการแก้ไข
+      // ใช้ createdAt ถ้ามี (timestamp), ไม่งั้น fallback ไปใช้ date string
+      let now = request.time;
+      if (worklog.keys().hasAny(['createdAt'])) {
+        let createdAt = worklog.createdAt;
+        return createdAt.year() == now.year() &&
+               createdAt.month() == now.month() &&
+               createdAt.day() == now.day();
+      } else {
+        // Fallback: เปรียบเทียบ date string กับวันนี้ (อาจมีปัญหา timezone แต่ดีที่สุดเท่าที่ทำได้)
+        let year = now.year();
+        let month = now.month();
+        let day = now.day();
+        let monthStr = month < 10 ? "0" + month : "" + month;
+        let dayStr = day < 10 ? "0" + day : "" + day;
+        let dateStr = year + "-" + monthStr + "-" + dayStr;
+        return worklog.date == dateStr;
+      }
     }
 
     // Users collection

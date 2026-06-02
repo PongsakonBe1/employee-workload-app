@@ -28,7 +28,9 @@ export default function TemplateManager() {
     comment: '',
     requireRecipient: false,
     requireComment: false,
-    isSmart: false
+    isSmart: false,
+    isCombo: false,
+    comboItems: []
   });
 
   // Auto-fill mainDuty และ dutyGroup เมื่อเลือก minorTask
@@ -110,7 +112,9 @@ export default function TemplateManager() {
       comment: template.comment,
       requireRecipient: template.requireRecipient || false,
       requireComment: template.requireComment || false,
-      isSmart: template.isSmart || false
+      isSmart: template.isSmart || false,
+      isCombo: template.isCombo || false,
+      comboItems: template.comboItems || []
     });
     setShowForm(true);
   };
@@ -143,7 +147,9 @@ export default function TemplateManager() {
       comment: '',
       requireRecipient: false,
       requireComment: false,
-      isSmart: false
+      isSmart: false,
+      isCombo: false,
+      comboItems: []
     });
     setEditingTemplate(null);
   };
@@ -349,7 +355,7 @@ export default function TemplateManager() {
                   <input
                     type="checkbox"
                     checked={formData.isSmart}
-                    onChange={(e) => setFormData({...formData, isSmart: e.target.checked})}
+                    onChange={(e) => setFormData({...formData, isSmart: e.target.checked, isCombo: e.target.checked ? false : formData.isCombo})}
                     className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                   />
                   <div className="flex-1">
@@ -366,8 +372,127 @@ export default function TemplateManager() {
                     </div>
                   </div>
                 </label>
+
+                {/* Combo Template */}
+                <label className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.isCombo}
+                    onChange={(e) => setFormData({...formData, isCombo: e.target.checked, isSmart: e.target.checked ? false : formData.isSmart})}
+                    className="w-5 h-5 text-violet-600 border-slate-300 rounded focus:ring-violet-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-900">Combo Template</span>
+                      <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs rounded-full">หลายงาน</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">
+                      ⚡ บันทึกหลายงานพร้อมกัน เหมาะสำหรับงานชุด (เช่น: ผูก Account ครบชุด = Authen + Google + SSO)
+                    </p>
+                    <div className="mt-2 p-2 bg-violet-50 rounded text-xs text-violet-700">
+                      <strong>เหมาะสำหรับ:</strong> ผูกบัญชีครบชุด, ชุดติดตั้งซอฟต์แวร์, ชุดแก้ไขปัญหาหลายจุด
+                    </div>
+                  </div>
+                </label>
               </div>
             </div>
+
+            {/* Combo Items Section */}
+            {formData.isCombo && (
+              <div className="space-y-4 border-t border-slate-200 pt-4">
+                <h3 className="text-lg font-medium text-slate-900 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-violet-500 text-white rounded-full text-xs flex items-center justify-center">3</span>
+                  รายการงานใน Combo
+                  <span className="text-sm font-normal text-slate-500">({formData.comboItems.length} งาน)</span>
+                </h3>
+                
+                {formData.comboItems.length === 0 && (
+                  <div className="text-sm text-slate-500 bg-slate-50 p-4 rounded-lg">
+                    ยังไม่มีรายการงาน กรุณาเพิ่มอย่างน้อย 2 รายการ
+                  </div>
+                )}
+                
+                <div className="space-y-3">
+                  {formData.comboItems.map((item, index) => (
+                    <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-violet-100 text-violet-600 rounded-full text-xs flex items-center justify-center font-medium">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm font-medium text-slate-700">งานที่ {index + 1}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newItems = formData.comboItems.filter((_, i) => i !== index);
+                            setFormData({...formData, comboItems: newItems});
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          ลบ
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">ชื่องานที่แสดง *</label>
+                          <input
+                            type="text"
+                            required
+                            value={item.name}
+                            onChange={(e) => {
+                              const newItems = [...formData.comboItems];
+                              newItems[index].name = e.target.value;
+                              setFormData({...formData, comboItems: newItems});
+                            }}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                            placeholder="เช่น: เปิดใช้งาน Microsoft Authenticator"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">หัวข้อรอง *</label>
+                          <MinorTaskSelector
+                            value={item.minorTask}
+                            onChange={(minorTask) => {
+                              const newItems = [...formData.comboItems];
+                              newItems[index].minorTask = minorTask;
+                              newItems[index].mainDuty = getMainDutyFromMinorTask(minorTask);
+                              setFormData({...formData, comboItems: newItems});
+                            }}
+                            placeholder="เลือกหัวข้อรอง"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">ความคิดเห็น (ถ้ามี)</label>
+                          <input
+                            type="text"
+                            value={item.comment || ''}
+                            onChange={(e) => {
+                              const newItems = [...formData.comboItems];
+                              newItems[index].comment = e.target.value;
+                              setFormData({...formData, comboItems: newItems});
+                            }}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                            placeholder="ข้อความที่จะบันทึกใน worklog"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newItems = [...formData.comboItems, { name: '', minorTask: '', mainDuty: '', comment: '' }];
+                    setFormData({...formData, comboItems: newItems});
+                  }}
+                  className="w-full py-3 border-2 border-dashed border-violet-300 text-violet-600 rounded-lg hover:bg-violet-50 transition-colors font-medium"
+                >
+                  + เพิ่ม Task
+                </button>
+              </div>
+            )}
             
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t border-slate-200">
@@ -433,10 +558,25 @@ export default function TemplateManager() {
                 {templates.map((template) => (
                   <tr key={template.id}>
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                      {template.name}
+                      <div className="flex items-center gap-2">
+                        {template.name}
+                        {template.isCombo && (
+                          <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs rounded-full">
+                            Combo ({template.comboItems?.length || 0} งาน)
+                          </span>
+                        )}
+                        {template.isSmart && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                            Smart
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
-                      {template.minorTask}
+                      {template.isCombo 
+                        ? template.comboItems?.map(i => i.minorTask).join(' · ') || '-'
+                        : template.minorTask
+                      }
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
                       {template.mainDuty}
