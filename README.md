@@ -4,8 +4,8 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v1.9.5  
-📅 **Last Updated:** 2026-05-29  
+📦 **Current Version:** v2.0.0  
+📅 **Last Updated:** 2026-06-02  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
 
@@ -74,12 +74,14 @@
 | Smart Equipment Modal | หูฟัง ICIT01-20, ปลั๊กไฟ ICIT21-25 แบบ real-time | v1.0.0 |
 | Room Equipment Status | Widget แสดงสถานะห้องและอุปกรณ์ พร้อม 3D preview | v1.0.0 |
 | Comment Suggestions | แนะนำค่า comment อัตโนมัติตาม minorTask | v1.8.0 |
+| Comment Auto-Suggest (ประวัติการพิมพ์) | แสดง history suggestions จากการใช้งานจริง (เรียงตามความถี่) ก่อน static suggestions พร้อม badge "(บ่อย)" | v2.0.0 |
 | แก้ไข/ลบงาน | ได้เฉพาะวันเดียวกัน (auto-lock หลัง 23:59) | v1.6.0 |
 | Undo Delete | ยกเลิกการลบภายใน 30 วินาที | v1.0.0 |
 | Dashboard ส่วนตัว | งานของฉัน + อันดับในกลุ่ม + leaderboard ทีม | v1.7.0 |
 | Calendar View | สลับ List/ปฏิทิน, คลิกวันดู worklog | v1.7.0 |
 | Thai Holidays | แสดงวันหยุดนักขัตฤกษ์ไทยในปฏิทิน | v1.7.3 |
 | Export CSV | Export ข้อมูลของตัวเอง | v1.5.0 |
+| พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ CSS @media print ซ่อน sidebar/nav/filter (เฉพาะ Admin/Superadmin) | v2.0.0 |
 
 ### 👑 Admin (ผู้ดูแลระบบ)
 
@@ -93,6 +95,7 @@
 | Hour-of-Day Chart | กราฟแท่งแสดงงานตามช่วงเวลา | v1.7.0 |
 | Custom Date Filter | Filter ตามช่วงวันที่ พร้อม quota alert (>90 วัน) | v1.6.0 |
 | Export CSV | Export ข้อมูลทุกคนกรองตามวันที่/พนักงาน | v1.5.0 |
+| พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header และ CSS @media print ซ่อน UI ที่ไม่จำเป็น | v2.0.0 |
 | จัดการ Users | อนุมัติ/ปฏิเสธคำขอสมัคร, เปิด/ปิดใช้งาน | v1.0.0 |
 | ดู System Logs | Audit log การใช้งานระบบ | v1.0.0 |
 
@@ -1220,6 +1223,7 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.0.0** | 2026-06-02 | **Security — Firestore Rules (Critical)**: ปิดช่องโหว่ 3 จุด — `pendingUsers` read/delete จำกัดเฉพาะ `isAdmin()`, `notifications create` ล็อคป้องกัน unauthorized write, ลบ `'admin'` ออกจาก self-creation role list; **Security — Auth Guard (Critical)**: แก้ `AppShell.js` ที่ข้ามการ redirect `/admin/*` เมื่อ unauthenticated ทำให้ UI ถูก expose โดยไม่ต้อง login; **Notification Bug Fix**: แก้ broadcast notification ถูกลบพร้อมกันทุก user — เปลี่ยนจาก `deleteDoc` เป็น soft-delete ด้วย `readBy: arrayUnion(uid)` + อัปเดต Firestore rule รองรับ `readBy` field; **FEAT: Comment Auto-Suggest (ประวัติการพิมพ์)**: แสดง history suggestions จากการใช้งานจริงเรียงตามความถี่พร้อม badge "(บ่อย)" นำหน้า static suggestions; **FEAT: Print Summary (พิมพ์รายงานประจำเดือน)**: ปุ่มพิมพ์รายงานบน Dashboard (Admin/Superadmin) พร้อม print header และ `@media print` CSS; **UX/Accessibility (WCAG 2.1 AA)**: เพิ่ม `role="status"` บน toast, `role="dialog"` บน custom date modal, `aria-pressed` บน filter buttons, `aria-label` บน icon-only buttons, `role="alert"` บน limit warning; **E2E Tests**: security test suite 11 tests ผ่านทั้งหมด (Playwright) |
 | **v1.9.5** | 2026-05-29 | **QuickLog hold fix**: เปลี่ยน `holdRafRef`/`executingRef` จาก plain object เป็น `useRef` จริง — แก้ปัญหา guard ถูก reset ทุก render ทำให้กดค้างไม่ครบแล้วกดใหม่บันทึกซ้ำ; **Pagination**: แสดง 6 templates ต่อหน้า มีปุ่ม ‹ ก่อนหน้า / ถัดไป › เมื่อมีมากกว่า 6 รายการ |
 | **v1.9.4** | 2026-05-29 | **QuickLog fix**: เพิ่ม `executingRef` guard ป้องกัน double-log เมื่อกดค้างบน PWA, ตั้ง `HOLD_DURATION=3000ms` ให้ชัดเจน, เพิ่ม `e.preventDefault()` บน touchStart/touchEnd ป้องกัน onClick ซ้ำ; **Template**: เพิ่ม option `requireComment` สำหรับ template ที่ต้องกรอกความคิดเห็น (ปฏิบัติงานตามผู้บังคับบัญชา) — เปิด modal กรอกรายละเอียดก่อนบันทึก |
 | **v1.8.0** | 2026-05-26 | **Admin Quick Log**: Admin/Superadmin ต้องเลือกพนักงานจาก dropdown ก่อนใช้ Quick Log — log บันทึกในนามพนักงานนั้น, **Comment Suggestions**: suggestion ห้อง 303–306 เปลี่ยนเป็นเลขห้องล้วน (ไม่มี `/Windows`), **Staff Permissions**: แก้ Firestore rules ให้ staff ลบ/แก้ไข worklog ตัวเองในวันเดียวกันได้ (inline condition แทน helper function ที่มี bug), **Templates tab**: Admin เข้าหน้าจัดการ Templates ในหน้า System ได้แล้ว (เดิม superadmin only), **Firestore rules**: เพิ่ม allow update `usageCount`/`lastUsedAt` ใน globalTemplates สำหรับ authenticated user ทุกคน (แก้ error recording template usage) |
