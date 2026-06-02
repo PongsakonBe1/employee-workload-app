@@ -51,6 +51,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/worklogs", workLogsRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/export", exportRouter);
+// Push notification routes
 app.use("/api/notify", notifyRouter);
 
 app.use((req, res) => {
