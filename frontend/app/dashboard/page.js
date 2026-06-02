@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { Calendar, Filter, User } from "lucide-react";
+import { Calendar, Filter, User, Printer } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { MetricCard } from "../../components/MetricCard";
 import { useAuth } from "../../components/AuthProvider";
@@ -574,6 +574,18 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
+      {/* FEAT-2: Print header — hidden on screen, visible in print */}
+      <div className="print-header hidden mb-6 border-b border-slate-300 pb-4">
+        <h1 className="text-xl font-bold text-slate-950">สำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)</h1>
+        <p className="text-sm text-slate-600 mt-1">
+          รายงานสรุปภาระงาน · ปีงบประมาณ {fiscalYear}
+          {data?.dateRange ? ` · ${data.dateRange.start} ถึง ${data.dateRange.end}` : ''}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">
+          พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
+
       <section className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -587,18 +599,33 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="apple-panel p-3">
-          <label className="apple-label">{t("dashboard.fiscalYear")}</label>
-          <input
-            className="apple-input w-40"
-            value={fiscalYear}
-            onChange={(event) => setFiscalYear(event.target.value)}
-          />
+        <div className="flex items-center gap-3">
+          <div className="apple-panel p-3">
+            <label className="apple-label">{t("dashboard.fiscalYear")}</label>
+            <input
+              className="apple-input w-40"
+              value={fiscalYear}
+              onChange={(event) => setFiscalYear(event.target.value)}
+            />
+          </div>
+
+          {/* FEAT-2: Print button — admin/superadmin only */}
+          {(user?.role === "admin" || user?.role === "superadmin") && (
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="print-hidden apple-button-secondary flex items-center gap-2 !px-4 !py-2.5"
+              aria-label="พิมพ์รายงาน"
+            >
+              <Printer size={16} />
+              <span className="text-sm font-medium">พิมพ์รายงาน</span>
+            </button>
+          )}
         </div>
       </section>
 
       {/* Filters Section */}
-      <section className="mb-6 apple-panel p-4">
+      <section className="mb-6 apple-panel p-4 print-hidden">
         <div className="flex items-center gap-2 mb-3">
           <Filter size={16} className="text-slate-500" />
           <span className="text-sm font-medium text-slate-700">ตัวกรอง</span>

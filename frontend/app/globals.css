@@ -67,3 +67,58 @@ input[type="time"] {
 .apple-button-secondary {
   @apply rounded-full border border-slate-200 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-white;
 }
+
+/* ─── FEAT-2: Print Styles ─── */
+@media print {
+  /* Hide non-essential UI elements */
+  nav,
+  aside,
+  .print-hidden,
+  [data-sidebar],
+  [data-nav],
+  button,
+  .apple-button,
+  .apple-button-secondary {
+    display: none !important;
+  }
+
+  /* Show print header */
+  .print-header {
+    display: block !important;
+  }
+
+  /* Reset backgrounds and shadows for print */
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .apple-panel {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: white !important;
+    border-radius: 0.5rem !important;
+    break-inside: avoid;
+  }
+
+  /* Full width layout */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  /* Keep charts from breaking across pages */
+  section {
+    break-inside: avoid;
+  }
+}
