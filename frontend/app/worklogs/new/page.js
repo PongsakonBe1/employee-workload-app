@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Zap, X } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { apiFetch } from "../../../lib/api";
@@ -266,16 +266,22 @@ export default function NewWorkLogPage() {
       <SmartTemplatesSeeder />
 
       {/* Toast messages — floating, doesn't push layout */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
+      <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
         {message && (
           <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl animate-in fade-in slide-in-from-top-2">
             <CheckCircle2 size={16} className="shrink-0" />
-            {message}
+            <span className="flex-1">{message}</span>
+            <button type="button" onClick={() => setMessage("")} className="ml-2 shrink-0 opacity-80 hover:opacity-100" aria-label="ปิดข้อความ">
+              <X size={14} />
+            </button>
           </div>
         )}
         {error && (
-          <div className="pointer-events-auto rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-            {error}
+          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+            <span className="flex-1">{error}</span>
+            <button type="button" onClick={() => setError("")} className="ml-2 shrink-0 opacity-80 hover:opacity-100" aria-label="ปิดข้อผิดพลาด">
+              <X size={14} />
+            </button>
           </div>
         )}
         {draftRestored && (
@@ -304,6 +310,7 @@ export default function NewWorkLogPage() {
               <button
                 type="button"
                 onClick={scrollToForm}
+                aria-label="เลื่อนไปยังฟอร์มกรอกเอง"
                 className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition"
               >
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -325,8 +332,9 @@ export default function NewWorkLogPage() {
 
             {/* Recipient */}
             <div className="mt-4">
-              <label className="apple-label">{t("form.recipient")}</label>
+              <label htmlFor="recipient-input" className="apple-label">{t("form.recipient")}</label>
               <input
+                id="recipient-input"
                 className="apple-input"
                 value={form.recipient}
                 onChange={(e) => setForm((c) => ({ ...c, recipient: e.target.value }))}
@@ -353,13 +361,14 @@ export default function NewWorkLogPage() {
 
             {/* Comment */}
             <div className="mt-4">
-              <label className="apple-label">{t("form.comment")}</label>
+              <label htmlFor="comment-textarea" className="apple-label">{t("form.comment")}</label>
               <CommentSuggestions
                 minorTask={form.minorTask}
                 selected={form.comment}
                 onSelect={handleCommentSuggestion}
               />
               <textarea
+                id="comment-textarea"
                 ref={textareaRef}
                 className="apple-input mt-2 resize-none overflow-hidden"
                 style={{ minHeight: "80px" }}

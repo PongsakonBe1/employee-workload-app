@@ -477,7 +477,8 @@ export default function DashboardPage() {
 
             // Count DOW × hour for heatmap (Mon=0..Sun=6 in display order)
             if (log.date) {
-              const dow = new Date(log.date).getDay(); // 0=Sun..6=Sat
+              // DA-4: เพิ่ม T00:00:00 เพื่อป้องกัน timezone shift เมื่อ parse date string
+              const dow = new Date(log.date + "T00:00:00").getDay(); // 0=Sun..6=Sat
               const displayDow = dow === 0 ? 6 : dow - 1; // Mon=0..Sun=6
               const dhKey = `${displayDow}-${String(h).padStart(2,"0")}`;
               byDayHour[dhKey] = (byDayHour[dhKey] || 0) + 1;
@@ -617,7 +618,8 @@ export default function DashboardPage() {
               <button
                 key={filter.key}
                 onClick={() => setTimeFilter(filter.key)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                aria-pressed={timeFilter === filter.key}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 ${
                   timeFilter === filter.key
                     ? "bg-slate-950 text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -733,13 +735,14 @@ export default function DashboardPage() {
 
       {/* Custom Date Range Modal */}
       {showCustomDateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-labelledby="custom-date-modal-title">
           <div className="apple-panel w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-slate-950 mb-4">กำหนดช่วงเวลาเอง</h3>
+            <h3 id="custom-date-modal-title" className="text-lg font-semibold text-slate-950 mb-4">กำหนดช่วงเวลาเอง</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">วันเริ่มต้น</label>
+                <label htmlFor="custom-date-start" className="text-sm font-medium text-slate-700 block mb-1">วันเริ่มต้น</label>
                 <input
+                  id="custom-date-start"
                   type="date"
                   value={pendingCustomStart}
                   onChange={(e) => setPendingCustomStart(e.target.value)}
@@ -747,8 +750,9 @@ export default function DashboardPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">วันสิ้นสุด</label>
+                <label htmlFor="custom-date-end" className="text-sm font-medium text-slate-700 block mb-1">วันสิ้นสุด</label>
                 <input
+                  id="custom-date-end"
                   type="date"
                   value={pendingCustomEnd}
                   onChange={(e) => setPendingCustomEnd(e.target.value)}
@@ -826,7 +830,7 @@ export default function DashboardPage() {
       </section>
       {/* Limit Warning Modal */}
       {showLimitModal && (
-        <div className="my-6 rounded-2xl bg-amber-50 border border-amber-200 p-5">
+        <div role="alert" aria-live="assertive" className="my-6 rounded-2xl bg-amber-50 border border-amber-200 p-5">
           <div className="flex items-start gap-3">
             <div className="text-2xl">⚠️</div>
             <div className="flex-1">
@@ -928,7 +932,7 @@ export default function DashboardPage() {
               <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-xl">
                 <span className="text-indigo-700">เฉลี่ยงานต่อคน</span>
                 <span className="text-2xl font-bold text-indigo-700">
-                  {staffList.length > 0 ? (actualCount / staffList.length).toFixed(1) : "0"} งาน/คน
+                  {(data?.byEmployee?.length || 0) > 0 ? (actualCount / data.byEmployee.length).toFixed(1) : "0"} งาน/คน
                 </span>
               </div>
               <div className="pt-1">
