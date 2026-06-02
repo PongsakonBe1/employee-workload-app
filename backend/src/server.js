@@ -9,6 +9,7 @@ import { categoriesRouter } from "./routes/categories.js";
 import { workLogsRouter } from "./routes/worklogs.js";
 import { statsRouter } from "./routes/stats.js";
 import { exportRouter } from "./routes/export.js";
+import { notifyRouter } from "./routes/notify.js";
 
 const app = express();
 
@@ -67,5 +68,4 @@ await connectDb();
 
 app.listen(env.port, () => {
   console.log(`API listening at http://localhost:${env.port}`);
-});
 });
