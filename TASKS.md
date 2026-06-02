@@ -134,6 +134,7 @@
 **ผู้รับผิดชอบ:** Frontend
 **Spark Plan:** ✅ ฟรี
 
+## Backlog (Future Versions)
 ### ✨ FEAT-3: Review & Approval Workflow (Monthly Submit)
 **ไฟล์:** `frontend/app/worklogs/page.js`, `frontend/app/admin/page.js`, `firebase/firestore.rules`
 - [ ] เพิ่ม field `monthlySubmitted: boolean`, `submittedAt: Timestamp` ใน user document (ต่อเดือน)

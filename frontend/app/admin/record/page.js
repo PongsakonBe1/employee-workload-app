@@ -577,7 +577,8 @@ export default function AdminRecordPage() {
               {hasSuggestions && (
                 <div className="mt-2">
                   <CommentSuggestions
-                    suggestions={suggestions}
+                    minorTask={form.minorTask}
+                    selected={form.comment}
                     onSelect={(suggestion) =>
                       setForm({ ...form, comment: suggestion })
                     }

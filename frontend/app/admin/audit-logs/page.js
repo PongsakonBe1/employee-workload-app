@@ -39,13 +39,13 @@ export default function AuditLogsPage() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (user && user.role !== "admin") {
+    if (user && user.role !== "admin" && user.role !== "superadmin") {
       router.replace("/dashboard");
     }
   }, [user, router]);
 
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (user?.role === "admin" || user?.role === "superadmin") {
       // TODO: Replace with actual API call
       setLogs(MOCK_LOGS);
       setLoading(false);
@@ -58,7 +58,7 @@ export default function AuditLogsPage() {
       searchQuery === "" ||
       log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.target.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.details.toLowerCase().includes(searchQuery.toLowerCase());
+      (log.details || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -79,7 +79,7 @@ export default function AuditLogsPage() {
     });
   }
 
-  if (!user || user.role !== "admin") {
+  if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
     return (
       <AppShell>
         <div className="flex min-h-[60vh] items-center justify-center">

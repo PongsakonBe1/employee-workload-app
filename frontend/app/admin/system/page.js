@@ -992,7 +992,7 @@ export default function SystemManagementPage() {
                   </span>
                   {log.targetUser && (
                     <span className="text-slate-400 text-xs whitespace-nowrap">
-                      → {log.targetUser.substring(0, 8)}...
+                      → {String(log.targetUser).substring(0, 8)}...
                     </span>
                   )}
                 </div>
