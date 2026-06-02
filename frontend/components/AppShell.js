@@ -94,9 +94,8 @@ export function AppShell({ children }) {
       if (pendingApproval && pathname !== "/pending") {
         router.replace("/pending");
       } else if (!user && !pendingApproval) {
-        const isAdminPage = pathname?.startsWith("/admin");
         const isLoginPage = pathname === "/login";
-        if (!isAdminPage && !isLoginPage) {
+        if (!isLoginPage) {
           router.replace("/login");
         }
       }

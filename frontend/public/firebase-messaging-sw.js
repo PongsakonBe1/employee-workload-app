@@ -3,6 +3,10 @@
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
 
+// firebase-messaging-sw.js runs as a Service Worker and has NO access to process.env.
+// Firebase apiKey is a PUBLIC project identifier (not a secret); it is safe to embed here.
+// Access is restricted by Firebase Security Rules and authorized domain settings in Firebase Console.
+// snyk:ignore:HardcodedNonCryptoSecret
 firebase.initializeApp({
   apiKey: "AIzaSyAqnN-_qbU6nMVhVsaYNybL2fcecQjWpPU",
   authDomain: "labboy-workload-app.firebaseapp.com",

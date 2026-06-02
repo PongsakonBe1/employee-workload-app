@@ -146,6 +146,7 @@ export default function DashboardPage() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [actualCount, setActualCount] = useState(0);
   const [hasMoreData, setHasMoreData] = useState(false); // True if there might be more records than we queried
+  const [dataWarning, setDataWarning] = useState(""); // Warning message when charts aggregate from truncated data
 
   // Load staff list for admin filter
   useEffect(() => {
@@ -279,10 +280,9 @@ export default function DashboardPage() {
       }
 
       // Role-based filtering
-      if (!isAdmin) {
-        constraints.push(where("employeeId", "==", user.uid));
-      } else if (selectedEmployee !== "all") {
-        // ใช้ employeeId == uid สำหรับ worklogs ใหม่
+      // DA-3: Staff ไม่ filter employeeId ใน query เพื่อใช้ข้อมูลร่วมคำนวณ leaderboard ได้เลย (ลด query ซ้ำซ้อน)
+      if (isAdmin && selectedEmployee !== "all") {
+        // Admin เลือกดูรายบุคคล
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
 
@@ -418,10 +418,27 @@ export default function DashboardPage() {
         }
 
         totalInRange = worklogs.length;
+        allWorklogsInRange = worklogs; // DA-3: เก็บ full dataset สำหรับ leaderboard
+      }
+
+      // DA-3: สำหรับ staff — filter worklogs เฉพาะของตัวเองสำหรับแสดง chart/stats
+      // (allWorklogsInRange ยังเก็บข้อมูลทุกคนไว้ใช้คำนวณ leaderboard)
+      if (!isAdmin) {
+        worklogs = worklogs.filter((log) => log.employeeId === user.uid);
+        totalInRange = allWorklogsInRange.filter((log) => log.employeeId === user.uid).length;
       }
 
       setActualCount(totalInRange);
       setHasMoreData(hasMoreThanLimit);
+
+      // DA-1: Show warning when aggregating from truncated data
+      if (hasMoreThanLimit) {
+        setDataWarning(`ข้อมูลในช่วงนี้มีมากกว่า 1,000 รายการ — กราฟและสถิติแสดงจากข้อมูลบางส่วนเท่านั้น`);
+      } else if (totalInRange > 300 && !showAllData) {
+        setDataWarning(`กราฟแสดงจาก 300 รายการล่าสุด (จากทั้งหมด ${totalInRange} รายการ)`);
+      } else {
+        setDataWarning("");
+      }
 
       // Show modal if count > 300
       if (totalInRange > 300 && !showAllData) {
@@ -524,27 +541,21 @@ export default function DashboardPage() {
         uidToName,
       });
 
-      // Staff leaderboard — query worklogs ทุกคนในช่วงเดียวกัน
+      // Staff leaderboard — DA-3: คำนวณจาก allWorklogsInRange ที่ได้มาแล้ว (ไม่ต้อง query แยก)
       if (!isAdmin) {
-        try {
-          const lbConstraints = dateRange
-            ? [where("date", ">=", dateRange.start), where("date", "<=", dateRange.end), limit(1000)]
-            : [limit(1000)];
-          const lbSnap = await getDocs(query(worklogsRef, ...lbConstraints));
-          const lbByEmp = {};
-          lbSnap.docs.forEach((d) => {
-            const empId = d.data().employeeId;
-            if (empId) lbByEmp[empId] = (lbByEmp[empId] || 0) + 1;
-          });
-          const lb = Object.entries(lbByEmp)
-            .map(([uid, count]) => ({
-              uid,
-              label: uidToName[uid] || uid,
-              count,
-            }))
-            .sort((a, b) => b.count - a.count);
-          setLeaderboard(lb);
-        } catch (_) {}
+        const lbByEmp = {};
+        allWorklogsInRange.forEach((log) => {
+          const empId = log.employeeId;
+          if (empId) lbByEmp[empId] = (lbByEmp[empId] || 0) + 1;
+        });
+        const lb = Object.entries(lbByEmp)
+          .map(([uid, count]) => ({
+            uid,
+            label: uidToName[uid] || uid,
+            count,
+          }))
+          .sort((a, b) => b.count - a.count);
+        setLeaderboard(lb);
       }
     }
 
@@ -813,12 +824,6 @@ export default function DashboardPage() {
           hint={t("dashboard.byMainDuty")}
         />
       </section>
-      {error ? (
-        <div className="mb-6 rounded-2xl bg-red-50 p-4 text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       {/* Limit Warning Modal */}
       {showLimitModal && (
         <div className="my-6 rounded-2xl bg-amber-50 border border-amber-200 p-5">
@@ -860,6 +865,14 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* DA-1: Data truncation warning for charts */}
+      {dataWarning && (
+        <div className="my-4 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center gap-2 text-sm text-amber-800">
+          <span>⚠️</span>
+          <span>{dataWarning}</span>
         </div>
       )}
 

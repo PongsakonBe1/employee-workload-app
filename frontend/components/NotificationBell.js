@@ -11,6 +11,8 @@ import {
   onSnapshot,
   getDocs,
   deleteDoc,
+  updateDoc,
+  arrayUnion,
   doc,
   getDoc,
   setDoc,
@@ -100,19 +102,25 @@ export function NotificationBell() {
           allNotificationsRef.current.delete(change.doc.id);
           prevNotifIds.current.delete(change.doc.id);
         } else {
-          allNotificationsRef.current.set(change.doc.id, {
-            id: change.doc.id,
-            ...change.doc.data(),
-          });
-          // trigger OS notification เฉพาะ doc ใหม่ (ไม่ใช่ initial load) + ไม่เคยเห็นมาก่อน
-          if (
-            change.type === "added" &&
-            !isFirstLoad &&
-            !prevNotifIds.current.has(change.doc.id)
-          ) {
-            const data = change.doc.data();
-            fireOsNotification(data.title || "แจ้งเตือน", data.message || "");
-            showAlertMessage(data.title || "แจ้งเตือน");
+          const docData = change.doc.data();
+          // Filter out notifications that this user has already dismissed (readBy)
+          const readBy = docData.readBy || [];
+          if (readBy.includes(user.uid)) {
+            allNotificationsRef.current.delete(change.doc.id);
+          } else {
+            allNotificationsRef.current.set(change.doc.id, {
+              id: change.doc.id,
+              ...docData,
+            });
+            // trigger OS notification เฉพาะ doc ใหม่ (ไม่ใช่ initial load) + ไม่เคยเห็นมาก่อน
+            if (
+              change.type === "added" &&
+              !isFirstLoad &&
+              !prevNotifIds.current.has(change.doc.id)
+            ) {
+              fireOsNotification(docData.title || "แจ้งเตือน", docData.message || "");
+              showAlertMessage(docData.title || "แจ้งเตือน");
+            }
           }
           prevNotifIds.current.add(change.doc.id);
         }
@@ -267,12 +275,28 @@ export function NotificationBell() {
     }
   }
 
+  // Helper: ตรวจสอบว่าเป็น broadcast notification หรือไม่
+  function isBroadcast(notif) {
+    return ["all", "staff", "admin", "superadmin"].includes(notif?.userId);
+  }
+
   async function markAsRead(id) {
     try {
+      const notif = notifications.find((n) => n.id === id);
       // ลบออกจาก state ทันที (optimistic update)
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      await deleteDoc(doc(db, "notifications", id));
+      allNotificationsRef.current.delete(id);
+
+      if (isBroadcast(notif)) {
+        // Broadcast: soft-delete โดยเพิ่ม uid เข้า readBy array
+        await updateDoc(doc(db, "notifications", id), {
+          readBy: arrayUnion(user.uid),
+        });
+      } else {
+        // Personal: ลบจริงได้เลย
+        await deleteDoc(doc(db, "notifications", id));
+      }
     } catch (err) {
       console.error("[Notification] Error marking as read:", err);
     }
@@ -281,10 +305,21 @@ export function NotificationBell() {
   async function deleteNotification(e, id) {
     e.stopPropagation();
     try {
+      const notif = notifications.find((n) => n.id === id);
       // ลบออกจาก state ทันที (optimistic update)
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      await deleteDoc(doc(db, "notifications", id));
+      allNotificationsRef.current.delete(id);
+
+      if (isBroadcast(notif)) {
+        // Broadcast: soft-delete โดยเพิ่ม uid เข้า readBy array
+        await updateDoc(doc(db, "notifications", id), {
+          readBy: arrayUnion(user.uid),
+        });
+      } else {
+        // Personal: ลบจริงได้เลย
+        await deleteDoc(doc(db, "notifications", id));
+      }
     } catch (err) {
       console.error("[Notification] Error deleting:", err);
     }
@@ -292,13 +327,25 @@ export function NotificationBell() {
 
   async function markAllAsRead() {
     try {
-      const toDelete = [...notifications];
+      const toProcess = [...notifications];
       // ลบออกจาก state ทันที
       setNotifications([]);
       setUnreadCount(0);
-      // ลบทุกอันจาก Firestore
+      toProcess.forEach((n) => allNotificationsRef.current.delete(n.id));
+
+      // แยก broadcast vs personal
       await Promise.all(
-        toDelete.map((n) => deleteDoc(doc(db, "notifications", n.id))),
+        toProcess.map((n) => {
+          if (isBroadcast(n)) {
+            // Broadcast: soft-delete โดยเพิ่ม uid เข้า readBy array
+            return updateDoc(doc(db, "notifications", n.id), {
+              readBy: arrayUnion(user.uid),
+            });
+          } else {
+            // Personal: ลบจริงได้เลย
+            return deleteDoc(doc(db, "notifications", n.id));
+          }
+        }),
       );
     } catch (err) {
       console.error("[Notification] Error marking all as read:", err);

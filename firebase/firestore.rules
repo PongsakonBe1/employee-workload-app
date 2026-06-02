@@ -82,7 +82,7 @@ service cloud.firestore {
             (request.resource.data.role == 'superadmin' &&
              request.resource.data.email in ['pongsagon.be1@gmail.com', 'pongsakon.be1@gmail.com'])
             ||
-            request.resource.data.role in ['admin', 'staff']
+            request.resource.data.role == 'staff'
           )
         )
         ||
@@ -108,19 +108,24 @@ service cloud.firestore {
       // Temporary fix: isAdmin() causes circular dependency issues
       allow read: if isAuthenticated();
       
-      // Create: Any authenticated user can create
-      allow create: if isAuthenticated() && isValidWorkLog();
+      // Create: Staff can only create their own worklog, Admin can create for anyone
+      allow create: if isAuthenticated() && isValidWorkLog() &&
+        (request.resource.data.employeeId == request.auth.uid || isAdmin());
       
-      // Update: Admin anytime, staff/owner only (if not locked) - same-day check enforced client-side
-      allow update: if isAdmin() || 
+      // Update: Admin anytime (with validation), staff/owner only same-day and if not locked
+      allow update: if (isAdmin() && isValidWorkLogUpdate()) ||
         (isAuthenticated() &&
          (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
          resource.data.locked != true &&
+         isSameDay(resource.data) &&
          isValidWorkLogUpdate());
       
-      // Delete: Admin or owner (if not locked) - same-day check enforced client-side
-      allow delete: if isAuthenticated() && 
-         (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid || isAdmin());
+      // Delete: Admin anytime, staff/owner only same-day and if not locked
+      allow delete: if isAdmin() ||
+         (isAuthenticated() && 
+          (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
+          resource.data.locked != true &&
+          isSameDay(resource.data));
     }
 
     // Audit logs collection
@@ -149,8 +154,7 @@ service cloud.firestore {
     // Pending users collection (for approval system)
     match /pendingUsers/{userId} {
       // Admin can read all pending users
-      // TEMPORARY: Allow all authenticated for setup
-      allow read: if isAuthenticated(); // isAdmin();
+      allow read: if isAdmin();
       
       // Authenticated users can create their own pending request
       allow create: if isAuthenticated() && 
@@ -158,8 +162,7 @@ service cloud.firestore {
         request.resource.data.email.matches('.*@icit\\.kmutnb\\.ac\\.th');
       
       // Admin can delete (approve/reject)
-      // TEMPORARY: Allow all authenticated for setup
-      allow delete: if isAuthenticated(); // isAdmin();
+      allow delete: if isAdmin();
       
       // No updates allowed
       allow update: if false;
@@ -178,9 +181,8 @@ service cloud.firestore {
       // list: Allow all authenticated to list (filter at client side for quota optimization)
       allow list: if isAuthenticated();
       
-      // System/Admin/Superadmin can create notifications
-      // TEMPORARY: Allow all authenticated for setup
-      allow create: if isAuthenticated(); // && (isAdmin() || request.resource.data.userId == request.auth.uid);
+      // System/Admin/Superadmin can create notifications, or users creating personal notifications
+      allow create: if isAuthenticated() && (isAdmin() || request.resource.data.userId == request.auth.uid);
       
       // Users can update (mark as read) their own + broadcast + role-based notifications
       allow update: if isAuthenticated() &&
@@ -189,7 +191,7 @@ service cloud.firestore {
          (resource.data.userId == "staff" && isStaff()) ||
          (resource.data.userId == "admin" && isAdmin()) ||
          isSuperAdmin()) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'readBy']);
       
       // Users can delete their own + broadcast + role-based notifications, superadmin can delete any
       allow delete: if isAuthenticated() &&
