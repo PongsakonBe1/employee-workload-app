@@ -7,5 +7,7 @@ export const env = {
   port: Number(process.env.PORT || 4000),
   mongodbUri: process.env.MONGODB_URI || "mongodb://localhost:27017/icit_workload",
   jwtSecret: process.env.JWT_SECRET || "dev-secret-change-me",
-  clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:3000"
+  clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
+  firebaseServiceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "",
+  cronSecret: process.env.CRON_SECRET || "",
 };

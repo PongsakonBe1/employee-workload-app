@@ -120,3 +120,140 @@ comboItems: [               // array ของ sub-tasks
 3. **[SE]** แก้ `QuickLogButtons.js` — detect combo + modal
 4. **[QA]** ทดสอบ end-to-end
 5. **[Doc]** อัปเดต README (optional)
+
+
+# Background Push Notification via Render + Cron-job.org
+
+เพิ่มความสามารถส่ง push notification ไปถึง Android/iOS ขณะปิดแอป โดยใช้ Render free tier เป็น server + Cron-job.org ping ป้องกัน sleep ฟรี $0/เดือน
+
+---
+
+## Architecture
+
+```
+[Superadmin กด Broadcast ใน UI]
+        │
+        ▼
+POST /api/notify/broadcast  (Render — Express backend)
+        │
+        ▼
+firebase-admin อ่าน fcmToken จาก users collection
+        │
+        ▼
+FCM REST API  sendEachForMulticast()
+        │
+        ▼
+Android / iOS / Desktop (Service Worker แสดง notification)
+
+─────────────────────────────────
+
+[Cron-job.org]  ทุก 14 นาที
+        │
+        ▼
+GET /health  (ping ป้องกัน Render sleep)
+
+[Cron-job.org]  ทุกวันจันทร์-เสาร์ ตามเวลาที่ admin ตั้งใน Settings
+        │
+        ▼
+POST /api/notify/daily-reminder
+        │
+        ▼
+backend อ่าน reminderTime จาก Firestore settings/system
+        → เช็คว่า user แต่ละคนมี worklog วันนี้หรือยัง
+        → ส่ง push เฉพาะคนที่ยังไม่ได้ลง
+```
+
+---
+
+## งานแต่ละตำแหน่ง
+
+### [SA] — ไม่ต้องแก้ Firestore Rules
+
+ยืนยันว่า:
+- `users/{uid}.fcmToken` มีอยู่แล้ว ✅
+- `settings/system.reminderTime` มีอยู่แล้ว ✅
+- Firestore Rules สำหรับ backend ใช้ **firebase-admin SDK** ซึ่ง bypass rules โดย default ✅
+
+เพิ่ม field ใน `settings/system`:
+```
+reminderDays: ["mon","tue","wed","thu","fri"]  // วันที่ส่ง reminder
+```
+
+---
+
+### [SE] — Backend (3 ไฟล์ใหม่ + แก้ 1 ไฟล์)
+
+**1. `backend/src/services/fcm.js`** — Firebase Admin + FCM helper
+- Init `firebase-admin` ด้วย Service Account (env var)
+- `sendToTokens(tokens, title, body, data)` — wrap `sendEachForMulticast()`
+- `getAllFCMTokens()` — อ่าน users collection ดึง fcmToken ที่ไม่ null
+- `getUsersWithoutTodayLog(date)` — query worklogs เช็คว่าใครยังไม่ลง
+
+**2. `backend/src/routes/notify.js`** — 2 endpoints
+- `POST /api/notify/broadcast` — รับ `{title, body}` จาก superadmin → ส่งทุก user ที่มี token
+  - Auth: ตรวจ Firebase ID token header (`Authorization: Bearer <idToken>`) เช็ค role superadmin
+- `POST /api/notify/daily-reminder` — เรียกโดย Cron-job.org พร้อม secret key
+  - Auth: `x-cron-secret` header ตรงกับ env var `CRON_SECRET`
+  - อ่าน `reminderTime` + `reminderDays` จาก Firestore
+  - เช็คว่าวันนี้อยู่ใน reminderDays หรือไม่
+  - ส่ง push เฉพาะ user ที่ยังไม่มี worklog วันนี้
+
+**3. `backend/.env.example`** — เพิ่ม vars ใหม่
+```
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+CRON_SECRET=replace-with-random-secret
+```
+
+**4. `backend/src/server.js`** — mount route ใหม่
+```js
+import { notifyRouter } from "./routes/notify.js";
+app.use("/api/notify", notifyRouter);
+```
+
+---
+
+### [SE] — Frontend (แก้ 2 ไฟล์)
+
+**1. `frontend/app/admin/settings/page.js`**
+- เพิ่ม section "การแจ้งเตือน Push (Background)"
+- `reminderDays` checkboxes: จันทร์–อาทิตย์ (default จ-ศ)
+- บันทึกลง `settings/system` ใน Firestore
+
+**2. เพิ่ม Broadcast UI ใน `frontend/app/admin/system/page.js` หรือ `settings/page.js`**
+- Input: `title` + `body` (textarea)
+- ปุ่ม "ส่ง Push Notification ทุกคน"
+- เรียก `POST /api/notify/broadcast` พร้อม Firebase ID token
+- แสดง toast: "ส่งแล้ว X คน"
+
+---
+
+## Setup ขั้นตอน Deploy (ทำครั้งเดียว)
+
+1. **Firebase Console** → Project Settings → Service Accounts → Generate new private key → ได้ JSON
+2. **Render.com** → New Web Service → connect GitHub → set env vars (`FIREBASE_SERVICE_ACCOUNT_JSON`, `CRON_SECRET`)
+3. **Cron-job.org** → สร้าง 2 jobs:
+   - Ping: `GET https://<render-url>/health` ทุก 14 นาที
+   - Reminder: `POST https://<render-url>/api/notify/daily-reminder` + header `x-cron-secret` ตามเวลาที่ต้องการ (admin ตั้งเวลาใน Settings แอป แต่ Cron-job.org ต้องตั้งเวลาตรงกัน)
+
+> **หมายเหตุ:** เวลา reminder ใน Cron-job.org ต้องตรงกับที่ admin ตั้งในแอป — backend จะ double-check กับ `reminderTime` ใน Firestore อีกทีก่อนส่ง
+
+---
+
+## Dependencies ที่ต้องเพิ่ม
+
+```json
+// backend/package.json
+"firebase-admin": "^12.0.0"
+```
+
+---
+
+## สรุปไฟล์ที่แก้/สร้างใหม่
+
+| ไฟล์ | การเปลี่ยนแปลง |
+|---|---|
+| `backend/src/services/fcm.js` | ใหม่ — Firebase Admin + FCM helpers |
+| `backend/src/routes/notify.js` | ใหม่ — broadcast + daily-reminder endpoints |
+| `backend/src/server.js` | แก้ — mount notifyRouter |
+| `backend/.env.example` | แก้ — เพิ่ม FIREBASE vars |
+| `frontend/app/admin/settings/page.js` | แก้ — เพิ่ม reminderDays + Broadcast UI |

@@ -50,6 +50,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/worklogs", workLogsRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/export", exportRouter);
+app.use("/api/notify", notifyRouter);
 
 app.use((req, res) => {
   res
@@ -66,4 +67,5 @@ await connectDb();
 
 app.listen(env.port, () => {
   console.log(`API listening at http://localhost:${env.port}`);
+});
 });

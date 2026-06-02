@@ -226,7 +226,7 @@ export default function TemplateManager() {
                 ข้อมูลพื้นฐาน
               </h3>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 ${!formData.isCombo ? 'lg:grid-cols-2' : ''} gap-4`}>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     ชื่อ Template *
@@ -237,71 +237,80 @@ export default function TemplateManager() {
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    placeholder="เช่น: ยืม/คืนหูฟัง"
+                    placeholder={formData.isCombo ? 'เช่น: ผูก Account ครบชุด' : 'เช่น: ยืม/คืนหูฟัง'}
                   />
                   <p className="mt-1 text-xs text-slate-500">
-                    💡 ชื่อที่ staff จะเห็นในปุ่ม Quick Log
+                    {formData.isCombo
+                      ? '💡 ชื่อ Combo ที่ staff เห็นในปุ่ม — รายละเอียดงานกำหนดด้านล่าง'
+                      : '💡 ชื่อที่ staff จะเห็นในปุ่ม Quick Log'
+                    }
                   </p>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    หัวข้อรอง *
-                  </label>
-                  <MinorTaskSelector
-                    value={formData.minorTask}
-                    onChange={handleMinorTaskChange}
-                    placeholder="เลือกหัวข้อรอง"
-                  />
-                  <p className="mt-1 text-xs text-slate-500">
-                    💡 เลือกงานที่ต้องทำ - ระบบจะ auto-fill หัวข้อหลักให้
-                  </p>
-                </div>
+                {!formData.isCombo && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      หัวข้อรอง *
+                    </label>
+                    <MinorTaskSelector
+                      value={formData.minorTask}
+                      onChange={handleMinorTaskChange}
+                      placeholder="เลือกหัวข้อรอง"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      💡 เลือกงานที่ต้องทำ - ระบบจะ auto-fill หัวข้อหลักให้
+                    </p>
+                  </div>
+                )}
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    หัวข้อหลัก (auto-fill)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.mainDuty}
-                    onChange={(e) => setFormData({...formData, mainDuty: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50"
-                    placeholder="เลือกหัวข้อรองเพื่อ auto-fill"
-                    readOnly
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    หมวดหมู่
-                  </label>
-                  <select
-                    value={formData.dutyGroup}
-                    onChange={(e) => setFormData({...formData, dutyGroup: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  >
-                    <option value="main">งานหลัก</option>
-                    <option value="additional">งานเพิ่มเติม</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  ความคิดเห็น (ถ้ามี)
-                </label>
-                <textarea
-                  value={formData.comment}
-                  onChange={(e) => setFormData({...formData, comment: e.target.value})}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  rows={3}
-                  placeholder="ข้อความเริ่มต้นที่จะแสดงในช่องกรอกข้อมูล"
-                />
-              </div>
+              {!formData.isCombo && (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        หัวข้อหลัก (auto-fill)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.mainDuty}
+                        onChange={(e) => setFormData({...formData, mainDuty: e.target.value})}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50"
+                        placeholder="เลือกหัวข้อรองเพื่อ auto-fill"
+                        readOnly
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        หมวดหมู่
+                      </label>
+                      <select
+                        value={formData.dutyGroup}
+                        onChange={(e) => setFormData({...formData, dutyGroup: e.target.value})}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option value="main">งานหลัก</option>
+                        <option value="additional">งานเพิ่มเติม</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      ความคิดเห็น (ถ้ามี)
+                    </label>
+                    <textarea
+                      value={formData.comment}
+                      onChange={(e) => setFormData({...formData, comment: e.target.value})}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      rows={3}
+                      placeholder="ข้อความเริ่มต้นที่จะแสดงในช่องกรอกข้อมูล"
+                    />
+                  </div>
+                </>
+              )}
             </div>
             
             {/* Step 2: Options */}
@@ -494,11 +503,18 @@ export default function TemplateManager() {
               </div>
             )}
             
+            {/* Combo Validation Warning */}
+            {formData.isCombo && formData.comboItems.length < 2 && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                ⚠️ Combo Template ต้องมีอย่างน้อย 2 รายการงาน
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t border-slate-200">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (formData.isCombo && (formData.comboItems.length < 2 || formData.comboItems.some(i => !i.name || !i.minorTask)))}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
               >
                 {loading ? 'กำลังบันทึก...' : (editingTemplate ? 'อัปเดต Template' : 'สร้าง Template')}

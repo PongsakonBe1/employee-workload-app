@@ -27,16 +27,25 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [notifPermission, setNotifPermission] = useState("default");
+  const [notifPermission, setNotifPermission] = useState(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return "default";
+    if (localStorage.getItem("notif_dismissed") === "1") return "dismissed";
+    return Notification.permission;
+  });
   const [reminderTime, setReminderTime] = useState("22:00");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const prevNotifIds = useRef(new Set());
   const allNotificationsRef = useRef(new Map()); // shared across all 4 queries
 
-  // โหลด permission state ตอน mount
+  // โหลด permission state ตอน mount (sync กับ browser)
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
-      setNotifPermission(Notification.permission);
+      const perm = Notification.permission;
+      if (perm !== "default") {
+        setNotifPermission(perm);
+      } else if (localStorage.getItem("notif_dismissed") === "1") {
+        setNotifPermission("dismissed");
+      }
     }
   }, []);
 
@@ -385,7 +394,7 @@ export function NotificationBell() {
               เปิด
             </button>
             <button
-              onClick={() => setNotifPermission("dismissed")}
+              onClick={() => { localStorage.setItem("notif_dismissed", "1"); setNotifPermission("dismissed"); }}
               className="shrink-0 hover:bg-white/20 rounded p-1"
             >
               <X size={14} />
