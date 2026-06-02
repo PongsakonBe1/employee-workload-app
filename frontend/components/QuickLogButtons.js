@@ -131,6 +131,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     if (template.requireComment) {
       setSelectedTemplate(template);
       setCommentText('');
+      setRecipient('');
       setShowCommentModal(true);
       return;
     }
@@ -168,23 +169,32 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (onLogSuccess) onLogSuccess('กรุณากรอกความคิดเห็น', 'error');
       return;
     }
+    if (selectedTemplate.requireRecipient && !recipient.trim()) {
+      if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
+      return;
+    }
     setLoggingTemplate(selectedTemplate.id);
     setLoading(true);
     try {
       const now = new Date();
-      await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, {
+      const extraData = {
         date: now.toISOString().slice(0, 10),
         time: now.toTimeString().slice(0, 5),
         comment: commentText.trim(),
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
         employeeNickname: logAsUser.nickname || '',
         employeeFullName: logAsUser.fullName || ''
-      });
+      };
+      if (selectedTemplate.requireRecipient && recipient.trim()) {
+        extraData.recipient = recipient.trim();
+      }
+      await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
       await logSystemAction(SystemActions.WORKLOG_CREATE, `Quick log: ${selectedTemplate.name}`, { templateId: selectedTemplate.id });
       if (onLogSuccess) onLogSuccess(`บันทึก "${selectedTemplate.name}" เรียบร้อย`);
       setShowCommentModal(false);
       setSelectedTemplate(null);
       setCommentText('');
+      setRecipient('');
     } catch (error) {
       if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
     } finally {
@@ -597,11 +607,24 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       {/* Comment Modal */}
       {showCommentModal && selectedTemplate && mounted && createPortal(
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); }} />
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); setRecipient(''); }} />
           <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
             <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
             <p className="text-xs text-slate-500 mb-4">ปฏิบัติงานตามผู้บังคับบัญชา — กรุณาระบุรายละเอียด</p>
+            {selectedTemplate.requireRecipient && (
+              <>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
+                <input
+                  type="text"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="apple-input mb-3"
+                  placeholder="กรอกชื่อผู้รับบริการ"
+                  autoFocus
+                />
+              </>
+            )}
             <label className="block text-xs font-medium text-slate-500 mb-1.5">ความคิดเห็น / รายละเอียด *</label>
             <textarea
               value={commentText}
@@ -609,12 +632,12 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
               className="apple-input w-full resize-none"
               rows={3}
               placeholder="กรอกรายละเอียดการปฏิบัติงาน..."
-              autoFocus
+              autoFocus={!selectedTemplate.requireRecipient}
             />
             <div className="flex gap-2 mt-5">
               <button
                 onClick={handleLogWithComment}
-                disabled={loading || !commentText.trim()}
+                disabled={loading || !commentText.trim() || (selectedTemplate.requireRecipient && !recipient.trim())}
                 className="apple-button flex-1 disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 {loading
@@ -623,7 +646,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
                 }
               </button>
               <button
-                onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); }}
+                onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); setRecipient(''); }}
                 className="apple-button-secondary px-4"
               >
                 ยกเลิก
