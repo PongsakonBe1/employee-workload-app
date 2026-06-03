@@ -4,7 +4,7 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.1.0  
+📦 **Current Version:** v2.2.0  
 📅 **Last Updated:** 2026-06-03  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
@@ -69,6 +69,7 @@
 |---------|-----------|----------------|
 | บันทึกงาน | ระบุ duty group, หัวข้อหลัก, หัวข้อรอง, เวลา, comment | v1.0.0 |
 | Quick Log Templates | กดปุ่มเดียวบันทึกงานซ้ำๆ | v1.0.0 |
+| Combo Template | กดครั้งเดียวบันทึกหลายงานพร้อมกัน (เช่น ผูก Account ครบชุด 3 งาน) พร้อม modal แสดง preview ก่อนบันทึก | v2.2.0 |
 | Hold-to-Confirm | กดค้าง 3 วินาทีเพื่อบันทึกงานด่วน (ป้องกัน misclick) | v1.9.4 |
 | Smart Room Modal | ห้อง 303-306, 401-407 พร้อมสถานะ real-time | v1.0.0 |
 | Smart Equipment Modal | หูฟัง ICIT01-20, ปลั๊กไฟ ICIT21-25 แบบ real-time | v1.0.0 |
@@ -87,7 +88,7 @@
 | ฟีเจอร์ | รายละเอียด | เวอร์ชันที่เพิ่ม |
 |---------|-----------|----------------|
 | บันทึกงานให้พนักงาน | เลือกพนักงานจาก dropdown แล้วบันทึกในนามพนักงาน | v1.8.0 |
-| จัดการ Templates | เพิ่ม/แก้ไข/ลบ Quick Log Templates | v1.8.0 |
+| จัดการ Templates | เพิ่ม/แก้ไข/ลบ Quick Log Templates + Combo Templates | v1.8.0 |
 | Template Options | `requireRecipient`, `requireComment`, `isSmart` | v1.9.4 |
 | Dashboard ทีม | สถิติรวม, เฉลี่ยต่อคน, Top 3, รายชื่อทุกคน | v1.7.0 |
 | Workload Heatmap | กราฟ DOW × Hour แสดงความถี่งาน | v1.7.1 |
@@ -1224,6 +1225,7 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.2.0** | 2026-06-03 | **FEAT: Combo Template**: เพิ่มระบบ Combo Template — Admin สร้าง template ที่ประกอบด้วยหลาย minorTask, Staff กดครั้งเดียว กรอก recipient ครั้งเดียว → บันทึก worklogs หลายรายการพร้อมกัน (`Promise.all`); ปุ่ม combo แสดง badge สีม่วงจำนวนงาน, modal preview ก่อนบันทึก; `TemplateManager.js` เพิ่ม isCombo toggle + comboItems editor; `QuickLogButtons.js` เพิ่ม combo modal + handler; `quickLogTemplates.js` เพิ่ม `logFromComboTemplate()` |
 | **v2.1.0** | 2026-06-03 | **FEAT: Background Push Notification**: เพิ่มระบบส่ง Push Notification ผ่าน Backend (Render + Cron-job.org) — daily reminder แจ้งเตือนพนักงานที่ยังไม่ลงงาน + broadcast push สำหรับ Superadmin; **Backend**: เพิ่ม Express server (`backend/`) พร้อม endpoints `/api/notify/daily-reminder` (CRON_SECRET auth + `crypto.timingSafeEqual`), `/api/notify/broadcast` (Firebase ID Token + superadmin role check), `/api/notify/health`; **FCM Service**: `backend/src/services/fcm.js` ใช้ firebase-admin SDK ส่ง multicast push; **Frontend — Settings UI**: เพิ่มหน้าตั้งค่า Push Notification ใน Admin Settings — toggle เปิด/ปิด, เลือกเวลาส่ง `pushReminderTime`, เลือกวัน `reminderDays` (จ–อา) พร้อม `aria-pressed` accessibility; **Frontend — Broadcast UI**: Superadmin เห็น Broadcast section ใน Settings — กรอก Title/Body แล้วส่ง push ถึงทุกคน แสดงผล sent/failed count; **Security — CRON_SECRET guard (FIX-4)**: เพิ่ม production guard ใน `backend/src/config/env.js` — throw error ถ้าไม่ตั้ง `CRON_SECRET` env var ใน production ป้องกันการใช้ค่า default; **Firestore Rules**: อนุญาต user update `fcmToken` field อย่างจำกัด; **QA Sign-off**: Snyk SAST ผ่าน (0 actionable issues ใน production code), Playwright E2E 32 tests — 22 passed, 10 skipped (รอ RENDER_URL), 0 failed |
 | **v2.0.2** | 2026-06-02 | **Firestore Rules — `isValidWorkLogUpdate` fix**: แก้ไข helper function ที่บังคับตรวจ `date` และ `time` ทุกครั้ง ทำให้ staff ที่ส่งเฉพาะฟิลด์ที่แก้ไข (partial update) ถูก Firestore ปฏิเสธด้วย `permission-denied` — เปลี่ยนเป็น optional check ด้วย `hasAny()` ตรวจเฉพาะฟิลด์ที่ส่งมาจริง |
 | **v2.0.1** | 2026-06-02 | **Firestore Rules — `isSameDay` fix**: แก้การเรียก `.format()` บน Timestamp ที่ไม่รองรับใน Firestore Rules — เปลี่ยนเป็น manual zero-pad ด้วย `.year()/.month()/.day()`; **QuickLog modal UI**: ปรับ UI ของ modal ใน `QuickLogButtons.js`; **Audit Logs — Superadmin access**: แก้หน้า `audit-logs/page.js` ที่จำกัดเฉพาะ `admin` ให้รองรับ `superadmin` ด้วย — แก้ทั้ง redirect guard, data fetch condition, และ loading fallback; **Audit Logs — details null crash**: แก้ `log.details.toLowerCase()` ที่ crash เมื่อ `details` เป็น `""` หรือ `null` → เพิ่ม `(log.details \|\| "")` |

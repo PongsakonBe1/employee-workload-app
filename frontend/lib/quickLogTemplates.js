@@ -214,3 +214,64 @@ export async function logFromTemplate(templateId, userId, extraData) {
 // Import increment function
 import { increment } from "firebase/firestore";
 import { getDoc } from "firebase/firestore";
+
+/**
+ * บันทึกงานจาก Combo Template (หลายงานพร้อมกัน)
+ * @param {string} templateId - ID ของ combo template
+ * @param {string} userId - ID ของ user
+ * @param {Object} extraData - ข้อมูลเพิ่มเติม (date, time, recipient)
+ * @returns {Promise<Array>} - array ของ worklog IDs
+ */
+export async function logFromComboTemplate(templateId, userId, extraData) {
+  try {
+    // ดึงข้อมูล template
+    const templateDoc = await getDoc(doc(db, "globalTemplates", templateId));
+    if (!templateDoc.exists()) {
+      throw new Error("Template not found");
+    }
+    
+    const template = templateDoc.data();
+    
+    if (!template.isCombo || !template.comboItems || template.comboItems.length === 0) {
+      throw new Error("Invalid combo template");
+    }
+    
+    const now = new Date();
+    const date = extraData.date || now.toISOString().slice(0, 10);
+    const time = extraData.time || now.toTimeString().slice(0, 5);
+    
+    // สร้าง worklog ทุก item ใน combo พร้อมกัน
+    const worklogPromises = template.comboItems.map(async (item) => {
+      const worklogData = {
+        employeeId: userId,
+        employeeDisplayName: extraData.employeeDisplayName || "",
+        employeeNickname: extraData.employeeNickname || "",
+        employeeFullName: extraData.employeeFullName || "",
+        date: date,
+        time: time,
+        recipient: extraData.recipient || "",
+        dutyGroup: item.dutyGroup || template.dutyGroup || "main",
+        mainDuty: item.mainDuty || template.mainDuty,
+        minorTask: item.minorTask,
+        comment: item.comment || "",
+        status: "บันทึกแล้ว",
+        templateId: templateId,
+        comboItemName: item.name,
+        createdAt: serverTimestamp()
+      };
+      
+      const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+      return worklogRef.id;
+    });
+    
+    const worklogIds = await Promise.all(worklogPromises);
+    
+    // บันทึกการใช้ template (นับ 1 ครั้งต่อการกด)
+    await recordTemplateUsage(templateId);
+    
+    return worklogIds;
+  } catch (error) {
+    console.error("Error logging from combo template:", error);
+    throw error;
+  }
+}

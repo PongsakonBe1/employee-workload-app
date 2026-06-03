@@ -76,7 +76,8 @@
       "invalidTime": "Invalid time format (HH:mm)",
       "saveFailed": "Failed to save",
       "locked": "This record is locked and cannot be edited",
-      "loadFailed": "Failed to load data"
+      "loadFailed": "Failed to load data",
+      "noData": "No data found"
     }
   },
   "dashboard": {

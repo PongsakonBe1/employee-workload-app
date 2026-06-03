@@ -21,6 +21,7 @@
     "concurrently": "^9.0.0"
   },
   "dependencies": {
+    "firebase-admin": "^12.7.0",
     "tslib": "^2.8.1"
   }
 }

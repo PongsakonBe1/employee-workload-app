@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { getTemplatesForUser, logFromTemplate } from '../lib/quickLogTemplates';
+import { getTemplatesForUser, logFromTemplate, logFromComboTemplate } from '../lib/quickLogTemplates';
 import { useAuth } from './AuthProvider';
 import { logSystemAction, SystemActions } from '../lib/systemLog';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
@@ -30,6 +30,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [showSmartRoomModal, setShowSmartRoomModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentText, setCommentText] = useState('');
+  // Combo modal state
+  const [showComboModal, setShowComboModal] = useState(false);
+  const [comboRecipient, setComboRecipient] = useState('');
   // hold-to-confirm state
   const [holdingId, setHoldingId] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
@@ -66,7 +69,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ');
   };
 
-  const isDirectLog = (template) => !isSmartOrEquipmentTemplate(template) && !template.requireRecipient;
+  const isDirectLog = (template) => !isSmartOrEquipmentTemplate(template) && !template.requireRecipient && !template.isCombo;
 
   // --- Hold-to-confirm handlers ---
   const handleHoldStart = (template) => {
@@ -128,6 +131,14 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const handleQuickLog = (template) => {
     if (!user || !logAsUser) return;
 
+    // Combo template: เปิด modal กรอก recipient
+    if (template.isCombo) {
+      setSelectedTemplate(template);
+      setComboRecipient('');
+      setShowComboModal(true);
+      return;
+    }
+
     if (template.requireComment) {
       setSelectedTemplate(template);
       setCommentText('');
@@ -162,6 +173,53 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     }
 
     // direct-log: handled by hold gesture only (3-second hold)
+  };
+
+  const handleLogCombo = async () => {
+    if (!selectedTemplate || !comboRecipient.trim()) {
+      if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
+      return;
+    }
+
+    setLoggingTemplate(selectedTemplate.id);
+    setLoading(true);
+
+    try {
+      const now = new Date();
+      const extraData = {
+        date: now.toISOString().slice(0, 10),
+        time: now.toTimeString().slice(0, 5),
+        recipient: comboRecipient.trim(),
+        employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
+        employeeNickname: logAsUser.nickname || '',
+        employeeFullName: logAsUser.fullName || ''
+      };
+
+      const worklogIds = await logFromComboTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
+      
+      await logSystemAction(
+        SystemActions.WORKLOG_CREATE,
+        `Combo log: ${selectedTemplate.name} (${worklogIds.length} งาน)`,
+        { templateId: selectedTemplate.id, comboSize: worklogIds.length }
+      );
+
+      if (onLogSuccess) {
+        onLogSuccess(`บันทึก ${worklogIds.length} งานเรียบร้อย`);
+      }
+      
+      setShowComboModal(false);
+      setSelectedTemplate(null);
+      setComboRecipient('');
+
+    } catch (error) {
+      console.error("Error combo logging:", error);
+      if (onLogSuccess) {
+        onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+      }
+    } finally {
+      setLoading(false);
+      setLoggingTemplate(null);
+    }
   };
 
   const handleLogWithComment = async () => {
@@ -516,8 +574,18 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
                   </div>
                 )}
                 <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
-                <div className="text-[11px] mt-0.5 opacity-60 truncate">{template.minorTask}</div>
+                <div className="text-[11px] mt-0.5 opacity-60 truncate">
+                  {template.isCombo 
+                    ? template.comboItems?.map(i => i.minorTask).join(' · ')
+                    : template.minorTask
+                  }
+                </div>
                 <div className="mt-1 flex items-center gap-1">
+                  {template.isCombo && (
+                    <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full">
+                      {template.comboItems?.length || 0} งาน
+                    </span>
+                  )}
                   {template.requireRecipient && (
                     <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
                   )}
@@ -688,6 +756,72 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
           templateName={selectedTemplate.name}
           templateMinorTask={selectedTemplate.minorTask}
         />
+      )}
+
+      {/* Combo Modal */}
+      {showComboModal && selectedTemplate && mounted && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowComboModal(false); setSelectedTemplate(null); setComboRecipient(''); }} />
+          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">Combo Template</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
+            <span className="inline-block px-2 py-1 bg-violet-100 text-violet-700 text-xs rounded-full mb-4">
+              {selectedTemplate.comboItems?.length || 0} งานพร้อมกัน
+            </span>
+            
+            {/* Sub-tasks list */}
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-slate-500 mb-2">รายการงานที่จะบันทึก</label>
+              <div className="space-y-2">
+                {selectedTemplate.comboItems?.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <span className="w-5 h-5 bg-violet-100 text-violet-600 rounded-full text-xs flex items-center justify-center font-medium shrink-0">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-slate-700 truncate">{item.name}</div>
+                      <div className="text-xs text-slate-500 truncate">{item.minorTask}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Recipient input */}
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
+              <input
+                type="text"
+                value={comboRecipient}
+                onChange={(e) => setComboRecipient(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && comboRecipient.trim() && handleLogCombo()}
+                className="apple-input"
+                placeholder="กรอกรหัสนักศึกษาหรือชื่อผู้รับบริการ"
+                autoFocus
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogCombo}
+                disabled={loading || !comboRecipient.trim()}
+                className="apple-button flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {loading
+                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+                  : <>บันทึก {selectedTemplate.comboItems?.length || 0} งาน</>
+                }
+              </button>
+              <button
+                onClick={() => { setShowComboModal(false); setSelectedTemplate(null); setComboRecipient(''); }}
+                className="apple-button-secondary px-4"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
