@@ -109,8 +109,9 @@ service cloud.firestore {
         !(resource.data.role == 'admin' && request.auth.uid != userId);
       
       // Users can update their own profile (except role)
+      // SA Note: fcmToken อนุญาติให้ user บันทึก token สำหรับ push notification
       allow update: if isOwner(userId) && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'displayName', 'lastLoginAt']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'displayName', 'lastLoginAt', 'fcmToken']);
     }
 
     // Worklogs collection
