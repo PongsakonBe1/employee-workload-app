@@ -51,9 +51,29 @@ router.get("/health", (_req, res) => {
  */
 router.post("/broadcast", async (req, res) => {
   try {
-    // TODO: Implement Firebase Auth verification
-    // ตอนนี้ให้ผ่านไปก่อน สำหรับการทดสอบ initial
-    // ใน production ควร verify Firebase ID token และเช็ค role superadmin
+    // Verify Firebase ID token + superadmin role
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - Missing or invalid Authorization header",
+      });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const admin = (await import("firebase-admin")).default;
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    
+    // ดึง role จาก Firestore users collection
+    const userDoc = await admin.firestore().collection("users").doc(decodedToken.uid).get();
+    const userRole = userDoc.exists ? userDoc.data().role : null;
+    
+    if (userRole !== "superadmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden - Superadmin role required",
+      });
+    }
 
     const { title, body, data = {} } = req.body;
 
@@ -103,12 +123,28 @@ router.post("/broadcast", async (req, res) => {
  */
 router.post("/daily-reminder", async (req, res) => {
   try {
-    // Verify cron secret
+    // Verify cron secret (constant-time comparison ป้องกัน timing attack)
     const cronSecret = req.headers["x-cron-secret"];
-    if (!cronSecret || cronSecret !== env.cronSecret) {
+    const expectedSecret = env.cronSecret;
+    
+    if (!cronSecret || !expectedSecret) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized - Invalid or missing cron secret",
+        message: "Unauthorized - Missing cron secret",
+      });
+    }
+    
+    // Timing-safe comparison using crypto
+    const crypto = await import("crypto");
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(cronSecret.padEnd(64, "0").slice(0, 64)),
+      Buffer.from(expectedSecret.padEnd(64, "0").slice(0, 64))
+    );
+    
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - Invalid cron secret",
       });
     }
 

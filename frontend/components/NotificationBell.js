@@ -27,18 +27,17 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [notifPermission, setNotifPermission] = useState("default");
+  const [notifPermission, setNotifPermission] = useState(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      return Notification.permission;
+    }
+    return "default";
+  });
+  const [fcmTokenStatus, setFcmTokenStatus] = useState(null); // null | "saving" | "saved" | "error"
   const [reminderTime, setReminderTime] = useState("22:00");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const prevNotifIds = useRef(new Set());
   const allNotificationsRef = useRef(new Map()); // shared across all 4 queries
-
-  // โหลด permission state ตอน mount
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setNotifPermission(Notification.permission);
-    }
-  }, []);
 
   // FCM: ลงทะเบียน token + รับ foreground message
   useEffect(() => {
@@ -52,12 +51,15 @@ export function NotificationBell() {
 
       const token = await getFCMToken();
       if (token) {
-        // บันทึก token ลง Firestore users/{uid}.fcmToken
-        setDoc(
-          doc(db, "users", user.uid),
-          { fcmToken: token, fcmUpdatedAt: new Date() },
-          { merge: true }
-        ).catch(() => {});
+        try {
+          await updateDoc(doc(db, "users", user.uid), {
+            fcmToken: token,
+            fcmUpdatedAt: new Date(),
+          });
+          setFcmTokenStatus("saved");
+        } catch {
+          setFcmTokenStatus("error");
+        }
       }
 
       // Foreground message handler
@@ -264,13 +266,20 @@ export function NotificationBell() {
     setNotifPermission(result);
     // ถ้า granted ให้ init FCM token ทันที
     if (result === "granted" && user) {
-      const token = await getFCMToken();
-      if (token) {
-        setDoc(
-          doc(db, "users", user.uid),
-          { fcmToken: token, fcmUpdatedAt: new Date() },
-          { merge: true }
-        ).catch(() => {});
+      setFcmTokenStatus("saving");
+      try {
+        const token = await getFCMToken();
+        if (token) {
+          await updateDoc(doc(db, "users", user.uid), {
+            fcmToken: token,
+            fcmUpdatedAt: new Date(),
+          });
+          setFcmTokenStatus("saved");
+        } else {
+          setFcmTokenStatus("error");
+        }
+      } catch {
+        setFcmTokenStatus("error");
       }
     }
   }
@@ -419,7 +428,16 @@ export function NotificationBell() {
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
                 <div className="flex items-center gap-2">
-                  {notifPermission === "granted" && (
+                  {notifPermission === "granted" && fcmTokenStatus === "saving" && (
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">กำลังลงทะเบียน...</span>
+                  )}
+                  {notifPermission === "granted" && fcmTokenStatus === "saved" && (
+                    <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">✓ พร้อมรับ Push</span>
+                  )}
+                  {notifPermission === "granted" && fcmTokenStatus === "error" && (
+                    <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full">ลงทะเบียนไม่สำเร็จ</span>
+                  )}
+                  {notifPermission === "granted" && fcmTokenStatus === null && (
                     <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">แจ้งเตือนเปิดอยู่</span>
                   )}
                   <button

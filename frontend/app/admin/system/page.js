@@ -15,7 +15,7 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { db, auth } from "../../../lib/firebase";
 import { NotificationBell } from "../../../components/NotificationBell";
 import {
   CheckCircle,
@@ -28,6 +28,10 @@ import {
   RefreshCw,
   Upload,
   AlertCircle,
+  Bell,
+  Smartphone,
+  Send,
+  Megaphone,
 } from "lucide-react";
 
 // Helper function สำหรับบันทึก log
@@ -75,6 +79,10 @@ export default function SystemManagementPage() {
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [broadcastTarget, setBroadcastTarget] = useState("all"); // "all" | "staff" | "admin"
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const [deliveryInApp, setDeliveryInApp] = useState(true);
+  const [deliveryPush, setDeliveryPush] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState(null); // {success, inAppSent, pushSent, pushFailed, error}
+  const [userCounts, setUserCounts] = useState({ total: 0, staff: 0, admin: 0 });
 
   // Import worklogs states (superadmin only)
   const [importText, setImportText] = useState("");
@@ -113,6 +121,26 @@ export default function SystemManagementPage() {
   useEffect(() => {
     loadExportRequests();
   }, [isAdmin]);
+
+  // โหลดจำนวน users สำหรับ Broadcast
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    async function loadUserCounts() {
+      try {
+        const usersSnap = await getDocs(query(collection(db, "users"), where("active", "==", true)));
+        let staff = 0, admin = 0;
+        usersSnap.forEach((d) => {
+          const role = d.data().role;
+          if (role === "admin" || role === "superadmin") admin++;
+          else staff++;
+        });
+        setUserCounts({ total: staff + admin, staff, admin });
+      } catch (err) {
+        console.error("Error loading user counts:", err);
+      }
+    }
+    loadUserCounts();
+  }, [isSuperAdmin]);
 
   // โหลด logs ล่าสุด (superadmin เท่านั้น) - ใช้ getDocs แทน onSnapshot
   async function loadSystemLogs() {
@@ -377,74 +405,102 @@ export default function SystemManagementPage() {
     }
   }
 
-  // Send broadcast notification (superadmin only)
+  // Send broadcast notification (superadmin only) — Unified: In-App + Push
   async function sendBroadcastNotification() {
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) {
       setMessage({ type: "error", text: "กรุณากรอกหัวข้อและข้อความ" });
       return;
     }
+    if (!deliveryInApp && !deliveryPush) {
+      setMessage({ type: "error", text: "กรุณาเลือกช่องทางส่งอย่างน้อย 1 ช่องทาง" });
+      return;
+    }
 
     setSendingBroadcast(true);
-    try {
-      // สร้าง notification ตามกลุ่มเป้าหมาย
-      // "all" → userId: "all" (document เดียว ทุก role เห็น, ไม่ถูกลบโดย role เดียว)
-      // "staff" → userId: "staff", "admin" → userId: "admin"
-      const notifications = [];
+    setBroadcastResult(null);
 
-      if (broadcastTarget === "all") {
-        // document เดียว userId: "all" — ทุก role subscribe
-        notifications.push({
-          userId: "all",
-          title: broadcastTitle,
-          message: broadcastMessage,
+    try {
+      const results = { inAppSent: 0, pushSent: 0, pushFailed: 0 };
+      const promises = [];
+
+      // In-App: เขียน notifications ลง Firestore
+      if (deliveryInApp) {
+        const inAppPromise = addDoc(collection(db, "notifications"), {
+          userId: broadcastTarget, // "all" | "staff" | "admin"
+          title: broadcastTitle.trim(),
+          message: broadcastMessage.trim(),
           type: "broadcast",
           read: false,
           timestamp: new Date(),
           sentBy: user.email,
+        }).then(() => {
+          results.inAppSent = broadcastTarget === "all" ? userCounts.total
+            : broadcastTarget === "staff" ? userCounts.staff : userCounts.admin;
         });
-      } else if (broadcastTarget === "staff") {
-        notifications.push({
-          userId: "staff",
-          title: broadcastTitle,
-          message: broadcastMessage,
-          type: "broadcast",
-          read: false,
-          timestamp: new Date(),
-          sentBy: user.email,
-        });
-      } else if (broadcastTarget === "admin") {
-        notifications.push({
-          userId: "admin",
-          title: broadcastTitle,
-          message: broadcastMessage,
-          type: "broadcast",
-          read: false,
-          timestamp: new Date(),
-          sentBy: user.email,
-        });
+        promises.push(inAppPromise);
       }
 
-      // ส่งทั้งหมด
-      await Promise.all(
-        notifications.map((notif) =>
-          addDoc(collection(db, "notifications"), notif),
-        ),
-      );
+      // Push: ส่งผ่าน backend API
+      if (deliveryPush) {
+        const pushPromise = (async () => {
+          const currentUser = auth.currentUser;
+          if (!currentUser) throw new Error("ไม่ได้ล็อกอิน");
+          const idToken = await currentUser.getIdToken();
+          const backendBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").replace(/\/api\/?$/, "");
+          const res = await fetch(`${backendBase}/api/notify/broadcast`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              title: broadcastTitle.trim(),
+              body: broadcastMessage.trim(),
+              data: { target: broadcastTarget },
+            }),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || "Push failed");
+          }
+          const data = await res.json();
+          results.pushSent = data.sentCount || 0;
+          results.pushFailed = data.failedCount || 0;
+        })();
+        promises.push(pushPromise);
+      }
 
+      const settled = await Promise.allSettled(promises);
+
+      // รวบรวม errors จากทุก channel
+      const errors = settled
+        .filter((r) => r.status === "rejected")
+        .map((r) => {
+          const e = r.reason;
+          return e?.message || (typeof e === "string" ? e : JSON.stringify(e)) || "ส่งไม่สำเร็จ";
+        });
+
+      if (errors.length > 0 && settled.every((r) => r.status === "rejected")) {
+        // ทุก channel ล้มเหลว
+        throw new Error(errors.join(" | "));
+      }
+
+      setBroadcastResult({ success: true, ...results, partialError: errors[0] || null });
       setMessage({
         type: "success",
-        text: `ส่งประกาศถึง ${broadcastTarget === "all" ? "ทุกคน" : broadcastTarget === "staff" ? "พนักงาน" : "แอดมิน"} สำเร็จ`,
+        text: `ส่งประกาศสำเร็จ${results.inAppSent ? ` (In-App: ${results.inAppSent} คน)` : ""}${results.pushSent ? ` (Push: ${results.pushSent} คน)` : ""}`,
       });
 
       // Clear form
       setBroadcastTitle("");
       setBroadcastMessage("");
-      setBroadcastTarget("all");
     } catch (err) {
-      console.error("Error sending broadcast:", err);
+      const errMsg = err?.message || (typeof err === "string" ? err : JSON.stringify(err)) || "ส่งไม่สำเร็จ";
+      console.error("[Broadcast] Error:", errMsg, err);
+      setBroadcastResult({ success: false, error: errMsg });
       setMessage({
         type: "error",
-        text: "ไม่สามารถส่งประกาศได้: " + err.message,
+        text: "ไม่สามารถส่งประกาศได้: " + errMsg,
       });
     } finally {
       setSendingBroadcast(false);
@@ -623,7 +679,7 @@ export default function SystemManagementPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-2 rounded-2xl bg-slate-100 p-2">
+      <div className="mb-6 flex gap-2 rounded-2xl bg-slate-100 p-2 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("exports")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
@@ -672,7 +728,7 @@ export default function SystemManagementPage() {
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <User size={18} />
+              <Megaphone size={18} />
               ประกาศ
             </button>
             <button
@@ -1002,128 +1058,317 @@ export default function SystemManagementPage() {
         </div>
       )}
 
-      {/* Broadcast Tab - Superadmin only */}
-      {activeTab === "broadcast" && isSuperAdmin && (
-        <div className="apple-panel p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-semibold">ส่งประกาศ</h2>
-              <p className="text-sm text-slate-600 mt-1">
-                ส่งการแจ้งเตือนไปยังพนักงานหรือแอดมินทั้งหมด
+      {/* Broadcast Tab - Superadmin only — Unified Broadcast Center v2 */}
+      {activeTab === "broadcast" && isSuperAdmin && (() => {
+        const canSend =
+          broadcastTitle.trim().length > 0 &&
+          broadcastMessage.trim().length > 0 &&
+          (deliveryInApp || deliveryPush);
+        const recipientCount =
+          broadcastTarget === "all" ? userCounts.total
+          : broadcastTarget === "staff" ? userCounts.staff
+          : userCounts.admin;
+
+        const deliveryCards = [
+          {
+            id: "inApp",
+            state: deliveryInApp,
+            toggle: () => !sendingBroadcast && setDeliveryInApp(!deliveryInApp),
+            icon: Bell,
+            iconColor: "bg-blue-500",
+            title: "In-App",
+            subtitle: "Notification Bell",
+            desc: "ผู้ใช้เห็นเมื่อเปิดแอป หรือมีไอคอนแจ้งเตือน",
+          },
+          {
+            id: "push",
+            state: deliveryPush,
+            toggle: () => !sendingBroadcast && setDeliveryPush(!deliveryPush),
+            icon: Smartphone,
+            iconColor: "bg-violet-500",
+            title: "Push Mobile",
+            subtitle: "ถึงมือถือแม้ปิดแอป",
+            desc: "ต้องมี FCM Token (ผู้ใช้เปิด Push ในเบราว์เซอร์)",
+          },
+        ];
+
+        return (
+          <div>
+            {/* Page Header */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-slate-950 flex items-center gap-2">
+                <Megaphone size={20} />
+                ส่งประกาศ
+                <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs rounded-full">Superadmin</span>
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                เขียนข้อความครั้งเดียว ส่งได้ทั้ง In-App และ Push Mobile
               </p>
             </div>
-          </div>
 
-          <div className="bg-slate-50 rounded-xl p-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  ส่งถึง
-                </label>
-                <div className="flex gap-3">
-                  <label className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-500 transition">
+            {/* Responsive Grid: 1-col mobile/iPad, 2-col desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+
+              {/* LEFT: Composer */}
+              <div className="space-y-5">
+
+                {/* Message Composer Card */}
+                <div className="apple-panel p-4 md:p-6 space-y-4">
+                  <div>
+                    <label htmlFor="bc-title" className="apple-label">
+                      หัวข้อประกาศ *
+                    </label>
                     <input
-                      type="radio"
-                      name="broadcastTarget"
-                      value="all"
-                      checked={broadcastTarget === "all"}
-                      onChange={(e) => setBroadcastTarget(e.target.value)}
-                      className="text-indigo-600"
+                      id="bc-title"
+                      type="text"
+                      className="apple-input"
+                      placeholder="เช่น แจ้งอัพเดตระบบ, ปิดปรับปรุงชั่วคราว"
+                      maxLength={100}
+                      value={broadcastTitle}
+                      onChange={(e) => setBroadcastTitle(e.target.value)}
+                      disabled={sendingBroadcast}
+                      aria-required="true"
                     />
-                    <span className="text-sm">ทุกคน</span>
-                  </label>
-                  <label className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-500 transition">
-                    <input
-                      type="radio"
-                      name="broadcastTarget"
-                      value="staff"
-                      checked={broadcastTarget === "staff"}
-                      onChange={(e) => setBroadcastTarget(e.target.value)}
-                      className="text-indigo-600"
+                  </div>
+                  <div>
+                    <label htmlFor="bc-body" className="apple-label">
+                      ข้อความ *
+                    </label>
+                    <textarea
+                      id="bc-body"
+                      className="apple-input resize-none"
+                      placeholder="พิมพ์รายละเอียดประกาศที่นี่..."
+                      rows={4}
+                      maxLength={500}
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      disabled={sendingBroadcast}
+                      aria-required="true"
                     />
-                    <span className="text-sm">พนักงาน (Staff)</span>
-                  </label>
-                  <label className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-indigo-500 transition">
-                    <input
-                      type="radio"
-                      name="broadcastTarget"
-                      value="admin"
-                      checked={broadcastTarget === "admin"}
-                      onChange={(e) => setBroadcastTarget(e.target.value)}
-                      className="text-indigo-600"
-                    />
-                    <span className="text-sm">แอดมิน (Admin)</span>
-                  </label>
+                    <p className="text-right text-xs text-slate-400 mt-1">
+                      {broadcastMessage.length}/500
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  หัวข้อ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={broadcastTitle}
-                  onChange={(e) => setBroadcastTitle(e.target.value)}
-                  placeholder="เช่น แจ้งการอัพเดตระบบ"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+                {/* Delivery Option Cards */}
+                <div>
+                  <p className="apple-label mb-3">ส่งไปที่ไหน</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {deliveryCards.map(({ id, state, toggle, icon: Icon, iconColor, title, subtitle, desc }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={toggle}
+                        disabled={sendingBroadcast}
+                        className={`
+                          w-full text-left p-4 rounded-2xl border-2
+                          transition-all duration-200 active:scale-[0.98]
+                          ${state
+                            ? "border-slate-900 bg-slate-900/[0.03]"
+                            : "border-slate-200 bg-white/60 hover:border-slate-300"
+                          }
+                        `}
+                        aria-pressed={state}
+                        aria-label={`${state ? "ปิด" : "เปิด"} การส่งแบบ ${title}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white transition-colors duration-200 ${state ? iconColor : "bg-slate-200"}`}>
+                              <Icon size={20} />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-slate-900 text-[15px] leading-tight">{title}</p>
+                              <p className="text-slate-500 text-xs mt-0.5">{subtitle}</p>
+                            </div>
+                          </div>
+                          {/* iOS Toggle — visual only */}
+                          <div
+                            className={`relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200 ${state ? "bg-emerald-500" : "bg-slate-200"}`}
+                            aria-hidden="true"
+                          >
+                            <span className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] bg-white rounded-full shadow-sm transition-transform duration-200 ${state ? "translate-x-[20px]" : "translate-x-0"}`} />
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-3 ml-[52px]">{desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  ข้อความ <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={broadcastMessage}
-                  onChange={(e) => setBroadcastMessage(e.target.value)}
-                  placeholder="รายละเอียดประกาศ..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                />
-              </div>
+                {/* Target Audience */}
+                <div>
+                  <p className="apple-label mb-3">ส่งถึงใคร</p>
+                  <div className="flex rounded-xl bg-slate-100 p-1 gap-1" role="radiogroup" aria-label="กลุ่มเป้าหมาย">
+                    {[
+                      { value: "all",   label: "ทุกคน",   count: userCounts.total },
+                      { value: "staff", label: "พนักงาน", count: userCounts.staff },
+                      { value: "admin", label: "แอดมิน",  count: userCounts.admin },
+                    ].map(({ value, label, count }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => !sendingBroadcast && setBroadcastTarget(value)}
+                        className={`
+                          flex-1 flex items-center justify-center gap-1.5
+                          py-2 px-2 rounded-lg text-sm font-medium
+                          transition-all duration-150
+                          ${broadcastTarget === value
+                            ? "bg-white text-slate-950 shadow-sm"
+                            : "text-slate-500 hover:text-slate-700"
+                          }
+                        `}
+                        aria-pressed={broadcastTarget === value}
+                      >
+                        <span>{label}</span>
+                        {count > 0 && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                            broadcastTarget === value
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-slate-200/60 text-slate-400"
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="pt-4 border-t border-slate-200">
+                {/* Validation Hint — shown before result */}
+                {!canSend && (broadcastTitle || broadcastMessage) && (
+                  <p className="text-xs text-slate-400 text-center">
+                    {!broadcastTitle.trim() ? "กรุณากรอกหัวข้อ"
+                      : !broadcastMessage.trim() ? "กรุณากรอกข้อความ"
+                      : "เลือกช่องทางส่งอย่างน้อย 1 ช่องทาง"}
+                  </p>
+                )}
+
+                {/* Result Feedback */}
+                {broadcastResult?.success && (
+                  <div
+                    className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    <CheckCircle size={20} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-semibold text-emerald-800">ส่งประกาศสำเร็จ</p>
+                      <div className="text-emerald-700 mt-1 space-y-0.5 text-xs">
+                        {broadcastResult.inAppSent != null && (
+                          <p>In-App: {broadcastResult.inAppSent} คน</p>
+                        )}
+                        {broadcastResult.pushSent != null && (
+                          <p>Push: {broadcastResult.pushSent} คน{broadcastResult.pushFailed > 0 && ` (ล้มเหลว ${broadcastResult.pushFailed})`}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {broadcastResult?.error && (
+                  <div
+                    className="rounded-2xl bg-red-50 border border-red-200 p-4 flex items-start gap-3"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    <AlertCircle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-semibold text-red-800">ส่งไม่สำเร็จ</p>
+                      <p className="text-red-600 mt-1 text-xs">{broadcastResult.error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Validation Hint */}
+                {!canSend && (broadcastTitle || broadcastMessage) && (
+                  <p className="text-xs text-slate-400 text-center">
+                    {!broadcastTitle.trim() ? "กรุณากรอกหัวข้อ"
+                      : !broadcastMessage.trim() ? "กรุณากรอกข้อความ"
+                      : "เลือกช่องทางส่งอย่างน้อย 1 ช่องทาง"}
+                  </p>
+                )}
+
+                {/* Send Button */}
+                <div className="flex md:justify-center">
                 <button
                   onClick={sendBroadcastNotification}
-                  disabled={
-                    sendingBroadcast ||
-                    !broadcastTitle.trim() ||
-                    !broadcastMessage.trim()
-                  }
-                  className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!canSend || sendingBroadcast}
+                  aria-disabled={!canSend}
+                  className="apple-button w-full md:w-auto md:min-w-[220px] flex items-center justify-center gap-2"
                 >
                   {sendingBroadcast ? (
                     <>
-                      <RefreshCw size={18} className="animate-spin" />
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                       กำลังส่ง...
                     </>
                   ) : (
                     <>
-                      <User size={18} />
-                      ส่งประกาศ
+                      <Send size={18} />
+                      {canSend ? `ส่งถึง ${recipientCount} คน` : "เลือกช่องทางก่อน"}
                     </>
                   )}
                 </button>
+                </div>
               </div>
+
+              {/* RIGHT: Preview Panel — Desktop only (lg+) */}
+              <div className="hidden lg:block space-y-4">
+                <p className="apple-label">ตัวอย่างที่ผู้ใช้จะเห็น</p>
+
+                {/* In-App Preview */}
+                {deliveryInApp ? (
+                  <div className="apple-panel p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <Bell size={14} className="text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-500">Notification Bell</span>
+                      <span className="text-xs text-slate-300 ml-auto">เมื่อกี้</span>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 leading-snug">
+                      {broadcastTitle || <span className="text-slate-300 font-normal">หัวข้อ...</span>}
+                    </p>
+                    <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                      {broadcastMessage || <span className="text-slate-300">ข้อความ...</span>}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border-2 border-dashed border-slate-200 p-4 text-center">
+                    <Bell size={20} className="text-slate-300 mx-auto mb-1" />
+                    <p className="text-xs text-slate-300">เปิด In-App เพื่อดูตัวอย่าง</p>
+                  </div>
+                )}
+
+                {/* Push Preview */}
+                {deliveryPush ? (
+                  <div className="rounded-2xl bg-slate-900 p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Smartphone size={14} className="text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-white/50">Push Notification</span>
+                      <span className="text-xs text-white/30 ml-auto">ตอนนี้</span>
+                    </div>
+                    <p className="text-sm font-semibold text-white leading-snug">
+                      {broadcastTitle || <span className="text-white/30 font-normal">หัวข้อ...</span>}
+                    </p>
+                    <p className="text-xs text-white/60 line-clamp-3 leading-relaxed">
+                      {broadcastMessage || <span className="text-white/30">ข้อความ...</span>}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border-2 border-dashed border-slate-200 p-4 text-center">
+                    <Smartphone size={20} className="text-slate-300 mx-auto mb-1" />
+                    <p className="text-xs text-slate-300">เปิด Push เพื่อดูตัวอย่าง</p>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
-
-          <div className="mt-6 bg-amber-50 rounded-xl p-4">
-            <h3 className="text-sm font-medium text-amber-900 mb-2">
-              💡 คำแนะนำ
-            </h3>
-            <ul className="text-sm text-amber-800 space-y-1 list-disc list-inside">
-              <li>การประกาศจะแสดงใน Notification Bell ของผู้ใช้ทันที</li>
-              <li>ผู้ใช้สามารถลบการแจ้งเตือนได้หลังจากอ่านแล้ว</li>
-              <li>
-                ใช้สำหรับแจ้งข่าวสารสำคัญ เช่น การอัพเดตระบบ
-                หรือการแจ้งเตือนทั่วไป
-              </li>
-            </ul>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Templates Tab */}
       {activeTab === "templates" && (

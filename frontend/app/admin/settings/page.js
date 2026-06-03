@@ -18,6 +18,8 @@ import {
   Trash2,
   Shield,
   ChevronRight,
+  Smartphone,
+  Radio,
 } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
@@ -44,8 +46,13 @@ const DEFAULT_SETTINGS = {
   // Notification Settings
   enableDeadlineReminder: true,
   reminderTime: "22:00",
+  reminderDays: ["mon", "tue", "wed", "thu", "fri"],
   enableSlackNotifications: false,
   slackWebhookUrl: "",
+
+  // Push Notification Settings
+  enablePushNotifications: true,
+  pushReminderTime: "21:00",
 
   // Backup Settings
   backupFrequency: "daily", // daily, weekly, monthly
@@ -431,11 +438,120 @@ export default function SettingsPage() {
 
               {/* Notifications */}
               {activeTab === "notifications" && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <h2 className="text-xl font-semibold text-slate-950 flex items-center gap-2">
                     <Bell size={20} />
                     การแจ้งเตือน
                   </h2>
+
+                  {/* Push Notifications Section */}
+                  <div className="space-y-4 border-b border-slate-100 pb-6">
+                    <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                      <Smartphone size={18} />
+                      Push Notification (Background)
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">ใหม่</span>
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      ส่งแจ้งเตือนไปยังมือถือ Staff แม้ปิดแอป (ผ่าน Render + Cron-job.org)
+                    </p>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="enablePushNotifications"
+                        className="w-5 h-5 rounded border-slate-300"
+                        checked={settings.enablePushNotifications}
+                        onChange={(e) =>
+                          updateSetting("enablePushNotifications", e.target.checked)
+                        }
+                      />
+                      <label
+                        htmlFor="enablePushNotifications"
+                        className="text-sm text-slate-700"
+                      >
+                        เปิดใช้งาน Push Notification
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="apple-label">
+                          เวลาแจ้งเตือนรายวัน
+                        </label>
+                        <input
+                          type="time"
+                          className="apple-input"
+                          value={settings.pushReminderTime}
+                          onChange={(e) =>
+                            updateSetting("pushReminderTime", e.target.value)
+                          }
+                          disabled={!settings.enablePushNotifications}
+                        />
+                        <p className="text-xs text-slate-400 mt-1">
+                          ตั้งค่า Cron-job.org ให้ตรงกับเวลานี้
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Reminder Days */}
+                    <div>
+                      <label className="apple-label mb-2">
+                        วันที่ส่งแจ้งเตือน
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { key: "mon", label: "จ" },
+                          { key: "tue", label: "อ" },
+                          { key: "wed", label: "พ" },
+                          { key: "thu", label: "พฤ" },
+                          { key: "fri", label: "ศ" },
+                          { key: "sat", label: "ส" },
+                          { key: "sun", label: "อา" },
+                        ].map(({ key, label }) => {
+                          const isSelected = settings.reminderDays?.includes(key);
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => {
+                                const current = settings.reminderDays || [];
+                                const updated = isSelected
+                                  ? current.filter((d) => d !== key)
+                                  : [...current, key];
+                                updateSetting("reminderDays", updated);
+                              }}
+                              disabled={!settings.enablePushNotifications}
+                              className={`w-10 h-10 rounded-xl text-sm font-medium transition ${
+                                isSelected
+                                  ? "bg-slate-950 text-white"
+                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                              } ${!settings.enablePushNotifications ? "opacity-50 cursor-not-allowed" : ""}`}
+                              aria-pressed={isSelected}
+                              aria-label={`วัน${label}${isSelected ? " (เลือก)" : ""}`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-2">
+                        เลือกวันที่ต้องการส่งแจ้งเตือนอัตโนมัติ (ส่งเฉพาะคนที่ยังไม่ได้ลงงาน)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Broadcast — ย้ายไปที่หน้า จัดการระบบ > ประกาศ (Unified Broadcast Center) */}
+                  {isSuperAdmin && (
+                    <div className="space-y-3 border-b border-slate-100 pb-6">
+                      <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                        <Radio size={18} className="text-violet-600" />
+                        ส่งข้อความ Broadcast
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        ฟีเจอร์ส่งประกาศย้ายไปที่ <strong>จัดการระบบ → ประกาศ</strong> แล้ว รองรับทั้ง In-App และ Push Notification
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-4 border-b border-slate-100 pb-6">
                     <div className="flex items-center gap-3">
@@ -455,7 +571,7 @@ export default function SettingsPage() {
                         htmlFor="enableReminder"
                         className="text-sm text-slate-700"
                       >
-                        เปิดใช้งานการแจ้งเตือนใกล้ 23:59
+                        เปิดใช้งานการแจ้งเตือนใกล้ 23:59 (In-app)
                       </label>
                     </div>
 
@@ -741,3 +857,4 @@ export default function SettingsPage() {
     </AppShell>
   );
 }
+

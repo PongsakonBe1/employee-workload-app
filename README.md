@@ -4,8 +4,8 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.0.2  
-📅 **Last Updated:** 2026-06-02  
+📦 **Current Version:** v2.1.0  
+📅 **Last Updated:** 2026-06-03  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
 
@@ -95,6 +95,7 @@
 | Custom Date Filter | Filter ตามช่วงวันที่ พร้อม quota alert (>90 วัน) | v1.6.0 |
 | Export CSV | Export ข้อมูลทุกคนกรองตามวันที่/พนักงาน | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header และ CSS @media print ซ่อน UI ที่ไม่จำเป็น | v2.0.0 |
+| Push Notification Settings | ตั้งค่าวัน/เวลาส่ง Push Reminder (Render + Cron-job.org), เปิด/ปิด toggle, เลือกวันที่ส่ง (จ–อา) | v2.1.0 |
 | จัดการ Users | อนุมัติ/ปฏิเสธคำขอสมัคร, เปิด/ปิดใช้งาน | v1.0.0 |
 | ดู System Logs | Audit log การใช้งานระบบ | v1.0.0 |
 
@@ -104,6 +105,7 @@
 |---------|-----------|----------------|
 | แต่งตั้ง Admin → Superadmin | พร้อม confirm modal | v1.6.0 |
 | Broadcast Notification | ส่งประกาศถึง all/staff/admin/superadmin | v1.0.0 |
+| Broadcast Push Notification | ส่ง Push Notification ถึงทุกคนผ่าน Backend (Render) พร้อม UI ใน Settings — ระบุ Title/Body, แสดงผลจำนวนส่งสำเร็จ/ล้มเหลว | v2.1.0 |
 | Bulk Import | นำเข้า worklogs จาก tab-separated text | v1.1.0 |
 | อนุมัติ Admin Promotion | อนุมัติ/ปฏิเสธคำขอเลื่อนตำแหน่งจาก Admin | v1.6.0 |
 | ดู System Logs ทั้งหมด | Audit log ครบทุก action | v1.0.0 |
@@ -1222,6 +1224,7 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.1.0** | 2026-06-03 | **FEAT: Background Push Notification**: เพิ่มระบบส่ง Push Notification ผ่าน Backend (Render + Cron-job.org) — daily reminder แจ้งเตือนพนักงานที่ยังไม่ลงงาน + broadcast push สำหรับ Superadmin; **Backend**: เพิ่ม Express server (`backend/`) พร้อม endpoints `/api/notify/daily-reminder` (CRON_SECRET auth + `crypto.timingSafeEqual`), `/api/notify/broadcast` (Firebase ID Token + superadmin role check), `/api/notify/health`; **FCM Service**: `backend/src/services/fcm.js` ใช้ firebase-admin SDK ส่ง multicast push; **Frontend — Settings UI**: เพิ่มหน้าตั้งค่า Push Notification ใน Admin Settings — toggle เปิด/ปิด, เลือกเวลาส่ง `pushReminderTime`, เลือกวัน `reminderDays` (จ–อา) พร้อม `aria-pressed` accessibility; **Frontend — Broadcast UI**: Superadmin เห็น Broadcast section ใน Settings — กรอก Title/Body แล้วส่ง push ถึงทุกคน แสดงผล sent/failed count; **Security — CRON_SECRET guard (FIX-4)**: เพิ่ม production guard ใน `backend/src/config/env.js` — throw error ถ้าไม่ตั้ง `CRON_SECRET` env var ใน production ป้องกันการใช้ค่า default; **Firestore Rules**: อนุญาต user update `fcmToken` field อย่างจำกัด; **QA Sign-off**: Snyk SAST ผ่าน (0 actionable issues ใน production code), Playwright E2E 32 tests — 22 passed, 10 skipped (รอ RENDER_URL), 0 failed |
 | **v2.0.2** | 2026-06-02 | **Firestore Rules — `isValidWorkLogUpdate` fix**: แก้ไข helper function ที่บังคับตรวจ `date` และ `time` ทุกครั้ง ทำให้ staff ที่ส่งเฉพาะฟิลด์ที่แก้ไข (partial update) ถูก Firestore ปฏิเสธด้วย `permission-denied` — เปลี่ยนเป็น optional check ด้วย `hasAny()` ตรวจเฉพาะฟิลด์ที่ส่งมาจริง |
 | **v2.0.1** | 2026-06-02 | **Firestore Rules — `isSameDay` fix**: แก้การเรียก `.format()` บน Timestamp ที่ไม่รองรับใน Firestore Rules — เปลี่ยนเป็น manual zero-pad ด้วย `.year()/.month()/.day()`; **QuickLog modal UI**: ปรับ UI ของ modal ใน `QuickLogButtons.js`; **Audit Logs — Superadmin access**: แก้หน้า `audit-logs/page.js` ที่จำกัดเฉพาะ `admin` ให้รองรับ `superadmin` ด้วย — แก้ทั้ง redirect guard, data fetch condition, และ loading fallback; **Audit Logs — details null crash**: แก้ `log.details.toLowerCase()` ที่ crash เมื่อ `details` เป็น `""` หรือ `null` → เพิ่ม `(log.details \|\| "")` |
 | **v2.0.0** | 2026-06-02 | **Security — Firestore Rules (Critical)**: ปิดช่องโหว่ 3 จุด — `pendingUsers` read/delete จำกัดเฉพาะ `isAdmin()`, `notifications create` ล็อคป้องกัน unauthorized write, ลบ `'admin'` ออกจาก self-creation role list; **Security — Auth Guard (Critical)**: แก้ `AppShell.js` ที่ข้ามการ redirect `/admin/*` เมื่อ unauthenticated ทำให้ UI ถูก expose โดยไม่ต้อง login; **Notification Bug Fix**: แก้ broadcast notification ถูกลบพร้อมกันทุก user — เปลี่ยนจาก `deleteDoc` เป็น soft-delete ด้วย `readBy: arrayUnion(uid)` + อัปเดต Firestore rule รองรับ `readBy` field; **FEAT: Print Summary (พิมพ์รายงานประจำเดือน)**: ปุ่มพิมพ์รายงานบน Dashboard (Admin/Superadmin) พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ `@media print` CSS; **UX/Accessibility (WCAG 2.1 AA)**: เพิ่ม `role="status"` บน toast, `role="dialog"` บน custom date modal, `aria-pressed` บน filter buttons, `aria-label` บน icon-only buttons, `role="alert"` บน limit warning; **E2E Tests**: security test suite 11 tests ผ่านทั้งหมด (Playwright) |
