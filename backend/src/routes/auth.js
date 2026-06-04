@@ -7,7 +7,26 @@ import { requireAuth } from "../middleware/auth.js";
 
 export const authRouter = express.Router();
 
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const MAX_LOGIN_ATTEMPTS = 10;
+
+function checkLoginRate(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now - entry.start > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { start: now, count: 1 });
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= MAX_LOGIN_ATTEMPTS;
+}
+
 authRouter.post("/login", async (req, res) => {
+  if (!checkLoginRate(req.ip)) {
+    return res.status(429).json({ message: "Too many login attempts. Try again later." });
+  }
+
   const username = String(req.body.username || "").trim();
   const password = String(req.body.password || "");
 

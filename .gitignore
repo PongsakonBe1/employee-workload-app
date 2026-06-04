@@ -6,9 +6,15 @@ firebase/out
 frontend/out
 .env
 .env.local
+.env.new
 .DS_Store
 coverage
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .windsurfrules
+
+# Firebase service account keys (NEVER commit these)
+**/serviceAccountKey.json
+**/serviceAccountKey*.json
+**/service-account*.json

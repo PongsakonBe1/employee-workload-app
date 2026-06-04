@@ -19,8 +19,13 @@ function localDate(dateText) {
 
 await connectDb();
 
-const staffPasswordHash = await bcrypt.hash("icit1234", 10);
-const adminPasswordHash = await bcrypt.hash("admin1234", 10);
+const staffPassword = process.env.SEED_STAFF_PASSWORD || "icit1234";
+const adminPassword = process.env.SEED_ADMIN_PASSWORD || "admin1234";
+if (process.env.NODE_ENV === "production") {
+  throw new Error("Do not run seed with default passwords in production. Set SEED_STAFF_PASSWORD and SEED_ADMIN_PASSWORD.");
+}
+const staffPasswordHash = await bcrypt.hash(staffPassword, 10);
+const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
 
 await User.updateOne(
   { username: "admin" },

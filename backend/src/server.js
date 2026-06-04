@@ -25,13 +25,14 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (!origin) {
+        // Block no-origin requests in production (curl, scripts, etc.)
+        if (env.nodeEnv === "production") {
+          return callback(new Error("Not allowed by CORS"));
+        }
         return callback(null, true);
       }
-      // Check if origin starts with localhost (any port)
-      if (origin.startsWith("http://localhost:")) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       callback(new Error("Not allowed by CORS"));
