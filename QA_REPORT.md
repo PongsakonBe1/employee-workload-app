@@ -513,4 +513,107 @@ const prediction   = useMemo(() => predictNextPeak(allWorklogs), [allWorklogs]);
 
 ---
 
-*QA Report v6 — Cascade QA Agent · 4 มิ.ย. 2569 · SP-7 Seasonal Pattern Analysis QA*
+## 12. SR-7 — Staff Radar Chart (Phase 3 v2.3.0)
+
+**จาก:** [SE] SR-4 + SR-5 + SR-6 Handover → [QA] SR-7 → [Doc] SR-8  
+**วันที่:** 4 มิ.ย. 2569  
+**Branch:** `feature/dashboard-analytics-v230`
+
+### 12.1 Files Under Test
+
+| ไฟล์ | บทบาท | บรรทัด |
+|------|-------|--------|
+| `frontend/components/StaffRadarChart.js` | Recharts RadarChart, single/compare mode | 312 |
+| `frontend/app/admin/staff-analytics/page.js` | Admin dashboard, rankings, CSV export | — |
+| `frontend/lib/staffMetrics.js` | 6 metrics calculation (SR-2) | 298 |
+| `frontend/app/admin/page.js` | Admin menu link | — |
+
+### 12.2 Test Cases Review — 6 Cases (SE_HANDOVER_SR.md)
+
+| Test | รายละเอียด | Implementation | ผล Review |
+|------|-----------|----------------|----------|
+| **TEST-1** | Single mode: Radar Chart + ScoreBadge | `StaffRadarChart.js:116-149` | ✅ `ScoreBadge` component |
+| **TEST-2** | Compare mode: 3 staff + Legend | `StaffRadarChart.js:57-67` | ✅ `staffList` prop |
+| **TEST-3** | SR-6 Benchmark: dashed slate line | `StaffRadarChart.js:41, 50-53` | ✅ `showBenchmark=true` |
+| **TEST-4** | CSV Export: 8 columns | `page.js:CSV export` | ✅ Rankings table export |
+| **TEST-5** | Empty state: no crash | `StaffRadarChart.js:151-158` | ✅ `ChartLoading` + empty |
+| **TEST-6** | New employee: worklogs < 3 warning | `StaffRadarChart.js:45` | ✅ `newEmployee` prop |
+
+### 12.3 StaffRadarChart.js Components (SR-4)
+
+| Component | Export | Props | Feature |
+|-----------|--------|-------|---------|
+| `StaffRadarChart` | default | `data, staffList, staffName, color, showBenchmark, benchmarkData` | Main RadarChart |
+| `ScoreBadge` | named | `data, staffName, color` | Overall score + จุดแข็ง/พัฒนาได้ |
+| `metricsToChartData` | named | `metricsObj, benchmarkObj?` | Transform to Recharts array |
+| `AXES` | const | — | 6 axes definition |
+| `SLOT_COLORS` | const | — | `["#6366f1", "#f59e0b", "#10b981"]` |
+
+**AXES (6 dimensions clockwise):**
+1. Volume (ปริมาณงาน)
+2. Versatility (ความหลากหลาย)
+3. Consistency (ความสม่ำเสมอ)
+4. Peak Handling (จัดการช่วงพีค)
+5. Documentation (เอกสารละเอียด)
+6. Combo Usage (ใช้ combo)
+
+### 12.4 Staff Metrics (SR-2)
+
+| Function | File | Metric | Range |
+|----------|------|--------|-------|
+| `calculateVolume()` | staffMetrics.js | จำนวน worklogs | 0-100 |
+| `calculateVersatility()` | staffMetrics.js | จำนวน minorTask ไม่ซ้ำ | 0-100 |
+| `calculateConsistency()` | staffMetrics.js | CV-based (ค่าต่าง = ดี) | 0-100 |
+| `calculatePeakHandling()` | staffMetrics.js | ช่วง 14-17 น. | 0-100 |
+| `calculateDocumentation()` | staffMetrics.js | comment ≥ 20 chars | 0-100 |
+| `calculateComboUsage()` | staffMetrics.js | combo click rate | 0-100 |
+| `getTeamAverage()` | staffMetrics.js | Average all staff metrics | Object |
+
+### 12.5 Admin Staff Analytics Page (SR-5)
+
+**Features:**
+- ✅ Admin guard (redirect non-admin)
+- ✅ Time Range: 1M / 3M / 6M / 1Y
+- ✅ Rankings table: sortable per metric + avg
+- ✅ Staff search
+- ✅ Compare mode toggle (max 3)
+- ✅ CSV export (8 columns)
+- ✅ `ScoreBadge` side panel (single mode)
+
+**Route:** `/admin/staff-analytics`
+
+### 12.6 Playwright Tests Created
+
+**ไฟล์:** `frontend/tests/staff-radar-sr7.spec.js` (170 lines, 8 tests)
+
+- TEST-1: Single mode — Radar Chart + ScoreBadge
+- TEST-2: Compare mode — 3 staff comparison
+- TEST-3: SR-6 Benchmark — dashed slate line
+- TEST-4: CSV Export — download button
+- TEST-5: Empty state — no crash
+- TEST-6: New employee warning — < 3 worklogs
+- Admin guard test
+- staffMetrics functions test
+
+### 12.7 Security Checklist
+
+| รายการ | สถานะ |
+|--------|-------|
+| Admin guard | ✅ บน `/admin/staff-analytics` |
+| No privilege escalation | ✅ Staff ถูก redirect |
+| Data visibility | ✅ เห็นเฉพาะ user list + metrics |
+
+### 12.8 Handover to [Doc] — SR-8
+
+**งานต่อไป:**
+- สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`:
+  - วิธีอ่าน Radar Chart 6 มิติ
+  - วิธีใช้ Compare mode วางแผน staffing
+  - ตาราง metric definition (ดู `STAFF_METRICS_SPEC.md`)
+  - Case study: พนักงานที่ Volume สูงแต่ Consistency ต่ำ
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 12
+
+---
+
+*QA Report v7 — Cascade QA Agent · 4 มิ.ย. 2569 · SR-7 Staff Radar Chart QA*
