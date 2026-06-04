@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
       }));
       setRoleChangeRequests(requests);
     } catch (err) {
-      // ไม่ throw error เพื่อให้โหลดส่วนอื่นได้
+      console.error("[AdminUsers] Error loading role change requests:", err);
     }
   }
 
@@ -256,9 +256,7 @@ export default function AdminUsersPage() {
       }));
       setPendingUsers(pendingData);
     } catch (err) {
-      console.error("[AdminUsers] Error loading pending users:", err);
-      console.error("[AdminUsers] Error code:", err.code);
-      // ไม่ throw error เพื่อให้โหลดส่วนอื่นได้
+      console.error("[AdminUsers] Error loading pending users:", err.code, err.message);
     }
   }
 

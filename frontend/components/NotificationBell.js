@@ -69,7 +69,8 @@ export function NotificationBell() {
             fcmUpdatedAt: new Date(),
           });
           setFcmTokenStatus("saved");
-        } catch {
+        } catch (err) {
+          console.error("[FCM] Error saving token:", err.message);
           setFcmTokenStatus("error");
         }
       }
@@ -97,7 +98,9 @@ export function NotificationBell() {
         if (typeof data.enableDeadlineReminder === "boolean")
           setReminderEnabled(data.enableDeadlineReminder);
       }
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn("[Notification] Error loading reminder settings:", err.message);
+    });
   }, [user]);
 
   useEffect(() => {
@@ -257,6 +260,8 @@ export function NotificationBell() {
             fireOsNotification(title, body);
             showAlertMessage(title);
           }
+        }).catch((err) => {
+          console.error("[Notification] Error checking today's worklogs:", err.message);
         });
       }
     };
@@ -290,7 +295,8 @@ export function NotificationBell() {
         } else {
           setFcmTokenStatus("error");
         }
-      } catch {
+      } catch (err) {
+        console.error("[FCM] Error requesting permission:", err.message);
         setFcmTokenStatus("error");
       }
     }
