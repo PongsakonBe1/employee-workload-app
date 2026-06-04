@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ShieldCheck, Chrome } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
+import { isAdminRole } from "../../lib/authUtils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        if (user.role === "admin" || user.role === "superadmin") {
+        if (isAdminRole(user)) {
           router.replace("/dashboard");
         } else {
           router.replace("/worklogs/new");

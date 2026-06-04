@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
+import { isAdminRole } from "../lib/authUtils";
 
 export default function Home() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function Home() {
       if (!user) {
         console.log("[Home] No user, redirect to /login");
         router.push("/login");
-      } else if (user.role === "admin" || user.role === "superadmin") {
+      } else if (isAdminRole(user)) {
         console.log("[Home] Admin user, redirect to /dashboard");
         router.push("/dashboard");
       } else {

@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { db, getFCMToken, onFCMMessage } from "../lib/firebase";
 import { useAuth } from "./AuthProvider";
+import { isAdminRole } from "../lib/authUtils";
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -202,7 +203,7 @@ export function NotificationBell() {
     }
 
     // Query 4: notifications ส่งถึง admin/superadmin
-    if (user.role === "admin" || user.role === "superadmin") {
+    if (isAdminRole(user)) {
       try {
         const q4 = query(
           collection(db, "notifications"),

@@ -17,6 +17,8 @@ import {
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { db } from "../../../lib/firebase";
+import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
+import { useLoadingTimeout } from "../../../hooks/useLoadingTimeout";
 import {
   collection,
   getDocs,
@@ -45,8 +47,8 @@ export default function AdminUsersPage() {
   const [promoteModal, setPromoteModal] = useState(null); // { uid, name } of target user
 
   // Redirect non-admin users (allow admin and superadmin)
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
-  const isSuperAdmin = user?.role === "superadmin";
+  const isAdmin = isAdminRole(user);
+  const isSuperAdmin = isSuperAdminRole(user);
 
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function AdminUsersPage() {
   }, [user, isAdmin, loading, router]);
 
   useEffect(() => {
-    if (user?.role === "admin" || user?.role === "superadmin") {
+    if (isAdminRole(user)) {
       loadUsers();
       loadPendingUsers();
       if (user?.role === "superadmin") {
@@ -71,15 +73,7 @@ export default function AdminUsersPage() {
   }, [user]);
 
   // Force stop loading ถ้าเกิน 5 วินาที (กัน loading ค้าง)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        console.log("[AdminUsers] Force stopping loading after timeout");
-        setLoading(false);
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [loading]);
+  useLoadingTimeout(loading, setLoading);
 
   async function loadRoleChangeRequests() {
     try {
