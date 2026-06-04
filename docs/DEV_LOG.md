@@ -46,6 +46,21 @@
 
 ---
 
+## [2026-06-04 21:36] - [SE] Software Engineer — EH-7 + EH-6 Equipment Health Dashboard
+
+**Task:** Implement EH-7 (EquipmentCharts) + EH-6 (admin/equipment-health page)
+
+**Files Modified:**
+- `frontend/components/EquipmentCharts.js` — ใหม่: EquipmentDamageChart, EquipmentHealthTimeline, DamageCategoryPie
+- `frontend/app/admin/equipment-health/page.js` — ใหม่: full dashboard + filters + CSV export
+- `frontend/app/admin/page.js` — เพิ่ม link สุขภาพอุปกรณ์
+
+**Note to Next Agent:**
+- [QA] EH-8: functional test 7 cases ใน `SE_HANDOVER_EH7_EH6.md` → บันทึกใน `QA_REPORT.md` Section 10
+- [Doc] EH-9: README + `EQUIPMENT_HEALTH.md` หลัง QA pass
+
+---
+
 ## [2026-06-04 21:19] - [SE] Software Engineer — EH-4 EquipmentReturnModal
 
 **Task:** Implement EH-4 ตาม design spec จาก [UX/UI] EH-3
