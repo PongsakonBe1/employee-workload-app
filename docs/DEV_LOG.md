@@ -46,6 +46,22 @@
 
 ---
 
+## [2026-06-04 21:19] - [SE] Software Engineer — EH-4 EquipmentReturnModal
+
+**Task:** Implement EH-4 ตาม design spec จาก [UX/UI] EH-3
+
+**Files Modified:**
+- `frontend/components/EquipmentReturnModal.js` — สร้างใหม่
+- `frontend/components/QuickLogButtons.js` — เพิ่ม `isReturnTemplate()`, state, handler, render
+- `frontend/lib/quickLogTemplates.js` — เพิ่ม `equipmentCondition` + `equipmentNote`
+
+**Note to Next Agent:**
+- [DA] EH-5: backfill script พร้อมให้ทำได้เลย schema: `equipmentCondition: "normal"|"damaged"|"lost"`, `equipmentNote: string`
+- [QA] EH-8: test 5 cases ใน `SE_HANDOVER_EH4.md`
+- [SE] ลำดับต่อไป: EH-7 (EquipmentCharts) → EH-6 (admin/equipment-health page)
+
+---
+
 ## [2026-06-04 14:50] - [SA] System Architect — Firestore Rules Hotfix (BUG-5 follow-up)
 
 **Task:** แก้ Firestore Rules ให้ staff สามารถ edit/delete worklog ของตัวเองในวันเดียวกันได้
