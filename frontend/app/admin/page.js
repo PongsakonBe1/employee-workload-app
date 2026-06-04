@@ -49,6 +49,16 @@ const adminModules = [
     color: "bg-emerald-500",
   },
   {
+    id: "equipment-health",
+    title: "สุขภาพอุปกรณ์",
+    titleEn: "Equipment Health",
+    description: "ติดตามสภาพหูฟัง ปลั๊กไฟ — ชำรุด / สูญหาย รายเดือน",
+    descriptionEn: "Track equipment condition — damaged / lost reports",
+    icon: BarChart3,
+    href: "/admin/equipment-health",
+    color: "bg-amber-600",
+  },
+  {
     id: "stats",
     title: "สถิติรวม",
     titleEn: "Statistics",

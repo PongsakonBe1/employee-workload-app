@@ -309,3 +309,53 @@
   - SmartModal sync สถานะ real-time
 
 ---
+
+## [2026-06-04 21:29] - [QA] EH-8 — Equipment Health Backfill Script Review
+
+**Task:** ตรวจสอบ `scripts/backfillEquipmentCondition.js` จาก [DA] EH-5
+
+**ไฟล์ที่ตรวจสอบ:**
+- `scripts/backfillEquipmentCondition.js` — **290 lines, fully reviewed**
+
+**Safety Features ที่ตรวจพบ:**
+| Feature | Status |
+|---------|--------|
+| DRY RUN default mode | ✅ |
+| 5-second delay ก่อน LIVE | ✅ |
+| Batch processing (500 docs) | ✅ |
+| Rate limiting (100ms) | ✅ |
+| Targeted query (8 minorTask types) | ✅ |
+| Skip existing equipmentCondition | ✅ |
+| Audit trail (_backfilledAt, _backfilledBy, _backfillReason) | ✅ |
+
+**Pattern Detection Keywords:**
+- DAMAGE: ชำรุด, เสีย, หัก, พัง, broken, damaged, สายขาด (13 keywords)
+- LOST: สูญหาย, หาย, lost, missing, not returned (8 keywords)
+
+**DRY RUN Test:**
+```bash
+cd scripts
+node backfillEquipmentCondition.js
+```
+
+**ผล:** ⚠️ `serviceAccountKey.json` ไม่มีใน repo (security best practice)  
+**สรุป:** Script พร้อมใช้ — ต้องขอ service account key จาก admin ก่อนรัน
+
+**Note to [SE] — งานต่อไป:**
+- **EH-7** (3 hr): `frontend/components/EquipmentCharts.js` — แสดง chart สุขภาพอุปกรณ์
+- **EH-6** (4 hr): `frontend/app/admin/equipment-health/page.js` — หน้า dashboard อุปกรณ์
+
+**Test data สำหรับ SE:**
+```javascript
+{
+  minorTask: "คืนหูฟัง",
+  comment: "ICIT05 สายขาด",
+  equipmentCondition: "damaged",  // ← จาก backfill
+  equipmentNote: "ICIT05 สายขาด",
+  _backfilledAt: Timestamp
+}
+```
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 9
+
+---

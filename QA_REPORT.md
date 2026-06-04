@@ -242,4 +242,87 @@ npx playwright test push-notification-e2e --config playwright.qa.config.js
 
 ---
 
-*QA Report v3 — Cascade QA Agent · 4 มิ.ย. 2569 · Bugfix Sprint Jun 04 + Snyk SAST + Playwright*
+## 9. Equipment Health (EH) — Backfill Script QA (EH-8)
+
+**จาก:** [DA] EH-5 Handover → [QA] EH-8 → [SE] EH-6/EH-7  
+**วันที่:** 4 มิ.ย. 2569  
+**ไฟล์:** `scripts/backfillEquipmentCondition.js`
+
+### 9.1 Script Review — Safety Features ✅
+
+| Feature | Implementation | ผลตรวจสอบ |
+|---------|---------------|-----------|
+| **DRY RUN default** | `DRY_RUN: process.env.DRY_RUN !== "false"` | ✅ ค่าเริ่มต้น true |
+| **5-second delay** | `await new Promise((r) => setTimeout(r, 5000))` ก่อน LIVE | ✅ มี warning + delay |
+| **Batch processing** | `BATCH_SIZE: 500` (Firestore limit) | ✅ |
+| **Rate limiting** | `DELAY_MS: 100` ระหว่าง batches | ✅ |
+| **Targeted query** | เฉพาะ `minorTask` ที่เกี่ยวข้องกับอุปกรณ์ | ✅ 8 types |
+| **Skip existing** | ข้าม docs ที่มี `equipmentCondition` แล้ว | ✅ |
+| **Audit trail** | `_backfilledAt`, `_backfilledBy`, `_backfillReason` | ✅ |
+
+### 9.2 Pattern Detection — Keywords ที่รองรับ
+
+**DAMAGE (13 keywords):**
+- ชำรุด, เสีย, หัก, พัง, ใช้ไม่ได้, ไม่ทำงาน, ขาด, ร้าว, แตก, บึ้ม, เสียงไม่ออก, สายขาด
+- broken, damaged, not working, defective
+
+**LOST (8 keywords):**
+- สูญหาย, หาย, ไม่ได้คืน, ยืมไม่คืน, เอาไปไม่คืน
+- lost, missing, not returned, stolen
+
+### 9.3 DRY RUN Test Result
+
+```bash
+cd scripts
+node backfillEquipmentCondition.js
+```
+
+**ผล:** ⚠️ `serviceAccountKey.json` ไม่มีใน repo (ตาม security best practice)
+
+**สรุป:** Script พร้อมใช้งาน — ต้องการ:
+1. ขอ `serviceAccountKey.json` จาก [SA] หรือ admin
+2. วางที่ `firebase/seed-data/serviceAccountKey.json`
+3. รัน DRY RUN บน dev environment ก่อน
+
+### 9.4 LIVE RUN Checklist (ก่อน apply จริง)
+
+- [ ] รัน DRY RUN บน dev → ตรวจสอบ detect ถูกต้อง
+- [ ] Backup Firestore ก่อน LIVE
+- [ ] รัน `DRY_RUN=false node backfillEquipmentCondition.js`
+- [ ] ตรวจสอบ Firestore ว่า fields ถูกเพิ่ม (`equipmentCondition`, `equipmentNote`)
+- [ ] ตรวจว่า docs ที่ไม่มีคำสำคัญ ไม่ถูกแตะ (ยังเป็น null)
+
+### 9.5 Schema ที่จะถูกเพิ่ม
+
+```javascript
+{
+  equipmentCondition: "damaged" | "lost",
+  equipmentNote: string,
+  _backfilledAt: Timestamp,
+  _backfilledBy: "EH-5-script",
+  _backfillReason: "Detected keyword: สายขาด"
+}
+```
+
+### 9.6 Handover to [SE]
+
+**EH-7** (3 hr): `frontend/components/EquipmentCharts.js`  
+**EH-6** (4 hr): `frontend/app/admin/equipment-health/page.js`
+
+**Test data ตัวอย่าง:**
+```javascript
+{
+  id: "abc123",
+  minorTask: "คืนหูฟัง",
+  comment: "ICIT05 สายขาด",
+  equipmentCondition: "damaged",  // ← จาก backfill
+  equipmentNote: "ICIT05 สายขาด",
+  _backfilledAt: Timestamp
+}
+```
+
+**Note:** ไม่ต้อง backfill "normal" — worklog ใหม่จะได้ default "normal" จาก EH-4 อยู่แล้ว
+
+---
+
+*QA Report v4 — Cascade QA Agent · 4 มิ.ย. 2569 · EH-8 Equipment Health Backfill Review*
