@@ -47,34 +47,42 @@ function normalizePayload(body, user) {
 workLogsRouter.use(requireAuth);
 
 workLogsRouter.get("/", async (req, res) => {
-  const page = Math.max(Number(req.query.page || 1), 1);
-  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 200);
-  const skip = (page - 1) * limit;
-  const filter = buildWorkLogFilter(req.query, req.user);
+  try {
+    const page = Math.max(Number(req.query.page || 1), 1);
+    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 200);
+    const skip = (page - 1) * limit;
+    const filter = buildWorkLogFilter(req.query, req.user);
 
-  const [items, total] = await Promise.all([
-    WorkLog.find(filter).sort({ date: -1, time: -1, createdAt: -1 }).skip(skip).limit(limit),
-    WorkLog.countDocuments(filter)
-  ]);
+    const [items, total] = await Promise.all([
+      WorkLog.find(filter).sort({ date: -1, time: -1, createdAt: -1 }).skip(skip).limit(limit),
+      WorkLog.countDocuments(filter)
+    ]);
 
-  res.json({
-    items: items.map((item) => item.toJSON()),
-    page,
-    limit,
-    total,
-    pages: Math.ceil(total / limit)
-  });
+    res.json({
+      items: items.map((item) => item.toJSON()),
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch work logs" });
+  }
 });
 
 workLogsRouter.get("/:id", async (req, res) => {
-  const log = await WorkLog.findById(req.params.id);
-  if (!log) return res.status(404).json({ message: "Work log not found" });
+  try {
+    const log = await WorkLog.findById(req.params.id);
+    if (!log) return res.status(404).json({ message: "Work log not found" });
 
-  if (req.user.role !== "admin" && log.employeeUsername !== req.user.username) {
-    return res.status(403).json({ message: "You can only view your own records" });
+    if (req.user.role !== "admin" && log.employeeUsername !== req.user.username) {
+      return res.status(403).json({ message: "You can only view your own records" });
+    }
+
+    res.json(log.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch work log" });
   }
-
-  res.json(log.toJSON());
 });
 
 workLogsRouter.post("/", async (req, res) => {
@@ -106,13 +114,17 @@ workLogsRouter.put("/:id", async (req, res) => {
 });
 
 workLogsRouter.delete("/:id", async (req, res) => {
-  const existing = await WorkLog.findById(req.params.id);
-  if (!existing) return res.status(404).json({ message: "Work log not found" });
+  try {
+    const existing = await WorkLog.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: "Work log not found" });
 
-  if (req.user.role !== "admin" && existing.employeeUsername !== req.user.username) {
-    return res.status(403).json({ message: "You can only delete your own records" });
+    if (req.user.role !== "admin" && existing.employeeUsername !== req.user.username) {
+      return res.status(403).json({ message: "You can only delete your own records" });
+    }
+
+    await existing.deleteOne();
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete work log" });
   }
-
-  await existing.deleteOne();
-  res.status(204).send();
 });

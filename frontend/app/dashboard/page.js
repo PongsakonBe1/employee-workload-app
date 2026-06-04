@@ -218,6 +218,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadStats() {
+      try {
       const worklogsRef = collection(db, "worklogs");
       const isAdmin = isAdminRole(user);
       const dateRange = getDateRange();
@@ -232,7 +233,9 @@ export default function DashboardPage() {
           const u = d.data();
           uidToName[d.id] = u.displayName || u.fullName || u.nickname || u.email || d.id;
         });
-      } catch (_) {}
+      } catch (err) {
+        console.error("[Dashboard] Error loading user names:", err);
+      }
 
       let q;
       const constraints = [];
@@ -523,6 +526,10 @@ export default function DashboardPage() {
           }))
           .sort((a, b) => b.count - a.count);
         setLeaderboard(lb);
+      }
+      } catch (err) {
+        console.error("[Dashboard] Error loading stats:", err);
+        setError("โหลดข้อมูล Dashboard ไม่สำเร็จ: " + err.message);
       }
     }
 

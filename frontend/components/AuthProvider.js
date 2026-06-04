@@ -282,7 +282,9 @@ export function AuthProvider({ children }) {
   async function loginWithGoogle() {
     // ใช้ popup ทุก platform เพื่อหลีกเลี่ยง Chrome redirect issues ที่ทำให้ login loop
     const result = await signInWithPopup(auth, googleProvider);
-    logSystemAction(SystemActions.LOGIN, "User logged in via Google").catch(() => {});
+    logSystemAction(SystemActions.LOGIN, "User logged in via Google").catch((err) => {
+      console.warn("[Auth] Failed to log login action:", err.message);
+    });
     return result.user;
   }
 
