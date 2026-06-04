@@ -2,6 +2,30 @@
 
 ---
 
+## [2026-06-04 21:15] - [UX/UI] Designer — EH-3 EquipmentReturnModal Design Spec
+
+**Task:** EH-3 — ออกแบบ `EquipmentReturnModal` สำหรับบันทึกสภาพอุปกรณ์ตอนคืน (หูฟัง/ปลั๊กไฟ/ห้อง)
+
+**Files Created:**
+- `docs/DESIGN_SPEC_EH3_EquipmentReturnModal.md` — Design spec ฉบับสมบูรณ์
+
+**Design Decisions:**
+- Modal shell อิง `SmartEquipmentModal.js` — Portal, backdrop blur, bottom-sheet mobile, center desktop
+- **2-click path (ปกติ):** เปิด modal → card "สมบูรณ์" pre-selected → กดยืนยัน → done
+- **3-click path (ชำรุด/สูญหาย):** เปิด modal → เลือก card → กรอก note → ยืนยัน
+- Color semantic: Green (สมบูรณ์) / Amber (ชำรุด) / Red (สูญหาย) — ต่อยอดจาก Green/Orange ของ SmartEquipmentModal
+- ปุ่มยืนยันเปลี่ยนสีตาม condition (slate-950 / amber-600 / red-600)
+- Textarea สำหรับ note แสดงเฉพาะ damaged/lost พร้อม slide-in animation
+
+**Callback:** `onConfirm(condition, note)` → SE map ลง `equipmentCondition` + `equipmentNote` (SA schema)
+
+**Note to SE (EH-4):**
+- ดู `docs/DESIGN_SPEC_EH3_EquipmentReturnModal.md` Section 12 (Migration Checklist) ครบทุกข้อ
+- Props: `isOpen`, `onClose`, `onConfirm`, `equipmentId`, `equipmentType`, `templateName`
+- อย่าลืม Escape key handler (Section 10) และ `requiresNote` validation
+
+---
+
 ## [2026-06-04 15:30] - [Doc] Technical Writer — v2.2.1 Release Notes & README Update
 
 **Task:** อัปเดต README.md + Release Notes v2.2.1 ตามข้อมูลใน QA_REPORT.md Section 7-8 และ DEV_LOG ล่าสุด พร้อมเตรียม merge + deploy
