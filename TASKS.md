@@ -367,7 +367,7 @@ test(playwright): add auth state injection for superadmin and staff roles
 - [ ] **EH-8** — ทดสอบ: ยืม→คืนปกติ, ยืม→คืน+ชำรุด+โน๊ต, กรองอุปกรณ์ชำรุดบ่อย → บันทึกใน `QA_REPORT.md`
 
 ### [Doc] (~1.5 hr, หลัง EH-8 pass)
-- [ ] **EH-9** — อัปเดต `README.md` + สร้าง `docs/EQUIPMENT_HEALTH.md`
+- [x] **EH-9** — อัปเดต `README.md` + สร้าง `docs/EQUIPMENT_HEALTH.md`
 
 ---
 

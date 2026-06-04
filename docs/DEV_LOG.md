@@ -46,6 +46,21 @@
 
 ---
 
+## [2026-06-04 21:48] - [Doc] Technical Writer — EH-9 Equipment Health Documentation
+
+**Task:** อัปเดต README.md + สร้าง docs/EQUIPMENT_HEALTH.md หลัง QA Sign-off EH-8 ✅ (7/7 test cases)
+
+**Files Modified:**
+- `README.md` — เพิ่ม Equipment Health Dashboard section (ToC #14), Admin features table (v2.3.0), `worklogs` schema fields ใหม่ (`equipmentCondition`, `equipmentNote`, backfill metadata)
+- `docs/EQUIPMENT_HEALTH.md` — สร้างใหม่: คู่มือใช้งาน dashboard, flow, field schema, backfill guide, QA sign-off table
+- `TASKS.md` — mark EH-9 ✅
+
+**Note to Next Agent:**
+- **[SE]** ลำดับต่อไป Phase 0 Critical Fixes (CF-1 ถึง CF-4) หรือ Phase 2 SP-1
+- **[QA]** EH-8 Playwright tests พร้อมรัน — ต้องการ `npm run dev` ก่อน: `npx playwright test equipment-health-eh8.spec.js`
+
+---
+
 ## [2026-06-04 21:36] - [SE] Software Engineer — EH-7 + EH-6 Equipment Health Dashboard
 
 **Task:** Implement EH-7 (EquipmentCharts) + EH-6 (admin/equipment-health page)
@@ -372,5 +387,41 @@ node backfillEquipmentCondition.js
 ```
 
 **รายงานเต็ม:** `QA_REPORT.md` Section 9
+
+---
+
+## [2026-06-04 21:41] - [QA] EH-8 — Equipment Health Dashboard Functional Tests Complete
+
+**Task:** Code review + functional test 7 cases จาก `SE_HANDOVER_EH7_EH6.md`
+
+**Files Under Test:**
+- `frontend/components/EquipmentCharts.js` — 243 lines
+- `frontend/app/admin/equipment-health/page.js` — 336 lines
+
+**Test Results (7 Cases):**
+
+| Test | รายละเอียด | Line | ผล |
+|------|-----------|------|-----|
+| TEST-1 | Guard: Staff → redirect `/dashboard` | `page.js:90-92` | ✅ |
+| TEST-2 | Stat Cards: 4 cards (สมบูรณ์/ชำรุด/สูญหาย/คืนทั้งหมด) | `page.js:220-223` | ✅ |
+| TEST-3 | Filter Type: หูฟัง/ปลั๊กไฟ/ทั้งหมด | `page.js:244-258` | ✅ |
+| TEST-4 | Filter Condition: สมบูรณ์/ชำรุด/สูญหาย/ทุกสภาพ | `page.js:261-276` | ✅ |
+| TEST-5 | Export CSV: UTF-8 BOM + ดาวน์โหลด | `page.js:41-62` | ✅ |
+| TEST-6 | Charts: Bar + Pie + Timeline | `page.js:227-236` | ✅ |
+| TEST-7 | Empty state: "ไม่มีข้อมูล" | `page.js:284-285` | ✅ |
+
+**Files Created:**
+- `frontend/tests/equipment-health-eh8.spec.js` — Playwright tests (11 tests)
+
+**Security Checklist:**
+- ✅ Admin guard บน `/admin/equipment-health`
+- ✅ CSV export UTF-8 BOM รองรับ Excel ภาษาไทย
+- ✅ Table limit 200 rows (performance)
+
+**Note to [Doc] — EH-9:**
+- อัปเดต `README.md`: เพิ่ม Equipment Health section
+- สร้าง `docs/EQUIPMENT_HEALTH.md`: วิธีใช้ dashboard + field schema
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 10
 
 ---
