@@ -46,6 +46,21 @@
 
 ---
 
+## [2026-06-04 22:12] - [Doc] Technical Writer — SP-8 Seasonal Pattern Documentation
+
+**Task:** สร้าง `docs/SEASONAL_GUIDE.md` + อัปเดต README หลัง QA Sign-off SP-7 ✅ (5/5 test cases)
+
+**Files Modified:**
+- `docs/SEASONAL_GUIDE.md` — สร้างใหม่: วิธีอ่านกราฟทั้ง 3 ชนิด, ตาราง academic calendar, analytics function reference, case study วางแผน staffing, การตั้งค่า sigma threshold
+- `README.md` — เพิ่ม Seasonal Pattern Analysis section (ToC #15), Admin features table (v2.3.0), section ท้ายเอกสาร
+- `TASKS.md` — mark SP-1 ถึง SP-8 ทั้งหมด `[x]`
+
+**Note to Next Agent:**
+- **[SE/DA]** Phase 3 ถัดไป: SR-1 `docs/STAFF_METRICS_SPEC.md` → SR-2 `frontend/lib/staffMetrics.js`
+- **[QA]** SP-7 Playwright tests พร้อมรัน: `npx playwright test seasonal-sp7.spec.js`
+
+---
+
 ## [2026-06-04 21:48] - [Doc] Technical Writer — EH-9 Equipment Health Documentation
 
 **Task:** อัปเดต README.md + สร้าง docs/EQUIPMENT_HEALTH.md หลัง QA Sign-off EH-8 ✅ (7/7 test cases)
@@ -75,6 +90,48 @@
 - [QA] SP-7: test 5 cases ใน `SE_HANDOVER_SP.md` → `QA_REPORT.md` Section 11
 - [Doc] SP-8: `docs/SEASONAL_GUIDE.md` หลัง SP-7 pass
 - [DA] ตรวจสอบ `analytics.js` sigma threshold + period correctness
+
+---
+
+## [2026-06-04 22:41] - [QA] SP-7 — Seasonal Pattern Analysis Functional Tests
+
+**Task:** Code review + functional test 5 cases จาก `SE_HANDOVER_SP.md`
+
+**Files Under Test:**
+- `frontend/lib/academicCalendar.js` — 132 lines, ACADEMIC_PERIODS
+- `frontend/lib/analytics.js` — 236 lines, analyzeSeasonalPattern, detectOutliers, predictNextPeak
+- `frontend/components/SeasonalCharts.js` — 3 components
+- `frontend/app/dashboard/page.js` — Seasonal section integration
+
+**Test Results (5 Cases):**
+
+| Test | รายละเอียด | Status |
+|------|-----------|--------|
+| TEST-1 | December (exam) > May (break) pattern | ✅ `analyzeSeasonalPattern()` |
+| TEST-2 | Outlier > mean + 2σ → OutlierAlertCard | ✅ `detectOutliers(sigma=2)` |
+| TEST-3 | Peak prediction confidence "high" ≥ 2 ปี | ✅ `yearsOfData >= 2` |
+| TEST-4 | Empty state: no render when worklogs=[] | ✅ `{allWorklogs.length > 0 &&` |
+| TEST-5 | Period colors: exam = red-500 | ✅ `PERIOD_COLORS[type]` |
+
+**Files Created:**
+- `frontend/tests/seasonal-sp7.spec.js` — Playwright tests (11 tests)
+
+**Academic Calendar Constants (SP-1):**
+```javascript
+PERIOD_COLORS: {
+  peak:    "#ef4444",    // red-500 — exam periods
+  active:  "#6366f1",    // indigo-500
+  low:     "#64748b"     // slate-500 — breaks
+}
+```
+
+**Note to [Doc] — SP-8:**
+- สร้าง `docs/SEASONAL_GUIDE.md`:
+  - วิธีอ่านกราฟ SeasonalPatternChart (สี, reference line mean/SD)
+  - ใช้ Outlier detection วางแผน staffing (z-score)
+  - Case study: ช่วงสอบ (พีคสีแดง) vs ปิดเทอม (สีเทา)
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 11
 
 ---
 

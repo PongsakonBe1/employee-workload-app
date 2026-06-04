@@ -374,25 +374,25 @@ test(playwright): add auth state injection for superadmin and staff roles
 ## Phase 2: Seasonal Pattern Analysis — (Week 2)
 
 ### [DA] Algorithm (Day 1-2, ~4 hr)
-- [ ] **SP-1** (1 hr) — สร้าง `frontend/lib/academicCalendar.js`: `ACADEMIC_PERIODS` constants ตาม academic calendar
-- [ ] **SP-2** (2 hr) — สร้าง `frontend/lib/analytics.js`: `analyzeSeasonalPattern()`, `detectOutliers()`, `predictNextPeak()`
-- [ ] **SP-3** (1 hr) — Outlier detection: วันที่มีงาน > mean + 2×SD → flag
+- [x] **SP-1** (1 hr) — สร้าง `frontend/lib/academicCalendar.js`: `ACADEMIC_PERIODS` constants ตาม academic calendar
+- [x] **SP-2** (2 hr) — สร้าง `frontend/lib/analytics.js`: `analyzeSeasonalPattern()`, `detectOutliers()`, `predictNextPeak()`
+- [x] **SP-3** (1 hr) — Outlier detection: วันที่มีงาน > mean + 2×SD → flag
   - *Dependency: SP-2*
 
 ### [UX/UI] Design (Day 1-2 parallel, ~2 hr)
-- [ ] **SP-4** — ออกแบบ Seasonal Dashboard: box plot style, trend arrows (▲▼→), outlier alert cards
+- [x] **SP-4** — ออกแบบ Seasonal Dashboard: box plot style, trend arrows (▲▼→), outlier alert cards
 
 ### [SE] Implementation (Day 3-4, ~5 hr)
-- [ ] **SP-5** (3 hr) — สร้าง `frontend/components/SeasonalCharts.js` (new): `SeasonalPatternChart`, `OutlierAlertCard`, `PeakHourPrediction`
+- [x] **SP-5** (3 hr) — สร้าง `frontend/components/SeasonalCharts.js` (new): `SeasonalPatternChart`, `OutlierAlertCard`, `PeakHourPrediction`
   - *Dependency: SP-4*
-- [ ] **SP-6** (2 hr) — แก้ `frontend/app/dashboard/page.js`: เพิ่ม section "แพทเทิร์นตามภาคเรียน" ใต้ Heatmap
+- [x] **SP-6** (2 hr) — แก้ `frontend/app/dashboard/page.js`: เพิ่ม section "แพทเทิร์นตามภาคเรียน" ใต้ Heatmap
   - *Dependency: SP-5*
 
 ### [QA] Validation (Day 5, ~1.5 hr)
-- [ ] **SP-7** — ตรวจ: ธันวาคม (exam) > พฤษภาคม (break), outlier detection flag วันงาน > 50
+- [x] **SP-7** — ตรวจ: ธันวาคม (exam) > พฤษภาคม (break), outlier detection flag วันงาน > 50
 
 ### [Doc] (~1 hr, หลัง SP-7 pass)
-- [ ] **SP-8** — สร้าง `docs/SEASONAL_GUIDE.md`: วิธีอ่านกราฟ, ใช้พยากรณ์ staffing, case study
+- [x] **SP-8** — สร้าง `docs/SEASONAL_GUIDE.md`: วิธีอ่านกราฟ, ใช้พยากรณ์ staffing, case study
 
 ---
 
