@@ -18,7 +18,7 @@ services:
       NODE_ENV: development
       PORT: 4000
       MONGODB_URI: mongodb://mongo:27017/icit_workload
-      JWT_SECRET: change-this-in-production
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env before running}
       CLIENT_ORIGIN: http://localhost:3000
     ports:
       - "4000:4000"

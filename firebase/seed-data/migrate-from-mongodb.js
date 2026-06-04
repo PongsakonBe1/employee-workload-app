@@ -31,8 +31,8 @@ async function migrateWorklogs() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "admin", // MongoDB admin user
-        password: "admin1234",
+        username: process.env.MONGO_ADMIN_USER || "admin",
+        password: process.env.MONGO_ADMIN_PASSWORD || (() => { throw new Error("Set MONGO_ADMIN_PASSWORD env var"); })(),
       }),
     });
 
