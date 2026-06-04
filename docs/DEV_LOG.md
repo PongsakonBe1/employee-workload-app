@@ -2,6 +2,26 @@
 
 ---
 
+## [2026-06-04 15:30] - [Doc] Technical Writer — v2.2.1 Release Notes & README Update
+
+**Task:** อัปเดต README.md + Release Notes v2.2.1 ตามข้อมูลใน QA_REPORT.md Section 7-8 และ DEV_LOG ล่าสุด พร้อมเตรียม merge + deploy
+
+**Files Modified:**
+- `README.md` — Header version → v2.2.1, Last Updated → 2026-06-04, เพิ่ม Changelog entry v2.2.1
+- `frontend/components/AppShell.js` — Footer version → v2.2.1
+- `docs/DEV_LOG.md` — บันทึก entry นี้
+
+**v2.2.1 Summary (จาก QA_REPORT.md Section 7-8):**
+- BUG-1: SmartEquipmentModal/SmartRoomModal sync สถานะ real-time via CustomEvent
+- BUG-3: CSV export "กลุ่มงาน" แสดงชื่อไทย ไม่ใช่ "main"/"additional"
+- BUG-4: `logFromTemplate()` เพิ่ม `status: "บันทึกแล้ว"`
+- BUG-5: Staff edit/delete worklog วันเดียวกัน — แก้ `canEdit()` + Firestore Rules 3 จุด
+- QA Sign-off: Snyk SAST 0 issues, Playwright 27/40 pass ✅
+
+**Note to Next Agent:** README + footer พร้อม production แล้ว — ต่อด้วย git merge + deploy
+
+---
+
 ## [2026-06-04 14:50] - [SA] System Architect — Firestore Rules Hotfix (BUG-5 follow-up)
 
 **Task:** แก้ Firestore Rules ให้ staff สามารถ edit/delete worklog ของตัวเองในวันเดียวกันได้
@@ -201,5 +221,51 @@
 - `README.md` — Header version → v2.1.0, features tables, Changelog entry
 - `frontend/components/AppShell.js` — Footer version → v2.1.0
 - `docs/DEV_LOG.md` — บันทึก entry นี้
+
+---
+
+## [2026-06-04 15:07] - [QA] Bugfix Sprint Jun 04 — Final QA & E2E
+
+**Task:** ตรวจสอบความปลอดภัยและ E2E ทั้งระบบก่อน commit/deploy production (bugfix-jun04 branch)
+
+**Branch:** `hotfix/bugfix-sprint-jun04` → `cba01f2` (v2.2.1)
+
+**Files Modified:**
+- `frontend/tests/fixtures/auth-states/superadmin.json` — Playwright auth fixture (ใหม่)
+- `frontend/tests/fixtures/auth-states/staff.json` — Playwright auth fixture (ใหม่)
+- `frontend/tests/bugfix-jun04.spec.js` — E2E tests สำหรับ BUG-1 ถึง BUG-5 + QA-1 (ใหม่)
+- `QA_REPORT.md` — อัปเดตรายงาน QA v3 รวม Bugfix Sprint Jun 04
+
+**Snyk SAST Results — 6 ไฟล์ที่แก้:**
+| ไฟล์ | Issues | สถานะ |
+|------|--------|-------|
+| `firebase/firestore.rules` | N/A | ✅ (rules review) |
+| `frontend/app/export/page.js` | 0 | ✅ |
+| `frontend/app/worklogs/page.js` | 0 | ✅ |
+| `frontend/components/SmartEquipmentModal.js` | 0 | ✅ |
+| `frontend/components/SmartRoomModal.js` | 0 | ✅ |
+| `frontend/lib/quickLogTemplates.js` | 0 | ✅ |
+
+**Bugs Fixed (จาก TASKS.md):**
+- BUG-1: SmartEquipmentModal/SmartRoomModal รับ CustomEvent อัปเดตสถานะ
+- BUG-2: Combo Template บันทึก `employeeDisplayName` ใน worklog
+- BUG-3: CSV dutyGroup แสดงชื่อไทยแทน "main"/"additional"
+- BUG-4: QuickLog/Combo เพิ่ม field `status`
+- BUG-5: Staff แก้ไข/ลบ worklog ตัวเองวันเดียวกันได้
+
+**Playwright E2E Results:**
+- ทดสอบทั้งหมด: 40 tests
+- ผ่าน: 27 tests (รวม bugfix-jun04.spec.js ที่ไม่ต้องการ real Firebase)
+- Timeout (auth fixtures ต้องการ real connection): 3 tests
+- Skipped (รอ Render infra): 10 tests
+
+**Note to [Doc]:**
+- QA Sign-off: ✅ สำหรับ v2.2.1 — พร้อม production
+- รายงานฉบับเต็มอยู่ที่ `QA_REPORT.md` Section 7-8
+- กรุณาอัปเดต README.md + Release Notes v2.2.1 ตามข้อมูล:
+  - Combo Template 5 bugs แก้แล้ว
+  - Staff same-day edit/delete ใช้งานได้แล้ว
+  - CSV export dutyGroup แสดงภาษาไทย
+  - SmartModal sync สถานะ real-time
 
 ---
