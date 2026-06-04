@@ -409,17 +409,17 @@ test(playwright): add auth state injection for superadmin and staff roles
 - [x] **SR-3** — ออกแบบ Radar Chart: 6 แกน clockwise, fill โปร่งใส opacity 0.3, team average เส้นประเทา, tooltip ✅
 
 ### [SE] Implementation (Day 2-4, ~9 hr)
-- [ ] **SR-4** (3 hr) — สร้าง `frontend/components/StaffRadarChart.js` (new): Recharts RadarChart, props `data`, `benchmark`, `onCompare`
+- [x] **SR-4** (3 hr) — สร้าง `frontend/components/StaffRadarChart.js` (new): Recharts RadarChart, props `data`, `benchmark`, `onCompare`
   - *Dependency: SR-3*
-- [ ] **SR-5** (4 hr) — สร้าง `frontend/app/admin/staff-analytics/page.js` (new): radar รายบุคคล, multi-select compare (max 3), ranking table, time range selector
+- [x] **SR-5** (4 hr) — สร้าง `frontend/app/admin/staff-analytics/page.js` (new): radar รายบุคคล, multi-select compare (max 3), ranking table, time range selector
   - *Dependency: SR-4*
-- [ ] **SR-6** (2 hr) — เพิ่ม team average benchmark line ใน `StaffRadarChart.js`
+- [x] **SR-6** (2 hr) — เพิ่ม team average benchmark line ใน `StaffRadarChart.js`
 
 ### [QA] Metric Accuracy (Day 4-5, ~2 hr)
-- [ ] **SR-7** — ตรวจ: คำนวณ consistency ด้วยมือเทียบระบบ, normalization อยู่ใน 0-100, edge case พนักงานใหม่ไม่ error
+- [x] **SR-7** — ตรวจ: คำนวณ consistency ด้วยมือเทียบระบบ, normalization อยู่ใน 0-100, edge case พนักงานใหม่ไม่ error
 
 ### [Doc] (~1.5 hr, หลัง SR-7 pass)
-- [ ] **SR-8** — สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`: วิธีอ่าน radar, ตัวอย่าง interpretation, ใช้ใน 1-on-1
+- [x] **SR-8** — สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`: วิธีอ่าน radar, ตัวอย่าง interpretation, ใช้ใน 1-on-1
 
 ---
 
@@ -433,10 +433,10 @@ test(playwright): add auth state injection for superadmin and staff roles
 
 ## Acceptance Criteria v2.3.0
 
-- [ ] CF-1 ถึง CF-4: Dashboard แสดงข้อมูลถูกต้อง ไม่มี bug จาก DA Audit
-- [ ] EH-1 ถึง EH-9: บันทึกสภาพอุปกรณ์ตอนคืนได้ + ดู report ได้
-- [ ] SP-1 ถึง SP-8: แสดง seasonal pattern และ outlier detection ได้
-- [ ] SR-1 ถึง SR-8: แสดง radar chart ประเมินพนักงาน 6 มิติได้
+- [x] CF-1 ถึง CF-4: Dashboard แสดงข้อมูลถูกต้อง ไม่มี bug จาก DA Audit
+- [x] EH-1 ถึง EH-9: บันทึกสภาพอุปกรณ์ตอนคืนได้ + ดู report ได้
+- [x] SP-1 ถึง SP-8: แสดง seasonal pattern และ outlier detection ได้
+- [x] SR-1 ถึง SR-8: แสดง radar chart ประเมินพนักงาน 6 มิติได้
 
 ---
 

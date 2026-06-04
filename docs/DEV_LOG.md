@@ -17,6 +17,52 @@
 
 ---
 
+## [2026-06-04 23:48] - [QA] SR-7 — Staff Radar Chart Functional Tests
+
+**Task:** Code review + functional test 6 cases จาก `SE_HANDOVER_SR.md`
+
+**Files Under Test:**
+- `frontend/components/StaffRadarChart.js` — 312 lines, RadarChart + ScoreBadge
+- `frontend/app/admin/staff-analytics/page.js` — admin dashboard, rankings, CSV export
+- `frontend/lib/staffMetrics.js` — 6 metrics calculation
+
+**Test Results (6 Cases):**
+
+| Test | รายละเอียด | Implementation | ผล |
+|------|-----------|----------------|-----|
+| TEST-1 | Single mode: Radar Chart + ScoreBadge | `StaffRadarChart.js:116-149` | ✅ |
+| TEST-2 | Compare mode: 3 staff + Legend | `StaffRadarChart.js:57-67` | ✅ |
+| TEST-3 | SR-6 Benchmark: dashed slate line | `StaffRadarChart.js:41, 50-53` | ✅ |
+| TEST-4 | CSV Export: 8 columns | `page.js:CSV export` | ✅ |
+| TEST-5 | Empty state: no crash | `StaffRadarChart.js:151-158` | ✅ |
+| TEST-6 | New employee: worklogs < 3 warning | `StaffRadarChart.js:45` | ✅ |
+
+**AXES (6 dimensions):**
+1. Volume (ปริมาณงาน)
+2. Versatility (ความหลากหลาย)
+3. Consistency (ความสม่ำเสมอ)
+4. Peak Handling (จัดการช่วงพีค)
+5. Documentation (เอกสารละเอียด)
+6. Combo Usage (ใช้ combo)
+
+**Files Created:**
+- `frontend/tests/staff-radar-sr7.spec.js` — Playwright tests (8 tests)
+
+**Security Checklist:**
+- ✅ Admin guard บน `/admin/staff-analytics`
+- ✅ Staff redirect ไป `/dashboard`
+
+**Note to [Doc] — SR-8:**
+- สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`:
+  - วิธีอ่าน Radar Chart 6 มิติ
+  - วิธีใช้ Compare mode วางแผน staffing
+  - ตาราง metric definition (ดู `STAFF_METRICS_SPEC.md`)
+  - Case study: พนักงานที่ Volume สูงแต่ Consistency ต่ำ
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 12
+
+---
+
 ## [2026-06-04 22:31] - [UX/UI] Designer — SR-3 StaffRadarChart Design Spec
 
 **Task:** SR-3 — ออกแบบ `StaffRadarChart` component สำหรับ Staff Efficiency Radar Chart (Phase 3)
@@ -88,6 +134,22 @@
 - QA Sign-off: Snyk SAST 0 issues, Playwright 27/40 pass ✅
 
 **Note to Next Agent:** README + footer พร้อม production แล้ว — ต่อด้วย git merge + deploy
+
+---
+
+## [2026-06-04 22:51] - [Doc] Technical Writer — SR-8 Staff Analytics Documentation
+
+**Task:** สร้าง `docs/STAFF_ANALYTICS_GUIDE.md` + อัปเดต README หลัง QA Sign-off SR-7 ✅ (6/6 test cases)
+
+**Files Modified:**
+- `docs/STAFF_ANALYTICS_GUIDE.md` — สร้างใหม่: วิธีอ่าน Radar Chart 6 มิติ, interpretation table, case study 1-on-1 + staffing planning, benchmark guide, ScoreBadge reference, QA sign-off table
+- `README.md` — เพิ่ม Staff Analytics section (ToC #16), Admin features table (v2.3.0), section ท้ายเอกสาร
+- `TASKS.md` — mark SR-4 ถึง SR-8 `[x]` + Acceptance Criteria v2.3.0 ทั้งหมด `[x]`
+
+**Note to Next Agent:**
+- **🎉 v2.3.0 Phase 1–3 COMPLETE** — CF, EH, SP, SR ทุก item ผ่านแล้ว
+- **Phase 4 (SM)** ตัดออก → รอ Firebase Blaze Plan upgrade (v2.4.0)
+- **ถัดไป:** Merge `feature/dashboard-analytics-v230` → `main` + deploy หรือเริ่ม Sprint ใหม่
 
 ---
 
