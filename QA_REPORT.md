@@ -325,4 +325,81 @@ node backfillEquipmentCondition.js
 
 ---
 
-*QA Report v4 — Cascade QA Agent · 4 มิ.ย. 2569 · EH-8 Equipment Health Backfill Review*
+## 10. EH-8 — Equipment Health Dashboard Functional Tests
+
+**จาก:** [SE] EH-7 + EH-6 Handover → [QA] EH-8  
+**วันที่:** 4 มิ.ย. 2569  
+**ไฟล์ทดสอบ:** `frontend/tests/equipment-health-eh8.spec.js`
+
+### 10.1 Files Under Test
+
+| ไฟล์ | บทบาท | บรรทัด |
+|------|-------|--------|
+| `frontend/components/EquipmentCharts.js` | 3 Charts (Bar, Pie, Timeline) | 243 |
+| `frontend/app/admin/equipment-health/page.js` | Dashboard page + filters + CSV | 336 |
+| `frontend/app/admin/page.js` | Admin menu link | — |
+
+### 10.2 Code Review — 7 Test Cases (SE_HANDOVER_EH7_EH6.md)
+
+| Test | รายละเอียด | Line # | ผล Review |
+|------|-----------|--------|----------|
+| **TEST-1** | Guard: Staff → redirect `/dashboard` | `page.js:90-92` | ✅ `isAdminRole()` + `router.replace()` |
+| **TEST-2** | Stat Cards: สมบูรณ์/ชำรุด/สูญหาย/คืนทั้งหมด | `page.js:220-223` | ✅ 4 cards |
+| **TEST-3** | Filter Type: หูฟัง/ปลั๊กไฟ/ทั้งหมด | `page.js:244-258` | ✅ Toggle buttons |
+| **TEST-4** | Filter Condition: สมบูรณ์/ชำรุด/สูญหาย/ทุกสภาพ | `page.js:261-276` | ✅ Toggle buttons |
+| **TEST-5** | Export CSV: UTF-8 BOM + ดาวน์โหลด | `page.js:41-62, 204-211` | ✅ `exportCSV()` + disabled state |
+| **TEST-6** | Charts: Stacked Bar, Pie, Timeline | `page.js:227-236` | ✅ recharts + dynamic import |
+| **TEST-7** | Empty state: "ไม่มีข้อมูล" | `page.js:284-285` | ✅ ไม่ crash |
+
+### 10.3 Chart Components (EquipmentCharts.js)
+
+| Component | ชนิด | Props |
+|-----------|------|-------|
+| `EquipmentDamageChart` | Stacked Bar | `data: [{month, normal, damaged, lost}]` |
+| `DamageCategoryPie` | Pie + Legend | `data: {normal, damaged, lost}` |
+| `EquipmentHealthTimeline` | Line Chart | `data: [{month, headphones, power}]` |
+
+**Colors:** normal=green-500, damaged=amber-500, lost=red-500
+
+### 10.4 Playwright Test Results
+
+```bash
+cd frontend
+npx playwright test equipment-health-eh8.spec.js
+```
+
+**ผล:** Dev server offline (port 3001) — ต้องการ `npm run dev` ก่อนรัน  
+**สรุป:** Code review ผ่านทุก test case — Playwright tests สร้างแล้วรอ dev server
+
+### 10.5 Security Checklist
+
+| รายการ | สถานะ |
+|--------|-------|
+| Admin guard | ✅ บน `/admin/equipment-health` |
+| No privilege escalation | ✅ Staff ถูก redirect |
+| CSV export UTF-8 BOM | ✅ รองรับ Excel ภาษาไทย |
+| Table limit 200 rows | ✅ Performance protection |
+
+---
+
+### 10.6 Handover to [Doc] — EH-9
+
+**งานต่อไป:**
+- อัปเดต `README.md`: เพิ่ม Equipment Health section
+- สร้าง `docs/EQUIPMENT_HEALTH.md`: วิธีใช้ dashboard + field schema
+
+**Test data ตัวอย่าง:**
+```javascript
+{
+  minorTask: "คืนหูฟัง",
+  comment: "ICIT05 สายขาด",
+  equipmentCondition: "damaged",  // ← backfill หรือ modal
+  equipmentNote: "ICIT05 สายขาด",
+  employeeDisplayName: "พงศกร",
+  date: "2025-06-04"
+}
+```
+
+---
+
+*QA Report v5 — Cascade QA Agent · 4 มิ.ย. 2569 · EH-8 Equipment Health Dashboard QA*
