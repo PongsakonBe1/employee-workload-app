@@ -12,6 +12,7 @@ import {
   ChevronRight,
   PlusCircle,
   Cog,
+  TrendingUp,
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
@@ -47,6 +48,26 @@ const adminModules = [
     icon: FileText,
     href: "/admin/audit-logs",
     color: "bg-emerald-500",
+  },
+  {
+    id: "staff-analytics",
+    title: "Staff Analytics",
+    titleEn: "Staff Analytics",
+    description: "ประสิทธิภาพพนักงาน 6 มิติ — Radar Chart, Rankings, เปรียบเทียบ",
+    descriptionEn: "Staff efficiency radar — 6 metrics, rankings, compare mode",
+    icon: TrendingUp,
+    href: "/admin/staff-analytics",
+    color: "bg-indigo-600",
+  },
+  {
+    id: "equipment-health",
+    title: "สุขภาพอุปกรณ์",
+    titleEn: "Equipment Health",
+    description: "ติดตามสภาพหูฟัง ปลั๊กไฟ — ชำรุด / สูญหาย รายเดือน",
+    descriptionEn: "Track equipment condition — damaged / lost reports",
+    icon: BarChart3,
+    href: "/admin/equipment-health",
+    color: "bg-amber-600",
   },
   {
     id: "stats",

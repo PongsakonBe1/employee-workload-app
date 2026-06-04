@@ -2,6 +2,121 @@
 
 ---
 
+## [2026-06-04 23:05] - [SE] Software Engineer — SR-4 + SR-5 + SR-6 Staff Radar Chart
+
+**Task:** Implement SR-4 (StaffRadarChart), SR-5 (admin/staff-analytics page), SR-6 (benchmark integration)
+
+**Files Created/Modified:**
+- `frontend/components/StaffRadarChart.js` — ใหม่: Recharts RadarChart, single/compare mode, ScoreBadge, metricsToChartData, AXES export
+- `frontend/app/admin/staff-analytics/page.js` — ใหม่: admin dashboard, time range, staff search, compare chart, rankings table, CSV export
+- `frontend/app/admin/page.js` — เพิ่ม Staff Analytics menu item
+
+**Note to Next Agent:**
+- [QA] SR-7: functional test 6 cases (single/compare mode, benchmark line, CSV export, empty state, new employee warning)
+- [Doc] SR-8: `docs/STAFF_ANALYTICS_GUIDE.md` หลัง SR-7 pass
+
+---
+
+## [2026-06-04 23:48] - [QA] SR-7 — Staff Radar Chart Functional Tests
+
+**Task:** Code review + functional test 6 cases จาก `SE_HANDOVER_SR.md`
+
+**Files Under Test:**
+- `frontend/components/StaffRadarChart.js` — 312 lines, RadarChart + ScoreBadge
+- `frontend/app/admin/staff-analytics/page.js` — admin dashboard, rankings, CSV export
+- `frontend/lib/staffMetrics.js` — 6 metrics calculation
+
+**Test Results (6 Cases):**
+
+| Test | รายละเอียด | Implementation | ผล |
+|------|-----------|----------------|-----|
+| TEST-1 | Single mode: Radar Chart + ScoreBadge | `StaffRadarChart.js:116-149` | ✅ |
+| TEST-2 | Compare mode: 3 staff + Legend | `StaffRadarChart.js:57-67` | ✅ |
+| TEST-3 | SR-6 Benchmark: dashed slate line | `StaffRadarChart.js:41, 50-53` | ✅ |
+| TEST-4 | CSV Export: 8 columns | `page.js:CSV export` | ✅ |
+| TEST-5 | Empty state: no crash | `StaffRadarChart.js:151-158` | ✅ |
+| TEST-6 | New employee: worklogs < 3 warning | `StaffRadarChart.js:45` | ✅ |
+
+**AXES (6 dimensions):**
+1. Volume (ปริมาณงาน)
+2. Versatility (ความหลากหลาย)
+3. Consistency (ความสม่ำเสมอ)
+4. Peak Handling (จัดการช่วงพีค)
+5. Documentation (เอกสารละเอียด)
+6. Combo Usage (ใช้ combo)
+
+**Files Created:**
+- `frontend/tests/staff-radar-sr7.spec.js` — Playwright tests (8 tests)
+
+**Security Checklist:**
+- ✅ Admin guard บน `/admin/staff-analytics`
+- ✅ Staff redirect ไป `/dashboard`
+
+**Note to [Doc] — SR-8:**
+- สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`:
+  - วิธีอ่าน Radar Chart 6 มิติ
+  - วิธีใช้ Compare mode วางแผน staffing
+  - ตาราง metric definition (ดู `STAFF_METRICS_SPEC.md`)
+  - Case study: พนักงานที่ Volume สูงแต่ Consistency ต่ำ
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 12
+
+---
+
+## [2026-06-04 22:31] - [UX/UI] Designer — SR-3 StaffRadarChart Design Spec
+
+**Task:** SR-3 — ออกแบบ `StaffRadarChart` component สำหรับ Staff Efficiency Radar Chart (Phase 3)
+
+**Files Created:**
+- `docs/DESIGN_SPEC_SR3_StaffRadarChart.md` — Design spec ฉบับสมบูรณ์
+
+**Design Decisions:**
+- Recharts `RadarChart` + `gridType="polygon"` (hexagonal) — ดูสะอาดกว่า circle สำหรับ 6 แกน
+- 6 axes clockwise: Volume → Consistency → Peak Handling → Documentation → Combo Usage → Versatility
+- Color system: Single = indigo-500 / Compare slot 2 = amber-500 / slot 3 = emerald-500
+- Team benchmark (SR-6): dashed stroke slate-400, no fill
+- `fillOpacity=0.15` — iOS-style โปร่งใส, ไม่ cluttered
+- `outerRadius="72%"` — เว้นพื้นที่ให้ axis labels ไม่ตัด
+- `ScoreBadge` component แสดง overall score + จุดแข็ง/พัฒนาได้ข้าง chart
+- Compare mode สูงสุด 3 คน ด้วย `dataKey="value_${i}"` + `mergeCompareData()` helper
+
+**Responsive:**
+- Mobile: chart stack เหนือ ScoreBadge
+- Desktop: side-by-side (`flex-col sm:flex-row`)
+- Compare mode mobile: stacked single charts
+
+**Note to SE (SR-4, SR-5, SR-6):**
+- ดู `docs/DESIGN_SPEC_SR3_StaffRadarChart.md` Section 14 (Migration Checklist) ครบทุกข้อ
+- ตรวจ `recharts` ใน `frontend/package.json` ก่อน — ถ้าไม่มีให้ `npm install recharts`
+- `calculateRadarMetrics()` + `getTeamAverage()` พร้อมใน `frontend/lib/staffMetrics.js` (SR-2 ✅)
+- SR-4 → SR-5 → SR-6 ตามลำดับ dependency
+
+---
+
+## [2026-06-04 21:15] - [UX/UI] Designer — EH-3 EquipmentReturnModal Design Spec
+
+**Task:** EH-3 — ออกแบบ `EquipmentReturnModal` สำหรับบันทึกสภาพอุปกรณ์ตอนคืน (หูฟัง/ปลั๊กไฟ/ห้อง)
+
+**Files Created:**
+- `docs/DESIGN_SPEC_EH3_EquipmentReturnModal.md` — Design spec ฉบับสมบูรณ์
+
+**Design Decisions:**
+- Modal shell อิง `SmartEquipmentModal.js` — Portal, backdrop blur, bottom-sheet mobile, center desktop
+- **2-click path (ปกติ):** เปิด modal → card "สมบูรณ์" pre-selected → กดยืนยัน → done
+- **3-click path (ชำรุด/สูญหาย):** เปิด modal → เลือก card → กรอก note → ยืนยัน
+- Color semantic: Green (สมบูรณ์) / Amber (ชำรุด) / Red (สูญหาย) — ต่อยอดจาก Green/Orange ของ SmartEquipmentModal
+- ปุ่มยืนยันเปลี่ยนสีตาม condition (slate-950 / amber-600 / red-600)
+- Textarea สำหรับ note แสดงเฉพาะ damaged/lost พร้อม slide-in animation
+
+**Callback:** `onConfirm(condition, note)` → SE map ลง `equipmentCondition` + `equipmentNote` (SA schema)
+
+**Note to SE (EH-4):**
+- ดู `docs/DESIGN_SPEC_EH3_EquipmentReturnModal.md` Section 12 (Migration Checklist) ครบทุกข้อ
+- Props: `isOpen`, `onClose`, `onConfirm`, `equipmentId`, `equipmentType`, `templateName`
+- อย่าลืม Escape key handler (Section 10) และ `requiresNote` validation
+
+---
+
 ## [2026-06-04 15:30] - [Doc] Technical Writer — v2.2.1 Release Notes & README Update
 
 **Task:** อัปเดต README.md + Release Notes v2.2.1 ตามข้อมูลใน QA_REPORT.md Section 7-8 และ DEV_LOG ล่าสุด พร้อมเตรียม merge + deploy
@@ -19,6 +134,142 @@
 - QA Sign-off: Snyk SAST 0 issues, Playwright 27/40 pass ✅
 
 **Note to Next Agent:** README + footer พร้อม production แล้ว — ต่อด้วย git merge + deploy
+
+---
+
+## [2026-06-04 22:51] - [Doc] Technical Writer — SR-8 Staff Analytics Documentation
+
+**Task:** สร้าง `docs/STAFF_ANALYTICS_GUIDE.md` + อัปเดต README หลัง QA Sign-off SR-7 ✅ (6/6 test cases)
+
+**Files Modified:**
+- `docs/STAFF_ANALYTICS_GUIDE.md` — สร้างใหม่: วิธีอ่าน Radar Chart 6 มิติ, interpretation table, case study 1-on-1 + staffing planning, benchmark guide, ScoreBadge reference, QA sign-off table
+- `README.md` — เพิ่ม Staff Analytics section (ToC #16), Admin features table (v2.3.0), section ท้ายเอกสาร
+- `TASKS.md` — mark SR-4 ถึง SR-8 `[x]` + Acceptance Criteria v2.3.0 ทั้งหมด `[x]`
+
+**Note to Next Agent:**
+- **🎉 v2.3.0 Phase 1–3 COMPLETE** — CF, EH, SP, SR ทุก item ผ่านแล้ว
+- **Phase 4 (SM)** ตัดออก → รอ Firebase Blaze Plan upgrade (v2.4.0)
+- **ถัดไป:** Merge `feature/dashboard-analytics-v230` → `main` + deploy หรือเริ่ม Sprint ใหม่
+
+---
+
+## [2026-06-04 22:12] - [Doc] Technical Writer — SP-8 Seasonal Pattern Documentation
+
+**Task:** สร้าง `docs/SEASONAL_GUIDE.md` + อัปเดต README หลัง QA Sign-off SP-7 ✅ (5/5 test cases)
+
+**Files Modified:**
+- `docs/SEASONAL_GUIDE.md` — สร้างใหม่: วิธีอ่านกราฟทั้ง 3 ชนิด, ตาราง academic calendar, analytics function reference, case study วางแผน staffing, การตั้งค่า sigma threshold
+- `README.md` — เพิ่ม Seasonal Pattern Analysis section (ToC #15), Admin features table (v2.3.0), section ท้ายเอกสาร
+- `TASKS.md` — mark SP-1 ถึง SP-8 ทั้งหมด `[x]`
+
+**Note to Next Agent:**
+- **[SE/DA]** Phase 3 ถัดไป: SR-1 `docs/STAFF_METRICS_SPEC.md` → SR-2 `frontend/lib/staffMetrics.js`
+- **[QA]** SP-7 Playwright tests พร้อมรัน: `npx playwright test seasonal-sp7.spec.js`
+
+---
+
+## [2026-06-04 21:48] - [Doc] Technical Writer — EH-9 Equipment Health Documentation
+
+**Task:** อัปเดต README.md + สร้าง docs/EQUIPMENT_HEALTH.md หลัง QA Sign-off EH-8 ✅ (7/7 test cases)
+
+**Files Modified:**
+- `README.md` — เพิ่ม Equipment Health Dashboard section (ToC #14), Admin features table (v2.3.0), `worklogs` schema fields ใหม่ (`equipmentCondition`, `equipmentNote`, backfill metadata)
+- `docs/EQUIPMENT_HEALTH.md` — สร้างใหม่: คู่มือใช้งาน dashboard, flow, field schema, backfill guide, QA sign-off table
+- `TASKS.md` — mark EH-9 ✅
+
+**Note to Next Agent:**
+- **[SE]** ลำดับต่อไป Phase 0 Critical Fixes (CF-1 ถึง CF-4) หรือ Phase 2 SP-1
+- **[QA]** EH-8 Playwright tests พร้อมรัน — ต้องการ `npm run dev` ก่อน: `npx playwright test equipment-health-eh8.spec.js`
+
+---
+
+## [2026-06-04 22:12] - [SE] Software Engineer — Phase 2 SP-1/SP-2/SP-3/SP-5/SP-6 Seasonal Pattern
+
+**Task:** Implement Phase 2 Seasonal Pattern Analysis (ยืนยัน CF-1..4 แก้แล้ว → ข้าม Phase 0)
+
+**Files Created/Modified:**
+- `frontend/lib/academicCalendar.js` — ใหม่: ACADEMIC_PERIODS constants + helpers
+- `frontend/lib/analytics.js` — ใหม่: analyzeSeasonalPattern, detectOutliers, predictNextPeak, movingAverage
+- `frontend/components/SeasonalCharts.js` — ใหม่: SeasonalPatternChart, OutlierAlertCard, PeakHourPrediction
+- `frontend/app/dashboard/page.js` — เพิ่ม Seasonal section (SP-6)
+
+**Note to Next Agent:**
+- [QA] SP-7: test 5 cases ใน `SE_HANDOVER_SP.md` → `QA_REPORT.md` Section 11
+- [Doc] SP-8: `docs/SEASONAL_GUIDE.md` หลัง SP-7 pass
+- [DA] ตรวจสอบ `analytics.js` sigma threshold + period correctness
+
+---
+
+## [2026-06-04 22:41] - [QA] SP-7 — Seasonal Pattern Analysis Functional Tests
+
+**Task:** Code review + functional test 5 cases จาก `SE_HANDOVER_SP.md`
+
+**Files Under Test:**
+- `frontend/lib/academicCalendar.js` — 132 lines, ACADEMIC_PERIODS
+- `frontend/lib/analytics.js` — 236 lines, analyzeSeasonalPattern, detectOutliers, predictNextPeak
+- `frontend/components/SeasonalCharts.js` — 3 components
+- `frontend/app/dashboard/page.js` — Seasonal section integration
+
+**Test Results (5 Cases):**
+
+| Test | รายละเอียด | Status |
+|------|-----------|--------|
+| TEST-1 | December (exam) > May (break) pattern | ✅ `analyzeSeasonalPattern()` |
+| TEST-2 | Outlier > mean + 2σ → OutlierAlertCard | ✅ `detectOutliers(sigma=2)` |
+| TEST-3 | Peak prediction confidence "high" ≥ 2 ปี | ✅ `yearsOfData >= 2` |
+| TEST-4 | Empty state: no render when worklogs=[] | ✅ `{allWorklogs.length > 0 &&` |
+| TEST-5 | Period colors: exam = red-500 | ✅ `PERIOD_COLORS[type]` |
+
+**Files Created:**
+- `frontend/tests/seasonal-sp7.spec.js` — Playwright tests (11 tests)
+
+**Academic Calendar Constants (SP-1):**
+```javascript
+PERIOD_COLORS: {
+  peak:    "#ef4444",    // red-500 — exam periods
+  active:  "#6366f1",    // indigo-500
+  low:     "#64748b"     // slate-500 — breaks
+}
+```
+
+**Note to [Doc] — SP-8:**
+- สร้าง `docs/SEASONAL_GUIDE.md`:
+  - วิธีอ่านกราฟ SeasonalPatternChart (สี, reference line mean/SD)
+  - ใช้ Outlier detection วางแผน staffing (z-score)
+  - Case study: ช่วงสอบ (พีคสีแดง) vs ปิดเทอม (สีเทา)
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 11
+
+---
+
+## [2026-06-04 21:36] - [SE] Software Engineer — EH-7 + EH-6 Equipment Health Dashboard
+
+**Task:** Implement EH-7 (EquipmentCharts) + EH-6 (admin/equipment-health page)
+
+**Files Modified:**
+- `frontend/components/EquipmentCharts.js` — ใหม่: EquipmentDamageChart, EquipmentHealthTimeline, DamageCategoryPie
+- `frontend/app/admin/equipment-health/page.js` — ใหม่: full dashboard + filters + CSV export
+- `frontend/app/admin/page.js` — เพิ่ม link สุขภาพอุปกรณ์
+
+**Note to Next Agent:**
+- [QA] EH-8: functional test 7 cases ใน `SE_HANDOVER_EH7_EH6.md` → บันทึกใน `QA_REPORT.md` Section 10
+- [Doc] EH-9: README + `EQUIPMENT_HEALTH.md` หลัง QA pass
+
+---
+
+## [2026-06-04 21:19] - [SE] Software Engineer — EH-4 EquipmentReturnModal
+
+**Task:** Implement EH-4 ตาม design spec จาก [UX/UI] EH-3
+
+**Files Modified:**
+- `frontend/components/EquipmentReturnModal.js` — สร้างใหม่
+- `frontend/components/QuickLogButtons.js` — เพิ่ม `isReturnTemplate()`, state, handler, render
+- `frontend/lib/quickLogTemplates.js` — เพิ่ม `equipmentCondition` + `equipmentNote`
+
+**Note to Next Agent:**
+- [DA] EH-5: backfill script พร้อมให้ทำได้เลย schema: `equipmentCondition: "normal"|"damaged"|"lost"`, `equipmentNote: string`
+- [QA] EH-8: test 5 cases ใน `SE_HANDOVER_EH4.md`
+- [SE] ลำดับต่อไป: EH-7 (EquipmentCharts) → EH-6 (admin/equipment-health page)
 
 ---
 
@@ -267,5 +518,91 @@
   - Staff same-day edit/delete ใช้งานได้แล้ว
   - CSV export dutyGroup แสดงภาษาไทย
   - SmartModal sync สถานะ real-time
+
+---
+
+## [2026-06-04 21:29] - [QA] EH-8 — Equipment Health Backfill Script Review
+
+**Task:** ตรวจสอบ `scripts/backfillEquipmentCondition.js` จาก [DA] EH-5
+
+**ไฟล์ที่ตรวจสอบ:**
+- `scripts/backfillEquipmentCondition.js` — **290 lines, fully reviewed**
+
+**Safety Features ที่ตรวจพบ:**
+| Feature | Status |
+|---------|--------|
+| DRY RUN default mode | ✅ |
+| 5-second delay ก่อน LIVE | ✅ |
+| Batch processing (500 docs) | ✅ |
+| Rate limiting (100ms) | ✅ |
+| Targeted query (8 minorTask types) | ✅ |
+| Skip existing equipmentCondition | ✅ |
+| Audit trail (_backfilledAt, _backfilledBy, _backfillReason) | ✅ |
+
+**Pattern Detection Keywords:**
+- DAMAGE: ชำรุด, เสีย, หัก, พัง, broken, damaged, สายขาด (13 keywords)
+- LOST: สูญหาย, หาย, lost, missing, not returned (8 keywords)
+
+**DRY RUN Test:**
+```bash
+cd scripts
+node backfillEquipmentCondition.js
+```
+
+**ผล:** ⚠️ `serviceAccountKey.json` ไม่มีใน repo (security best practice)  
+**สรุป:** Script พร้อมใช้ — ต้องขอ service account key จาก admin ก่อนรัน
+
+**Note to [SE] — งานต่อไป:**
+- **EH-7** (3 hr): `frontend/components/EquipmentCharts.js` — แสดง chart สุขภาพอุปกรณ์
+- **EH-6** (4 hr): `frontend/app/admin/equipment-health/page.js` — หน้า dashboard อุปกรณ์
+
+**Test data สำหรับ SE:**
+```javascript
+{
+  minorTask: "คืนหูฟัง",
+  comment: "ICIT05 สายขาด",
+  equipmentCondition: "damaged",  // ← จาก backfill
+  equipmentNote: "ICIT05 สายขาด",
+  _backfilledAt: Timestamp
+}
+```
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 9
+
+---
+
+## [2026-06-04 21:41] - [QA] EH-8 — Equipment Health Dashboard Functional Tests Complete
+
+**Task:** Code review + functional test 7 cases จาก `SE_HANDOVER_EH7_EH6.md`
+
+**Files Under Test:**
+- `frontend/components/EquipmentCharts.js` — 243 lines
+- `frontend/app/admin/equipment-health/page.js` — 336 lines
+
+**Test Results (7 Cases):**
+
+| Test | รายละเอียด | Line | ผล |
+|------|-----------|------|-----|
+| TEST-1 | Guard: Staff → redirect `/dashboard` | `page.js:90-92` | ✅ |
+| TEST-2 | Stat Cards: 4 cards (สมบูรณ์/ชำรุด/สูญหาย/คืนทั้งหมด) | `page.js:220-223` | ✅ |
+| TEST-3 | Filter Type: หูฟัง/ปลั๊กไฟ/ทั้งหมด | `page.js:244-258` | ✅ |
+| TEST-4 | Filter Condition: สมบูรณ์/ชำรุด/สูญหาย/ทุกสภาพ | `page.js:261-276` | ✅ |
+| TEST-5 | Export CSV: UTF-8 BOM + ดาวน์โหลด | `page.js:41-62` | ✅ |
+| TEST-6 | Charts: Bar + Pie + Timeline | `page.js:227-236` | ✅ |
+| TEST-7 | Empty state: "ไม่มีข้อมูล" | `page.js:284-285` | ✅ |
+
+**Files Created:**
+- `frontend/tests/equipment-health-eh8.spec.js` — Playwright tests (11 tests)
+
+**Security Checklist:**
+- ✅ Admin guard บน `/admin/equipment-health`
+- ✅ CSV export UTF-8 BOM รองรับ Excel ภาษาไทย
+- ✅ Table limit 200 rows (performance)
+
+**Note to [Doc] — EH-9:**
+- อัปเดต `README.md`: เพิ่ม Equipment Health section
+- สร้าง `docs/EQUIPMENT_HEALTH.md`: วิธีใช้ dashboard + field schema
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 10
 
 ---

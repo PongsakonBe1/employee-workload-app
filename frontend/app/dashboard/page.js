@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Calendar, Filter, User, Printer } from "lucide-react";
+import { analyzeSeasonalPattern, detectOutliers, predictNextPeak } from "../../lib/analytics";
 import { AppShell } from "../../components/AppShell";
 import { MetricCard } from "../../components/MetricCard";
 import { useAuth } from "../../components/AuthProvider";
@@ -54,6 +55,18 @@ const WorkloadHeatmap = dynamic(
 );
 const HourOfDayChart = dynamic(
   () => import("../../components/DashboardCharts").then((m) => m.HourOfDayChart),
+  { ssr: false, loading: ChartLoading }
+);
+const SeasonalPatternChart = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.SeasonalPatternChart),
+  { ssr: false, loading: ChartLoading }
+);
+const OutlierAlertCard = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.OutlierAlertCard),
+  { ssr: false, loading: ChartLoading }
+);
+const PeakHourPrediction = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.PeakHourPrediction),
   { ssr: false, loading: ChartLoading }
 );
 
@@ -487,6 +500,9 @@ export default function DashboardPage() {
         .map(([hour, count]) => ({ hour, count }))
         .sort((a, b) => a.hour.localeCompare(b.hour));
 
+      // SP-2: เก็บ worklogs สำหรับ seasonal analysis
+      setAllWorklogs(allWorklogsInRange);
+
       setData({
         total: actualTotal,
         totalLoaded: worklogs.length,
@@ -544,6 +560,12 @@ export default function DashboardPage() {
   }, [fiscalYear, timeFilter, selectedEmployee, customStart, customEnd]);
 
   const topDuty = useMemo(() => data?.byMainDuty?.[0]?.label || "—", [data]);
+
+  // SP-2: Seasonal analysis — คำนวณจาก allWorklogsInRange ที่ผ่าน filter แล้ว
+  const [allWorklogs, setAllWorklogs] = useState([]);
+  const seasonalData = useMemo(() => analyzeSeasonalPattern(allWorklogs), [allWorklogs]);
+  const outliers     = useMemo(() => detectOutliers(allWorklogs, 2), [allWorklogs]);
+  const prediction   = useMemo(() => predictNextPeak(allWorklogs), [allWorklogs]);
 
   return (
     <AppShell>
@@ -899,6 +921,35 @@ export default function DashboardPage() {
         <WorkloadHeatmap data={data?.byDayHour || {}} />
         <HourOfDayChart data={data?.byHour || []} />
       </section>
+
+      {/* แถว SP: แพทเทิร์นตามภาคเรียน */}
+      {allWorklogs.length > 0 && (
+        <section className="mt-5">
+          <div className="mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950">แพทเทิร์นตามภาคเรียน</h2>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">SP</span>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <SeasonalPatternChart
+                data={seasonalData.byMonth}
+                mean={seasonalData.monthlyMean}
+                sd={seasonalData.monthlySD}
+              />
+            </div>
+            <PeakHourPrediction
+              prediction={prediction}
+              byPeriod={seasonalData.byPeriod}
+            />
+          </div>
+          <div className="mt-5">
+            <OutlierAlertCard
+              outliers={outliers}
+              mean={seasonalData.monthlyMean}
+            />
+          </div>
+        </section>
+      )}
 
       {/* แถว 3: จำนวนงานตามหัวข้อหลัก + จำนวนงานตามหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">

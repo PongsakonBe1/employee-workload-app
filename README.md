@@ -29,6 +29,9 @@
 11. [ความปลอดภัย (Security)](#ความปลอดภัย-security)
 12. [ประวัติการเปลี่ยนแปลง (Changelog)](#ประวัติการเปลี่ยนแปลง-changelog)
 13. [การพัฒนาเพิ่มเติม (Development)](#การพัฒนาเพิ่มเติม-development)
+14. [Equipment Health Dashboard](#equipment-health-dashboard)
+15. [Seasonal Pattern Analysis](#seasonal-pattern-analysis)
+16. [Staff Analytics (Radar Chart)](#staff-analytics-radar-chart)
 
 ---
 
@@ -100,6 +103,9 @@
 | Export CSV | Export ข้อมูลทุกคนกรองตามวันที่/พนักงาน | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header และ CSS @media print ซ่อน UI ที่ไม่จำเป็น | v2.0.0 |
 | Push Notification Settings | ตั้งค่าวัน/เวลาส่ง Push Reminder (Render + Cron-job.org), เปิด/ปิด toggle, เลือกวันที่ส่ง (จ–อา) | v2.1.0 |
+| Equipment Health Dashboard | Dashboard สุขภาพอุปกรณ์ — Damage Rate, Timeline, Pie chart, กรองตามประเภท/สภาพ, Export CSV | v2.3.0 |
+| Seasonal Pattern Analysis | วิเคราะห์แพทเทิร์นภาระงานตามปฏิทินวิชาการ — SeasonalPatternChart, OutlierAlertCard, PeakHourPrediction, เกณฑ์อ้างอิงปฏิทิน KMUTNB | v2.3.0 |
+| Staff Analytics | Radar Chart ประเมินประสิทธิภาพ 6 มิติ, Compare mode 3 คน, Rankings table, benchmark เทียบทีม, CSV export | v2.3.0 |
 | จัดการ Users | อนุมัติ/ปฏิเสธคำขอสมัคร, เปิด/ปิดใช้งาน | v1.0.0 |
 | ดู System Logs | Audit log การใช้งานระบบ | v1.0.0 |
 
@@ -318,7 +324,16 @@ employee-workload-app/
   
   // Equipment/Room (optional)
   equipment: string | null,      // รหัสอุปกรณ์ เช่น "ICIT01"
-  room: string | null             // ห้อง เช่น "303"
+  room: string | null,            // ห้อง เช่น "303"
+  
+  // Equipment Health (v2.3.0+, optional — ตอนคืนอุปกรณ์)
+  equipmentCondition: "normal" | "damaged" | "lost" | null,
+  equipmentNote: string | null,   // หมายเหตุสภาพอุปกรณ์ (เมื่อ damaged/lost)
+  
+  // Backfill Metadata (optional — จาก backfillEquipmentCondition.js)
+  _backfilledAt: Timestamp | null,
+  _backfilledBy: string | null,
+  _backfillReason: string | null
 }
 ```
 
@@ -1570,6 +1585,140 @@ cd firebase && firebase deploy
 3. Commit: `git commit -m 'feat: add your feature'`
 4. Push: `git push origin feature/your-feature`
 5. เปิด Pull Request
+
+---
+
+## Equipment Health Dashboard
+
+> 📄 คู่มือฉบับเต็ม: [`docs/EQUIPMENT_HEALTH.md`](docs/EQUIPMENT_HEALTH.md)
+
+ฟีเจอร์ v2.3.0 — ติดตามสุขภาพอุปกรณ์ (หูฟัง/ปลั๊กไฟ) หลังคืนแต่ละครั้ง
+
+### ภาพรวม
+
+เมื่อ Staff กด **"คืนหูฟัง"** หรือ **"คืนปลั๊กไฟ"** จะมี `EquipmentReturnModal` ขึ้นมาให้เลือกสภาพ:
+- ✅ **สมบูรณ์** (default, 1 click)
+- ⚠️ **ชำรุด** — เปิด text input กรอกรายละเอียด
+- ❌ **สูญหาย** — เปิด text input กรอกรายละเอียด
+
+ข้อมูลถูกบันทึกเป็น field `equipmentCondition` และ `equipmentNote` ใน `worklogs` document นั้น
+
+### หน้า Dashboard — `/admin/equipment-health`
+
+เข้าถึงได้เฉพาะ **Admin / Superadmin** — Staff ถูก redirect ไป `/dashboard`
+
+| ส่วน | รายละเอียด |
+|------|-----------|
+| **Stat Cards (4 ใบ)** | สมบูรณ์ / ชำรุด / สูญหาย / คืนทั้งหมด |
+| **Filter ประเภท** | หูฟัง / ปลั๊กไฟ / ทั้งหมด |
+| **Filter สภาพ** | สมบูรณ์ / ชำรุด / สูญหาย / ทุกสภาพ |
+| **EquipmentDamageChart** | Stacked Bar — จำนวน normal/damaged/lost รายเดือน |
+| **DamageCategoryPie** | Pie Chart — สัดส่วนแต่ละสภาพ |
+| **EquipmentHealthTimeline** | Line Chart — trend หูฟัง vs ปลั๊กไฟ รายเดือน |
+| **ตาราง** | รายละเอียดทุก record (จำกัด 200 แถว) |
+| **Export CSV** | UTF-8 BOM รองรับ Excel ภาษาไทย |
+
+### Field Schema (เพิ่มใน `worklogs/{id}`)
+
+```javascript
+equipmentCondition: "normal" | "damaged" | "lost" | null,
+equipmentNote: string | null,  // กรอกเมื่อ damaged/lost เท่านั้น
+```
+
+### Files ที่เกี่ยวข้อง
+
+| ไฟล์ | หน้าที่ |
+|------|--------|
+| `frontend/components/EquipmentReturnModal.js` | Modal เลือกสภาพตอนคืนอุปกรณ์ |
+| `frontend/components/EquipmentCharts.js` | Chart components (Bar, Pie, Timeline) |
+| `frontend/app/admin/equipment-health/page.js` | Dashboard page |
+| `scripts/backfillEquipmentCondition.js` | Script backfill ข้อมูลย้อนหลัง |
+
+---
+
+## Seasonal Pattern Analysis
+
+> 📄 คู่มือฉบับเต็ม: [`docs/SEASONAL_GUIDE.md`](docs/SEASONAL_GUIDE.md)
+
+ฟีเจอร์ v2.3.0 (Phase 2) — วิเคราะห์แพทเทิร์นภาระงานตามปฏิทินวิชาการ KMUTNB — ช่วย Admin วางแผนอัตรากำลังล่วงหน้าได้
+
+### ภาพรวม
+
+แสดงใน **Dashboard → ส่วน "แพทเทิร์นตามภาคเรียน"** (ใต้ Heatmap) เฉพาะ Admin/Superadmin และเมื่อมีข้อมูล worklog
+
+### Charts 3 ชนิด
+
+| Component | ชนิด | ข้อมูล |
+|-----------|------|--------|
+| `SeasonalPatternChart` | Bar Chart + Reference Lines | จำนวนงานรายเดือน + mean + mean+2σ |
+| `OutlierAlertCard` | Card list | วันที่งานเกิน mean+2σ พร้อม z-score |
+| `PeakHourPrediction` | Prediction card | เดือนที่คาดว่างานจะหนาแน่นปีหน้า |
+
+### สีตามช่วงปฏิทินวิชาการ
+
+| สี | ช่วง | ความหมาย |
+|----|------|----------|
+| 🔴 แดง | ช่วงสอบ (ก.ย.–ต.ค., ก.พ.–มี.ค.) | ภาระงานสูงสุด |
+| 🔵 ม่วง | ช่วงเรียนปกติ | ภาระงานปกติ |
+| ⬜ เทา | ปิดเทอม (พ.ย., เม.ย.–พ.ค.) | ภาระงานน้อย |
+
+### Analytics Functions
+
+| Function | ใช้งาน |
+|----------|--------|
+| `analyzeSeasonalPattern(worklogs)` | สรุปงานรายเดือน/ช่วง, หา peak/low month |
+| `detectOutliers(worklogs, sigma=2)` | ตรวจจับวันผิดปกติ (z-score > threshold) |
+| `predictNextPeak(worklogs)` | พยากรณ์เดือนหนาแน่นปีหน้า |
+| `movingAverage(arr, n=7)` | เส้น trend เรียบ 7 วัน |
+
+### Files ที่เกี่ยวข้อง
+
+| ไฟล์ | หน้าที่ |
+|------|--------|
+| `frontend/lib/academicCalendar.js` | `ACADEMIC_PERIODS` constants + helpers |
+| `frontend/lib/analytics.js` | Core analytics functions |
+| `frontend/components/SeasonalCharts.js` | React chart components |
+| `frontend/app/dashboard/page.js` | Dashboard integration (SP-6) |
+
+---
+
+## Staff Analytics (Radar Chart)
+
+> 📄 คู่มือฉบับเต็ม: [`docs/STAFF_ANALYTICS_GUIDE.md`](docs/STAFF_ANALYTICS_GUIDE.md)  
+> 📊 Metrics Spec: [`docs/STAFF_METRICS_SPEC.md`](docs/STAFF_METRICS_SPEC.md)
+
+ฟีเจอร์ v2.3.0 (Phase 3) — ประเมินประสิทธิภาพพนักงาน 6 มิติด้วย Radar Chart — ช่วย Admin เห็นจุดแข็ง/จุดพัฒนาได้และใช้ในการ 1-on-1 coaching
+
+### หน้า Dashboard — `/admin/staff-analytics`
+
+เข้าถึงได้เฉพาะ **Admin / Superadmin** — Staff ถูก redirect ไป `/dashboard`
+
+| ส่วน | รายละเอียด |
+|------|----------|
+| **Time Range** | 1M / 3M / 6M / 1Y |
+| **Rankings Table** | เรียงอันดับตามคะแนนเฉลี่ย, sort ได้ทุกมิติ |
+| **Radar Chart (Single)** | เลือก 1 คน + ScoreBadge จุดแข็ง/พัฒนาได้ |
+| **Radar Chart (Compare)** | เลือก 2–3 คน ซ้อนกัน + benchmark เยตีม |
+| **Export CSV** | 8 คอลัมน์ (6 metrics + ชื่อ + เฉลี่ย) |
+
+### 6 มิติที่วัด
+
+| มิติ | ชื่อไทย | วัดจาก |
+|------|--------|--------|
+| Volume | ปริมาณงาน | จำนวน worklogs |
+| Versatility | ความหลากหลาย | จำนวน `minorTask` ไม่ซ้ำ |
+| Consistency | ความสม่ำเสมอ | CV-based งานต่อวัน |
+| Peak Handling | จัดการช่วงพีค | สัดส่วนงาน 14–17 น. |
+| Documentation | เอกสารละเอียด | comment ≥ 20 ตัวอักษร |
+| Combo Usage | ใช้ combo | อัตราการใช้ Combo Template |
+
+### Files ที่เกี่ยวข้อง
+
+| ไฟล์ | หน้าที่ |
+|------|--------|
+| `frontend/lib/staffMetrics.js` | Core metrics: 6 functions + normalize + getTeamAverage |
+| `frontend/components/StaffRadarChart.js` | Radar Chart, ScoreBadge, AXES, SLOT_COLORS |
+| `frontend/app/admin/staff-analytics/page.js` | Dashboard page |
 
 ---
 

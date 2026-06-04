@@ -306,3 +306,147 @@ hotfix(modal): sync SmartEquipmentModal/SmartRoomModal with CustomEvents
 hotfix(rules): allow staff to delete own same-day unlocked worklogs
 test(playwright): add auth state injection for superadmin and staff roles
 ```
+
+---
+
+# Dashboard & Analytics Enhancement — v2.3.0
+
+เพิ่มฟีเจอร์ Analytics 3 Phase + Critical Fixes จาก DA Audit
+**Branch:** `feature/dashboard-analytics-v230`
+**Timeline:** 3 สัปดาห์ (สมมติ 1 คน/role)
+**Phase 4 (System Metrics):** ❌ ตัดออก — ต้องการ Blaze Plan + ยังไม่ upgrade Firebase
+
+---
+
+## Timeline Overview
+
+| สัปดาห์ | Phase | งานหลัก |
+|---|---|---|
+| **Week 1** | Phase 0 + Phase 1 | Critical Fixes + Equipment Health Tracking |
+| **Week 2** | Phase 2 | Seasonal Pattern Analysis |
+| **Week 3** | Phase 3 + QA/Doc | Staff Efficiency Radar + ทดสอบและเอกสาร |
+
+---
+
+## Phase 0: Critical Fixes — [SE] 🔴 (Week 1, Day 1-2)
+
+*ต้องทำก่อนเพิ่มฟีเจอร์ใดๆ — ทั้งหมดอยู่ใน `frontend/app/dashboard/page.js`*
+
+- [ ] **CF-1** (30 min) — Fix Heatmap Timezone Bug: `new Date(log.date)` → `new Date(log.date + "T00:00:00")` (บรรทัด 463)
+- [ ] **CF-2** (30 min) — Fix Aggregate from Truncated Data: `worklogs.forEach` → `allWorklogsInRange.forEach` (บรรทัด 436)
+- [ ] **CF-3** (15 min) — Remove Duplicate Error Display: ลบ error block ซ้ำออก 1 จุด (บรรทัด 783-787 หรือ 816-819)
+- [ ] **CF-4** (1 hr) — Fix Leaderboard Query Redundancy: ใช้ `allWorklogsInRange` แทน query Firestore ซ้ำ (บรรทัด 528-548)
+
+**Acceptance:** KPI Card กับ Pie Chart reflect จำนวนเดียวกัน, Heatmap วันจันทร์แสดงข้อมูลจันทร์จริง
+
+---
+
+## Phase 1: Equipment Health Tracking — (Week 1, Day 3-5)
+
+### [SA] Schema + Rules (Day 3, ~1.5 hr)
+- [ ] **EH-1** — ออกแบบ schema: เพิ่ม `worklogs.equipmentCondition: enum["normal","damaged","lost"]` + `worklogs.equipmentNote: string`
+- [ ] **EH-2** — อัปเดต `firebase/firestore.rules`: อนุญาต write fields ใหม่ใน worklog create/update
+  - *Dependency: EH-1 ก่อน*
+
+### [UX/UI] Design (Day 3, ~2 hr, parallel กับ SA)
+- [ ] **EH-3** — ออกแบบ EquipmentReturnModal: trigger ตอน "คืนหูฟัง/ปลั๊กไฟ/ปิดห้อง", default [✓] สมบูรณ์, alt [ชำรุด] → text input, max 2 clicks ถ้าปกติ
+  - *Pattern: ใช้จาก `SmartEquipmentModal.js`*
+
+### [SE] Implementation (Day 4-5, ~10 hr)
+- [ ] **EH-4** (3 hr) — สร้าง `frontend/components/EquipmentReturnModal.js` (new) + เชื่อมจาก `QuickLogButtons.js`
+  - *Dependency: EH-3*
+- [ ] **EH-7** (3 hr) — สร้าง `frontend/components/EquipmentCharts.js` (new): `EquipmentDamageChart`, `EquipmentHealthTimeline`, `DamageCategoryPie`
+- [ ] **EH-6** (4 hr) — สร้าง `frontend/app/admin/equipment-health/page.js` (new): Damage Rate, Timeline, Pie, Export CSV
+  - *Dependency: EH-4, EH-7*
+
+### [DA] Backfill (Day 5, ~2 hr, parallel กับ SE)
+- [ ] **EH-5** — สร้าง `scripts/backfillEquipmentCondition.js`: parse comment หา "ชำรุด/เสีย/หัก/สูญหาย" → อัปเดต field ย้อนหลัง
+  - *Safety: รันบน dev ก่อน + backup ก่อน production*
+
+### [QA] Test (Day 5 EOD, ~2 hr)
+- [ ] **EH-8** — ทดสอบ: ยืม→คืนปกติ, ยืม→คืน+ชำรุด+โน๊ต, กรองอุปกรณ์ชำรุดบ่อย → บันทึกใน `QA_REPORT.md`
+
+### [Doc] (~1.5 hr, หลัง EH-8 pass)
+- [x] **EH-9** — อัปเดต `README.md` + สร้าง `docs/EQUIPMENT_HEALTH.md`
+
+---
+
+## Phase 2: Seasonal Pattern Analysis — (Week 2)
+
+### [DA] Algorithm (Day 1-2, ~4 hr)
+- [x] **SP-1** (1 hr) — สร้าง `frontend/lib/academicCalendar.js`: `ACADEMIC_PERIODS` constants ตาม academic calendar
+- [x] **SP-2** (2 hr) — สร้าง `frontend/lib/analytics.js`: `analyzeSeasonalPattern()`, `detectOutliers()`, `predictNextPeak()`
+- [x] **SP-3** (1 hr) — Outlier detection: วันที่มีงาน > mean + 2×SD → flag
+  - *Dependency: SP-2*
+
+### [UX/UI] Design (Day 1-2 parallel, ~2 hr)
+- [x] **SP-4** — ออกแบบ Seasonal Dashboard: box plot style, trend arrows (▲▼→), outlier alert cards
+
+### [SE] Implementation (Day 3-4, ~5 hr)
+- [x] **SP-5** (3 hr) — สร้าง `frontend/components/SeasonalCharts.js` (new): `SeasonalPatternChart`, `OutlierAlertCard`, `PeakHourPrediction`
+  - *Dependency: SP-4*
+- [x] **SP-6** (2 hr) — แก้ `frontend/app/dashboard/page.js`: เพิ่ม section "แพทเทิร์นตามภาคเรียน" ใต้ Heatmap
+  - *Dependency: SP-5*
+
+### [QA] Validation (Day 5, ~1.5 hr)
+- [x] **SP-7** — ตรวจ: ธันวาคม (exam) > พฤษภาคม (break), outlier detection flag วันงาน > 50
+
+### [Doc] (~1 hr, หลัง SP-7 pass)
+- [x] **SP-8** — สร้าง `docs/SEASONAL_GUIDE.md`: วิธีอ่านกราฟ, ใช้พยากรณ์ staffing, case study
+
+---
+
+## Phase 3: Staff Efficiency Radar Chart — (Week 3, Day 1-4)
+
+### [DA] Metrics Spec + Functions (Day 1-2, ~4 hr)
+- [x] **SR-1** (2 hr) — สร้าง `docs/STAFF_METRICS_SPEC.md`: 6 metrics (Volume, Versatility, Consistency, Peak Handling, Documentation, Combo Usage) ✅
+- [x] **SR-2** (2 hr) — สร้าง `frontend/lib/staffMetrics.js` (new): `calculateRadarMetrics()`, `getTeamAverage()`, 6 calculation functions + unit tests ✅
+  - *Files:* `frontend/lib/staffMetrics.js`, `frontend/lib/staffMetrics.test.js`
+  - *Tests:* 14 test suites, 50+ test cases, all passing ✅
+  - *Dependency: SR-1* ✅ **COMPLETE** — ready for SR-3/4 (UX/UI + SE)
+
+### [UX/UI] Design (Day 1-2 parallel, ~2 hr)
+- [x] **SR-3** — ออกแบบ Radar Chart: 6 แกน clockwise, fill โปร่งใส opacity 0.3, team average เส้นประเทา, tooltip ✅
+
+### [SE] Implementation (Day 2-4, ~9 hr)
+- [x] **SR-4** (3 hr) — สร้าง `frontend/components/StaffRadarChart.js` (new): Recharts RadarChart, props `data`, `benchmark`, `onCompare`
+  - *Dependency: SR-3*
+- [x] **SR-5** (4 hr) — สร้าง `frontend/app/admin/staff-analytics/page.js` (new): radar รายบุคคล, multi-select compare (max 3), ranking table, time range selector
+  - *Dependency: SR-4*
+- [x] **SR-6** (2 hr) — เพิ่ม team average benchmark line ใน `StaffRadarChart.js`
+
+### [QA] Metric Accuracy (Day 4-5, ~2 hr)
+- [x] **SR-7** — ตรวจ: คำนวณ consistency ด้วยมือเทียบระบบ, normalization อยู่ใน 0-100, edge case พนักงานใหม่ไม่ error
+
+### [Doc] (~1.5 hr, หลัง SR-7 pass)
+- [x] **SR-8** — สร้าง `docs/STAFF_ANALYTICS_GUIDE.md`: วิธีอ่าน radar, ตัวอย่าง interpretation, ใช้ใน 1-on-1
+
+---
+
+## Phase 4: System Metrics Collection — ❌ ตัดออก (v2.4.0)
+
+**เหตุผล:** ต้องการ Firebase Blaze Plan (Cloud Functions Scheduled Trigger) + SM-2 dependency — เลื่อนไป v2.4.0 เมื่อ upgrade Firebase
+
+*Items: SM-1 ถึง SM-5 รอในไฟล์ `docs/V230_ACTION_ITEMS.md`*
+
+---
+
+## Acceptance Criteria v2.3.0
+
+- [x] CF-1 ถึง CF-4: Dashboard แสดงข้อมูลถูกต้อง ไม่มี bug จาก DA Audit
+- [x] EH-1 ถึง EH-9: บันทึกสภาพอุปกรณ์ตอนคืนได้ + ดู report ได้
+- [x] SP-1 ถึง SP-8: แสดง seasonal pattern และ outlier detection ได้
+- [x] SR-1 ถึง SR-8: แสดง radar chart ประเมินพนักงาน 6 มิติได้
+
+---
+
+## Resource Summary (ตัด Phase 4 แล้ว)
+
+| Role | Phase 0 | Phase 1 | Phase 2 | Phase 3 | **Total** |
+|------|---------|---------|---------|---------|-----------|
+| **SE** | 2.25 hr | 10 hr | 5 hr | 9 hr | **26.25 hr** |
+| **SA** | — | 1.5 hr | — | — | **1.5 hr** |
+| **UX/UI** | — | 2 hr | 2 hr | 2 hr | **6 hr** |
+| **DA** | — | 2 hr | 4 hr | 4 hr | **10 hr** |
+| **QA** | — | 2 hr | 1.5 hr | 2 hr | **5.5 hr** |
+| **Doc** | — | 1.5 hr | 1 hr | 1.5 hr | **4 hr** |
