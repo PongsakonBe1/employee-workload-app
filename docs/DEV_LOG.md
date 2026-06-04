@@ -2,6 +2,21 @@
 
 ---
 
+## [2026-06-04 23:05] - [SE] Software Engineer — SR-4 + SR-5 + SR-6 Staff Radar Chart
+
+**Task:** Implement SR-4 (StaffRadarChart), SR-5 (admin/staff-analytics page), SR-6 (benchmark integration)
+
+**Files Created/Modified:**
+- `frontend/components/StaffRadarChart.js` — ใหม่: Recharts RadarChart, single/compare mode, ScoreBadge, metricsToChartData, AXES export
+- `frontend/app/admin/staff-analytics/page.js` — ใหม่: admin dashboard, time range, staff search, compare chart, rankings table, CSV export
+- `frontend/app/admin/page.js` — เพิ่ม Staff Analytics menu item
+
+**Note to Next Agent:**
+- [QA] SR-7: functional test 6 cases (single/compare mode, benchmark line, CSV export, empty state, new employee warning)
+- [Doc] SR-8: `docs/STAFF_ANALYTICS_GUIDE.md` หลัง SR-7 pass
+
+---
+
 ## [2026-06-04 22:31] - [UX/UI] Designer — SR-3 StaffRadarChart Design Spec
 
 **Task:** SR-3 — ออกแบบ `StaffRadarChart` component สำหรับ Staff Efficiency Radar Chart (Phase 3)
