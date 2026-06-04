@@ -6,7 +6,6 @@ firebase/out
 frontend/out
 .env
 .env.local
-.env.production
 .env.new
 .DS_Store
 coverage
