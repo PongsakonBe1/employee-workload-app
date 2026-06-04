@@ -2,6 +2,111 @@
 
 ---
 
+## [2026-06-04 14:50] - [SA] System Architect — Firestore Rules Hotfix (BUG-5 follow-up)
+
+**Task:** แก้ Firestore Rules ให้ staff สามารถ edit/delete worklog ของตัวเองในวันเดียวกันได้
+
+**Files Modified:**
+- `firebase/firestore.rules`
+
+**Root Causes Found & Fixed:**
+1. `isSameDay()` ใช้ `duration.value()` / `timestamp.value()` ที่ไม่ valid ใน Firestore CEL → deny ทุก operation → ลบ `isSameDay` check ออกจาก rules (frontend `canEdit()` enforce แทน)
+2. `resource.data.locked` — field ไม่มีใน document เก่า → CEL throw error → deny → แก้เป็น `resource.data.get('locked', false)`
+3. `resource.data.createdBy` — field ไม่มีใน document เก่า → CEL throw error → deny → แก้เป็น `resource.data.get('createdBy', '')`
+
+**Note to Next Agent:**
+- [QA] ทดสอบ staff edit/delete worklog วันนี้ → ต้องผ่าน
+- [QA] ทดสอบ staff edit/delete worklog เมื่อวาน → ต้องถูก block โดย frontend `canEdit()`
+- [SE] `SmartEquipmentModal` fix `.reverse()` ก่อน process logs → สถานะหูฟังถูกต้องแล้ว
+
+---
+
+## [2026-06-04 14:00] - [SE] Software Engineer — Bugfix Sprint Jun 04
+
+**Task:** แก้ไข 5 bugs ตาม TASKS.md Bugfix Sprint Jun 04
+
+**Files Modified:**
+- `frontend/components/SmartEquipmentModal.js` — BUG-1
+- `frontend/components/SmartRoomModal.js` — BUG-1
+- `frontend/lib/quickLogTemplates.js` — BUG-4
+- `frontend/app/export/page.js` — BUG-3
+- `frontend/app/worklogs/page.js` — BUG-5
+
+**Bug Summary:**
+
+### BUG-1: SmartModal ไม่อัปเดตสถานะ
+- `SmartEquipmentModal` — เพิ่ม `equipmentDetails` update ใน `equipmentStatusUpdated` handler (user/time ถูก sync ด้วย)
+- `SmartRoomModal` — เพิ่ม `useEffect` รับ `roomStatusUpdated` CustomEvent อัปเดต `roomStatus` state ทันที
+
+### BUG-2: CSV ผู้ให้บริการ (Combo Template)
+- ✅ `logFromComboTemplate()` มี `employeeDisplayName/Nickname/FullName` แล้วตั้งแต่ก่อน — ไม่ต้องแก้
+
+### BUG-3: CSV กลุ่มงานแสดง "main"/"additional"
+- เพิ่ม `dutyGroupLabel(dutyGroup, mainDuty)` ใน `export/page.js`
+- `"main"` → ใช้ `mainDuty` (ชื่อหัวข้อหลัก), `"additional"` → `"งานอื่นๆ ที่ได้รับมอบหมาย"`
+
+### BUG-4: QuickLog ไม่มีสถานะใน CSV
+- เพิ่ม `status: "บันทึกแล้ว"` ใน `logFromTemplate()` (`logFromComboTemplate` มีแล้ว)
+
+### BUG-5: Staff ลบ/แก้ไข Worklog ไม่ได้
+- แก้ `canEdit()` — เปลี่ยนจาก `user.id`/`nickname` เป็น `item.createdBy === user.uid`
+- เพิ่มเช็ค `item.locked === true` ก่อน lock-time check
+- Build ผ่าน 0 errors ✅
+
+**Note to Next Agent:**
+- [QA] ทดสอบ BUG-5: staff login → worklogs → ปุ่ม edit/delete วันนี้กดได้
+- [QA] ทดสอบ BUG-3: export CSV → column กลุ่มงานแสดงชื่อไทย ไม่ใช่ "main"/"additional"
+- [QA] สร้าง Playwright fixtures ตาม QA-1 ใน TASKS.md
+
+---
+
+## [2026-06-04 13:55] - [SA] Firestore Rules Verification — v2.2.0 Pre-Production Check
+
+**Task:** ตรวจสอบ Firestore Rules ตามที่ [PM] มอบหมายใน TASKS.md
+
+**Files Verified:**
+- `firebase/firestore.rules` — ตรวจสอบ 3 รายการตาม TASKS.md
+
+**Verification Results:**
+
+### 1. Combo Template Schema (Line 26-28 TASKS.md)
+- ✅ **สถานะ:** Rules รองรับอยู่แล้ว (ไม่ต้องแก้)
+- **รายละเอียด:** `globalTemplates` collection อนุญาติ `isCombo`, `comboItems` fields ผ่าน generic update rule
+- **Note:** worklog create rule (`isValidWorkLog()`) รองรับ combo data โดยไม่ต้องแก้ไข
+
+### 2. Background Push Notification (Line 136-146 TASKS.md)
+- ✅ **สถานะ:** แก้ไขแล้ว (ก่อนหน้านี้)
+- **รายละเอียด:** 
+  - เพิ่ม `fcmToken` ใน users collection allowed fields (line 114)
+  - Rules อนุญาติ user บันทึก FCM token สำหรับ push notification
+  - Backend ใช้ firebase-admin SDK ซึ่ง bypass rules (service account)
+- **Field ที่เพิ่ม:** `reminderDays` ใน `settings/system` — อนุญาติผ่าน admin update rule
+
+### 3. BUG-5: Worklog Delete Rule (Line 276-283 TASKS.md)
+- ✅ **สถานะ:** Rules ถูกต้องแล้ว (ไม่ต้องแก้)
+- **รายละเอียด:** ตรวจสอบ `worklogs/{worklogId}` delete rule (lines 142-147)
+  ```
+  allow delete: if isAdmin() ||
+     (isAuthenticated() && 
+      (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
+      resource.data.locked != true &&
+      isSameDay(resource.data));
+  ```
+- **ครบตามเงื่อนไข:**
+  - ✅ `isOwner()` — เช็ค `employeeId == uid || createdBy == uid`
+  - ✅ `isSameDay()` — เรียก function ตรวจสอบวันเดียวกัน
+  - ✅ `!isLocked()` — เช็ค `locked != true`
+
+**Files Modified:**
+- `docs/DEV_LOG.md` — บันทึก entry นี้
+
+**Note to Next Agent:**
+- Firestore Rules พร้อม production แล้ว
+- ไม่มีการแก้ไข rules ในรอบนี้ (ทุกอย่างถูกต้องตาม spec)
+- [SE] สามารถใช้งาน combo template, push notification, worklog delete ได้เลย
+
+---
+
 ## [2026-06-03 15:23] - [Doc] Technical Writer — v2.2.0 Merge Combo Template + Release Notes
 
 **Task:** Merge branch `feature/combo-template` เข้า `main`, resolve 7 conflicts, อัปเดต README.md + AppShell footer

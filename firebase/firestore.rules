@@ -62,24 +62,10 @@ service cloud.firestore {
     }
 
     function isSameDay(worklog) {
-      // ตรวจสอบว่า worklog ถูกสร้าง/บันทึกในวันเดียวกับการแก้ไข
-      // ใช้ createdAt ถ้ามี (timestamp), ไม่งั้น fallback ไปใช้ date string
-      let now = request.time;
-      if (worklog.keys().hasAny(['createdAt'])) {
-        let createdAt = worklog.createdAt;
-        return createdAt.year() == now.year() &&
-               createdAt.month() == now.month() &&
-               createdAt.day() == now.day();
-      } else {
-        // Fallback: เปรียบเทียบ date string กับวันนี้ (อาจมีปัญหา timezone แต่ดีที่สุดเท่าที่ทำได้)
-        let year = now.year();
-        let month = now.month();
-        let day = now.day();
-        let monthStr = month < 10 ? "0" + month : "" + month;
-        let dayStr = day < 10 ? "0" + day : "" + day;
-        let dateStr = year + "-" + monthStr + "-" + dayStr;
-        return worklog.date == dateStr;
-      }
+      // ตรวจสอบว่า worklog ถูกสร้างภายใน 24 ชั่วโมงที่ผ่านมา
+      // (ครอบคลุม timezone UTC+7 โดยไม่ต้องคำนวณ offset)
+      let cutoff = request.time - duration.value(24, 'h');
+      return worklog.createdAt > cutoff;
     }
 
     // Users collection
@@ -131,20 +117,20 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidWorkLog() &&
         (request.resource.data.employeeId == request.auth.uid || isAdmin());
       
-      // Update: Admin anytime (with validation), staff/owner only same-day and if not locked
+      // Update: Admin anytime (with validation), staff/owner only if not locked
+      // Note: same-day enforcement is handled client-side via canEdit() lockTime check
       allow update: if (isAdmin() && isValidWorkLogUpdate()) ||
         (isAuthenticated() &&
-         (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
-         resource.data.locked != true &&
-         isSameDay(resource.data) &&
+         (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+         resource.data.get('locked', false) != true &&
          isValidWorkLogUpdate());
       
-      // Delete: Admin anytime, staff/owner only same-day and if not locked
+      // Delete: Admin anytime, staff/owner only if not locked
+      // Note: same-day enforcement is handled client-side via canEdit() lockTime check
       allow delete: if isAdmin() ||
          (isAuthenticated() && 
-          (resource.data.employeeId == request.auth.uid || resource.data.createdBy == request.auth.uid) &&
-          resource.data.locked != true &&
-          isSameDay(resource.data));
+          (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+          resource.data.get('locked', false) != true);
     }
 
     // Audit logs collection

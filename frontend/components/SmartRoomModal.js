@@ -93,6 +93,17 @@ export default function SmartRoomModal({
     loadRoomStatus();
   }, [isOpen]);
 
+  // รับ CustomEvent เมื่อ QuickLogButtons บันทึกสำเร็จ
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (event) => {
+      const { room, status } = event.detail;
+      if (room) setRoomStatus(prev => ({ ...prev, [room]: status }));
+    };
+    window.addEventListener('roomStatusUpdated', handler);
+    return () => window.removeEventListener('roomStatusUpdated', handler);
+  }, [isOpen]);
+
   // กรองห้องตามชั้นที่เลือก
   const getFilteredRooms = () => {
     const isFloor3 = templateName.includes('ชั้น 3') || templateMinorTask.includes('ชั้น 3');

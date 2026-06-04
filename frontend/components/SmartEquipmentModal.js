@@ -71,7 +71,9 @@ export default function SmartEquipmentModal({
         const today = new Date().toISOString().slice(0,10);
         const details = {};
 
-        logs.filter(l => l.date === today).forEach(log => {
+        // reverse เป็น asc เพื่อให้ log ใหม่ (คืน) override log เก่า (ยืม) ถูกต้อง
+        const todayLogs = logs.filter(l => l.date === today).reverse();
+        todayLogs.forEach(log => {
           const commentLower = (log.comment || '').toLowerCase();
           const minorTask = (log.minorTask || '').toLowerCase();
           const userName = log.recipient || log.employeeDisplayName || log.employeeNickname || log.employeeFullName || '-';
@@ -109,8 +111,14 @@ export default function SmartEquipmentModal({
   useEffect(() => {
     if (!isOpen) return;
     const handler = (event) => {
-      const { equipmentType: updatedType, equipment, status } = event.detail;
-      if (updatedType === equipmentType) setEquipmentStatus(prev => ({...prev, [equipment]: status}));
+      const { equipmentType: updatedType, equipment, status, user: userName, time: userTime } = event.detail;
+      if (updatedType !== equipmentType) return;
+      setEquipmentStatus(prev => ({ ...prev, [equipment]: status }));
+      if (status === 'in_use' && userName) {
+        setEquipmentDetails(prev => ({ ...prev, [equipment]: { user: userName, time: userTime || '' } }));
+      } else if (status === 'available') {
+        setEquipmentDetails(prev => { const next = { ...prev }; delete next[equipment]; return next; });
+      }
     };
     window.addEventListener('equipmentStatusUpdated', handler);
     return () => window.removeEventListener('equipmentStatusUpdated', handler);

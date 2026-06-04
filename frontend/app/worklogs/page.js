@@ -310,17 +310,16 @@ export default function WorkLogsPage() {
   function canEdit(item) {
     if (!user) return false;
     if (isAdminRole(user)) return true;
-    if (
+    const isOwner =
       item.employeeId === user.uid ||
-      item.employeeId === user.id ||
-      item.employeeNickname === user.nickname
-    ) {
-      // Check if locked (locked after 23:59 of the record date)
+      item.createdBy === user.uid;
+    if (isOwner) {
+      if (item.locked === true) return false;
+      // ล็อคหลัง 23:59 ของวันที่บันทึก
       const recordDate = new Date(item.date);
       const lockTime = new Date(recordDate);
       lockTime.setHours(23, 59, 0, 0);
-      const now = new Date();
-      return now < lockTime;
+      return new Date() < lockTime;
     }
     return false;
   }
@@ -490,7 +489,6 @@ export default function WorkLogsPage() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setDeletedItems([{ id, ...docSnap.data() }]);
-        console.log('[Delete Debug] doc.employeeId:', docSnap.data().employeeId, '| user.uid:', user?.uid, '| match:', docSnap.data().employeeId === user?.uid);
       }
 
       await deleteDoc(docRef);
