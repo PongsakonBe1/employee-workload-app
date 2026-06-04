@@ -26,7 +26,7 @@ export async function getAllTemplates(department = null) {
     }));
   } catch (error) {
     console.error("Error getting templates:", error);
-    return [];
+    throw error;
   }
 }
 
@@ -77,7 +77,7 @@ export async function getTemplatesForUser(userDepartment) {
     return [...globalTemplates, ...deptTemplates];
   } catch (error) {
     console.error("Error getting user templates:", error);
-    return [];
+    throw error;
   }
 }
 

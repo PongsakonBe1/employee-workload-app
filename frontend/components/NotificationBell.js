@@ -70,7 +70,8 @@ export function NotificationBell() {
             fcmUpdatedAt: new Date(),
           });
           setFcmTokenStatus("saved");
-        } catch {
+        } catch (err) {
+          console.error("[FCM] Error saving token:", err.message);
           setFcmTokenStatus("error");
         }
       }
@@ -98,7 +99,9 @@ export function NotificationBell() {
         if (typeof data.enableDeadlineReminder === "boolean")
           setReminderEnabled(data.enableDeadlineReminder);
       }
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn("[Notification] Error loading reminder settings:", err.message);
+    });
   }, [user]);
 
   useEffect(() => {

@@ -75,7 +75,8 @@ export async function onFCMMessage(callback) {
     if (!supported) return () => {};
     const messaging = getMessaging(app);
     return onMessage(messaging, callback);
-  } catch {
+  } catch (err) {
+    console.warn("[FCM] onMessage setup failed:", err.message);
     return () => {};
   }
 }
