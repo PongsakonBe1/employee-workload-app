@@ -61,6 +61,23 @@
 
 ---
 
+## [2026-06-04 22:12] - [SE] Software Engineer — Phase 2 SP-1/SP-2/SP-3/SP-5/SP-6 Seasonal Pattern
+
+**Task:** Implement Phase 2 Seasonal Pattern Analysis (ยืนยัน CF-1..4 แก้แล้ว → ข้าม Phase 0)
+
+**Files Created/Modified:**
+- `frontend/lib/academicCalendar.js` — ใหม่: ACADEMIC_PERIODS constants + helpers
+- `frontend/lib/analytics.js` — ใหม่: analyzeSeasonalPattern, detectOutliers, predictNextPeak, movingAverage
+- `frontend/components/SeasonalCharts.js` — ใหม่: SeasonalPatternChart, OutlierAlertCard, PeakHourPrediction
+- `frontend/app/dashboard/page.js` — เพิ่ม Seasonal section (SP-6)
+
+**Note to Next Agent:**
+- [QA] SP-7: test 5 cases ใน `SE_HANDOVER_SP.md` → `QA_REPORT.md` Section 11
+- [Doc] SP-8: `docs/SEASONAL_GUIDE.md` หลัง SP-7 pass
+- [DA] ตรวจสอบ `analytics.js` sigma threshold + period correctness
+
+---
+
 ## [2026-06-04 21:36] - [SE] Software Engineer — EH-7 + EH-6 Equipment Health Dashboard
 
 **Task:** Implement EH-7 (EquipmentCharts) + EH-6 (admin/equipment-health page)
