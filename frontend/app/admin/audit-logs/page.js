@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileText, Search, Filter, User, Clock, FileEdit, Trash2, LogIn, LogOut } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
+import { isAdminRole } from "../../../lib/authUtils";
 
 const LOG_TYPES = {
   WORKLOG_CREATED: { label: "สร้างรายการ", labelEn: "Created", icon: FileEdit, color: "bg-emerald-100 text-emerald-700" },
@@ -37,20 +38,22 @@ export default function AuditLogsPage() {
   const [filter, setFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const isAdmin = isAdminRole(user);
+
   // Redirect non-admin users
   useEffect(() => {
-    if (user && user.role !== "admin" && user.role !== "superadmin") {
+    if (user && !isAdmin) {
       router.replace("/dashboard");
     }
-  }, [user, router]);
+  }, [user, isAdmin, router]);
 
   useEffect(() => {
-    if (user?.role === "admin" || user?.role === "superadmin") {
+    if (isAdmin) {
       // TODO: Replace with actual API call
       setLogs(MOCK_LOGS);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   const filteredLogs = logs.filter((log) => {
     const matchesFilter = filter === "ALL" || log.type === filter;
@@ -79,7 +82,7 @@ export default function AuditLogsPage() {
     });
   }
 
-  if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
+  if (!user || !isAdmin) {
     return (
       <AppShell>
         <div className="flex min-h-[60vh] items-center justify-center">

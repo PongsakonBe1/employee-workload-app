@@ -15,10 +15,13 @@
     "copy-env": "copy frontend\\.env.production frontend\\.env.local /y",
     "test:gray-box": "npm run pre-build-check && npm run copy-env && cd frontend && npx playwright test --project=chromium",
     "build:prod": "npm run pre-build-check && npm run copy-env && cd frontend && npm run build",
-    "deploy:firebase": "cd firebase && firebase deploy --only hosting"
+    "deploy:firebase": "cd firebase && firebase deploy --only hosting",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0",

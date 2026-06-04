@@ -41,7 +41,7 @@ async function seedUsers() {
     try {
       const userRecord = await admin.auth().createUser({
         email: userData.email,
-        password: 'password123', // Default password, should be changed
+        password: process.env.SEED_DEFAULT_PASSWORD || 'password123', // Set SEED_DEFAULT_PASSWORD env var
         displayName: userData.nickname,
         emailVerified: true
       });

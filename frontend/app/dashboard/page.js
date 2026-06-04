@@ -16,6 +16,15 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
+import {
+  getThaiFiscalYearDates,
+  getToday,
+  toLocalDateStr,
+  getThisWeek,
+  getThisMonth,
+  getThisQuarter,
+} from "../../lib/dateUtils";
+import { isAdminRole } from "../../lib/authUtils";
 
 const ChartLoading = () => (
   <div className="apple-panel flex h-48 items-center justify-center text-slate-400">
@@ -78,50 +87,7 @@ function BarList({ title, items, t }) {
   );
 }
 
-// Helper functions for date ranges
-const getThaiFiscalYearDates = (fy) => {
-  const year = parseInt(fy) - 543;
-  return {
-    start: `${year - 1}-10-01`,
-    end: `${year}-09-30`,
-  };
-};
 
-const getToday = () => {
-  return new Date().toISOString().split("T")[0];
-};
-
-const toLocalDateStr = (d) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
-const getThisWeek = () => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=Sun
-  const start = new Date(today);
-  start.setDate(today.getDate() - dayOfWeek);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
-};
-
-const getThisMonth = () => {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
-  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
-};
-
-const getThisQuarter = () => {
-  const today = new Date();
-  const q = Math.floor(today.getMonth() / 3);
-  const start = new Date(today.getFullYear(), q * 3, 1);
-  const end = new Date(today.getFullYear(), q * 3 + 3, 0); // last day of last month in quarter
-  return { start: toLocalDateStr(start), end: toLocalDateStr(end) };
-};
 
 export default function DashboardPage() {
   const t = useTranslations();
@@ -151,7 +117,7 @@ export default function DashboardPage() {
   // Load staff list for admin filter
   useEffect(() => {
     async function loadStaff() {
-      if (user?.role !== "admin" && user?.role !== "superadmin") return;
+      if (!isAdminRole(user)) return;
 
       try {
         // ดึง user ที่ active และมี lastLoginAt (ใช้งานจริง) หรือไม่มี migratedFrom (ไม่ใช่ของเก่า)
@@ -254,7 +220,7 @@ export default function DashboardPage() {
     async function loadStats() {
       try {
       const worklogsRef = collection(db, "worklogs");
-      const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+      const isAdmin = isAdminRole(user);
       const dateRange = getDateRange();
 
       // Build uidToName map จาก users collection (ชื่อปัจจุบัน)
@@ -617,7 +583,7 @@ export default function DashboardPage() {
           </div>
 
           {/* FEAT-2: Print button — admin/superadmin only */}
-          {(user?.role === "admin" || user?.role === "superadmin") && (
+          {isAdminRole(user) && (
             <button
               type="button"
               onClick={() => window.print()}
@@ -720,7 +686,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Employee Filter (Admin only) */}
-          {(user?.role === "admin" || user?.role === "superadmin") && (
+          {isAdminRole(user) && (
             <div className="flex items-center gap-2 ml-auto">
               <User size={16} className="text-slate-500" />
               <select
@@ -949,7 +915,7 @@ export default function DashboardPage() {
       {/* แถว 4: Admin/Superadmin — สถิติการลงงานทุกคน + Top 3 */}
       {/*        Staff — สถิติส่วนตัวในกลุ่ม */}
       <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        {(user?.role === "admin" || user?.role === "superadmin") ? (
+        {isAdminRole(user) ? (
           <div className="apple-panel p-6">
             <h2 className="text-xl font-semibold tracking-tight text-slate-950 mb-4">
               สถิติการลงงานของทีม

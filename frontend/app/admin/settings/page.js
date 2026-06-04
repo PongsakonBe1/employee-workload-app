@@ -24,6 +24,7 @@ import {
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { db } from "../../../lib/firebase";
+import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
 import {
   doc,
   getDoc,
@@ -95,8 +96,8 @@ export default function SettingsPage() {
     backupSize: "-",
   });
 
-  const isSuperAdmin = user?.role === "superadmin";
-  const isAdmin = user?.role === "admin" || isSuperAdmin;
+  const isSuperAdmin = isSuperAdminRole(user);
+  const isAdmin = isAdminRole(user);
 
   useEffect(() => {
     if (!isAdmin) {

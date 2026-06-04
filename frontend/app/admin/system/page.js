@@ -16,6 +16,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db, auth } from "../../../lib/firebase";
+import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
 import { NotificationBell } from "../../../components/NotificationBell";
 import {
   CheckCircle,
@@ -91,8 +92,8 @@ export default function SystemManagementPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
 
-  const isSuperAdmin = user?.role === "superadmin";
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isSuperAdmin = isSuperAdminRole(user);
+  const isAdmin = isAdminRole(user);
 
   // โหลดคำขอส่งออกที่รออนุมัติ (ใช้ getDocs แทน onSnapshot ประหยัด quota)
   async function loadExportRequests() {

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
+import { isAdminRole } from "../../lib/authUtils";
 
 const adminModules = [
   {
@@ -75,7 +76,7 @@ export default function AdminPage() {
   const { user } = useAuth();
 
   // Redirect non-admin users (allow admin and superadmin)
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isAdmin = isAdminRole(user);
 
   useEffect(() => {
     if (user && !isAdmin) {

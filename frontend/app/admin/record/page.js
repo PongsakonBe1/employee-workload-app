@@ -39,15 +39,11 @@ import {
   hasCommentSuggestions,
 } from "../../../lib/commentSuggestions";
 import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nowTime() {
-  const date = new Date();
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-}
+import { today, nowTime } from "../../../lib/dateUtils";
+import { getDutyGroupFromMinorTask, dispatchEquipmentStatusEvents } from "../../../lib/worklogUtils";
+import { isAdminRole } from "../../../lib/authUtils";
+import { useLoadingTimeout } from "../../../hooks/useLoadingTimeout";
+import { Toast } from "../../../components/Toast";
 
 export default function AdminRecordPage() {
   const t = useTranslations("worklog");
@@ -74,7 +70,7 @@ export default function AdminRecordPage() {
   });
 
   // Redirect non-admin users (allow admin and superadmin)
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isAdmin = isAdminRole(user);
 
   // Debug log
   useEffect(() => {
@@ -101,15 +97,7 @@ export default function AdminRecordPage() {
   }, [isAdmin, user]);
 
   // Force stop loading ถ้าเกิน 5 วินาที
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        console.log("[AdminRecord] Force stopping loading after timeout");
-        setLoading(false);
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [loading]);
+  useLoadingTimeout(loading, setLoading);
 
   async function loadStaff() {
     try {
@@ -202,18 +190,7 @@ export default function AdminRecordPage() {
     setForm((current) => ({ ...current, comment: suggestion }));
   }, []);
 
-  function getDutyGroupFromMinorTask(minorTask) {
-    const mainDuty = getMainDutyFromMinorTask(minorTask);
-    // ทั้งสองหน้าที่หลักถือเป็น "งานในหน้าที่หลัก"
-    if (mainDuty === "ดูแลห้องบริการคอมพิวเตอร์") {
-      return "งานในหน้าที่หลัก (ห้องบริการ)";
-    } else if (mainDuty === "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ") {
-      return "งานในหน้าที่หลัก (รับแจ้งปัญหา)";
-    } else if (mainDuty === "คุมสอบ DL") {
-      return "งานในหน้าที่หลัก (คุมสอบ DL)";
-    }
-    return "งานอื่นๆ ที่ได้รับมอบหมาย";
-  }
+
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -279,49 +256,7 @@ export default function AdminRecordPage() {
       setLastSaved(new Date());
       
       // Trigger refresh ของ RoomEquipmentStatus หลังบันทึกปกติ
-      const comment = (form.comment || '').toLowerCase();
-      const minorTask = (form.minorTask || '').toLowerCase();
-      
-      // ตรวจสอบการยืม/คืนหูฟัง
-      if (minorTask.includes('ยืมหูฟัง') || minorTask.includes('คืนหูฟัง')) {
-        for (let i = 1; i <= 12; i++) {
-          const equipment = `ICIT${String(i).padStart(2, '0')}`;
-          if (comment.includes(equipment)) {
-            const newStatus = minorTask.includes('ยืม') ? 'in_use' : 'available';
-            window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
-              detail: { equipmentType: 'headphones', equipment, status: newStatus }
-            }));
-            break;
-          }
-        }
-      }
-      
-      // ตรวจสอบการยืม/คืนปลั๊กไฟ
-      if (minorTask.includes('ยืมปลั๊กไฟ') || minorTask.includes('คืนปลั๊กไฟ')) {
-        for (let i = 21; i <= 23; i++) {
-          const equipment = `ICIT${i}`;
-          if (comment.includes(equipment)) {
-            const newStatus = minorTask.includes('ยืม') ? 'in_use' : 'available';
-            window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
-              detail: { equipmentType: 'power', equipment, status: newStatus }
-            }));
-            break;
-          }
-        }
-      }
-      
-      // ตรวจสอบการเปิด/ปิดห้อง
-      if (minorTask.includes('เปิดห้อง') || minorTask.includes('ปิดห้อง')) {
-        const rooms = ['401', '402', '406', '407'];
-        rooms.forEach(room => {
-          if (comment.includes(room)) {
-            const newStatus = minorTask.includes('เปิด') ? 'in_use' : 'available';
-            window.dispatchEvent(new CustomEvent('roomStatusUpdated', {
-              detail: { room, status: newStatus }
-            }));
-          }
-        });
-      }
+      dispatchEquipmentStatusEvents(form.minorTask, form.comment);
       
       setTimeout(() => {
         setSuccess(false);
@@ -403,21 +338,12 @@ export default function AdminRecordPage() {
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
 
-      {/* Toast messages — floating, doesn't push layout */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
-        {message && (
-          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-            <CheckCircle2 size={16} className="shrink-0" />
-            {message}
-          </div>
-        )}
-        {error && (
-          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-medium text-red-700 shadow-xl animate-in fade-in slide-in-from-top-2">
-            <AlertCircle size={16} className="shrink-0" />
-            {error}
-          </div>
-        )}
-      </div>
+      <Toast
+        message={message}
+        error={error}
+        onDismissMessage={() => setMessage("")}
+        onDismissError={() => setError("")}
+      />
 
       {/* Room Equipment Status - Collapsible */}
       <div className="mb-5">

@@ -20,6 +20,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
+import { isAdminRole } from "../lib/authUtils";
 import { Breadcrumb } from "./Breadcrumb";
 import { NotificationBell } from "./NotificationBell";
 
@@ -187,7 +188,7 @@ export function AppShell({ children }) {
           <NotificationBell />
 
           {/* Settings icon for admin/superadmin - tooltip style */}
-          {(user?.role === "admin" || user?.role === "superadmin") && (
+          {isAdminRole(user) && (
             <Link
               href="/admin/system"
               className="relative p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 group"

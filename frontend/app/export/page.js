@@ -25,6 +25,8 @@ import {
   limit,
 } from "firebase/firestore";
 import { useAuth } from "../../components/AuthProvider";
+import { getThaiFiscalYearDates } from "../../lib/dateUtils";
+import { isAdminRole } from "../../lib/authUtils";
 
 export default function ExportPage() {
   const { user } = useAuth();
@@ -44,7 +46,7 @@ export default function ExportPage() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestReason, setRequestReason] = useState("");
 
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const isAdmin = isAdminRole(user);
   const isStaff = user?.role === "staff";
 
   // Staff: โหลดคำขอส่งออกล่าสุดจาก localStorage (ไม่สามารถ query ได้ตาม rules)
@@ -131,14 +133,8 @@ export default function ExportPage() {
     }
   }
 
-  // คำนวณวันเริ่มต้นและสิ้นสุดของปีงบประมาฐไทย
-  const getFiscalYearDates = (fy) => {
-    const year = parseInt(fy) - 543; // แปลง พ.ศ. เป็น ค.ศ.
-    return {
-      start: `${year - 1}-10-01`, // 1 ต.ค. ปีก่อน
-      end: `${year}-09-30`, // 30 ก.ย. ปีปัจจุบัน
-    };
-  };
+  // Alias for backward compatibility within this file
+  const getFiscalYearDates = getThaiFiscalYearDates;
 
   // Client-side CSV export from Firestore
   async function exportFromFirestore(
