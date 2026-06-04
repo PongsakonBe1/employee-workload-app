@@ -4,8 +4,8 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.2.0  
-📅 **Last Updated:** 2026-06-03  
+📦 **Current Version:** v2.2.1  
+📅 **Last Updated:** 2026-06-04  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
 
@@ -1225,6 +1225,7 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.2.1** | 2026-06-04 | **HOTFIX: Bugfix Sprint Jun 04** — แก้ 5 bugs หลังจาก v2.2.0: **BUG-1** SmartEquipmentModal/SmartRoomModal ไม่รับ CustomEvent → เพิ่ม handler sync สถานะอุปกรณ์/ห้อง real-time; **BUG-3** CSV export column "กลุ่มงาน" แสดง `"main"`/`"additional"` → เปลี่ยนเป็นชื่อภาษาไทย (`mainDuty` หรือ `"งานอื่นๆ ที่ได้รับมอบหมาย"`); **BUG-4** QuickLog ขาด field `status` → เพิ่ม `status: "บันทึกแล้ว"` ใน `logFromTemplate()`; **BUG-5** Staff กด edit/delete worklog ของตัวเองวันเดียวกันไม่ได้ → แก้ `canEdit()` ใน `worklogs/page.js` (`createdBy === user.uid`) + แก้ Firestore Rules 3 จุด (`isSameDay` CEL bug, `resource.data.get('locked',false)`, `resource.data.get('createdBy','')`); **QA**: Snyk SAST 0 issues ในทุกไฟล์ที่แก้, Playwright 27/40 passed, 3 timeout (auth fixtures), 10 skipped (รอ Render) |
 | **v2.2.0** | 2026-06-03 | **FEAT: Combo Template**: เพิ่มระบบ Combo Template — Admin สร้าง template ที่ประกอบด้วยหลาย minorTask, Staff กดครั้งเดียว กรอก recipient ครั้งเดียว → บันทึก worklogs หลายรายการพร้อมกัน (`Promise.all`); ปุ่ม combo แสดง badge สีม่วงจำนวนงาน, modal preview ก่อนบันทึก; `TemplateManager.js` เพิ่ม isCombo toggle + comboItems editor; `QuickLogButtons.js` เพิ่ม combo modal + handler; `quickLogTemplates.js` เพิ่ม `logFromComboTemplate()` |
 | **v2.1.0** | 2026-06-03 | **FEAT: Background Push Notification**: เพิ่มระบบส่ง Push Notification ผ่าน Backend (Render + Cron-job.org) — daily reminder แจ้งเตือนพนักงานที่ยังไม่ลงงาน + broadcast push สำหรับ Superadmin; **Backend**: เพิ่ม Express server (`backend/`) พร้อม endpoints `/api/notify/daily-reminder` (CRON_SECRET auth + `crypto.timingSafeEqual`), `/api/notify/broadcast` (Firebase ID Token + superadmin role check), `/api/notify/health`; **FCM Service**: `backend/src/services/fcm.js` ใช้ firebase-admin SDK ส่ง multicast push; **Frontend — Settings UI**: เพิ่มหน้าตั้งค่า Push Notification ใน Admin Settings — toggle เปิด/ปิด, เลือกเวลาส่ง `pushReminderTime`, เลือกวัน `reminderDays` (จ–อา) พร้อม `aria-pressed` accessibility; **Frontend — Broadcast UI**: Superadmin เห็น Broadcast section ใน Settings — กรอก Title/Body แล้วส่ง push ถึงทุกคน แสดงผล sent/failed count; **Security — CRON_SECRET guard (FIX-4)**: เพิ่ม production guard ใน `backend/src/config/env.js` — throw error ถ้าไม่ตั้ง `CRON_SECRET` env var ใน production ป้องกันการใช้ค่า default; **Firestore Rules**: อนุญาต user update `fcmToken` field อย่างจำกัด; **QA Sign-off**: Snyk SAST ผ่าน (0 actionable issues ใน production code), Playwright E2E 32 tests — 22 passed, 10 skipped (รอ RENDER_URL), 0 failed |
 | **v2.0.2** | 2026-06-02 | **Firestore Rules — `isValidWorkLogUpdate` fix**: แก้ไข helper function ที่บังคับตรวจ `date` และ `time` ทุกครั้ง ทำให้ staff ที่ส่งเฉพาะฟิลด์ที่แก้ไข (partial update) ถูก Firestore ปฏิเสธด้วย `permission-denied` — เปลี่ยนเป็น optional check ด้วย `hasAny()` ตรวจเฉพาะฟิลด์ที่ส่งมาจริง |

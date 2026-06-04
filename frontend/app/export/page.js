@@ -28,6 +28,12 @@ import { useAuth } from "../../components/AuthProvider";
 import { getThaiFiscalYearDates } from "../../lib/dateUtils";
 import { isAdminRole } from "../../lib/authUtils";
 
+function dutyGroupLabel(dutyGroup, mainDuty) {
+  if (dutyGroup === "main") return mainDuty || "งานหลัก";
+  if (dutyGroup === "additional") return "งานอื่นๆ ที่ได้รับมอบหมาย";
+  return dutyGroup || "";
+}
+
 export default function ExportPage() {
   const { user } = useAuth();
   const [exportMode, setExportMode] = useState("fiscal"); // "fiscal" | "range"
@@ -199,7 +205,7 @@ export default function ExportPage() {
         log.employeeId ||
         "",
       log.recipient || log.requesterName || log.requester || log.clientName || log.customerName || log.receiverName || log.client || log.to || "",
-      log.dutyGroup || log.mainDuty || "",
+      dutyGroupLabel(log.dutyGroup, log.mainDuty),
       log.mainDuty || "",
       log.minorTask || "",
       log.comment || "",

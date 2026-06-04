@@ -223,3 +223,86 @@ app.use("/api/notify", notifyRouter);
 | `backend/src/server.js` | แก้ — mount notifyRouter |
 | `backend/.env.example` | แก้ — เพิ่ม FIREBASE vars |
 | `frontend/app/admin/settings/page.js` | แก้ — เพิ่ม reminderDays + Broadcast UI |
+
+---
+
+# Bugfix Sprint — Jun 04
+
+แก้ไข 5 bugs จาก CSV audit + เพิ่ม Playwright Auth State Injection
+
+**Branch:** `hotfix/bugfix-sprint-jun04`
+
+---
+
+## BUG-1: SmartModal ไม่อัปเดตสถานะ — [SE]
+
+**Root cause:** `SmartEquipmentModal` และ `SmartRoomModal` ไม่รับ `CustomEvent` (`equipmentStatusUpdated`, `roomStatusUpdated`) ที่ QuickLogButtons dispatch หลังบันทึก
+
+**ไฟล์:**
+- [ ] `frontend/components/SmartEquipmentModal.js` — เพิ่ม `useEffect` รับ `equipmentStatusUpdated` event อัปเดต `equipmentStatus` + `equipmentDetails` state
+- [ ] `frontend/components/SmartRoomModal.js` — เพิ่ม `useEffect` รับ `roomStatusUpdated` event อัปเดต `roomStatus` state
+
+---
+
+## BUG-2: CSV ผู้ให้บริการแสดง uid แทนชื่อ (Combo Template) — [SE]
+
+**Root cause:** `logFromComboTemplate()` ไม่ได้ set `employeeDisplayName`
+
+**ไฟล์:**
+- [ ] `frontend/lib/quickLogTemplates.js` — เพิ่ม `employeeDisplayName`, `employeeNickname`, `employeeFullName` ใน worklogData ของแต่ละ comboItem
+
+---
+
+## BUG-3: CSV กลุ่มงานแสดง "main"/"additional" แทนชื่อไทย — [SE]
+
+**Root cause:** `export/page.js` ใช้ raw `log.dutyGroup` โดยตรง
+
+**ไฟล์:**
+- [ ] `frontend/app/export/page.js` — เพิ่ม `dutyGroupLabel(dutyGroup, mainDuty)` function และแทนที่ในการ map rows:
+  - `"main"` → ใช้ `mainDuty`
+  - `"additional"` → `"งานอื่นๆ ที่ได้รับมอบหมาย"`
+
+---
+
+## BUG-4: QuickLog / Combo ไม่มีสถานะใน CSV — [SE]
+
+**Root cause:** `logFromTemplate()` และ `logFromComboTemplate()` ไม่ set field `status`
+
+**ไฟล์:**
+- [ ] `frontend/lib/quickLogTemplates.js` — เพิ่ม `status: "บันทึกแล้ว"` ใน `logFromTemplate()` และ `logFromComboTemplate()`
+
+---
+
+## BUG-5: Staff ลบ/แก้ไข Worklog ของตัวเองในวันนั้นไม่ได้ — [SA] + [SE]
+
+**Root cause:** ต้องตรวจ 2 จุด — Firestore Rules `delete` rule + frontend disable logic
+
+**ไฟล์:**
+- [ ] **[SA]** `firebase/firestore.rules` — ตรวจ `worklogs delete` rule: staff ควรลบได้เมื่อ `isOwner() && isSameDay() && !isLocked()`
+- [ ] **[SE]** `frontend/app/worklogs/page.js` — ตรวจและแก้ไข logic ที่ disable ปุ่ม edit/delete สำหรับ staff
+
+---
+
+## QA-1: Playwright Auth State Injection — [QA]
+
+**ไฟล์:**
+- [ ] `frontend/tests/fixtures/auth-states/superadmin.json` — `pongsakon.be1@gmail.com`, displayName: `"Admin"`, role: `"superadmin"`
+- [ ] `frontend/tests/fixtures/auth-states/staff.json` — `pongsagon.r@icit.kmutnb.ac.th`, displayName: `"พงศกร"`, role: `"staff"`
+- [ ] `playwright.config.js` หรือ test fixtures — ใช้ `storageState` จาก JSON ข้างต้น
+- [ ] เขียน test BUG-5: staff login → worklog list → ปุ่มลบ/แก้ไขวันนี้กดได้
+
+---
+
+## ลำดับส่งไม้ต่อ
+
+`[SA]` ตรวจ Rules → `[SE]` แก้ทุก bug (BUG-1 ถึง BUG-5 frontend) → `[QA]` สร้าง fixtures + test
+
+## Commit Convention
+
+```
+hotfix(quicklog): add employeeDisplayName and status to combo/template worklogs
+hotfix(export): map dutyGroup raw key to Thai label in CSV
+hotfix(modal): sync SmartEquipmentModal/SmartRoomModal with CustomEvents
+hotfix(rules): allow staff to delete own same-day unlocked worklogs
+test(playwright): add auth state injection for superadmin and staff roles
+```
