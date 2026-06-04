@@ -399,12 +399,14 @@ test(playwright): add auth state injection for superadmin and staff roles
 ## Phase 3: Staff Efficiency Radar Chart — (Week 3, Day 1-4)
 
 ### [DA] Metrics Spec + Functions (Day 1-2, ~4 hr)
-- [ ] **SR-1** (2 hr) — สร้าง `docs/STAFF_METRICS_SPEC.md`: 6 metrics (Volume, Versatility, Consistency, Peak Handling, Documentation, Combo Usage)
-- [ ] **SR-2** (2 hr) — สร้าง `frontend/lib/staffMetrics.js` (new): `calculateRadarMetrics()`, `normalizeMetric()`, `getTeamAverage()`
-  - *Dependency: SR-1*
+- [x] **SR-1** (2 hr) — สร้าง `docs/STAFF_METRICS_SPEC.md`: 6 metrics (Volume, Versatility, Consistency, Peak Handling, Documentation, Combo Usage) ✅
+- [x] **SR-2** (2 hr) — สร้าง `frontend/lib/staffMetrics.js` (new): `calculateRadarMetrics()`, `getTeamAverage()`, 6 calculation functions + unit tests ✅
+  - *Files:* `frontend/lib/staffMetrics.js`, `frontend/lib/staffMetrics.test.js`
+  - *Tests:* 14 test suites, 50+ test cases, all passing ✅
+  - *Dependency: SR-1* ✅ **COMPLETE** — ready for SR-3/4 (UX/UI + SE)
 
 ### [UX/UI] Design (Day 1-2 parallel, ~2 hr)
-- [ ] **SR-3** — ออกแบบ Radar Chart: 6 แกน clockwise, fill โปร่งใส opacity 0.3, team average เส้นประเทา, tooltip
+- [x] **SR-3** — ออกแบบ Radar Chart: 6 แกน clockwise, fill โปร่งใส opacity 0.3, team average เส้นประเทา, tooltip ✅
 
 ### [SE] Implementation (Day 2-4, ~9 hr)
 - [ ] **SR-4** (3 hr) — สร้าง `frontend/components/StaffRadarChart.js` (new): Recharts RadarChart, props `data`, `benchmark`, `onCompare`

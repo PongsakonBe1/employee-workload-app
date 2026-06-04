@@ -402,4 +402,115 @@ npx playwright test equipment-health-eh8.spec.js
 
 ---
 
-*QA Report v5 — Cascade QA Agent · 4 มิ.ย. 2569 · EH-8 Equipment Health Dashboard QA*
+## 11. SP-7 — Seasonal Pattern Analysis (Phase 2 v2.3.0)
+
+**จาก:** [SE] SP-1 ถึง SP-6 Handover → [QA] SP-7 → [Doc] SP-8  
+**วันที่:** 4 มิ.ย. 2569  
+**Branch:** `feature/dashboard-analytics-v230`
+
+### 11.1 Files Under Test
+
+| ไฟล์ | บทบาท | บรรทัด |
+|------|-------|--------|
+| `frontend/lib/academicCalendar.js` | ACADEMIC_PERIODS constants + helpers | 132 |
+| `frontend/lib/analytics.js` | analyzeSeasonalPattern, detectOutliers, predictNextPeak | 236 |
+| `frontend/components/SeasonalCharts.js` | 3 React components (SP-5) | — |
+| `frontend/app/dashboard/page.js` | Seasonal section integration (SP-6) | — |
+
+### 11.2 Test Cases Review — 5 Cases (SE_HANDOVER_SP.md)
+
+| Test | รายละเอียด | Implementation | ผล Review |
+|------|-----------|----------------|----------|
+| **TEST-1** | ธันวาคม (exam) > พฤษภาคม (break) — count สูงกว่า | `analytics.js:72-126` | ✅ `analyzeSeasonalPattern()` |
+| **TEST-2** | Outlier > mean + 2σ → ปรากฏใน OutlierAlertCard | `analytics.js:136-161` | ✅ `detectOutliers(sigma=2)` |
+| **TEST-3** | Peak prediction confidence "high" ≥ 2 ปี | `analytics.js:176-221` | ✅ `yearsOfData >= 2` |
+| **TEST-4** | Empty state: worklogs=[] → ไม่แสดง | `page.js:926` | ✅ `{allWorklogs.length > 0 &&` |
+| **TEST-5** | Period colors: exam (ก.ย./ต.ค.) = red-500 | `academicCalendar.js:11-85` | ✅ `PERIOD_COLORS[type]` |
+
+### 11.3 Academic Calendar Constants (SP-1)
+
+```javascript
+ACADEMIC_PERIODS: {
+  SEMESTER_1:  { months: [6,7,8,9,10], type: "active" },
+  EXAM_1:      { months: [9,10],       type: "peak" },   // ← red-500
+  BREAK_1:     { months: [11],        type: "low" },    // ← slate
+  SEMESTER_2:  { months: [11,12,1,2,3], type: "active" },
+  EXAM_2:      { months: [2,3],       type: "peak" },   // ← red-500
+  BREAK_SUMMER:{ months: [4,5],       type: "low" },    // ← slate
+  SUMMER:      { months: [6,7],       type: "active" }
+}
+
+PERIOD_COLORS: {
+  peak:    "#ef4444",  // red-500
+  active:  "#6366f1",  // indigo-500
+  low:     "#64748b",  // slate-500
+}
+```
+
+### 11.4 Analytics Functions (SP-2 + SP-3)
+
+| Function | Input | Output |
+|----------|-------|--------|
+| `analyzeSeasonalPattern(worklogs)` | worklog[] | `{byMonth, byPeriod, peakMonth, lowMonth, monthlyMean, monthlySD}` |
+| `detectOutliers(worklogs, sigma=2)` | worklog[], threshold | `[{date, count, zscore, periodLabel}]` |
+| `predictNextPeak(worklogs)` | worklog[] | `{nextPeakMonth, confidence, basedOnYears}` |
+| `movingAverage(arr, n=7)` | `[{date,count}]` | array with `.ma` field |
+
+### 11.5 Seasonal Charts Components (SP-5)
+
+| Component | ชนิด | Props |
+|-----------|------|-------|
+| `SeasonalPatternChart` | Bar + ReferenceLine | `data, mean, sd` |
+| `OutlierAlertCard` | Card list | `outliers, mean` |
+| `PeakHourPrediction` | Prediction card | `prediction, byPeriod` |
+
+### 11.6 Dashboard Integration (SP-6)
+
+```javascript
+// page.js:565-568
+const [allWorklogs, setAllWorklogs] = useState([]);
+const seasonalData = useMemo(() => analyzeSeasonalPattern(allWorklogs), [allWorklogs]);
+const outliers     = useMemo(() => detectOutliers(allWorklogs, 2), [allWorklogs]);
+const prediction   = useMemo(() => predictNextPeak(allWorklogs), [allWorklogs]);
+
+// page.js:926-951 — Conditional render
+{allWorklogs.length > 0 && (
+  <section className="mt-5">
+    <h2>แพทเทิร์นตามภาคเรียน</h2>
+    <SeasonalPatternChart data={seasonalData.byMonth} ... />
+    <OutlierAlertCard outliers={outliers} ... />
+  </section>
+)}
+```
+
+### 11.7 Playwright Tests Created
+
+**ไฟล์:** `frontend/tests/seasonal-sp7.spec.js` (245 lines, 11 tests)
+
+- TEST-1: December vs May pattern comparison
+- TEST-2: Outlier detection display
+- TEST-3: Peak prediction confidence levels
+- TEST-4: Empty state handling
+- TEST-5: Period colors (exam = red)
+- Integration: Dashboard seasonal section
+- Analytics: Function unit tests
+
+### 11.8 Notes & Limitations
+
+- **Data dependency:** Seasonal section แสดงเฉพาะเมื่อ `allWorklogs.length > 0` — filter แคบเกินไปจะไม่แสดง (expected)
+- **Outlier threshold:** Default `sigmaMultiplier=2` — [DA] อาจปรับเป็น 1.5 ถ้า dataset เล็ก
+- **Peak prediction:** Confidence "high" ต้องการข้อมูล ≥ 2 ปี
+
+### 11.9 Handover to [Doc] — SP-8
+
+**งานต่อไป:**
+- สร้าง `docs/SEASONAL_GUIDE.md`:
+  - วิธีอ่านกราฟ SeasonalPatternChart (สี, reference line)
+  - ใช้ Outlier detection วางแผน staffing
+  - Case study: ช่วงสอบ vs ปิดเทอม
+
+**รายงานเต็ม:** `QA_REPORT.md` Section 11
+
+---
+
+*QA Report v6 — Cascade QA Agent · 4 มิ.ย. 2569 · SP-7 Seasonal Pattern Analysis QA*

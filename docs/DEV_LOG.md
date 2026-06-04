@@ -2,6 +2,36 @@
 
 ---
 
+## [2026-06-04 22:31] - [UX/UI] Designer — SR-3 StaffRadarChart Design Spec
+
+**Task:** SR-3 — ออกแบบ `StaffRadarChart` component สำหรับ Staff Efficiency Radar Chart (Phase 3)
+
+**Files Created:**
+- `docs/DESIGN_SPEC_SR3_StaffRadarChart.md` — Design spec ฉบับสมบูรณ์
+
+**Design Decisions:**
+- Recharts `RadarChart` + `gridType="polygon"` (hexagonal) — ดูสะอาดกว่า circle สำหรับ 6 แกน
+- 6 axes clockwise: Volume → Consistency → Peak Handling → Documentation → Combo Usage → Versatility
+- Color system: Single = indigo-500 / Compare slot 2 = amber-500 / slot 3 = emerald-500
+- Team benchmark (SR-6): dashed stroke slate-400, no fill
+- `fillOpacity=0.15` — iOS-style โปร่งใส, ไม่ cluttered
+- `outerRadius="72%"` — เว้นพื้นที่ให้ axis labels ไม่ตัด
+- `ScoreBadge` component แสดง overall score + จุดแข็ง/พัฒนาได้ข้าง chart
+- Compare mode สูงสุด 3 คน ด้วย `dataKey="value_${i}"` + `mergeCompareData()` helper
+
+**Responsive:**
+- Mobile: chart stack เหนือ ScoreBadge
+- Desktop: side-by-side (`flex-col sm:flex-row`)
+- Compare mode mobile: stacked single charts
+
+**Note to SE (SR-4, SR-5, SR-6):**
+- ดู `docs/DESIGN_SPEC_SR3_StaffRadarChart.md` Section 14 (Migration Checklist) ครบทุกข้อ
+- ตรวจ `recharts` ใน `frontend/package.json` ก่อน — ถ้าไม่มีให้ `npm install recharts`
+- `calculateRadarMetrics()` + `getTeamAverage()` พร้อมใน `frontend/lib/staffMetrics.js` (SR-2 ✅)
+- SR-4 → SR-5 → SR-6 ตามลำดับ dependency
+
+---
+
 ## [2026-06-04 21:15] - [UX/UI] Designer — EH-3 EquipmentReturnModal Design Spec
 
 **Task:** EH-3 — ออกแบบ `EquipmentReturnModal` สำหรับบันทึกสภาพอุปกรณ์ตอนคืน (หูฟัง/ปลั๊กไฟ/ห้อง)
