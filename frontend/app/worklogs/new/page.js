@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Zap, X } from "lucide-react";
+import { Toast } from "../../../components/Toast";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { apiFetch } from "../../../lib/api";
@@ -22,22 +23,8 @@ import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
 import { db } from "../../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nowTime() {
-  const date = new Date();
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-}
-
-// Get lock time (23:59 today)
-function getLockTime(dateStr) {
-  const date = new Date(dateStr);
-  date.setHours(23, 59, 0, 0);
-  return date;
-}
+import { today, nowTime, getLockTime } from "../../../lib/dateUtils";
+import { getDutyGroupFromMinorTask } from "../../../lib/worklogUtils";
 
 export default function NewWorkLogPage() {
   const t = useTranslations("worklog");
@@ -145,18 +132,7 @@ export default function NewWorkLogPage() {
     }));
   }, []);
 
-  function getDutyGroupFromMinorTask(minorTask) {
-    const mainDuty = getMainDutyFromMinorTask(minorTask);
-    // ทั้งสองหน้าที่หลักถือเป็น "งานในหน้าที่หลัก"
-    if (mainDuty === "ดูแลห้องบริการคอมพิวเตอร์") {
-      return "งานในหน้าที่หลัก (ห้องบริการ)";
-    } else if (mainDuty === "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ") {
-      return "งานในหน้าที่หลัก (รับแจ้งปัญหา)";
-    } else if (mainDuty === "คุมสอบ DL") {
-      return "งานในหน้าที่หลัก (คุมสอบ DL)";
-    }
-    return "งานอื่นๆ ที่ได้รับมอบหมาย";
-  }
+
 
   // Handle comment suggestion selection
   const handleCommentSuggestion = useCallback((suggestion) => {
@@ -265,32 +241,13 @@ export default function NewWorkLogPage() {
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
 
-      {/* Toast messages — floating, doesn't push layout */}
-      <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
-        {message && (
-          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-            <CheckCircle2 size={16} className="shrink-0" />
-            <span className="flex-1">{message}</span>
-            <button type="button" onClick={() => setMessage("")} className="ml-2 shrink-0 opacity-80 hover:opacity-100" aria-label="ปิดข้อความ">
-              <X size={14} />
-            </button>
-          </div>
-        )}
-        {error && (
-          <div className="pointer-events-auto flex items-center gap-3 rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-            <span className="flex-1">{error}</span>
-            <button type="button" onClick={() => setError("")} className="ml-2 shrink-0 opacity-80 hover:opacity-100" aria-label="ปิดข้อผิดพลาด">
-              <X size={14} />
-            </button>
-          </div>
-        )}
-        {draftRestored && (
-          <div className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-slate-800 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-            <CheckCircle2 size={14} className="shrink-0 text-slate-300" />
-            กู้คืนร่างอัตโนมัติแล้ว
-          </div>
-        )}
-      </div>
+      <Toast
+        message={message}
+        error={error}
+        info={draftRestored ? "กู้คืนร่างอัตโนมัติแล้ว" : ""}
+        onDismissMessage={() => setMessage("")}
+        onDismissError={() => setError("")}
+      />
 
       {/* ── Status bar — full width, always on top ── */}
       <div className="mb-4">

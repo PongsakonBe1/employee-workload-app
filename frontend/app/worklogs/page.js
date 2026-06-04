@@ -46,18 +46,8 @@ import {
   getMainDutyFromMinorTask,
   hasCommentSuggestions,
 } from "../../lib/commentSuggestions";
-
-// Normalize status: รองรับทั้งค่าเก่า (EN: completed/pending) และใหม่ (TH: บันทึกแล้ว/รอดำเนินการ)
-function normalizeStatus(status) {
-  if (!status) return "บันทึกแล้ว";
-  const map = {
-    completed: "บันทึกแล้ว",
-    pending: "รอดำเนินการ",
-    cancelled: "ยกเลิก",
-    canceled: "ยกเลิก",
-  };
-  return map[status.toLowerCase()] || status;
-}
+import { normalizeStatus } from "../../lib/worklogUtils";
+import { isAdminRole } from "../../lib/authUtils";
 
 export default function WorkLogsPage() {
   const t = useTranslations();
@@ -176,7 +166,7 @@ export default function WorkLogsPage() {
     setLoading(true);
     console.log("[Worklogs] Loading... user:", user?.uid, "role:", user?.role);
     try {
-      const isStaffRole = user?.role !== "admin" && user?.role !== "superadmin";
+      const isStaffRole = !isAdminRole(user);
       const hasDateFilter = filters.from || filters.to;
       let q;
 
@@ -319,7 +309,7 @@ export default function WorkLogsPage() {
   // Check if user can edit/delete this item
   function canEdit(item) {
     if (!user) return false;
-    if (user.role === "admin" || user.role === "superadmin") return true;
+    if (isAdminRole(user)) return true;
     if (
       item.employeeId === user.uid ||
       item.employeeId === user.id ||
