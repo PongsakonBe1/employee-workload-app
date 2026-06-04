@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, memo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
@@ -361,6 +362,9 @@ export default function WorkLogsPage() {
         user?.uid,
       );
       setEditingId(null);
+      if (editSuccessTimer.current) clearTimeout(editSuccessTimer.current);
+      setShowEditSuccess(true);
+      editSuccessTimer.current = setTimeout(() => setShowEditSuccess(false), 3000);
       load(data.page);
     } catch (err) {
       setActionError(err.message);
@@ -405,6 +409,8 @@ export default function WorkLogsPage() {
   const [deletedItems, setDeletedItems] = useState([]);
   const [undoTimeout, setUndoTimeout] = useState(null);
   const [showUndo, setShowUndo] = useState(false);
+  const [showEditSuccess, setShowEditSuccess] = useState(false);
+  const editSuccessTimer = useRef(null);
 
   async function executeBulkDelete() {
     if (selectedIds.length === 0) return;
@@ -549,6 +555,14 @@ export default function WorkLogsPage() {
   }
 
   return (
+    <>
+    {showEditSuccess && typeof document !== 'undefined' && createPortal(
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-yellow-400 text-yellow-900 px-5 py-3 rounded-2xl shadow-xl font-medium text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        แก้ไขรายการเรียบร้อยแล้ว
+      </div>,
+      document.body
+    )}
     <AppShell>
       <section className="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
@@ -627,6 +641,7 @@ export default function WorkLogsPage() {
           {actionError}
         </div>
       ) : null}
+
 
       {/* Undo Notification */}
       {showUndo && (
@@ -1370,6 +1385,7 @@ export default function WorkLogsPage() {
         </div>
       )}
     </AppShell>
+    </>
   );
 }
 
