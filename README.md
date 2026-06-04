@@ -21,10 +21,13 @@
 6. [ฐานข้อมูล (Database Schema)](#ฐานข้อมูล-database-schema)
 7. [สิทธิ์ผู้ใช้งาน (Roles & Permissions)](#สิทธิ์ผู้ใช้งาน-roles--permissions)
 8. [API Documentation](#api-documentation)
+   - [Firebase Client SDK APIs](#firebase-client-sdk-apis)
+   - [Backend REST API (Express.js บน Render)](#backend-rest-api-expressjs-บน-render)
+   - [Component APIs](#component-apis)
 9. [การติดตั้ง (Installation)](#การติดตั้ง-installation)
 10. [การ Deploy (Deployment)](#การ-deploy-deployment)
 11. [ความปลอดภัย (Security)](#ความปลอดภัย-security)
-12. [ประวัติการเปลี่ยนแปลง (Changelog)](#changelog)
+12. [ประวัติการเปลี่ยนแปลง (Changelog)](#ประวัติการเปลี่ยนแปลง-changelog)
 13. [การพัฒนาเพิ่มเติม (Development)](#การพัฒนาเพิ่มเติม-development)
 
 ---
@@ -214,6 +217,20 @@ employee-workload-app/
 │   └── public/
 │       ├── manifest.json       # PWA manifest
 │       └── sw.js               # Service Worker
+├── backend/                    # Express.js backend (deploy บน Render)
+│   ├── src/
+│   │   ├── server.js           # Entry point + middleware + router mount
+│   │   ├── config/
+│   │   │   └── env.js          # Environment variables + CRON_SECRET guard
+│   │   ├── routes/
+│   │   │   ├── notify.js       # POST /broadcast, POST /daily-reminder
+│   │   │   ├── auth.js         # Auth routes
+│   │   │   ├── stats.js        # Stats routes
+│   │   │   └── worklogs.js     # Worklog routes
+│   │   └── services/
+│   │       └── fcm.js          # Firebase Admin SDK FCM service
+│   ├── .env.example            # ตัวอย่าง env vars
+│   └── package.json
 ├── firebase/
 │   ├── firestore.rules         # Firestore security rules
 │   ├── firestore.indexes.json  # Composite indexes
@@ -362,11 +379,19 @@ Quick Log Templates ที่ใช้ซ้ำได้
   requireComment: boolean,        // ต้องกรอก comment?
   isSmart: boolean,               // เป็น smart template (ห้อง/อุปกรณ์)?
   
+  // Combo Template (v2.2.0+)
+  isCombo: boolean,               // true = เป็น Combo Template (กดครั้งเดียวบันทึกหลายงาน)
+  comboItems: Array<{             // รายการงานย่อยใน combo (เมื่อ isCombo = true)
+    name: string,                 // ชื่องานย่อย (แสดงใน modal preview)
+    minorTask: string,            // งานย่อยที่ใช้บันทึก worklog
+    comment: string               // หมายเหตุ (optional, "" ถ้าไม่มี)
+  }> | null,
+  
   // Usage Stats
   usageCount: number,             // จำนวนครั้งที่ใช้
   lastUsedAt: Timestamp,          // ใช้ล่าสุด
   createdAt: Timestamp,
-  createdBy: string,                // uid ผู้สร้าง
+  createdBy: string,              // uid ผู้สร้าง
   updatedAt: Timestamp
 }
 ```
@@ -667,6 +692,92 @@ async function logSystemAction(action, description, metadata = {}) {
   // Creates entry in systemLogs collection
 }
 ```
+
+### Backend REST API (Express.js บน Render)
+
+Backend ให้บริการที่ `https://<render-app>.onrender.com` สำหรับ Push Notification
+
+#### `GET /health`
+
+ตรวจสอบสถานะ backend
+
+```
+Response 200: { "status": "ok", "timestamp": "..." }
+```
+
+#### `POST /api/notify/broadcast`
+
+ส่ง Push Notification ถึงผู้ใช้ทุกคนที่มี FCM token  
+**Auth:** Firebase ID Token (Superadmin เท่านั้น)
+
+```javascript
+// Request Headers
+Authorization: Bearer <firebase-id-token>
+Content-Type: application/json
+
+// Request Body
+{
+  "title": "หัวข้อแจ้งเตือน",
+  "body": "ข้อความแจ้งเตือน"
+}
+
+// Response 200
+{
+  "success": true,
+  "sent": 15,      // จำนวนที่ส่งสำเร็จ
+  "failed": 0      // จำนวนที่ส่งไม่สำเร็จ
+}
+```
+
+#### `POST /api/notify/daily-reminder`
+
+ส่ง Push Notification เตือนพนักงานที่ยังไม่บันทึกงานวันนี้  
+**Auth:** `x-cron-secret` header (ใช้กับ Cron-job.org)
+
+```javascript
+// Request Headers
+x-cron-secret: <CRON_SECRET>
+Content-Type: application/json
+
+// Response 200
+{
+  "success": true,
+  "reminded": 5,   // จำนวน user ที่ส่ง reminder
+  "skipped": 10    // จำนวน user ที่บันทึกงานแล้ว
+}
+```
+
+#### `GET /api/notify/health`
+
+ตรวจสอบสถานะ Firebase Admin SDK connection
+
+```
+Response 200: { "success": true, "firebase": "connected" }
+```
+
+---
+
+#### Environment Variables — Backend
+
+```env
+# backend/.env
+PORT=3001
+
+# Firebase Admin SDK
+# คัดลอกจากไฟล์ service-account.json (Project Settings → Service Accounts)
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"...","private_key":"...","client_email":"..."}
+
+# Cron Secret — ใช้สำหรับ authenticate daily-reminder endpoint
+# ต้องตั้งค่าใน production (ไม่มีค่า default ใน production)
+CRON_SECRET=replace-with-random-secret-min-32-chars
+
+# CORS origin
+CLIENT_ORIGIN=https://labboy-workload-app.web.app
+```
+
+> **⚠️ Security:** `CRON_SECRET` ต้องตั้งค่าก่อน deploy — backend จะ throw error ถ้าไม่มีใน production
+
+---
 
 ### Dashboard Data APIs
 
