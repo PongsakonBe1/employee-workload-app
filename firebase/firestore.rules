@@ -54,11 +54,16 @@ service cloud.firestore {
 
     function isValidWorkLogUpdate() {
       // Update ไม่จำเป็นต้องส่งทุกฟิลด์ — ตรวจเฉพาะฟิลด์ที่ส่งมาว่าถูกชนิด
+      // SA Note: v2.3.0-replan — เพิ่ม equipmentCondition/equipmentNote (ITEM-1)
       let hasDate = request.resource.data.keys().hasAny(['date']);
       let hasTime = request.resource.data.keys().hasAny(['time']);
+      let hasEquipmentCondition = request.resource.data.keys().hasAny(['equipmentCondition']);
+      let hasEquipmentNote = request.resource.data.keys().hasAny(['equipmentNote']);
       let validDate = !hasDate || (request.resource.data.date is string);
       let validTime = !hasTime || (request.resource.data.time is string);
-      return validDate && validTime;
+      let validEquipmentCondition = !hasEquipmentCondition || (request.resource.data.equipmentCondition in ['normal', 'damaged', 'lost']);
+      let validEquipmentNote = !hasEquipmentNote || (request.resource.data.equipmentNote is string);
+      return validDate && validTime && validEquipmentCondition && validEquipmentNote;
     }
 
     function isSameDay(worklog) {
@@ -101,10 +106,11 @@ service cloud.firestore {
         request.resource.data.role != 'superadmin' &&
         !(resource.data.role == 'admin' && request.auth.uid != userId);
       
-      // Users can update their own profile (except role)
+      // Users can update their own profile (except role and displayName)
+      // SA Note: v2.3.0-replan — ล็อค displayName ไม่ให้ staff แก้เอง (ITEM-3A)
       // SA Note: fcmToken อนุญาติให้ user บันทึก token สำหรับ push notification
       allow update: if isOwner(userId) && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'displayName', 'lastLoginAt', 'fcmToken']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken']);
     }
 
     // Worklogs collection

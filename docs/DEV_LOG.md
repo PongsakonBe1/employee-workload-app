@@ -2,6 +2,94 @@
 
 ---
 
+## [2026-06-05 08:23] - [SA] Firestore Rules Update — v2.3.0 Re-plan ITEM-1 & ITEM-3A
+
+**Task:** ตามที่ [PM] มอบหมายใน TASKS.md — อัปเดต Firestore Rules สำหรับ v2.3.0 Re-plan
+
+**Files Modified:**
+- `firebase/firestore.rules` — 2 การเปลี่ยนแปลงหลัก
+
+**Changes:**
+
+### ITEM-3A: ล็อค displayName ไม่ให้ staff แก้เอง (Line ~109-113)
+```javascript
+// Users can update their own profile (except role and displayName)
+// SA Note: v2.3.0-replan — ล็อค displayName ไม่ให้ staff แก้เอง (ITEM-3A)
+allow update: if isOwner(userId) && 
+  request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken']);
+// หมายเหตุ: displayName ถูกลบออกจาก allowed fields
+```
+
+### ITEM-1: อนุญาต write equipmentCondition/equipmentNote (Line ~55-65)
+```javascript
+function isValidWorkLogUpdate() {
+  // SA Note: v2.3.0-replan — เพิ่ม equipmentCondition/equipmentNote (ITEM-1)
+  let hasEquipmentCondition = request.resource.data.keys().hasAny(['equipmentCondition']);
+  let hasEquipmentNote = request.resource.data.keys().hasAny(['equipmentNote']);
+  let validEquipmentCondition = !hasEquipmentCondition || (request.resource.data.equipmentCondition in ['normal', 'damaged', 'lost']);
+  let validEquipmentNote = !hasEquipmentNote || (request.resource.data.equipmentNote is string);
+  return validDate && validTime && validEquipmentCondition && validEquipmentNote;
+}
+```
+
+**Status:** ✅ Deployed to Firebase — `firebase deploy --only firestore:rules`
+
+**Note to Next Agent:**
+- **[DA]** ทำ parallel: ตรวจ + แก้ `predictNextPeak()` cap 6 เดือน
+- **[SE]** รอ SA เสร็จแล้ว — เริ่มทำได้เลย:
+  - ITEM-1: SmartEquipmentModal double-borrow + condition inline
+  - ITEM-2: PERIOD_COLORS + SeasonalCharts  
+  - ITEM-3A: ซ่อน displayName input สำหรับ staff
+  - ITEM-3B: Profile page Radar + Stats + Badges
+- **[UX/UI]** ทำ parallel: ออกแบบ tooltip/legend Seasonal chart (ITEM-4)
+
+---
+
+## [2026-06-05 08:17] - [PM] Project Manager — v2.3.0 Rollback & Re-plan
+
+**Task:** วิเคราะห์สาเหตุ rollback + วางแผน v2.3.0 Re-plan + assign งานแต่ละ role
+
+**สถานะ:** v2.3.0 rollback กลับ production v2.2.1 — เริ่ม branch `feature/v230-replan`
+
+**สาเหตุ Rollback:**
+1. SmartEquipmentModal กดครั้งที่ 2 เป็น "ยืมซ้ำ" แทนที่จะเป็น "คืน" (action detection ผิด)
+2. EquipmentReturnModal (EH-4) ไม่มีใน codebase — ยังไม่ implement
+3. Seasonal Pattern กราฟสีเดียว (ข้อมูลน้อย period เดียว) + พยากรณ์ Peak กระโดดไป มิ.ย. 2027
+4. Radar Chart อยู่คนละ page (/admin/staff-analytics) — user หาไม่เจอ
+
+**Files Modified:**
+- `TASKS.md` — เพิ่ม section "v2.3.0 Rollback & Re-plan" พร้อม 4 items + ลำดับงาน
+- `docs/DEV_LOG.md` — บันทึก entry นี้
+
+**Note to Next Agent:**
+- **[SA]** เริ่มก่อน: อัปเดต `firebase/firestore.rules` — (1) อนุญาต write `equipmentCondition`/`equipmentNote` ใน worklog, (2) ล็อค `displayName` ไม่ให้ staff แก้เอง → บันทึกใน DEV_LOG.md
+- **[DA]** parallel กับ SA: ตรวจ + แก้ `predictNextPeak()` cap 6 เดือน + verify `analyzeSeasonalPattern()` → บันทึกใน DEV_LOG.md
+- **[SE]** รอ SA เสร็จก่อน: แก้ SmartEquipmentModal (ITEM-1), PERIOD_COLORS (ITEM-2), Profile page (ITEM-3B)
+- **[UX/UI]** parallel: ออกแบบ tooltip/legend สำหรับ Seasonal chart (ITEM-4)
+- **[QA]** รอ SE เสร็จ: ทดสอบ equipment flow ยืม→คืน→condition + Seasonal + displayName lock → บันทึกใน `QA_REPORT.md`
+
+---
+
+## [2026-06-05 06:25] - [SE] HOTFIX — Timezone Bug Fix (UTC vs Local Date)
+
+**Problem:** วันที่ 5 มิ.ย. 2025 เวลา 06:00 (ไทย) แต่ SmartEquipmentModal แสดงสถานะวันที่ 4 มิ.ย.
+
+**Root Cause:** 
+- `today()` ใน `dateUtils.js` ใช้ `toISOString()` ซึ่งให้ **UTC date**
+- ประเทศไทย UTC+7 → 06:00 น. = 23:00 ของวันก่อนใน UTC
+
+**Fix:**
+- `dateUtils.js` — เปลี่ยน `today()` ใช้ `toLocalDateStr()` (local timezone)
+- `SmartEquipmentModal.js` — ใช้ `toLocaleDateString('en-CA')` (local timezone)
+
+**Files Modified:**
+- `frontend/lib/dateUtils.js` — แก้ `today()` ใช้ local date
+- `frontend/components/SmartEquipmentModal.js` — แก้ `today` ใช้ local date
+
+**Deployed:** ✅ Hotfix deployed — https://labboy-workload-app.web.app
+
+---
+
 ## [2026-06-04 14:50] - [SA] System Architect — Firestore Rules Hotfix (BUG-5 follow-up)
 
 **Task:** แก้ Firestore Rules ให้ staff สามารถ edit/delete worklog ของตัวเองในวันเดียวกันได้
