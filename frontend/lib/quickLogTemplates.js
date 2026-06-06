@@ -26,7 +26,7 @@ export async function getAllTemplates(department = null) {
     }));
   } catch (error) {
     console.error("Error getting templates:", error);
-    return [];
+    throw error;
   }
 }
 
@@ -77,7 +77,7 @@ export async function getTemplatesForUser(userDepartment) {
     return [...globalTemplates, ...deptTemplates];
   } catch (error) {
     console.error("Error getting user templates:", error);
-    return [];
+    throw error;
   }
 }
 
@@ -195,6 +195,8 @@ export async function logFromTemplate(templateId, userId, extraData) {
       comment: extraData.comment || template.comment, // ใช้ comment จาก extraData ถ้ามี
       equipment: extraData.equipment || "", // เพิ่ม equipment field
       room: extraData.room || "", // เพิ่ม room field
+      equipmentCondition: extraData.equipmentCondition || "normal", // EH-4: สภาพอุปกรณ์ตอนคืน
+      equipmentNote: extraData.equipmentNote || "", // EH-4: หมายเหตุเมื่อชำรุด/สูญหาย
       status: "บันทึกแล้ว",
       templateId: templateId, // บันทึกว่ามาจาก template
       createdAt: serverTimestamp()

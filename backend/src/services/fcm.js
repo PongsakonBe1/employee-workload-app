@@ -219,7 +219,7 @@ export async function getReminderSettings() {
     };
   } catch (error) {
     console.error("❌ Failed to get reminder settings:", error.message);
-    // Return defaults on error
+    console.warn("⚠️ Using default reminder settings due to Firestore error");
     return {
       reminderTime: "17:00",
       reminderDays: ["mon", "tue", "wed", "thu", "fri"],

@@ -1,0 +1,19 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3001",
+      "localStorage": [
+        {
+          "name": "firebaseUser",
+          "value": "{\"uid\":\"superadmin-uid-001\",\"email\":\"pongsakon.be1@gmail.com\",\"displayName\":\"Admin\",\"role\":\"superadmin\",\"photoURL\":\"https://lh3.googleusercontent.com/a/default-user.png\"}"
+        },
+        {
+          "name": "authProvider",
+          "value": "google.com"
+        }
+      ]
+    }
+  ],
+  "sessionStorage": []
+}

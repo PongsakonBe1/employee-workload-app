@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
       }));
       setRoleChangeRequests(requests);
     } catch (err) {
-      // ไม่ throw error เพื่อให้โหลดส่วนอื่นได้
+      console.error("[AdminUsers] Error loading role change requests:", err);
     }
   }
 

@@ -113,7 +113,9 @@ export default function WorkLogsPage() {
             doc.id;
         });
         setUsersCache(usersMap);
-      } catch (err) {}
+      } catch (err) {
+        console.error("[Worklogs] Error loading users for display names:", err);
+      }
     }
     loadUsers();
   }, []);

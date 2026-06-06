@@ -11,6 +11,7 @@ import { db } from '../lib/firebase';
 import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
+import EquipmentReturnModal from './EquipmentReturnModal';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
 
@@ -33,6 +34,10 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   // Combo modal state
   const [showComboModal, setShowComboModal] = useState(false);
   const [comboRecipient, setComboRecipient] = useState('');
+  // EquipmentReturnModal state (EH-4)
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnEquipmentId, setReturnEquipmentId] = useState('');
+  const [returnEquipmentType, setReturnEquipmentType] = useState('headphones');
   // hold-to-confirm state
   const [holdingId, setHoldingId] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
@@ -58,6 +63,10 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
 
     loadTemplates();
   }, [user]);
+
+  const isReturnTemplate = (template) =>
+    template.minorTask.includes('คืนหูฟัง') || template.minorTask.includes('คืนปลั๊กไฟ') ||
+    template.name.includes('คืนหูฟัง') || template.name.includes('คืนปลั๊กไฟ');
 
   const isSmartOrEquipmentTemplate = (template) => {
     return template.isSmart ||
@@ -130,6 +139,19 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
 
   const handleQuickLog = (template) => {
     if (!user || !logAsUser) return;
+
+    // Return template: เปิด EquipmentReturnModal (EH-4)
+    if (isReturnTemplate(template)) {
+      setSelectedTemplate(template);
+      const eqType = (template.minorTask.includes('หูฟัง') || template.name.includes('หูฟัง'))
+        ? 'headphones' : 'power';
+      setReturnEquipmentType(eqType);
+      // ดึง equipment ID จากชื่อ template เช่น "คืนหูฟัง ICIT05" → "ICIT05"
+      const idMatch = template.name.match(/ICIT\d+/) || template.minorTask.match(/ICIT\d+/);
+      setReturnEquipmentId(idMatch ? idMatch[0] : '');
+      setShowReturnModal(true);
+      return;
+    }
 
     // Combo template: เปิด modal กรอก recipient
     if (template.isCombo) {
@@ -824,6 +846,49 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
           </div>
         </div>,
         document.body
+      )}
+      {/* EquipmentReturnModal (EH-4) */}
+      {selectedTemplate && (
+        <EquipmentReturnModal
+          isOpen={showReturnModal}
+          onClose={() => { setShowReturnModal(false); setSelectedTemplate(null); }}
+          onConfirm={async (condition, note) => {
+            if (!selectedTemplate || !logAsUser) return;
+            setLoggingTemplate(selectedTemplate.id);
+            setLoading(true);
+            try {
+              const now = new Date();
+              const extraData = {
+                date: now.toISOString().slice(0, 10),
+                time: now.toTimeString().slice(0, 5),
+                equipmentCondition: condition,
+                equipmentNote: note,
+                employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
+                employeeNickname: logAsUser.nickname || '',
+                employeeFullName: logAsUser.fullName || '',
+              };
+              await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
+              await logSystemAction(
+                SystemActions.WORKLOG_CREATE,
+                `Return log: ${selectedTemplate.name} — ${condition}${note ? ` (${note})` : ''}`,
+                { templateId: selectedTemplate.id }
+              );
+              window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
+                detail: { equipmentType: returnEquipmentType, equipment: returnEquipmentId, status: 'available' }
+              }));
+              if (onLogSuccess) onLogSuccess(`บันทึก "${selectedTemplate.name}" — ${condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย'} เรียบร้อย`);
+            } catch (error) {
+              if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            } finally {
+              setLoading(false);
+              setLoggingTemplate(null);
+              setSelectedTemplate(null);
+            }
+          }}
+          equipmentId={returnEquipmentId}
+          equipmentType={returnEquipmentType}
+          templateName={selectedTemplate.name}
+        />
       )}
     </div>
   );

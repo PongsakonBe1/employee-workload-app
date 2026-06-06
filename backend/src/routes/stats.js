@@ -8,7 +8,8 @@ export const statsRouter = express.Router();
 statsRouter.use(requireAuth);
 
 statsRouter.get("/summary", async (req, res) => {
-  const fiscalYear = req.query.fiscalYear || new Date().getUTCFullYear() + 543;
+  try {
+    const fiscalYear = req.query.fiscalYear || new Date().getUTCFullYear() + 543;
   const range = getFiscalYearRange(fiscalYear);
 
   const match = {
@@ -75,4 +76,7 @@ statsRouter.get("/summary", async (req, res) => {
     })),
     recent: recent.map((item) => item.toJSON())
   });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch statistics" });
+  }
 });

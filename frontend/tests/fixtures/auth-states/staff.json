@@ -1,0 +1,19 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3001",
+      "localStorage": [
+        {
+          "name": "firebaseUser",
+          "value": "{\"uid\":\"staff-uid-001\",\"email\":\"pongsagon.r@icit.kmutnb.ac.th\",\"displayName\":\"พงศกร\",\"role\":\"staff\",\"photoURL\":\"https://lh3.googleusercontent.com/a/default-user.png\"}"
+        },
+        {
+          "name": "authProvider",
+          "value": "google.com"
+        }
+      ]
+    }
+  ],
+  "sessionStorage": []
+}

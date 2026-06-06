@@ -20,6 +20,7 @@ export default function TemplateManager() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     minorTask: '',
@@ -50,11 +51,13 @@ export default function TemplateManager() {
 
   const loadTemplates = async () => {
     setLoading(true);
+    setError('');
     try {
       const templatesData = await getAllTemplates();
       setTemplates(templatesData);
     } catch (error) {
       console.error('Error loading templates:', error);
+      setError('โหลด Templates ไม่สำเร็จ: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -176,6 +179,12 @@ export default function TemplateManager() {
           เพิ่ม Template
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Template Form */}
       {showForm && (
