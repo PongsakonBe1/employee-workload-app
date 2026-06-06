@@ -136,6 +136,20 @@
 
 ---
 
+## [2026-06-06 14:47] - [SA] System Architect — Firestore Composite Index (Equipment Export)
+
+**Task:** สร้าง Composite Index สำหรับ `exportTransactionHistory` query ที่ต้องการ `where equipment != null + date range + orderBy createdAt`
+
+**Files Modified:**
+- `firebase/firestore.indexes.json` — เพิ่ม index ใหม่: `equipment(ASC) + date(ASC) + createdAt(ASC)`
+
+**Deployed:**
+- `firebase deploy --only firestore:indexes` — สำเร็จ (index ถูก sync กับ Firebase Console)
+
+**Note to Next Agent:** SE: Index พร้อมใช้งานแล้ว `exportTransactionHistory` ไม่ควร error "The query requires an index" อีกต่อไป
+
+---
+
 ## [2026-06-05 16:05] - [SE/SA] — Equipment Transaction Export (Simplified)
 
 **Task:** Add date range export for equipment borrow/return history

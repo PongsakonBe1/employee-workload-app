@@ -99,6 +99,24 @@
       ]
     },
     {
+      "collectionGroup": "worklogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "equipment",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
       "fields": [
