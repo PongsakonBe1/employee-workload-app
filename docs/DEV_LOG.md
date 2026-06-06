@@ -2,6 +2,278 @@
 
 ---
 
+## [2026-06-05 09:29] - [UX/UI] Designer — ITEM-4 Seasonal Legend & InfoTooltip Spec
+
+**Task:** ITEM-4 — ออกแบบ legend + popover ⓘ สำหรับ `SeasonalPatternChart` ตาม `KMUTNB_ACADEMIC_CALENDAR.md`
+
+**Files Created:**
+- `docs/DESIGN_SPEC_ITEM4_SeasonalLegend.md` — Design spec ฉบับสมบูรณ์
+
+**Design Decisions:**
+- **Progressive disclosure:** chips ย่อ 3 ชิป (rose/indigo/slate) → กด ⓘ → popover ขยายเต็ม
+- **Popover content:** สี 3 ประเภท + เดือนจริง (ส.ค./ต.ค./ม.ค./มี.ค.) + reference line อธิบาย + tip outlier + TGGS note
+- **Click-outside + Escape ปิด** — ไม่ block workflow
+- **LegendChips** แทนที่ component เดิม (บรรทัด 115–129) ทั้งหมด
+- **CustomTooltip** upgrade: เพิ่ม `periodType` (สีตาม peak/active/low), multiplier เทียบ mean, outlier flag
+- **Empty state** ปรับ copy + เพิ่ม icon
+- **Mobile:** chip label ซ่อนบน < 640px (`hidden sm:inline`)
+
+**Color system (ยืนยันตาม KMUTNB calendar):**
+- peak → `#be123c` (rose-700) / active → `#3730a3` (indigo-700) / low → `#475569` (slate-600)
+
+**Note to SE (ITEM-4, ลำดับ #9):**
+- ดู Section 11 (Migration Checklist) — 9 steps ชัดเจน
+- แทนที่ `LegendChips()` เดิม + `CustomTooltip` เดิม + empty state เดิม ใน `SeasonalCharts.js`
+- เพิ่ม import `{ Info, X, BarChart2 }` จาก `lucide-react`
+- เพิ่ม `periodType` ใน `chartData` map + ส่ง `mean` เข้า `makeCustomTooltip(mean)`
+
+---
+
+## [2026-06-05 15:15] - [SE] Software Engineer — ITEM-3B: Profile Stats + Radar + Badges
+
+**Task:** ITEM-3B SE — เพิ่มสถิติส่วนตัว กราฟ radar และตรารางวัลในหน้า Profile
+
+**Files Created:**
+- `frontend/components/ProfileStats.js` — Component แสดงสถิติส่วนตัว:
+  - `StatCard`: การ์ดสถิติ 4 ใบ (งานทั้งหมด, เดือนนี้, streak, หมวดหมู่หลัก) พร้อม trend indicator
+  - `CategoryRadar`: กราฟ Radar Chart แสดงการกระจายงานตามหมวดหมู่ (normalized 0-100) ใช้ Recharts
+  - `BadgesSection`: แสดงตรารางวัลที่ได้รับ พร้อมสีตามประเภท
+
+**Files Modified:**
+- `frontend/lib/analytics.js` — เพิ่มฟังก์ชันสำหรับ profile stats:
+  - `calculateStreak(worklogs)` — คำนวณ streak ปัจจุบัน (consecutive days)
+  - `calculateLongestStreak(worklogs)` — คำนวณ streak สูงสุดตลอดกาล
+  - `getCategoryBreakdown(worklogs)` — สรุปงานตามหมวดหมู่
+  - `calculateUserStats(worklogs, user)` — รวมสถิติทั้งหมด (total, thisMonth, streak, topCategory, trend)
+  - `calculateRadarData(worklogs)` — ข้อมูลสำหรับ radar chart (normalized)
+  - `getBadges(stats, worklogs)` — คำนวณตรารางวัลตาม achievements:
+    - Volume badges: 10/50/100 worklogs
+    - Streak badges: 7/30 days
+    - Current streak badge (>= 5 days)
+    - Consistency badge (20+ days, avg 2+ per day)
+    - Specialist badge (top category >= 20)
+    - Early adopter badge (first worklog before 2025-06-01)
+
+- `frontend/app/profile/page.js`:
+  - Import `ProfileStats` และ `BarChart3` icon
+  - เพิ่ม section "สถิติของฉัน" แสดง `ProfileStats` component ก่อนฟอร์มแก้ไขโปรไฟล์
+
+**Features:**
+- Stats cards responsive (2 cols mobile → 4 cols desktop)
+- Radar chart แสดงสูงสุด 8 หมวดหมู่ พร้อม tooltip แสดงจำนวนจริง
+- Loading state แสดง skeleton animate-pulse
+- Empty states สำหรับยังไม่มีข้อมูล
+
+**Note to [QA]:**
+- ทดสอบว่า stats แสดงถูกต้องตาม worklogs ของ user ที่ login
+- ทดสอบ radar chart แสดง normalized data (0-100)
+- ทดสอบ badges คำนวณถูกต้องตามเกณฑ์ที่กำหนด
+- ทดสอบ loading state แสดงขณะโหลด worklogs
+
+---
+
+## [2026-06-05 15:22] - [PM/UX/DA/SE] — Approved: Radar uses minorTask + New Badges
+
+**PM/UX Decision:** Profile Radar Chart ใช้ `minorTask` (หัวข้อรอง) แทน `category/dutyType`
+
+**เหตุผล:**
+- `mainDuty` มีแค่ 3 categories — กว้างเกินไป
+- `minorTask` มี ~30 tasks — สะท้อนทักษะจริง เช่น "ยืมหูฟัง" vs "ติดตั้ง Software"
+
+**Files Modified:**
+
+**`frontend/lib/analytics.js`:**
+- `getCategoryBreakdown()` — เปลี่ยนใช้ `w.minorTask` เป็น primary category
+- `calculateUserStats()` — เพิ่ม `uniqueMinorTasks` และ `topMinorTask` ใน return
+- `getBadges()` — เพิ่ม 2 badges ใหม่:
+  - **All-rounder** (`Layers` icon, cyan): ทำงานครบ 10 หัวข้อรองที่แตกต่างกัน
+  - **มือขวาประจำ** (`HandHelping` icon, pink): เชี่ยวชาญหัวข้อรองใดหนึ่ง 30+ ครั้ง
+
+**`frontend/components/ProfileStats.js`:**
+- Import `Layers`, `HandHelping` icons
+- เพิ่ม `cyan`, `pink` colors ใน COLOR_MAP
+- เปลี่ยนหัวข้อกราฟ: "การกระจายตามหัวข้อรอง"
+- แก้ empty state: แสดงข้อความชัดเจนเมื่อมี < 3 หัวข้อ ("ต้องมีอย่างน้อย 3 หัวข้อรองที่แตกต่างกัน")
+- ลด font size ของ labels บน radar เป็น 10px เพื่อรองรับชื่องานที่ยาว
+
+**ผลลัพธ์:**
+- Staff ที่ทำงานหลากหลายจะเห็นกราฟ radar หลายมิติ
+- Badges สะท้อนความสามารถทั้ง depth (เชี่ยวชาญเฉพาะ) และ breadth (ทำได้หลายอย่าง)
+
+---
+
+## [2026-06-06 10:50] - [UX/UI] — Apple iOS Style Export Buttons + Date Picker
+
+**Task:** Refine export UI to Apple/iOS minimalist design theme
+
+**Files Modified:**
+
+**1. RoomEquipmentStatus.js — Export Button Styling:**
+
+**Export CSV Button (Header bar):**
+- เปลี่ยนจาก `bg-slate-100` → `bg-white` ให้คลีนขึ้น
+- ใช้ `border-slate-200/60` ให้เส้นขอบบาง ๆ (60% opacity)
+- แก้ไขปัญหา nested button → ใช้ `<div role="button">`
+- Font size 10px, icon size 11px, strokeWidth 1.5 (บางเฉียบ)
+- Hover: `hover:bg-slate-50` (subtle)
+- Tooltip: "ส่งออกสถานะอุปกรณ์ (CSV)"
+
+**Date Range Picker + Export History (Expanded section):**
+- เปลี่ยนจาก `bg-slate-50` → `bg-slate-50/80` (80% opacity ให้สว่างขึ้น)
+- ใช้ uppercase label: "ส่งออกประวัติ" text-[10px] text-slate-400 tracking-wide
+- Date inputs: `bg-white border-slate-200/60 rounded-md` 
+- เปลี่ยน separator "-" → "→" (arrow icon style บางๆ)
+- Export button: คลีนแบบเดียวกับ header — `bg-white border-slate-200/60`
+- ไม่ใช้สีน้ำเงินเด่น → ใช้ `text-slate-600` ให้ minimal
+- `active:scale-95` ให้ tactile feedback แบบ iOS
+
+**Design Principles Applied:**
+- **สี:** ใช้ `slate-50` to `slate-600` gradient เท่านั้น (monochrome)
+- **ขอบ:** `border-slate-200/60` — บาง 60% opacity (Apple style)
+- **Shadow:** `shadow-sm` — บางเฉียบ ไม่หนัก
+- **Spacing:** กระชับ px-3 py-2.5 แทน px-4 py-3
+- **Typography:** text-[10px] uppercase tracking-wide ให้ดู professional
+
+---
+
+## [2026-06-05 16:05] - [SE/SA] — Equipment Transaction Export (Simplified)
+
+**Task:** Add date range export for equipment borrow/return history
+
+---
+
+## [2026-06-05 15:40] - [SE/SA/UX] — RoomEquipmentStatus + ProfileStats Enhancements
+
+**Task:** Implement equipment condition tracking + CSV export + improved UX
+
+**1. RoomEquipmentStatus.js — Equipment Condition & CSV Export**
+
+**Files Modified:**
+- Added imports: `Download`, `AlertTriangle`, `Wrench`, `Ban` (Lucide icons)
+- Added `useAuth` hook — เช็ค admin สำหรับ export CSV
+- Added `equipmentConditions` state — track สภาพอุปกรณ์ (normal/damaged/lost)
+- Updated `calculateStatusFromWorklogs()` — อ่าน `equipmentCondition` จาก worklog เมื่อคืนของ
+- Added `getConditionBadge()` — styling สำหรับสถานะชำรุด/สูญหาย
+- Added `exportToCSV()` — export ข้อมูลอุปกรณ์ทั้งหมด (เฉพาะ admin)
+- Updated all grid cards — แสดง condition indicator (amber=ชำรุด, red=สูญหาย)
+- Updated `DevicePreview` — แสดง condition badge เมื่อเลือกอุปกรณ์
+- Added Export CSV button — แสดงเฉพาะเมื่อ expand + admin
+
+**CSV Columns:**
+- รหัสอุปกรณ์, ประเภท, สังกัด (ชั้น 3/Finn), สถานะการใช้งาน, สภาพอุปกรณ์, บันทึกล่าสุด, Barcode, Item No
+
+**2. ProfileStats.js — Abbreviations & Badge Tooltip**
+
+**Files Modified:**
+- Added `limit(500)` ใน query — ป้องกัน quota overuse [SA]
+- Added `ABBREVIATION_MAP` — คำย่อสำหรับ radar chart:
+  - `ช่วยเหลือการใช้งานคอมพิวเตอร์` → `ช่วยดูคอม`
+  - `เปิดห้องเรียนชั้น 3/4` → `เปิดชั้น 3/4`
+  - `ปิดห้องเรียนชั้น 3/4` → `ปิดชั้น 3/4`
+  - `Software ลิขสิทธิ์` → `SW Licence`
+  - `แก้ไขปัญหา ICIT account` → `ICIT Account`
+  - `Microsoft Authenticator` → `MS Auth`
+  - และอื่นๆ
+- Added `shortenLabel()` function — แปลงชื่องานยาวเป็นคำย่อ
+- Updated `CategoryRadar` — แสดงคำย่อบน radar, tooltip แสดงชื่อเต็ม
+- Added `BadgeWithTooltip` component — custom tooltip สวยงาม (dark bg, arrow)
+- Updated `BadgesSection` — ใช้ BadgeWithTooltip แทน native title
+
+**3. Integration Flow — SmartEquipmentModal ↔ RoomEquipmentStatus**
+
+```
+[ยืม/คืน ใน SmartEquipmentModal]
+    ↓ onSelect(comment, equipment, minorTask, recipient, condition, note)
+[QuickLogButtons.handleLogWithSmartEquipment]
+    ↓ addDoc(worklogs, { equipmentCondition, equipmentNote })
+[RoomEquipmentStatus อ่าน worklogs]
+    ↓ แสดงสถานะ: กำลังใช้งาน (🔴) / ชำรุด (🟠) / สูญหาย (🔴 deep)
+```
+
+**ผลลัพธ์:**
+- Staff เห็นสถานะอุปกรณ์ครบถ้วน (ใช้งาน/ชำรุด/สูญหาย)
+- Admin export CSV ได้ — มีข้อมูลสังกัด+สภาพ+บาร์โค้ด
+- Profile radar แสดงคำย่อ — อ่านง่ายขึ้น
+- Badge hover สวยงาม — dark tooltip มีลูกศร
+
+**UX Update 15:45:** เปลี่ยนสี `lost` จากแดงเข้ม → **เทา/สเลท** (`slate-400/500`)
+- สื่อความหมาย: "disabled/unavailable" (Apple iOS semantic)
+- แยกชัดจาก `in_use` (rose-400) ที่เป็น active/error แต่ยังมีตัวตน
+- สอดคล้องธีม minimal, professional, clean
+
+---
+
+## [2026-06-05 15:05] - [DA] Data Analyst — Auto-detect Academic Year + Fiscal 2568 Calendar
+
+**Task:** DA — รองรับปีการศึกษา 2568 ในปีงบ 2569 (Oct'25 - May'26) พร้อม auto-detect
+
+**Rationale:** ปีงบ 2569 (1 ต.ค. 2568 - 30 ก.ย. 2569) ทับซ้อน 2 ปีการศึกษา:
+- ต.ค. 2568 - มี.ค. 2569 = ภาค 2 ของปีการศึกษา 2568
+- มิ.ย. 2569 - ก.ย. 2569 = ภาค 1 ของปีการศึกษา 2569
+
+**Files Modified:**
+- `frontend/lib/analytics.js`:
+  - เพิ่ม `ACADEMIC_PERIODS_2568_BACHELOR` — ปฏิทินปริญญาตรี 2568 (มิ.ย. 2568 - พ.ค. 2569)
+  - เพิ่ม `ACADEMIC_PERIODS_2568_TGGS` — ปฏิทิน TGGS 2568 (ส.ค. 2568 - ก.ค. 2569)
+  - เพิ่ม `ACADEMIC_PERIODS_2568` (alias)
+  - เพิ่ม `getAcademicYear(date)` — คำนวณปีการศึกษาจากวันที่ (Jun-Dec = ปีนั้น, Jan-May = ปีก่อน)
+  - ปรับ `getAcademicPeriod(date, level)` — auto-detect ปีการศึกษาแล้วเลือก calendar ที่ถูกต้อง (รองรับ 2568/2569)
+  - ปรับ `getExamPeriods(level, academicYear)` — รองรับทั้ง 2 ปี (default = ทั้ง 2 ปี, หรือเลือกเฉพาะปี)
+
+**Examples:**
+- `getAcademicPeriod('2025-10-15')` → sem1_final_exam (academic 2568)
+- `getAcademicPeriod('2026-08-20')` → sem1_mid_exam (academic 2569)
+- `getAcademicYear('2025-12-01')` → "2568"
+- `getAcademicYear('2026-06-22')` → "2569"
+
+**Note to [SE]:**
+- ไม่ต้องแก้ `SeasonalCharts.js` — `getSeasonalAnalysis` ใช้ `getAcademicPeriod` ที่ auto-detect แล้ว
+- กราฟ seasonal จะแสดงสี/period ถูกต้องอัตโนมัติไม่ว่า worklog จะอยู่ช่วงไหนของ fiscal 2569
+
+---
+
+## [2026-06-05 10:40] - [SE] Software Engineer — ITEM-4: SeasonalCharts Legend + InfoTooltip + Strip
+
+**Task:** ITEM-4 SE — implement ตาม `DESIGN_SPEC_ITEM4_SeasonalLegend.md`
+
+**Files Modified:**
+- `frontend/components/SeasonalCharts.js` — เขียนใหม่ทั้งหมด:
+  - `LegendChips`: chips 3 สี (Exam/Semester/Break) + ปุ่ม ⓘ → popover `คู่มืออ่านกราฟ` (click-outside + Escape ปิด, focus closeRef เมื่อเปิด, `aria-expanded`, `role="dialog"`)
+  - Popover: section สีแท่งกราฟ + เดือนจริง, reference line legend (slate/amber dashed), amber tip card, TGGS note
+  - `makeCustomTooltip(mean)`: curried component — แสดง periodLabel สี rose/indigo/slate, multiplier × mean, 🔴 outlier flag เมื่อ > 2×mean
+  - `AcademicCalendarStrip`: timeline strip ใต้ chart — filter เฉพาะ months ที่มีใน data, flex proportional, opacity/hover, mobile ซ่อน label (`hidden sm:inline`)
+  - `PERIOD_LABEL_MAP` + `PERIOD_TYPE_MAP`: รองรับ keys ใหม่ Bachelor 2569 + TGGS + Legacy keys (fallback)
+  - Empty state: `BarChart2` icon + copy ใหม่
+  - ลบ `Legend` import (ไม่ใช้)
+
+**Note to [QA]:**
+- ทดสอบ popover: กด ⓘ → เปิด → กด Escape → ปิด; click outside → ปิด; focus ที่ ✕
+- ทดสอบ tooltip: hover bar → เห็น periodLabel สี + multiplier ↑/🔴
+- ทดสอบ strip: มี data 2026-08 → segment "Midterm" rose สีปรากฏ, hover opacity=1
+- ทดสอบ mobile < 640px: chip label ซ่อน, strip label ซ่อน
+
+---
+
+## [2026-06-05 09:15] - [SE] Software Engineer — v2.3.0 Re-plan ITEM-1, ITEM-2, ITEM-3A
+
+**Task:** แก้ SmartEquipmentModal double-borrow bug + rebuild SeasonalCharts + lock displayName สำหรับ staff
+
+**Files Modified:**
+- `frontend/components/SmartEquipmentModal.js` — ITEM-1: เพิ่ม `returnCondition`/`returnNote` state; inline condition selector (สมบูรณ์/ชำรุด/สูญหาย) ปรากฏเมื่อเลือก `in_use`; track `equipmentConditionMap` จาก worklogs; disable ยืมถ้า damaged/lost; ส่ง condition+note ผ่าน `onSelect` 6 args
+- `frontend/components/QuickLogButtons.js` — ITEM-1: `handleLogWithSmartEquipment` รับ `equipmentCondition` + `equipmentNote` แล้วใส่ใน `extraData`
+- `frontend/components/SeasonalCharts.js` — ITEM-2: สร้างใหม่ทั้งหมด ใช้ PERIOD_COLORS จาก `analytics.js` (rose-700/indigo-700/slate-600); `SeasonalPatternChart`, `OutlierAlertCard`, `PeakHourPrediction`; legend chips, fillOpacity=0.85, maxBarSize=48; empty state message
+- `frontend/app/dashboard/page.js` — ITEM-2: เพิ่ม dynamic imports SeasonalPatternChart/OutlierAlertCard/PeakHourPrediction; `allWorklogs` state + `setAllWorklogs(allWorklogsInRange)` ใน loadStats; `seasonalAnalysis = useMemo(() => getSeasonalAnalysis(allWorklogs))`; seasonal section admin-only พร้อม empty state < 5 records
+- `frontend/app/profile/page.js` — ITEM-3A: staff เห็น displayName แบบ read-only พร้อม Lock icon; admin แก้ได้; updateDoc payload ไม่ส่ง displayName ถ้า role != admin
+- `frontend/app/admin/users/page.js` — ITEM-3A: เพิ่มปุ่ม "ชื่อลงงาน" (Pencil icon) ในทุก row ที่ไม่ใช่ superadmin; modal `editDisplayNameModal` + `handleSaveDisplayName()`
+
+**Note to [QA]:**
+- ทดสอบ ITEM-1: กดยืม ICIT01 (ครั้งแรก) → กด ICIT01 อีกครั้ง → modal แสดง condition selector, ปุ่มเปลี่ยนสีตาม damaged/lost
+- ทดสอบ ITEM-1: กด ICIT01 ที่ damaged (available) → ปุ่มถูก disable, tooltip "ยืมไม่ได้ — ชำรุด"
+- ทดสอบ ITEM-2: dashboard → seasonal section ปรากฏ (admin), สีกราฟ rose/indigo/slate
+- ทดสอบ ITEM-3A: staff login → profile → displayName เป็น read-only; admin → users page → ปุ่มชื่อลงงาน → modal แก้ได้
+
+---
+
 ## [2026-06-05 08:23] - [SA] Firestore Rules Update — v2.3.0 Re-plan ITEM-1 & ITEM-3A
 
 **Task:** ตามที่ [PM] มอบหมายใน TASKS.md — อัปเดต Firestore Rules สำหรับ v2.3.0 Re-plan

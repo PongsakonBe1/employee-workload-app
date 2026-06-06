@@ -306,3 +306,149 @@ hotfix(modal): sync SmartEquipmentModal/SmartRoomModal with CustomEvents
 hotfix(rules): allow staff to delete own same-day unlocked worklogs
 test(playwright): add auth state injection for superadmin and staff roles
 ```
+
+---
+
+# v2.3.0 Rollback & Re-plan — PM Decision Log
+
+**สถานะ:** v2.3.0 ถูก rollback กลับ production v2.2.1
+**วันที่:** 2026-06-05
+**Branch ใหม่:** `feature/v230-replan`
+
+## สาเหตุ Rollback
+
+1. **SmartEquipmentModal double-borrow bug** — กดครั้งที่ 2 ไม่เป็นการ "คืน" แต่เป็นการ "ยืมซ้ำ" → logic action detection ผิด
+2. **EquipmentReturnModal ไม่มี** — EH-4 ยังไม่ implement
+3. **Seasonal Pattern กราฟสีเดียว + พยากรณ์ผิด** — FU-2, FU-3 ยังไม่แก้
+4. **Radar อยู่แยก page** — user หาไม่เจอ
+
+---
+
+## ITEM-1: SmartEquipmentModal — Double-Borrow Bug + Equipment Condition Flow — [SE] 🔴
+
+**Root cause:** `SmartEquipmentModal` ใช้ `templateMinorTask` (เช่น "ยืมหูฟัง") ตายตัวจาก template — ไม่ได้ดู current status ของอุปกรณ์ที่เลือกว่า `in_use` อยู่หรือเปล่า ก่อนตัดสินว่าเป็น "ยืม" หรือ "คืน"
+
+**Flow ที่ถูกต้อง (v2.3.0):**
+
+```
+ครั้งแรก (สถานะ available):
+  เลือกอุปกรณ์ → กรอก recipient → กด "ยืม ICIT01" → บันทึก minorTask="ยืมหูฟัง" ✅
+
+ครั้งที่ 2 (สถานะ in_use):
+  เลือก ICIT01 → modal แสดงตัวเลือกสภาพ [✓ สมบูรณ์ / ชำรุด / สูญหาย] (default: สมบูรณ์)
+  → กด "คืน ICIT01 — สมบูรณ์" → บันทึก minorTask="คืนหูฟัง" + equipmentCondition="normal" ✅
+```
+
+**หมายเหตุสำคัญ:**
+- `equipmentCondition` เก็บใน `worklog.equipmentCondition` — **ไม่แสดงในประวัติงาน Staff**
+- สถานะสภาพแสดงใน `RoomEquipmentStatus` panel และ `SmartEquipmentModal` (badge "ชำรุด !")
+- อุปกรณ์ชำรุด/สูญหาย → แสดงใน modal ว่า "ยืมไม่ได้ — ชำรุด" และ lock ปุ่มยืม
+
+**งาน [SE]:**
+- [ ] แก้ `SmartEquipmentModal.js` — `handleConfirm()`: ดู `equipmentStatus[selectedEquipment]` ก่อน ถ้า `in_use` → action = "คืน" (เรียก `EquipmentReturnInlineSection`) ถ้า `available` → action = "ยืม" (flow เดิม)
+- [ ] เพิ่ม inline condition section ใน `SmartEquipmentModal.js` ตอน action = คืน (ไม่ต้องสร้าง component ใหม่แยก — ฝังใน Modal เดิม):
+  ```
+  [✓] สมบูรณ์  [ ] ชำรุด  [ ] สูญหาย
+  (ถ้าเลือก "ชำรุด" → แสดง text input "โน้ตสั้น (ไม่เกิน 200 ตัวอักษร)")
+  ```
+- [ ] บันทึก `equipmentCondition: "normal"|"damaged"|"lost"` + `equipmentNote?: string` ใน worklog document
+- [ ] แก้ `RoomEquipmentStatus.js` — แสดง badge สภาพอุปกรณ์: ถ้า `equipmentCondition === "damaged"` หรือ `"lost"` → แสดง indicator สีส้ม/แดง บน equipment item
+- [ ] แก้ `SmartEquipmentModal.js` — อุปกรณ์ที่ `equipmentCondition === "damaged"` หรือ `"lost"` → disable ปุ่มยืม + แสดง tooltip "ยืมไม่ได้ — ชำรุด/สูญหาย"
+
+**งาน [SA]:**
+- [ ] อัปเดต `firebase/firestore.rules` — อนุญาต write fields `equipmentCondition`, `equipmentNote` ใน worklog create + update rule
+
+*Note to SE: ตรวจสอบข้อมูล `equipmentCondition` จาก worklogs วันนี้ใน `calculateStatusFromWorklogs()` เพื่อ derive สถานะอุปกรณ์*
+
+---
+
+## ITEM-2: Seasonal Pattern — สีกราฟ + สูตรพยากรณ์ — [DA] + [SE] 🟠
+
+**งาน [DA]:**
+- [x] ตรวจสอบ `analyzeSeasonalPattern()` + **แก้ไขปฏิทิน มจพ 2569/2570** ตามเอกสารจริง:
+  - ✅ **ปริญญาตรี/ปวช (default):** เปิด มิ.ย. 2569 → สอบกลาง ส.ค. → สอบปลาย ต.ค. → เปิดภาค 2 พ.ย. → สอบกลาง ม.ค. 2570 → สอบปลาย มี.ค. 2570
+  - ✅ **TGGS/นานาชาติ:** เปิด ส.ค. 2569 → สอบกลาง ก.ย.-ต.ค. → สอบปลาย พ.ย.-ธ.ค. → เปิดภาค 2 ม.ค. 2570 → สอบกลาง มี.ค. → สอบปลาย พ.ค. 2570
+  - ✅ รองรับ 3 levels: `bachelor` (default), `vocational`, `tggs`/`international`
+- [x] แก้ `predictNextPeak()` ใน `frontend/lib/analytics.js`:
+  - ✅ เพิ่ม cap 6 เดือน: `Math.min(monthsAhead, 6)` + returns `{ confidence: "low", reason: "limited_data_use_academic_calendar" }`
+  - ✅ ถ้า `yearsOfData === 1` → ใช้ academic period ถัดไป (exam/opening) แทนการกระโดดปีหน้า
+- [x] เขียน unit test ใน `analytics.test.js` สำหรับ cap 6 เดือน + academic fallback ✅
+  - *Files:* `frontend/lib/analytics.js`, `frontend/lib/analytics.test.js`
+  - *Tests:* 16 suites, 60+ test cases (KMUTNB calendar, 6-month cap, TGGS support)
+
+**งาน [SE]:**
+- [ ] แก้ `PERIOD_COLORS` ใน `frontend/lib/academicCalendar.js`:
+  - `peak/exam` → `#be123c` (rose-700)
+  - `active/semester` → `#3730a3` (indigo-700)
+  - `low/break` → `#475569` (slate-600)
+- [ ] แก้ `SeasonalPatternChart` ใน `frontend/components/SeasonalCharts.js` — เพิ่ม `opacity={0.85}` บน Bar + `maxBarSize={48}` ให้กราฟดูสวยขึ้น
+
+---
+
+## ITEM-3: Staff Profile — Radar + ข้อมูลโปรไฟล์ + ล็อค displayName — [SE] + [SA] 🟡
+
+### 3A: ล็อค displayName — staff แก้เองไม่ได้
+
+**งาน [SA]:**
+- [ ] แก้ `firebase/firestore.rules` — `users/{uid}` update rule: staff ห้าม write field `displayName` (อนุญาตเฉพาะ admin/superadmin หรือ Cloud Function)
+
+**งาน [SE]:**
+- [ ] แก้ profile page (หาไฟล์: `frontend/app/profile` หรือ `frontend/app/dashboard`) — ซ่อน/disable input `displayName` สำหรับ role staff
+- [ ] หน้า admin user management (`frontend/app/admin/users` หรือ settings) — เพิ่ม field แก้ `displayName` สำหรับ admin/superadmin เท่านั้น
+
+### 3B: Profile Page เพิ่มข้อมูล (Radar + Stats)
+
+**งาน [SE]:**
+- [ ] เพิ่มใน profile page ของแต่ละ user:
+  - **Radar Chart** — embed `StaffRadarChart` แสดงคะแนน 6 metrics ของตัวเอง vs team average
+  - **Stats Summary** — จำนวนงานเดือนนี้, top 3 minorTask ที่ทำบ่อย, streak วันทำงานติดต่อกัน
+  - **Achievement Badges** — เช่น "บันทึก 100 งาน", "ใช้ QuickLog > 80%", "ไม่มีงานค้าง 30 วัน"
+
+*Note to SE: ใช้ `calculateRadarMetrics()` จาก `frontend/lib/staffMetrics.js` (SR-2 ✅) + `getTeamAverage()` ที่มีอยู่แล้ว*
+
+---
+
+## ITEM-4: Dashboard UX — Guide สำหรับ User ทุก Role — [UX/UI] + [SE] 🟡
+
+**ปัญหา:** Admin/Staff ที่ไม่ใช่ DA อาจอ่านกราฟ Seasonal Pattern ไม่เข้าใจ
+
+**งาน [UX/UI]:**
+- [x] ออกแบบ legend อธิบาย period สี + popover ⓘ — `docs/DESIGN_SPEC_ITEM4_SeasonalLegend.md` ✅
+- [x] ออกแบบ info icon ⓘ พร้อม popover (progressive disclosure, click-outside ปิด, Escape ปิด) ✅
+
+**งาน [SE]:**
+- [ ] เพิ่ม `InfoTooltip` component เล็กๆ ถัดจาก title "แพทเทิร์นตามภาคเรียน" อธิบาย:
+  - สีแต่ละช่วง = ช่วงเวลาในปีการศึกษา
+  - แท่งสูง = งานเยอะ, แท่งเตี้ย = งานน้อย
+  - จุดสีส้ม = วันผิดปกติ (Outlier)
+- [ ] เพิ่ม empty state ที่ดีขึ้น: ถ้าข้อมูล < 2 เดือน → แสดงข้อความ "กราฟจะแม่นยำขึ้นเมื่อมีข้อมูลสะสม 2 เดือนขึ้นไป"
+
+---
+
+## ลำดับส่งไม้ต่อ (v2.3.0 Re-plan)
+
+| ลำดับ | งาน | Role | เวลา | Dependency |
+|---|---|---|---|---|
+| 1 | ITEM-1 SA: อัปเดต Firestore rules (equipmentCondition) | **[SA]** | 30 min | — |
+| 2 | ITEM-3A SA: ล็อค displayName ใน rules | **[SA]** | 30 min | — |
+| 3 | ITEM-2 DA: ตรวจสูตร + แก้ predictNextPeak cap | **[DA]** | 1.5 hr | — |
+| 4 | ITEM-1 SE: แก้ SmartEquipmentModal double-borrow + condition inline | **[SE]** | 4 hr | SA #1 |
+| 5 | ITEM-2 SE: แก้ PERIOD_COLORS + SeasonalCharts | **[SE]** | 1 hr | DA #3 |
+| 6 | ITEM-3A SE: ซ่อน displayName + admin edit | **[SE]** | 2 hr | SA #2 |
+| 7 | ITEM-3B SE: Profile page Radar + Stats + Badges | **[SE]** | 4 hr | — |
+| 8 | ITEM-4 UX/UI: ออกแบบ tooltip/legend | **[UX/UI]** | 1 hr | — | ✅ |
+| 9 | ITEM-4 SE: เพิ่ม InfoTooltip + empty state | **[SE]** | 1 hr | UX/UI #8 |
+| 10 | QA: ทดสอบ SmartEquipmentModal flow ยืม→คืน→condition | **[QA]** | 2 hr | SE #4 |
+| 11 | QA: ทดสอบ Seasonal + Prediction | **[QA]** | 1 hr | SE #5 |
+| 12 | QA: ทดสอบ displayName lock | **[QA]** | 30 min | SE #6 |
+
+## Commit Convention v2.3.0 Re-plan
+
+```
+fix(equipment): detect return action from status, add condition selector inline
+fix(rules): lock displayName for staff, add equipmentCondition write permission
+fix(analytics): cap predictNextPeak to 6 months, use academic period fallback
+fix(seasonal): update PERIOD_COLORS to match app theme
+feat(profile): embed radar chart and stats summary in user profile page
+feat(dashboard): add InfoTooltip and empty state for seasonal section
+```

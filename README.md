@@ -4,8 +4,8 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.2.0  
-📅 **Last Updated:** 2026-06-03  
+📦 **Current Version:** v2.3.0  
+📅 **Last Updated:** 2026-06-06  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
 
@@ -45,7 +45,7 @@
 
 | ประเภท | จำนวน (โดยประมาณ) | คำอธิบาย |
 |--------|-------------------|----------|
-| Staff (พนักงาน) | 10-20 คน | บันทึกงานตัวเอง, ดูสถิติส่วนตัว |
+| Staff (พนักงาน) | 8-10 คน | บันทึกงานตัวเอง, ดูสถิติส่วนตัว |
 | Admin (ผู้ดูแล) | 2-3 คน | จัดการทีม, อนุมัติ users, ดูรายงาน |
 | Superadmin | 1-2 คน | ดูแลระบบทั้งหมด, จัดการสิทธิ์ |
 
@@ -1225,6 +1225,7 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.3.0** | 2026-06-06 | **FEAT: Equipment Borrow/Return Export**: Admin/Superadmin ส่งออกประวัติการยืม/คืนอุปกรณ์เป็น CSV พร้อม date range picker (เลือกช่วงวันที่) — query Firestore `worklogs` จับคู่ log ยืม+คืน อัตโนมัติ, CSV columns: วันที่ยืม/เวลายืม/Barcode/รหัสอุปกรณ์/ผู้ยืม/สถานะ/ผู้รับคืน/เวลาคืน/สภาพ/หมายเหตุ, BOM สำหรับ Thai encoding; **FIX: Equipment Lost Color**: เปลี่ยนสี `lost` จากแดงเข้ม → สเลท/เทา (`slate-400/500`) ให้สื่อ "disabled/unavailable" (Apple iOS semantic); **FIX: Nested Button Hydration Error**: แก้ `<button>` ซ้อน `<button>` ใน `RoomEquipmentStatus` — เปลี่ยน inner เป็น `<div role="button">`; **FIX: คู่มืออ่านกราฟ z-index**: แก้ popup ถูก container อื่นกลบด้วย `createPortal` + `fixed z-[9999]`; **UX: Export Buttons**: ปรับ export buttons ให้ minimal Apple/iOS style — `bg-white border-slate-200/60 shadow-sm`, font 10px, icon strokeWidth 1.5; **UX: Seasonal Chart Label**: เปลี่ยน "พยากรณ์ช่วงพีค" → "ช่วงที่อาจมีงานมาก" พร้อม note "จากตารางการศึกษา (ข้อมูล 1 ปี ไม่เพียงพอสำหรับ statistical prediction)" |
 | **v2.2.0** | 2026-06-03 | **FEAT: Combo Template**: เพิ่มระบบ Combo Template — Admin สร้าง template ที่ประกอบด้วยหลาย minorTask, Staff กดครั้งเดียว กรอก recipient ครั้งเดียว → บันทึก worklogs หลายรายการพร้อมกัน (`Promise.all`); ปุ่ม combo แสดง badge สีม่วงจำนวนงาน, modal preview ก่อนบันทึก; `TemplateManager.js` เพิ่ม isCombo toggle + comboItems editor; `QuickLogButtons.js` เพิ่ม combo modal + handler; `quickLogTemplates.js` เพิ่ม `logFromComboTemplate()` |
 | **v2.1.0** | 2026-06-03 | **FEAT: Background Push Notification**: เพิ่มระบบส่ง Push Notification ผ่าน Backend (Render + Cron-job.org) — daily reminder แจ้งเตือนพนักงานที่ยังไม่ลงงาน + broadcast push สำหรับ Superadmin; **Backend**: เพิ่ม Express server (`backend/`) พร้อม endpoints `/api/notify/daily-reminder` (CRON_SECRET auth + `crypto.timingSafeEqual`), `/api/notify/broadcast` (Firebase ID Token + superadmin role check), `/api/notify/health`; **FCM Service**: `backend/src/services/fcm.js` ใช้ firebase-admin SDK ส่ง multicast push; **Frontend — Settings UI**: เพิ่มหน้าตั้งค่า Push Notification ใน Admin Settings — toggle เปิด/ปิด, เลือกเวลาส่ง `pushReminderTime`, เลือกวัน `reminderDays` (จ–อา) พร้อม `aria-pressed` accessibility; **Frontend — Broadcast UI**: Superadmin เห็น Broadcast section ใน Settings — กรอก Title/Body แล้วส่ง push ถึงทุกคน แสดงผล sent/failed count; **Security — CRON_SECRET guard (FIX-4)**: เพิ่ม production guard ใน `backend/src/config/env.js` — throw error ถ้าไม่ตั้ง `CRON_SECRET` env var ใน production ป้องกันการใช้ค่า default; **Firestore Rules**: อนุญาต user update `fcmToken` field อย่างจำกัด; **QA Sign-off**: Snyk SAST ผ่าน (0 actionable issues ใน production code), Playwright E2E 32 tests — 22 passed, 10 skipped (รอ RENDER_URL), 0 failed |
 | **v2.0.2** | 2026-06-02 | **Firestore Rules — `isValidWorkLogUpdate` fix**: แก้ไข helper function ที่บังคับตรวจ `date` และ `time` ทุกครั้ง ทำให้ staff ที่ส่งเฉพาะฟิลด์ที่แก้ไข (partial update) ถูก Firestore ปฏิเสธด้วย `permission-denied` — เปลี่ยนเป็น optional check ด้วย `hasAny()` ตรวจเฉพาะฟิลด์ที่ส่งมาจริง |

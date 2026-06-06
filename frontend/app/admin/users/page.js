@@ -13,6 +13,7 @@ import {
   XCircle,
   Clock,
   UserPlus,
+  Pencil,
 } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
@@ -45,6 +46,27 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active"); // "active" | "pending" | "role-requests"
   const [promoteModal, setPromoteModal] = useState(null); // { uid, name } of target user
+  // ITEM-3A: แก้ displayName ผ่าน admin
+  const [editDisplayNameModal, setEditDisplayNameModal] = useState(null); // { uid, currentName }
+  const [editDisplayNameValue, setEditDisplayNameValue] = useState('');
+  const [savingDisplayName, setSavingDisplayName] = useState(false);
+
+  async function handleSaveDisplayName() {
+    if (!editDisplayNameModal || !editDisplayNameValue.trim()) return;
+    setSavingDisplayName(true);
+    try {
+      await updateDoc(doc(db, 'users', editDisplayNameModal.uid), {
+        displayName: editDisplayNameValue.trim(),
+      });
+      setUsers((prev) => prev.map((u) => u.id === editDisplayNameModal.uid
+        ? { ...u, displayName: editDisplayNameValue.trim() } : u));
+      setEditDisplayNameModal(null);
+    } catch (err) {
+      alert('แก้ชื่อไม่สำเร็จ: ' + err.message);
+    } finally {
+      setSavingDisplayName(false);
+    }
+  }
 
   // Redirect non-admin users (allow admin and superadmin)
   const isAdmin = isAdminRole(user);
@@ -601,7 +623,17 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {/* ITEM-3A: แก้ชื่อลงงาน — admin แก้สำหรับ staff ทุกคน */}
+                        {u.role !== 'superadmin' && u.id !== user?.uid && (
+                          <button
+                            onClick={() => { setEditDisplayNameModal({ uid: u.id, currentName: u.displayName || '' }); setEditDisplayNameValue(u.displayName || ''); }}
+                            className="rounded-lg px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 flex items-center gap-1"
+                          >
+                            <Pencil size={12} />
+                            ชื่อลงงาน
+                          </button>
+                        )}
                         {/* Superadmin สามารถ promote admin → superadmin */}
                         {isSuperAdmin && u.role === "admin" && u.id !== user?.uid && (
                           <button
@@ -658,6 +690,31 @@ export default function AdminUsersPage() {
               {t("common.noData")}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ITEM-3A: Edit displayName Modal */}
+      {editDisplayNameModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-semibold text-slate-950 mb-1">แก้ชื่อลงงาน</h3>
+            <p className="text-sm text-slate-500 mb-4">ชื่อที่แสดงใน Dashboard และรายงานงาน</p>
+            <input
+              type="text"
+              className="apple-input mb-4"
+              value={editDisplayNameValue}
+              onChange={(e) => setEditDisplayNameValue(e.target.value)}
+              placeholder="ชื่อภาษาไทย เช่น พงศกร"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSaveDisplayName} disabled={savingDisplayName || !editDisplayNameValue.trim()} className="apple-button flex-1 disabled:opacity-40">
+                {savingDisplayName ? 'กำลังบันทึก...' : 'บันทึก'}
+              </button>
+              <button onClick={() => setEditDisplayNameModal(null)} className="apple-button-secondary px-4">ยกเลิก</button>
+            </div>
+          </div>
         </div>
       )}
 

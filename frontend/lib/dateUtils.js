@@ -5,9 +5,9 @@
  * worklogs/new, admin/record, dashboard, and export pages.
  */
 
-/** Current date as YYYY-MM-DD. */
+/** Current date as YYYY-MM-DD (local timezone). */
 export function today() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalDateStr(new Date());
 }
 
 /** Current time as HH:mm. */

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Monitor, Headphones, Plug, Wifi, Activity } from 'lucide-react';
+import { Monitor, Headphones, Plug, Wifi, Activity, Download, AlertTriangle, Wrench, Ban } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { useAuth } from './AuthProvider';
+import { isAdminRole } from '../lib/authUtils';
 
 // ─── Equipment Details Data (Barcode & Item Number) ───
 const EQUIPMENT_DETAILS = {
@@ -232,6 +234,23 @@ const DevicePreview = ({ item }) => {
             <span className="text-xs text-slate-500">ยืมเมื่อ {item.detail.time}</span>
           </div>
         </div>
+      ) : item.condition ? (
+        // [SE] Show condition badge for returned equipment with issues
+        <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-3 border shadow-sm ${getConditionBadge(item.condition)?.color || 'bg-slate-50 border-slate-100'}`}>
+          <div className="flex items-center gap-2 justify-center">
+            {(() => {
+              const badge = getConditionBadge(item.condition);
+              const Icon = badge?.icon;
+              return Icon ? <Icon size={14} /> : null;
+            })()}
+            <span className="text-xs font-medium">
+              {(() => {
+                const badge = getConditionBadge(item.condition);
+                return badge?.label || item.condition;
+              })()}
+            </span>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-sm">
           <p className="text-xs text-slate-400 text-center">
@@ -244,13 +263,27 @@ const DevicePreview = ({ item }) => {
 };
 
 export default function RoomEquipmentStatus() {
+  const { user } = useAuth();
+  const isAdmin = isAdminRole(user);
+
   const [roomStatus, setRoomStatus] = useState({});
   const [equipmentStatus, setEquipmentStatus] = useState({});
+  const [equipmentConditions, setEquipmentConditions] = useState({}); // [SE] Track condition: normal/damaged/lost
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [equipmentDetails, setEquipmentDetails] = useState({});
   const [selectedItem, setSelectedItem] = useState(null);
+
+  // SE: Date range for transaction history export
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().slice(0, 10);
+  });
 
   // ข้อมูลเริ่มต้นทั้งหมดว่าง - เริ่มต้นที่ 'available' (ไม่ได้ใช้งาน)
   const initialRoomStatus = {
@@ -282,10 +315,11 @@ export default function RoomEquipmentStatus() {
   const calculateStatusFromWorklogs = (worklogs) => {
     const today = new Date().toISOString().slice(0, 10);
     const todayLogs = worklogs.filter(log => log.date === today);
-    
+
     const roomStatus = { ...initialRoomStatus };
     const equipmentStatus = JSON.parse(JSON.stringify(initialEquipmentStatus));
     const details = {};
+    const conditions = {}; // [SE] Track equipment condition from return logs
 
     todayLogs.forEach(log => {
       const commentLower = (log.comment || '').toLowerCase();
@@ -327,6 +361,12 @@ export default function RoomEquipmentStatus() {
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.headphones[equipment] = 'available';
             delete details[equipment];
+            // [SE] Capture equipment condition from return log
+            if (log.equipmentCondition) {
+              conditions[equipment] = log.equipmentCondition;
+            } else {
+              delete conditions[equipment]; // Reset to normal if not specified
+            }
           }
         }
       }
@@ -347,12 +387,18 @@ export default function RoomEquipmentStatus() {
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.power[equipment] = 'available';
             delete details[equipment];
+            // [SE] Capture equipment condition from return log
+            if (log.equipmentCondition) {
+              conditions[equipment] = log.equipmentCondition;
+            } else {
+              delete conditions[equipment]; // Reset to normal if not specified
+            }
           }
         }
       }
     });
 
-    return { roomStatus, equipmentStatus, details };
+    return { roomStatus, equipmentStatus, details, conditions };
   };
 
   useEffect(() => {
@@ -383,11 +429,12 @@ export default function RoomEquipmentStatus() {
         // reverse เป็น asc เพื่อให้ log ใหม่ override เก่า
         worklogs.reverse();
         
-        const { roomStatus: calculatedRoomStatus, equipmentStatus: calculatedEquipmentStatus, details } = 
+        const { roomStatus: calculatedRoomStatus, equipmentStatus: calculatedEquipmentStatus, details, conditions } =
           calculateStatusFromWorklogs(worklogs);
-        
+
         setRoomStatus(calculatedRoomStatus);
         setEquipmentStatus(calculatedEquipmentStatus);
+        setEquipmentConditions(conditions);
         setEquipmentDetails(details);
         setLastUpdated(new Date());
       } catch (error) {
@@ -463,6 +510,201 @@ export default function RoomEquipmentStatus() {
     }
   };
 
+  // [SE/UX] Get condition badge styling — Apple iOS style
+  const getConditionBadge = (condition) => {
+    switch (condition) {
+      case 'damaged':
+        return { icon: Wrench, color: 'bg-amber-50 text-amber-700 border-amber-100', label: 'ชำรุด', dot: 'bg-amber-400' };
+      case 'lost':
+        // UX: Gray/slate for lost — "disabled/unavailable" semantic (Apple style)
+        return { icon: Ban, color: 'bg-slate-100 text-slate-500 border-slate-200', label: 'สูญหาย', dot: 'bg-slate-400' };
+      default:
+        return null;
+    }
+  };
+
+  // [SE/SA] Export equipment status to CSV for admin
+  const exportToCSV = () => {
+    const headers = ['รหัสอุปกรณ์', 'ประเภท', 'สังกัด', 'สถานะการใช้งาน', 'สภาพอุปกรณ์', 'บันทึกล่าสุด', 'Barcode', 'Item No'];
+
+    const rows = [];
+
+    // Headphones
+    allHeadphones.forEach(id => {
+      const inUse = (equipmentStatus.headphones || {})[id] === 'in_use';
+      const condition = equipmentConditions[id] || 'normal';
+      const location = allHeadphones3.includes(id) ? 'ชั้น 3' : 'Finn Space';
+      const details = EQUIPMENT_DETAILS[id];
+      rows.push([
+        id,
+        'หูฟัง',
+        location,
+        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
+        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
+        lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
+        details?.barcode || '-',
+        details?.itemNo || '-'
+      ]);
+    });
+
+    // Power plugs
+    allPower.forEach(id => {
+      const inUse = (equipmentStatus.power || {})[id] === 'in_use';
+      const condition = equipmentConditions[id] || 'normal';
+      const location = allPower3.includes(id) ? 'ชั้น 3' : 'Finn Space';
+      const details = EQUIPMENT_DETAILS[id];
+      rows.push([
+        id,
+        'ปลั๊กไฟ',
+        location,
+        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
+        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
+        lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
+        details?.barcode || '-',
+        details?.itemNo || '-'
+      ]);
+    });
+
+    // Create CSV content with BOM for Thai characters
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `equipment-status-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // SE: Export transaction history (borrow/return) for date range
+  const exportTransactionHistory = async () => {
+    try {
+      setLoading(true);
+      const db = getFirestore();
+      const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore');
+
+      // Query worklogs for equipment borrow/return in date range
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      const worklogsQuery = query(
+        collection(db, 'worklogs'),
+        where('date', '>=', startDate),
+        where('date', '<=', endDate),
+        where('equipment', '!=', null),
+        orderBy('createdAt', 'asc')
+      );
+
+      const snapshot = await getDocs(worklogsQuery);
+      const logs = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        logs.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt)
+        });
+      });
+
+      // Group logs by equipment and pair borrow/return
+      const equipmentLogs = {};
+      logs.forEach(log => {
+        if (!log.equipment) return;
+        if (!equipmentLogs[log.equipment]) equipmentLogs[log.equipment] = [];
+        equipmentLogs[log.equipment].push(log);
+      });
+
+      // Create paired transactions
+      const transactions = [];
+      Object.entries(equipmentLogs).forEach(([equipmentId, eqLogs]) => {
+        let borrowLog = null;
+        eqLogs.forEach(log => {
+          const isBorrow = log.minorTask?.includes('ยืม');
+          const isReturn = log.minorTask?.includes('คืน');
+
+          if (isBorrow) {
+            borrowLog = log;
+          } else if (isReturn && borrowLog) {
+            // Pair found
+            transactions.push({
+              borrowDate: borrowLog.date,
+              borrowTime: borrowLog.time,
+              barcode: EQUIPMENT_DETAILS[equipmentId]?.barcode || '-',
+              equipmentId,
+              borrowerName: borrowLog.recipient || '-', // recipient = รหัสนักศึกษาหรือชื่อผู้ยืม
+              status: 'คืนแล้ว',
+              returnStaff: log.employeeDisplayName || '-',
+              returnTime: log.time,
+              condition: log.equipmentCondition === 'damaged' ? 'ชำรุด' : log.equipmentCondition === 'lost' ? 'สูญหาย' : 'สมบูรณ์',
+              note: log.equipmentNote || ''
+            });
+            borrowLog = null;
+          }
+        });
+
+        // Unreturned items
+        if (borrowLog) {
+          transactions.push({
+            borrowDate: borrowLog.date,
+            borrowTime: borrowLog.time,
+            barcode: EQUIPMENT_DETAILS[equipmentId]?.barcode || '-',
+            equipmentId,
+            borrowerName: borrowLog.recipient || '-', // recipient = รหัสนักศึกษาหรือชื่อผู้ยืม
+            status: 'ยังไม่คืน',
+            returnStaff: '-',
+            returnTime: '-',
+            condition: '-',
+            note: ''
+          });
+        }
+      });
+
+      // Sort by borrow date
+      transactions.sort((a, b) => new Date(a.borrowDate) - new Date(b.borrowDate));
+
+      // Create CSV - ใช้ recipient เป็นรหัสนักศึกษา/ชื่อผู้ยืม
+      const headers = ['วันที่ยืม', 'เวลายืม', 'Barcode', 'รหัสอุปกรณ์', 'ผู้ยืม (รหัสนักศึกษา/ชื่อ)', 'สถานะ', 'ผู้รับคืน', 'เวลาคืน', 'สภาพ', 'หมายเหตุ'];
+      const rows = transactions.map(t => [
+        t.borrowDate,
+        t.borrowTime,
+        t.barcode,
+        t.equipmentId,
+        t.borrowerName, // รหัสนักศึกษาหรือชื่อผู้ยืม (จาก recipient field)
+        t.status,
+        t.returnStaff,
+        t.returnTime,
+        t.condition,
+        t.note
+      ]);
+
+      const csvContent = '\uFEFF' + [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `equipment-history-${startDate}-to-${endDate}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+    } catch (error) {
+      console.error('Error exporting transaction history:', error);
+      alert('เกิดข้อผิดพลาดในการส่งออก: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
   const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
 
@@ -485,10 +727,10 @@ export default function RoomEquipmentStatus() {
   const navItems = [
     ...allRooms3.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 3', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
     ...allRooms4.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 4', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
-    ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id] })),
-    ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id] })),
-    ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id] })),
-    ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id] })),
+    ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+    ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+    ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+    ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
   ];
 
   // --- Navigation handlers ---
@@ -632,6 +874,18 @@ export default function RoomEquipmentStatus() {
               {anyInUse ? 'มีการใช้งาน' : 'ว่างทั้งหมด'}
             </span>
           )}
+          {/* [SE/SA] Export CSV button for admin - iOS minimal style */}
+          {isAdmin && expanded && (
+            <div
+              onClick={(e) => { e.stopPropagation(); exportToCSV(); }}
+              className="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-slate-50 text-slate-500 text-[10px] font-medium rounded-md transition-all cursor-pointer border border-slate-200/60 shadow-sm"
+              role="button"
+              title="ส่งออกสถานะอุปกรณ์ (CSV)"
+            >
+              <Download size={11} strokeWidth={1.5} />
+              <span className="hidden sm:inline">ส่งออก</span>
+            </div>
+          )}
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"
             className={`text-slate-300 transition-transform ${expanded ? 'rotate-180' : ''}`}>
             <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -642,6 +896,36 @@ export default function RoomEquipmentStatus() {
       {/* ── Expanded detail: 2-column layout ── */}
       {expanded && !loading && (
         <div className="border-t border-slate-100">
+          {/* SE: Date range picker and export for admin - iOS minimal style */}
+          {isAdmin && (
+            <div className="px-3 py-2.5 bg-slate-50/80 border-b border-slate-100">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">ส่งออกประวัติ</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="text-[10px] py-1 px-2 w-28 bg-white border border-slate-200/60 rounded-md text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300 transition-all"
+                  />
+                  <span className="text-slate-300 text-[10px]">→</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="text-[10px] py-1 px-2 w-28 bg-white border border-slate-200/60 rounded-md text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-300 transition-all"
+                  />
+                </div>
+                <button
+                  onClick={exportTransactionHistory}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 text-[10px] font-medium rounded-md transition-all border border-slate-200/60 shadow-sm active:scale-95"
+                >
+                  <Download size={11} strokeWidth={1.5} />
+                  <span className="hidden sm:inline">ยืม/คืน</span>
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col-reverse md:flex-row">
             {/* ฝั่งซ้าย: Grid Cards - 40% - Fixed height with smooth scroll */}
             <div className="w-full md:w-[42%] p-2 space-y-2 overflow-y-auto h-[420px] md:h-[480px] scroll-smooth snap-y snap-mandatory">
@@ -691,14 +975,23 @@ export default function RoomEquipmentStatus() {
                   {allHeadphones3.map(id => {
                     const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
                     const det = equipmentDetails[id];
+                    const cond = equipmentConditions[id];
                     const num = parseInt(id.replace('ICIT',''),10);
+                    // [SE] Show condition styling
+                    let bgClass = 'bg-slate-50 border-slate-100';
+                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
+                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
+                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200'; // UX: Gray for lost (disabled semantic)
                     return (
-                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'ชั้น 3',inUse,detail:det})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
+                        }`} />
+                        <span className={`text-[9px] font-bold ${
+                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
+                        }`}>{num}</span>
                       </button>
                     );
                   })}
@@ -712,14 +1005,22 @@ export default function RoomEquipmentStatus() {
                   {allPower3.map(id => {
                     const inUse = (equipmentStatus.power||{})[id] === 'in_use';
                     const det = equipmentDetails[id];
+                    const cond = equipmentConditions[id];
                     const num = parseInt(id.replace('ICIT',''),10);
+                    let bgClass = 'bg-slate-50 border-slate-100';
+                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
+                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
+                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
                     return (
-                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'ชั้น 3',inUse,detail:det})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
+                        }`} />
+                        <span className={`text-[9px] font-bold ${
+                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
+                        }`}>{num}</span>
                       </button>
                     );
                   })}
@@ -733,14 +1034,22 @@ export default function RoomEquipmentStatus() {
                   {allHeadphonesFinn.map(id => {
                     const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
                     const det = equipmentDetails[id];
+                    const cond = equipmentConditions[id];
                     const num = parseInt(id.replace('ICIT',''),10);
+                    let bgClass = 'bg-slate-50 border-slate-100';
+                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
+                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
+                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
                     return (
-                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'Finn Space',inUse,detail:det})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'Finn Space',inUse,detail:det,condition:cond})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
+                        }`} />
+                        <span className={`text-[9px] font-bold ${
+                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
+                        }`}>{num}</span>
                       </button>
                     );
                   })}
@@ -754,14 +1063,22 @@ export default function RoomEquipmentStatus() {
                   {allPowerFinn.map(id => {
                     const inUse = (equipmentStatus.power||{})[id] === 'in_use';
                     const det = equipmentDetails[id];
+                    const cond = equipmentConditions[id];
                     const num = parseInt(id.replace('ICIT',''),10);
+                    let bgClass = 'bg-slate-50 border-slate-100';
+                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
+                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
+                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
                     return (
-                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'Finn Space',inUse,detail:det})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===id ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-slate-50 border border-slate-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[9px] font-bold ${inUse ? 'text-red-700' : 'text-slate-500'}`}>{num}</span>
+                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'Finn Space',inUse,detail:det,condition:cond})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
+                        }`} />
+                        <span className={`text-[9px] font-bold ${
+                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
+                        }`}>{num}</span>
                       </button>
                     );
                   })}

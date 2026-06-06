@@ -362,7 +362,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     }
   };
 
-  const handleLogWithSmartEquipment = async (comment, equipment, minorTask, recipient) => {
+  const handleLogWithSmartEquipment = async (comment, equipment, minorTask, recipient, equipmentCondition = 'normal', equipmentNote = '') => {
     if (!selectedTemplate || !comment.trim()) {
       if (onLogSuccess) {
         onLogSuccess('กรุณาเลือกรายการอุปกรณ์', 'error');
@@ -383,6 +383,8 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         minorTask: minorTask, // override minorTask ตามสถานะ
         equipment: equipment,
         recipient: recipient.trim(),
+        equipmentCondition: equipmentCondition || 'normal', // ITEM-1
+        equipmentNote: equipmentNote || '',                 // ITEM-1
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
         employeeNickname: logAsUser.nickname || '',
         employeeFullName: logAsUser.fullName || ''

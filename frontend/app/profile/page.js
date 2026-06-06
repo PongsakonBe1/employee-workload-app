@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
+import { ProfileStats } from "../../components/ProfileStats";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { User, Save } from "lucide-react";
+import { User, Save, Lock, BarChart3 } from "lucide-react";
+import { isAdminRole } from "../../lib/authUtils";
 
 export default function ProfilePage() {
   const { user, setUser } = useAuth();
@@ -16,16 +18,18 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const isAdmin = isAdminRole(user);
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!user) return;
 
     try {
       setSaving(true);
-      await updateDoc(doc(db, "users", user.uid), {
-        fullName: form.fullName,
-        displayName: form.displayName || form.fullName,
-      });
+      const updatePayload = { fullName: form.fullName };
+      // ITEM-3A: เฉพาะ admin/superadmin แก้ displayName ได้ (SA lock rules)
+      if (isAdmin) updatePayload.displayName = form.displayName || form.fullName;
+      await updateDoc(doc(db, "users", user.uid), updatePayload);
 
       // อัพเดต context
       setUser({ ...user, ...form });
@@ -62,6 +66,15 @@ export default function ProfilePage() {
           <p className="mt-2 text-slate-600">อัพเดตข้อมูลส่วนตัวของคุณ</p>
         </div>
 
+        {/* ITEM-3B: Stats + Radar + Badges */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={20} className="text-indigo-600" />
+            <h2 className="text-lg font-semibold text-slate-900">สถิติของฉัน</h2>
+          </div>
+          <ProfileStats user={user} />
+        </section>
+
         <div className="apple-panel p-8">
           {message && (
             <div
@@ -72,24 +85,31 @@ export default function ProfilePage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ITEM-3A: displayName — admin แก้ได้, staff ดูอย่างเดียว */}
             <div>
               <label className="apple-label">
-                ชื่อที่ใช้ลงงาน (ภาษาไทย){" "}
-                <span className="text-red-500">*</span>
+                ชื่อที่ใช้ลงงาน (ภาษาไทย)
               </label>
-              <input
-                type="text"
-                className="apple-input"
-                value={form.displayName}
-                onChange={(e) =>
-                  setForm({ ...form, displayName: e.target.value })
-                }
-                placeholder="เช่น พงศกร"
-                required
-              />
-              <p className="mt-1 text-xs text-slate-500">
-                ชื่อนี้จะแสดงในหน้า Dashboard และรายงานงาน
-              </p>
+              {isAdmin ? (
+                <>
+                  <input
+                    type="text"
+                    className="apple-input"
+                    value={form.displayName}
+                    onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                    placeholder="เช่น พงศกร"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    ชื่อนี้จะแสดงในหน้า Dashboard และรายงานงาน
+                  </p>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                  <Lock size={14} className="text-slate-400 shrink-0" />
+                  <span className="text-slate-700 font-medium">{user.displayName || user.fullName || "—"}</span>
+                  <span className="ml-auto text-xs text-slate-400">แก้ไขโดย Admin เท่านั้น</span>
+                </div>
+              )}
             </div>
 
             <div>

@@ -25,6 +25,7 @@ import {
   getThisQuarter,
 } from "../../lib/dateUtils";
 import { isAdminRole } from "../../lib/authUtils";
+import { getSeasonalAnalysis } from "../../lib/analytics";
 
 const ChartLoading = () => (
   <div className="apple-panel flex h-48 items-center justify-center text-slate-400">
@@ -54,6 +55,18 @@ const WorkloadHeatmap = dynamic(
 );
 const HourOfDayChart = dynamic(
   () => import("../../components/DashboardCharts").then((m) => m.HourOfDayChart),
+  { ssr: false, loading: ChartLoading }
+);
+const SeasonalPatternChart = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.SeasonalPatternChart),
+  { ssr: false, loading: ChartLoading }
+);
+const OutlierAlertCard = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.OutlierAlertCard),
+  { ssr: false, loading: ChartLoading }
+);
+const PeakHourPrediction = dynamic(
+  () => import("../../components/SeasonalCharts").then((m) => m.PeakHourPrediction),
   { ssr: false, loading: ChartLoading }
 );
 
@@ -107,6 +120,7 @@ export default function DashboardPage() {
   const [pendingCustomStart, setPendingCustomStart] = useState("");
   const [pendingCustomEnd, setPendingCustomEnd] = useState("");
   const [leaderboard, setLeaderboard] = useState([]); // staff leaderboard
+  const [allWorklogs, setAllWorklogs] = useState([]); // ITEM-2: for seasonal analysis
 
   // Modal state for limit warning
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -484,6 +498,9 @@ export default function DashboardPage() {
         .map(([hour, count]) => ({ hour, count }))
         .sort((a, b) => a.hour.localeCompare(b.hour));
 
+      // ITEM-2: เก็บ worklogs สำหรับ seasonal analysis
+      setAllWorklogs(allWorklogsInRange);
+
       setData({
         total: actualTotal,
         totalLoaded: worklogs.length,
@@ -537,6 +554,9 @@ export default function DashboardPage() {
   }, [fiscalYear, timeFilter, selectedEmployee, customStart, customEnd]);
 
   const topDuty = useMemo(() => data?.byMainDuty?.[0]?.label || "—", [data]);
+
+  // ITEM-2: seasonal analysis — คำนวณจาก allWorklogs (ไม่ query เพิ่ม)
+  const seasonalAnalysis = useMemo(() => getSeasonalAnalysis(allWorklogs), [allWorklogs]);
 
   return (
     <AppShell>
@@ -892,6 +912,45 @@ export default function DashboardPage() {
         <WorkloadHeatmap data={data?.byDayHour || {}} />
         <HourOfDayChart data={data?.byHour || []} />
       </section>
+
+      {/* ITEM-2: แถว SP — แพทเทิร์นตามภาคเรียน (admin only, ต้องมีข้อมูล) */}
+      {isAdminRole(user) && (
+        <section className="mt-5">
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950">แพทเทิร์นตามภาคเรียน</h2>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">SP</span>
+          </div>
+          {allWorklogs.length < 5 ? (
+            <div className="apple-panel p-6 text-center text-sm text-slate-400">
+              กราฟจะแม่นยำขึ้นเมื่อมีข้อมูลสะสม 2 เดือนขึ้นไป
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-5 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                  <SeasonalPatternChart
+                    data={seasonalAnalysis.chartData}
+                    mean={seasonalAnalysis.mean}
+                    sd={seasonalAnalysis.std}
+                  />
+                </div>
+                <PeakHourPrediction
+                  prediction={seasonalAnalysis.prediction}
+                  byPeriod={[]}
+                />
+              </div>
+              {seasonalAnalysis.outliers?.length > 0 && (
+                <div className="mt-5">
+                  <OutlierAlertCard
+                    outliers={seasonalAnalysis.outliers}
+                    mean={seasonalAnalysis.mean}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
 
       {/* แถว 3: จำนวนงานตามหัวข้อหลัก + จำนวนงานตามหัวข้อรอง */}
       <section className="mt-5 grid gap-5 lg:grid-cols-2">
