@@ -165,6 +165,18 @@ const Room3D = ({ os, inUse = false }) => (
   </Device3DContainer>
 );
 
+// ─── Module-level helper (ใช้ได้ทั้ง DevicePreview และ RoomEquipmentStatus) ───
+const getConditionBadge = (condition) => {
+  switch (condition) {
+    case 'damaged':
+      return { icon: Wrench, color: 'bg-amber-50 text-amber-700 border-amber-100', label: 'ชำรุด', dot: 'bg-amber-400' };
+    case 'lost':
+      return { icon: Ban, color: 'bg-slate-100 text-slate-500 border-slate-200', label: 'สูญหาย', dot: 'bg-slate-400' };
+    default:
+      return null;
+  }
+};
+
 // Preview Panel Component
 const DevicePreview = ({ item }) => {
   if (!item) return null;
@@ -188,11 +200,27 @@ const DevicePreview = ({ item }) => {
       
       {/* Status indicator */}
       <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 ${
-        item.inUse ? 'bg-red-50/80 border border-red-100' : 'bg-emerald-50/80 border border-emerald-100'
+        item.inUse ? 'bg-red-50/80 border border-red-100'
+        : item.condition === 'damaged' ? 'bg-amber-50/80 border border-amber-100'
+        : item.condition === 'lost' ? 'bg-slate-100/80 border border-slate-200'
+        : 'bg-emerald-50/80 border border-emerald-100'
       }`}>
-        <div className={`w-3 h-3 rounded-full ${item.inUse ? 'bg-red-400 animate-pulse' : 'bg-emerald-400'}`} />
-        <span className={`text-sm font-bold ${item.inUse ? 'text-red-700' : 'text-emerald-700'}`}>
-          {item.inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน'}
+        <div className={`w-3 h-3 rounded-full ${
+          item.inUse ? 'bg-red-400 animate-pulse'
+          : item.condition === 'damaged' ? 'bg-amber-400'
+          : item.condition === 'lost' ? 'bg-slate-400'
+          : 'bg-emerald-400'
+        }`} />
+        <span className={`text-sm font-bold ${
+          item.inUse ? 'text-red-700'
+          : item.condition === 'damaged' ? 'text-amber-700'
+          : item.condition === 'lost' ? 'text-slate-500'
+          : 'text-emerald-700'
+        }`}>
+          {item.inUse ? 'กำลังใช้งาน'
+          : item.condition === 'damaged' ? 'ชำรุด — ยืมไม่ได้'
+          : item.condition === 'lost' ? 'สูญหาย — ยืมไม่ได้'
+          : 'พร้อมใช้งาน'}
         </span>
       </div>
 
@@ -311,17 +339,55 @@ export default function RoomEquipmentStatus() {
     }
   };
 
-  // ฟังก์ชันตรวจสอบสถานะจาก worklogs วันนี้
+  // ฟังก์ชันตรวจสอบสถานะจาก worklogs
   const calculateStatusFromWorklogs = (worklogs) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const todayLogs = worklogs.filter(log => log.date === today);
+    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local timezone
+
+    // [SA] worklogs มาเรียง desc จาก Firestore → reverse เป็น asc ก่อน process
+    const sortedLogs = [...worklogs].reverse();
 
     const roomStatus = { ...initialRoomStatus };
     const equipmentStatus = JSON.parse(JSON.stringify(initialEquipmentStatus));
     const details = {};
-    const conditions = {}; // [SE] Track equipment condition from return logs
+    // [SA] conditions: ดูจาก log equipment ล่าสุดทุกวัน (ไม่จำกัดวันนี้)
+    // เพราะ damaged/lost อาจถูก set เมื่อวานหรือก่อนหน้า และยังคงอยู่จนกว่าจะมี log ใหม่เปลี่ยน
+    const conditions = {};
 
-    todayLogs.forEach(log => {
+    // Pass 1: scan ทุก log เพื่อหา equipmentCondition ล่าสุดของแต่ละ equipment
+    sortedLogs.forEach(log => {
+      const minorTask = (log.minorTask || '').toLowerCase();
+      const comment = (log.comment || '').toLowerCase();
+      const isEquipmentLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') ||
+                             minorTask.includes('ยืมหูฟัง') || minorTask.includes('ยืมปลั๊กไฟ');
+      if (!isEquipmentLog) return;
+
+      // ตรวจ field equipment ตรง (จาก SmartEquipmentModal) ก่อน
+      if (log.equipment && log.equipmentCondition) {
+        conditions[log.equipment] = log.equipmentCondition;
+        return;
+      }
+
+      // fallback: parse จาก comment
+      const allEquipment = [
+        ...Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`),
+        ...['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25']
+      ];
+      for (const eq of allEquipment) {
+        if (comment.includes(eq.toLowerCase()) && log.equipmentCondition) {
+          conditions[eq] = log.equipmentCondition;
+        }
+      }
+    });
+
+    // [SA] Pass 2: scan ทุก log เพื่อหา room status ล่าสุดของแต่ละห้อง
+    // room status (in_use/available) คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
+    const roomLogs = sortedLogs.filter(log => {
+      const mt = (log.minorTask || '').toLowerCase();
+      return mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
+             mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
+    });
+
+    roomLogs.forEach(log => {
       const commentLower = (log.comment || '').toLowerCase();
       const comment = commentLower;
       const minorTask = (log.minorTask || '').toLowerCase();
@@ -361,12 +427,6 @@ export default function RoomEquipmentStatus() {
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.headphones[equipment] = 'available';
             delete details[equipment];
-            // [SE] Capture equipment condition from return log
-            if (log.equipmentCondition) {
-              conditions[equipment] = log.equipmentCondition;
-            } else {
-              delete conditions[equipment]; // Reset to normal if not specified
-            }
           }
         }
       }
@@ -387,12 +447,6 @@ export default function RoomEquipmentStatus() {
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.power[equipment] = 'available';
             delete details[equipment];
-            // [SE] Capture equipment condition from return log
-            if (log.equipmentCondition) {
-              conditions[equipment] = log.equipmentCondition;
-            } else {
-              delete conditions[equipment]; // Reset to normal if not specified
-            }
           }
         }
       }
@@ -425,9 +479,6 @@ export default function RoomEquipmentStatus() {
             date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0, 10) || ''
           });
         });
-        
-        // reverse เป็น asc เพื่อให้ log ใหม่ override เก่า
-        worklogs.reverse();
         
         const { roomStatus: calculatedRoomStatus, equipmentStatus: calculatedEquipmentStatus, details, conditions } =
           calculateStatusFromWorklogs(worklogs);
@@ -507,19 +558,6 @@ export default function RoomEquipmentStatus() {
       case 'in_use': return '🔴';
       case 'maintenance': return '🟡';
       default: return '⚪';
-    }
-  };
-
-  // [SE/UX] Get condition badge styling — Apple iOS style
-  const getConditionBadge = (condition) => {
-    switch (condition) {
-      case 'damaged':
-        return { icon: Wrench, color: 'bg-amber-50 text-amber-700 border-amber-100', label: 'ชำรุด', dot: 'bg-amber-400' };
-      case 'lost':
-        // UX: Gray/slate for lost — "disabled/unavailable" semantic (Apple style)
-        return { icon: Ban, color: 'bg-slate-100 text-slate-500 border-slate-200', label: 'สูญหาย', dot: 'bg-slate-400' };
-      default:
-        return null;
     }
   };
 
@@ -839,27 +877,27 @@ export default function RoomEquipmentStatus() {
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* ชั้น 3: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[2px]">{allHeadphones3.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>หูฟัง</span>
+              <div className="flex gap-[2px]">{allHeadphones3.map(h=>{const s=(equipmentStatus.headphones||{})[h];const c=equipmentConditions[h];return <div key={h} className={`w-1 h-1 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
+              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':allHeadphones3.some(h=>equipmentConditions[h]==='damaged'||equipmentConditions[h]==='lost')?'text-amber-500':'text-slate-400'}`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* ชั้น 3: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">{allPower3.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>ปลั๊ก</span>
+              <div className="flex gap-[3px]">{allPower3.map(p=>{const s=(equipmentStatus.power||{})[p];const c=equipmentConditions[p];return <div key={p} className={`w-1.5 h-1.5 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
+              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':allPower3.some(p=>equipmentConditions[p]==='damaged'||equipmentConditions[p]==='lost')?'text-amber-500':'text-slate-400'}`}>ปลั๊ก</span>
             </div>
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* Finn: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-[9px] text-slate-300 font-medium">Finn</span>
-              <div className="flex gap-[2px]">{allHeadphonesFinn.map(h=><div key={h} className={`w-1 h-1 rounded-full ${(equipmentStatus.headphones||{})[h]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':'text-slate-400'}`}>หูฟัง</span>
+              <div className="flex gap-[2px]">{allHeadphonesFinn.map(h=>{const s=(equipmentStatus.headphones||{})[h];const c=equipmentConditions[h];return <div key={h} className={`w-1 h-1 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
+              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':allHeadphonesFinn.some(h=>equipmentConditions[h]==='damaged'||equipmentConditions[h]==='lost')?'text-amber-500':'text-slate-400'}`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* Finn: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">{allPowerFinn.map(p=><div key={p} className={`w-1.5 h-1.5 rounded-full ${(equipmentStatus.power||{})[p]==='in_use'?'bg-red-400':'bg-emerald-400'}`}/>)}</div>
-              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':'text-slate-400'}`}>ปลั๊ก</span>
+              <div className="flex gap-[3px]">{allPowerFinn.map(p=>{const s=(equipmentStatus.power||{})[p];const c=equipmentConditions[p];return <div key={p} className={`w-1.5 h-1.5 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
+              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':allPowerFinn.some(p=>equipmentConditions[p]==='damaged'||equipmentConditions[p]==='lost')?'text-amber-500':'text-slate-400'}`}>ปลั๊ก</span>
             </div>
           </div>
         )}
