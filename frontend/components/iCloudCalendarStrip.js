@@ -10,7 +10,7 @@ const MONTHS_TH = ["มกราคม","กุมภาพันธ์","มี
 const DAY_LABELS_TH = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
 
 const HOUR_START = 7;
-const HOUR_END = 19;
+const HOUR_END = 22;
 const HOUR_HEIGHT = 68; // px per hour
 
 function getNowTH() {
@@ -28,11 +28,11 @@ function timeToMin(t) {
 }
 
 const ROOM_ACCENT = {
-  "401": { bar: "bg-blue-500",   pill: "bg-blue-50 text-blue-700 border-blue-200",   dot: "bg-blue-500"   },
-  "402": { bar: "bg-violet-500", pill: "bg-violet-50 text-violet-700 border-violet-200", dot: "bg-violet-500" },
-  "406": { bar: "bg-emerald-500",pill: "bg-emerald-50 text-emerald-700 border-emerald-200",dot: "bg-emerald-500"},
-  "407": { bar: "bg-sky-500",    pill: "bg-sky-50 text-sky-700 border-sky-200",    dot: "bg-sky-500"    },
-  default:{ bar: "bg-slate-400", pill: "bg-slate-50 text-slate-600 border-slate-200", dot: "bg-slate-400"  },
+  "401": { bar: "bg-blue-500",    pill: "bg-blue-50 text-blue-700 border-blue-200",     dot: "bg-blue-500",    cardBg: "bg-blue-50/80",    cardBorder: "border-blue-200",    cardText: "text-blue-900",    cardSub: "text-blue-700"    },
+  "402": { bar: "bg-violet-500",  pill: "bg-violet-50 text-violet-700 border-violet-200", dot: "bg-violet-500",  cardBg: "bg-violet-50/80",  cardBorder: "border-violet-200",  cardText: "text-violet-900",  cardSub: "text-violet-700"  },
+  "406": { bar: "bg-emerald-500", pill: "bg-emerald-50 text-emerald-700 border-emerald-200",dot: "bg-emerald-500",cardBg: "bg-emerald-50/80",cardBorder: "border-emerald-200",cardText: "text-emerald-900",cardSub: "text-emerald-700" },
+  "407": { bar: "bg-sky-500",     pill: "bg-sky-50 text-sky-700 border-sky-200",         dot: "bg-sky-500",    cardBg: "bg-sky-50/80",     cardBorder: "border-sky-200",     cardText: "text-sky-900",     cardSub: "text-sky-700"     },
+  default:{ bar: "bg-slate-400",  pill: "bg-slate-50 text-slate-600 border-slate-200",   dot: "bg-slate-400",  cardBg: "bg-slate-50/80",   cardBorder: "border-slate-200",   cardText: "text-slate-800",   cardSub: "text-slate-600"   },
 };
 
 const TYPE_STYLE = {
@@ -146,7 +146,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
       rooms.forEach((room) => list.push({
         id: `${e.id}-${room}`, type: "dlExam", room,
         subject: e.subject || `คุมสอบ DL (${e.examType === "staff" ? "บุคลากร" : "นศ."})`,
-        teacher: proctors.slice(0,2).join(", "),
+        teacher: proctors.join(", "),
         startTime: slot.s, endTime: slot.e,
         startMin: timeToMin(slot.s), endMin: timeToMin(slot.e),
       }));
@@ -306,13 +306,17 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
               const LANE_WIDTH = totalLanes === 1 ? availW : Math.max(availW / totalLanes, MIN_LANE_W);
               const laneLeft   = ev.lane * LANE_WIDTH;
 
+              // Dynamic subject font size based on available height
+              const subjectSize = height >= 90 ? "text-sm" : height >= 64 ? "text-xs" : "text-[11px]";
+              const subjectLines = height >= 90 ? "line-clamp-3" : "line-clamp-2";
+
               return (
                 <div key={ev.id}
-                  className={`absolute rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
+                  className={`absolute rounded-2xl border overflow-hidden z-10 ${c.cardBorder} ${isAct ? "shadow-md ring-1 ring-inset " + c.bar.replace("bg-","ring-") : "shadow-sm"}`}
                   style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
                   {/* Left accent bar */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
-                  <div className="pl-3 pr-2 py-2 h-full flex flex-col justify-center gap-1 bg-white/95 overflow-hidden">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${c.bar}`} />
+                  <div className={`pl-3.5 pr-2 py-2 h-full flex flex-col justify-center gap-0.5 ${c.cardBg} overflow-hidden`}>
                     <div className="flex items-center gap-1 flex-wrap">
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${c.pill}`}>
                         ห้อง {ev.room}
@@ -321,19 +325,19 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                         {ts.label}
                       </span>
                       {isAct && (
-                        <span className="flex items-center gap-0.5 text-[10px] font-semibold text-blue-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />กำลังใช้งาน
+                        <span className={`flex items-center gap-0.5 text-[10px] font-semibold ${c.cardSub}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${c.bar} animate-pulse`} />กำลังใช้งาน
                         </span>
                       )}
                     </div>
-                    <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">{ev.subject}</p>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="flex items-center gap-1 text-[11px] text-slate-500 whitespace-nowrap">
+                    <p className={`${subjectSize} font-bold ${c.cardText} leading-snug ${subjectLines}`}>{ev.subject}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
+                      <span className={`flex items-center gap-1 text-[11px] ${c.cardSub} whitespace-nowrap`}>
                         <Clock size={9} className="shrink-0" />
                         {ev.startTime}–{ev.endTime}
                       </span>
                       {ev.teacher && (
-                        <span className="flex items-center gap-1 text-[11px] text-slate-500 min-w-0">
+                        <span className={`flex items-center gap-1 text-[11px] ${c.cardSub} min-w-0`}>
                           <User size={9} className="shrink-0" />
                           <span className="truncate">{ev.teacher}</span>
                         </span>

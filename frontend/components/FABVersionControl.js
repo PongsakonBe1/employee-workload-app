@@ -4,25 +4,28 @@ import { useState } from "react";
 import { GitBranch, GitCommit, Calendar, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const VERSION_INFO = {
-  version: "2.5.0",
+  version: "2.7.0",
   buildDate: "2026-06-17",
-  buildTime: "08:30",
-  gitCommit: "51dbe5b",
+  buildTime: "21:50",
+  gitCommit: "e1738d5",
   branch: "main",
   features: [
-    "TodayRoomSchedule - iOS Compact Calendar (Dashboard)",
-    "User Manual /help - Accordion 8 หัวข้อ",
-    "RoomUsageCalendar - View Toggle (1วัน/3วัน/สัปดาห์)",
-    "Footer: ลิงก์คู่มือ + Nav Drawer",
-    "DL Exam & Classroom Schedule Integration",
-    "Thailand Timezone (UTC+7) Real-time Clock"
+    "iCloudCalendarStrip - Drag-to-scroll 2D timeline",
+    "iCloudCalendarStrip - Responsive lane layout (ResizeObserver)",
+    "iCloudCalendarStrip - Timeline scope 07:00–22:00",
+    "iCloudCalendarStrip - Card bg สีตามห้อง + subject font dynamic",
+    "iCloudCalendarStrip - แสดง proctor ครบทุกคน",
+    "Classroom Schedules - Hard delete (ลบออกจาก Firestore จริง)",
+    "NotificationBell - Alert toast ย้ายจาก top → bottom",
+    "ScheduleAlertBanner - Toast bottom-right ไม่บัง navbar"
   ],
   changes: [
-    "Dashboard: เพิ่ม TodayRoomSchedule widget แบบ iOS",
-    "Room pills: ห้องที่ต้องเปิด + pulse dot เมื่อ active",
-    "Event cards: active/upcoming/past color-coded",
-    "เพิ่มหน้า /help คู่มือการใช้งานแบบ Accordion",
-    "อัปเดต README.md + Changelog v2.5.0"
+    "iCalendar: HOUR_END 19→22, card redesign ด้วยสีประจำห้อง",
+    "iCalendar: subject font scale ตาม card height (sm/xs/11px)",
+    "iCalendar: ลบ cap proctors.slice(0,2) → แสดงครบ",
+    "Schedules: deleteSchedule เปลี่ยนเป็น hard delete (deleteDoc)",
+    "UI: NotificationBell alert banner ย้ายจาก top-4 → bottom-20",
+    "อัปเดต README.md + Changelog v2.7.0"
   ]
 };
 
