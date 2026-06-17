@@ -37,6 +37,7 @@ export function useClassroomSchedules() {
     try {
       const q = query(
         collection(db, "classroomSchedules"),
+        where("isActive", "==", true),
         orderBy("dayOfWeek", "asc"),
         orderBy("startTime", "asc")
       );
