@@ -158,14 +158,11 @@ export function useClassroomSchedules() {
   };
 
   /**
-   * ลบตารางเรียน (soft delete)
+   * ลบตารางเรียน (hard delete)
    */
   const deleteSchedule = async (id) => {
     try {
-      await updateDoc(doc(db, "classroomSchedules", id), {
-        isActive: false,
-        deletedAt: serverTimestamp(),
-      });
+      await deleteDoc(doc(db, "classroomSchedules", id));
       await fetchSchedules();
       await fetchTodaySchedules();
     } catch (err) {
