@@ -40,7 +40,7 @@ const TYPE_STYLE = {
   dlExam:    { blockBg: "bg-orange-50 border-l-orange-400", label: "DL",  labelCls: "bg-orange-100 text-orange-700"},
 };
 
-export default function ICloudCalendarStrip() {
+export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const [now, setNow] = useState(getNowTH());
   const [viewDate, setViewDate] = useState(getNowTH());
   const [classroomSchedules, setClassroomSchedules] = useState([]);
@@ -48,6 +48,9 @@ export default function ICloudCalendarStrip() {
   const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(true);
   const timelineRef = useRef(null);
+  const isDragging = useRef(false);
+  const dragStartY = useRef(0);
+  const dragStartScrollTop = useRef(0);
 
   // Clock tick every 30s
   useEffect(() => {
@@ -174,7 +177,36 @@ export default function ICloudCalendarStrip() {
       </div>
 
       {/* ── Timeline ── */}
-      <div ref={timelineRef} className="relative overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ height: `${HOUR_HEIGHT * 7}px` }}>
+      <div
+        ref={timelineRef}
+        className="relative overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
+        style={{ height: `${HOUR_HEIGHT * 7}px` }}
+        onMouseDown={(e) => {
+          isDragging.current = true;
+          dragStartY.current = e.clientY;
+          dragStartScrollTop.current = timelineRef.current.scrollTop;
+          e.preventDefault();
+        }}
+        onMouseMove={(e) => {
+          if (!isDragging.current) return;
+          const delta = e.clientY - dragStartY.current;
+          timelineRef.current.scrollTop = dragStartScrollTop.current - delta;
+        }}
+        onMouseUp={() => { isDragging.current = false; }}
+        onMouseLeave={() => { isDragging.current = false; }}
+        onTouchStart={(e) => {
+          isDragging.current = true;
+          dragStartY.current = e.touches[0].clientY;
+          dragStartScrollTop.current = timelineRef.current.scrollTop;
+        }}
+        onTouchMove={(e) => {
+          if (!isDragging.current) return;
+          const delta = e.touches[0].clientY - dragStartY.current;
+          timelineRef.current.scrollTop = dragStartScrollTop.current - delta;
+          e.preventDefault();
+        }}
+        onTouchEnd={() => { isDragging.current = false; }}
+      >
         <div className="relative" style={{ height: `${HOUR_HEIGHT * (HOUR_END - HOUR_START)}px` }}>
 
           {/* Hour grid lines */}
@@ -284,6 +316,38 @@ export default function ICloudCalendarStrip() {
         </div>
       </div>
 
+      {/* ── Compact Detail Cards ── */}
+      {showCompactCards && events.length > 0 && (
+        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            {events.length} กิจกรรม{isToday ? "วันนี้" : `  ${viewDate.getDate()} ${MONTHS_TH[viewDate.getMonth()]}`}
+          </p>
+          <div className="space-y-1.5">
+            {events.map((ev) => {
+              const c     = ROOM_ACCENT[ev.room] || ROOM_ACCENT.default;
+              const ts    = TYPE_STYLE[ev.type]  || TYPE_STYLE.classroom;
+              const isAct = isToday && nowMin >= ev.startMin && nowMin < ev.endMin;
+              const isPast= isToday && nowMin >= ev.endMin;
+              return (
+                <div key={ev.id}
+                  className={`flex items-center gap-3 p-2.5 rounded-2xl border bg-white transition ${isPast ? "opacity-40" : ""}`}>
+                  <div className={`w-1 self-stretch rounded-full ${c.bar}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-lg border ${c.pill}`}>ห้อง {ev.room}</span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${ts.labelCls}`}>{ts.label}</span>
+                      <span className="text-xs text-slate-500 font-medium">{ev.startTime}–{ev.endTime}</span>
+                      {isAct && <span className="text-xs font-semibold text-blue-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />ดำเนินอยู่</span>}
+                    </div>
+                    <p className="text-sm font-semibold text-slate-800 mt-0.5 truncate">{ev.subject}</p>
+                    {ev.teacher && <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5"><User size={10}/>{ev.teacher}</p>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

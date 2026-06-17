@@ -6,8 +6,6 @@ import { useTranslations } from "next-intl";
 import { Calendar, Filter, User, Printer } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { MetricCard } from "../../components/MetricCard";
-import RoomUsageCalendar from "../../components/RoomUsageCalendar";
-import TodayRoomSchedule from "../../components/TodayRoomSchedule";
 import { useAuth } from "../../components/AuthProvider";
 import { db } from "../../lib/firebase";
 import {
@@ -842,11 +840,6 @@ export default function DashboardPage() {
           value={topDuty}
           hint={t("dashboard.byMainDuty")}
         />
-      </section>
-
-      {/* ตารางห้องวันนี้ — iOS Compact Style */}
-      <section className="mt-5">
-        <TodayRoomSchedule />
       </section>
 
       {/* Limit Warning Modal */}
