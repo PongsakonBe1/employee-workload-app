@@ -266,7 +266,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
             const totalLanes = Math.max(...evWithLane
               .filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin)
               .map((e) => e.lane)) + 1;
-            const LANE_WIDTH = 200; // px per lane — fixed width for readability
+            const LANE_WIDTH = 240; // px per lane — fixed width for readability
             const laneLeft   = ev.lane * LANE_WIDTH;
 
             return (
@@ -275,8 +275,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                 style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
                 {/* Left accent bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
-                <div className="pl-3 pr-2 py-1.5 h-full flex flex-col justify-center bg-white/95">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="pl-3 pr-2 pt-1.5 pb-1 h-full flex flex-col justify-start gap-0.5 bg-white/95 overflow-hidden">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${c.pill}`}>
                       ห้อง {ev.room}
                     </span>
@@ -289,21 +289,19 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-slate-800 leading-tight truncate">{ev.subject}</p>
-                  {height > 52 && (
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Clock size={10} className="shrink-0" />
-                        {ev.startTime}–{ev.endTime}
+                  <p className="text-[13px] font-semibold text-slate-800 leading-tight line-clamp-2">{ev.subject}</p>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                      <Clock size={9} className="shrink-0" />
+                      {ev.startTime}–{ev.endTime}
+                    </span>
+                    {ev.teacher && (
+                      <span className="flex items-center gap-1 text-[11px] text-slate-500 truncate">
+                        <User size={9} className="shrink-0" />
+                        {ev.teacher}
                       </span>
-                      {ev.teacher && (
-                        <span className="flex items-center gap-1 text-xs text-slate-500 truncate">
-                          <User size={10} className="shrink-0" />
-                          {ev.teacher}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );
