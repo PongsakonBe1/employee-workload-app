@@ -386,6 +386,46 @@ export default function ScheduleManager() {
         </div>
       )}
 
+      {/* Overview: Room-colored cards for today */}
+      <div className="mb-6 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-700">
+            ภาพรวมการใช้ห้องเรียนชั้น 4 — วันนี้ ({dayLabels[DAYS[new Date().getDay()]]})
+          </h3>
+        </div>
+        <div className="p-4">
+          {FLOOR4_ROOMS.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              {FLOOR4_ROOMS.map((room) => {
+                const c = ROOM_COLORS[room] || ROOM_COLORS.default;
+                const roomScheds = todaySchedules.filter((s) => s.room === room);
+                return (
+                  <div key={room} className={`rounded-xl border p-3 ${c.light} ${c.border}`}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                      <span className={`text-sm font-bold ${c.text}`}>ห้อง {room}</span>
+                    </div>
+                    {roomScheds.length === 0 ? (
+                      <p className="text-xs text-slate-400">ว่าง</p>
+                    ) : (
+                      roomScheds.map((s) => (
+                        <div key={s.id} className="mb-1 last:mb-0">
+                          <p className={`text-xs font-semibold ${c.text} truncate`}>{s.subject}</p>
+                          <p className="text-[11px] text-slate-500">{s.startTime}–{s.endTime}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {todaySchedules.length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-2">ไม่มีตารางเรียนวันนี้</p>
+          )}
+        </div>
+      </div>
+
       {/* Selection Action Bar */}
       {selectedIds.length > 0 && (
         <div className="mb-3 flex items-center gap-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">

@@ -1405,28 +1405,12 @@ export default function SystemManagementPage() {
 
       {/* Classroom Schedules Tab */}
       {activeTab === "classroom-schedules" && (
-        <div className="space-y-6">
-          <div className="apple-panel p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              ภาพรวมการใช้ห้องเรียนชั้น 4
-            </h2>
-            <RoomUsageCalendar view="week" showDLExam={true} />
-          </div>
-          <ScheduleManager />
-        </div>
+        <ScheduleManager />
       )}
 
       {/* DL Exam Schedules Tab */}
       {activeTab === "dl-exam" && (
-        <div className="space-y-6">
-          <div className="apple-panel p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              ภาพรวมการใช้ห้องสอบ DL
-            </h2>
-            <RoomUsageCalendar view="week" showDLExam={true} />
-          </div>
-          <DLExamManager />
-        </div>
+        <DLExamManager />
       )}
 
       {/* Import Worklogs Tab */}
