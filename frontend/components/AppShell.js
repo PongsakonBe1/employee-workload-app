@@ -19,14 +19,11 @@ import {
   X,
   ChevronLeft,
   HelpCircle,
-  Moon,
-  Sun,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { isAdminRole } from "../lib/authUtils";
 import { Breadcrumb } from "./Breadcrumb";
 import { NotificationBell } from "./NotificationBell";
-import { useTheme } from "./ThemeProvider";
 
 const getNav = (t, role) => {
   const isAdmin = role === "admin";
@@ -87,7 +84,6 @@ export function AppShell({ children }) {
   const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
   const currentPageLabel = PAGE_LABELS[pathname] || "";
 
   const navItems = user ? getNav(t, user.role) : [];
@@ -123,21 +119,21 @@ export function AppShell({ children }) {
   }
 
   return (
-    <div className="min-h-screen px-5 py-5 sm:px-8 dark:text-slate-100">
+    <div className="min-h-screen px-5 py-5 sm:px-8">
       {/* Profile Alert Banner for Staff without displayName */}
       {user?.role === "staff" &&
         !user?.displayName &&
         pathname !== "/profile" && (
-          <div className="flex items-center justify-between px-5 py-3 mx-auto mb-4 border max-w-7xl rounded-2xl bg-amber-50 border-amber-200 dark:bg-amber-950/50 dark:border-amber-800">
+          <div className="flex items-center justify-between px-5 py-3 mx-auto mb-4 border max-w-7xl rounded-2xl bg-amber-50 border-amber-200">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 text-white rounded-xl bg-amber-500">
                 <User size={18} />
               </div>
               <div>
-                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                <p className="text-sm font-medium text-amber-900">
                   กรุณาตั้งชื่อที่ใช้ลงงาน (ภาษาไทย)
                 </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400">
+                <p className="text-xs text-amber-700">
                   ชื่อนี้จะแสดงใน Dashboard และรายงานงาน เช่น พงศกร, สมชาย
                   (ไม่ต้องมีนามสกุล)
                 </p>
@@ -152,16 +148,16 @@ export function AppShell({ children }) {
           </div>
         )}
 
-      <header className="relative z-50 mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl dark:border-white/10 dark:bg-slate-800/70">
+      <header className="relative z-50 mx-auto mb-8 flex max-w-7xl items-center justify-between rounded-[2rem] border border-white/70 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-2xl">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="flex items-center justify-center w-10 h-10 overflow-hidden text-white rounded-2xl bg-slate-950">
             <Image src="/labboy-logo.png" alt="labboy logo" width={32} height={32} className="object-contain" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-950 dark:text-slate-100">
+            <p className="text-sm font-semibold text-slate-950">
               labboy Workload
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               {t("metadata.description")}
             </p>
           </div>
@@ -177,8 +173,8 @@ export function AppShell({ children }) {
                 href={item.href}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                    ? "bg-slate-950 text-white"
+                    : "text-slate-600 hover:bg-white hover:text-slate-950"
                 }`}
               >
                 <Icon size={16} />
@@ -193,37 +189,28 @@ export function AppShell({ children }) {
           <NotificationBell />
 
           {/* Settings icon for admin/superadmin - tooltip style */}
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 dark:border-slate-600 dark:bg-slate-700/80 dark:text-slate-300 dark:hover:text-white"
-            title={theme === "dark" ? "โหมดสว่าง" : "โหมดมืด"}
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
           {isAdminRole(user) && (
             <Link
               href="/admin/system"
-              className="relative p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 dark:border-slate-600 dark:bg-slate-700/80 dark:text-slate-300 dark:hover:text-white group"
+              className="relative p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 group"
               title="จัดการระบบ"
             >
               <Settings size={18} />
               {/* Tooltip */}
-              <span className="absolute px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded opacity-0 pointer-events-none top-full left-1/2 bg-slate-800 group-hover:opacity-100 whitespace-nowrap dark:bg-slate-600">
+              <span className="absolute px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded opacity-0 pointer-events-none top-full left-1/2 bg-slate-800 group-hover:opacity-100 whitespace-nowrap">
                 จัดการระบบ
               </span>
             </Link>
           )}
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold text-slate-950 dark:text-slate-100">
+            <p className="text-sm font-semibold text-slate-950">
               {user.displayName || user.nickname || user.fullName || "User"}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{user.role}</p>
+            <p className="text-xs text-slate-500">{user.role}</p>
           </div>
           <button
             onClick={logout}
-            className="p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 dark:border-slate-600 dark:bg-slate-700/80 dark:text-slate-300 dark:hover:text-white"
+            className="p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950"
             title={t("navigation.logout")}
           >
             <LogOut size={18} />
@@ -238,7 +225,7 @@ export function AppShell({ children }) {
           onClick={() => prevPage && router.push(prevPage.href)}
           disabled={!prevPage}
           title={prevPage?.label}
-          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95 dark:bg-slate-800/70 dark:text-slate-400"
+          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95"
         >
           <ChevronLeft size={18} />
           <span className="text-[9px] mt-0.5 leading-none truncate w-12 text-center">{prevPage?.label ?? ''}</span>
@@ -247,10 +234,10 @@ export function AppShell({ children }) {
         {/* Current page — tappable to open drawer */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/70 hover:bg-white/90 transition dark:bg-slate-800/70 dark:hover:bg-slate-700/90"
+          className="flex-1 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/70 hover:bg-white/90 transition"
         >
-          <span className="text-sm font-semibold text-slate-800 truncate dark:text-slate-100">{currentPageLabel}</span>
-          <Menu size={16} className="text-slate-400 shrink-0 ml-2 dark:text-slate-500" />
+          <span className="text-sm font-semibold text-slate-800 truncate">{currentPageLabel}</span>
+          <Menu size={16} className="text-slate-400 shrink-0 ml-2" />
         </button>
 
         {/* Next page */}
@@ -258,7 +245,7 @@ export function AppShell({ children }) {
           onClick={() => nextPage && router.push(nextPage.href)}
           disabled={!nextPage}
           title={nextPage?.label}
-          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95 dark:bg-slate-800/70 dark:text-slate-400"
+          className="flex flex-col items-center justify-center w-14 h-12 rounded-2xl bg-white/70 text-slate-500 disabled:opacity-25 shrink-0 transition active:scale-95"
         >
           <ChevronLeft size={18} className="rotate-180" />
           <span className="text-[9px] mt-0.5 leading-none truncate w-12 text-center">{nextPage?.label ?? ''}</span>
@@ -271,13 +258,13 @@ export function AppShell({ children }) {
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
           {/* Sheet */}
-          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col dark:bg-slate-900">
-            <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100 dark:border-slate-700">
+          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100">
               <div>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.displayName || user?.nickname || "User"}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">{user?.role}</p>
+                <p className="text-sm font-semibold text-slate-900">{user?.displayName || user?.nickname || "User"}</p>
+                <p className="text-xs text-slate-400">{user?.role}</p>
               </div>
-              <button onClick={() => setDrawerOpen(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 dark:hover:bg-slate-800 dark:text-slate-400">
+              <button onClick={() => setDrawerOpen(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500">
                 <X size={18} />
               </button>
             </div>
@@ -291,7 +278,7 @@ export function AppShell({ children }) {
                     href={item.href}
                     onClick={() => setDrawerOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition ${
-                      active ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                      active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"
                     }`}
                   >
                     <Icon size={18} />
@@ -300,18 +287,11 @@ export function AppShell({ children }) {
                 );
               })}
             </nav>
-            <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-700 space-y-1">
-              <button
-                onClick={() => { toggleTheme(); }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                {theme === "dark" ? "โหมดสว่าง" : "โหมดมืด"}
-              </button>
+            <div className="px-3 py-4 border-t border-slate-100 space-y-1">
               <Link
                 href="/help"
                 onClick={() => setDrawerOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition dark:text-slate-300 dark:hover:bg-slate-800"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
               >
                 <HelpCircle size={18} />
                 คู่มือการใช้งาน
@@ -333,16 +313,16 @@ export function AppShell({ children }) {
         {children}
       </main>
 
-      <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400 dark:text-slate-500 space-y-1">
+      <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400 space-y-1">
         <div>
-          <Link href="/help" className="inline-flex items-center gap-1 text-slate-400 hover:text-blue-500 transition dark:text-slate-500 dark:hover:text-blue-400">
+          <Link href="/help" className="inline-flex items-center gap-1 text-slate-400 hover:text-blue-500 transition">
             <HelpCircle size={11} />
             คู่มือการใช้งาน
           </Link>
           <span className="mx-2">·</span>
           <span>labboy Workload Recorder</span>
           <span className="mx-2">&mdash;</span>
-          <span>v2.7.0</span>
+          <span>v2.5.0</span>
         </div>
       </footer>
     </div>

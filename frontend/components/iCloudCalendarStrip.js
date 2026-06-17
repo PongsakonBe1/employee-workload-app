@@ -178,31 +178,31 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const goToday  = () => setViewDate(getNowTH());
 
   return (
-    <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden select-none dark:bg-slate-800 dark:border-slate-700">
+    <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden select-none">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+      <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
         <div className="flex items-end gap-3">
-          <span className={`text-4xl font-semibold leading-none tabular-nums ${isToday ? "text-red-500" : "text-slate-800 dark:text-slate-100"}`}>
+          <span className={`text-4xl font-semibold leading-none tabular-nums ${isToday ? "text-red-600" : "text-slate-800"}`}>
             {viewDate.getDate()}
           </span>
           <div className="pb-0.5 leading-tight">
-            <p className={`text-base font-semibold ${isToday ? "text-red-500" : "text-slate-700 dark:text-slate-200"}`}>
+            <p className={`text-base font-semibold ${isToday ? "text-red-600" : "text-slate-700"}`}>
               {DAY_LABELS_TH[viewDate.getDay()]}
             </p>
-            <p className="text-sm text-slate-400 dark:text-slate-500">
+            <p className="text-sm text-slate-400">
               {MONTHS_TH[viewDate.getMonth()]} {viewDate.getFullYear() + 543}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={prevDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400">
+          <button onClick={prevDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500">
             <ChevronLeft size={16} />
           </button>
-          <button onClick={goToday} className="px-3 py-1.5 text-sm font-semibold text-red-500 hover:bg-red-50 active:bg-red-100 rounded-xl transition dark:hover:bg-red-950/40">
+          <button onClick={goToday} className="px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl transition">
             วันนี้
           </button>
-          <button onClick={nextDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500 dark:hover:bg-slate-700 dark:text-slate-400">
+          <button onClick={nextDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500">
             <ChevronRight size={16} />
           </button>
         </div>
@@ -212,7 +212,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
       <div ref={wrapperRef} className="relative">
       <div
         ref={timelineRef}
-        className="relative overflow-auto bg-white dark:bg-slate-800 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
+        className="relative overflow-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
         style={{ height: `${HOUR_HEIGHT * 7}px` }}
         onMouseDown={(e) => {
           isDragging.current = true;
@@ -256,16 +256,16 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
           {hours.map((h) => (
             <div key={h} className="absolute left-0 right-0 flex items-center"
               style={{ top: `${(h - HOUR_START) * HOUR_HEIGHT}px` }}>
-              <span className="w-14 pl-3 text-xs text-slate-400 dark:text-slate-600 shrink-0 -mt-2.5 font-medium">
+              <span className="w-14 pl-3 text-xs text-slate-400 shrink-0 -mt-2.5 font-medium">
                 {h < 12 ? `${h}:00` : h === 12 ? "12:00" : `${h}:00`}
               </span>
-              <div className="flex-1 border-t border-slate-100 dark:border-slate-700" />
+              <div className="flex-1 border-t border-slate-100" />
             </div>
           ))}
 
           {/* Half-hour subtle lines */}
           {hours.map((h) => (
-            <div key={`h${h}`} className="absolute left-14 right-0 border-t border-slate-50 dark:border-slate-700/50"
+            <div key={`h${h}`} className="absolute left-14 right-0 border-t border-slate-50"
               style={{ top: `${(h - HOUR_START) * HOUR_HEIGHT + HOUR_HEIGHT / 2}px` }} />
           ))}
 
@@ -352,10 +352,10 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
           {/* Empty state */}
           {!loading && events.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                <Clock size={18} className="text-slate-400 dark:text-slate-500" />
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <Clock size={18} className="text-slate-400" />
               </div>
-              <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">ไม่มีกิจกรรมวันนี้</p>
+              <p className="text-sm text-slate-400 font-medium">ไม่มีกิจกรรมวันนี้</p>
             </div>
           )}
         </div>
@@ -364,8 +364,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
 
       {/* ── Compact Detail Cards ── */}
       {showCompactCards && events.length > 0 && (
-        <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-3 bg-slate-50/50 dark:bg-slate-900/30">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             {events.length} กิจกรรม{isToday ? "วันนี้" : `  ${viewDate.getDate()} ${MONTHS_TH[viewDate.getMonth()]}`}
           </p>
           <div className="space-y-1.5">
@@ -376,7 +376,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
               const isPast= isToday && nowMin >= ev.endMin;
               return (
                 <div key={ev.id}
-                  className={`flex items-center gap-3 p-2.5 rounded-2xl border bg-white dark:bg-slate-800 dark:border-slate-700 transition ${isPast ? "opacity-40" : ""}`}>
+                  className={`flex items-center gap-3 p-2.5 rounded-2xl border bg-white transition ${isPast ? "opacity-40" : ""}`}>
                   <div className={`w-1 self-stretch rounded-full ${c.bar}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -385,8 +385,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                       <span className="text-xs text-slate-500 font-medium">{ev.startTime}–{ev.endTime}</span>
                       {isAct && <span className="text-xs font-semibold text-blue-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />ดำเนินอยู่</span>}
                     </div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mt-0.5 truncate">{ev.subject}</p>
-                    {ev.teacher && <p className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5"><User size={10}/>{ev.teacher}</p>}
+                    <p className="text-sm font-semibold text-slate-800 mt-0.5 truncate">{ev.subject}</p>
+                    {ev.teacher && <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5"><User size={10}/>{ev.teacher}</p>}
                   </div>
                 </div>
               );

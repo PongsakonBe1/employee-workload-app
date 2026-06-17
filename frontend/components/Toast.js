@@ -60,7 +60,7 @@ export function Toast({
         </div>
       )}
       {info && (
-        <div className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-slate-800 dark:bg-slate-700 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-slate-800 px-4 py-3 text-sm text-white shadow-xl animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 size={14} className="shrink-0 text-slate-300" />
           <span className="flex-1">{info}</span>
           {onDismissInfo && (
