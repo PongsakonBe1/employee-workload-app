@@ -3,6 +3,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 import FABVersionControl from "../components/FABVersionControl";
+import { ThemeProvider } from "../components/ThemeProvider";
 
 export const metadata = {
   title: "labboy Workload Recorder",
@@ -44,12 +45,14 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale}>
       <body>
-        <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
-            {children}
-            <FABVersionControl />
-          </AuthProvider>
-        </NextIntlClientProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider messages={messages}>
+            <AuthProvider>
+              {children}
+              <FABVersionControl />
+            </AuthProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

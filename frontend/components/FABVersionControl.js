@@ -46,7 +46,7 @@ export default function FABVersionControl() {
       {/* Version Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -69,24 +69,24 @@ export default function FABVersionControl() {
             {/* Content */}
             <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
               {/* Version Info Card */}
-              <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 text-sm">Version</span>
-                  <span className="text-slate-800 font-semibold">{VERSION_INFO.version}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-sm">Version</span>
+                  <span className="text-slate-800 dark:text-slate-100 font-semibold">{VERSION_INFO.version}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 text-sm">Branch</span>
-                  <span className="text-blue-600 font-medium text-sm">{VERSION_INFO.branch}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-sm">Branch</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">{VERSION_INFO.branch}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 text-sm">Commit</span>
-                  <code className="text-slate-700 bg-slate-200 px-2 py-0.5 rounded text-xs font-mono">
+                  <span className="text-slate-500 dark:text-slate-400 text-sm">Commit</span>
+                  <code className="text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-mono">
                     {VERSION_INFO.gitCommit}
                   </code>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 text-sm">Build Date</span>
-                  <span className="text-slate-700 text-sm flex items-center gap-1">
+                  <span className="text-slate-500 dark:text-slate-400 text-sm">Build Date</span>
+                  <span className="text-slate-700 dark:text-slate-300 text-sm flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {VERSION_INFO.buildDate}
                   </span>
@@ -95,13 +95,13 @@ export default function FABVersionControl() {
 
               {/* Features */}
               <div>
-                <h4 className="font-medium text-slate-800 mb-2 flex items-center gap-2">
+                <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                   <GitCommit className="w-4 h-4 text-green-500" />
                   Features
                 </h4>
                 <ul className="space-y-1">
                   {VERSION_INFO.features.map((feature, idx) => (
-                    <li key={idx} className="text-sm text-slate-600 flex items-start gap-2">
+                    <li key={idx} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
                       <span className="text-green-500 mt-1">•</span>
                       {feature}
                     </li>
@@ -111,13 +111,13 @@ export default function FABVersionControl() {
 
               {/* Recent Changes */}
               <div>
-                <h4 className="font-medium text-slate-800 mb-2 flex items-center gap-2">
+                <h4 className="font-medium text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-orange-500" />
                   Recent Changes
                 </h4>
                 <ul className="space-y-1">
                   {VERSION_INFO.changes.map((change, idx) => (
-                    <li key={idx} className="text-sm text-slate-600 flex items-start gap-2">
+                    <li key={idx} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
                       <span className="text-orange-500 mt-1">•</span>
                       {change}
                     </li>
@@ -127,8 +127,8 @@ export default function FABVersionControl() {
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-50 p-3 text-center border-t border-slate-100">
-              <p className="text-xs text-slate-400">
+            <div className="bg-slate-50 dark:bg-slate-800 p-3 text-center border-t border-slate-100 dark:border-slate-700">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 Built with Next.js + Tailwind + Firebase
               </p>
             </div>

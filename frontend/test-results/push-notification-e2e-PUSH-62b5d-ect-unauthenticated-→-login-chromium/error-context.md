@@ -12,11 +12,7 @@
 # Error details
 
 ```
-Test timeout of 30000ms exceeded.
-```
-
-```
-Error: page.waitForURL: Test timeout of 30000ms exceeded.
+TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
 =========================== logs ===========================
 waiting for navigation until "load"
   navigated to "http://localhost:3000/admin/settings"
@@ -139,7 +135,7 @@ waiting for navigation until "load"
   148 |   test("หน้า /admin/settings โหลดได้และ redirect unauthenticated → /login", async ({ page }) => {
   149 |     await page.goto("/admin/settings");
 > 150 |     await page.waitForURL(/\/login/, { timeout: 10000 });
-      |                ^ Error: page.waitForURL: Test timeout of 30000ms exceeded.
+      |                ^ TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
   151 |     await expect(page).toHaveURL(/\/login/);
   152 |   });
   153 | 
