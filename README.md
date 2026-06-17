@@ -1,31 +1,42 @@
-# labboy Workload Recorder - ICIT Workload Management System
+# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT
 
-ระบบบันทึกภาระงานพนักงาน สำหรับสำนักคอมพิวเตอร์ ICIT มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB)  
-ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
+> **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
+> มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
+> รองรับ PWA บน iOS/Android/Desktop, Google Sign-In, Real-time sync, Push Notification และ Dashboard วิเคราะห์ข้อมูล
 
-🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.6.0  
-📅 **Last Updated:** 2026-06-17  
-🏢 **Organization:** ICIT KMUTNB  
-📄 **License:** MIT License
+| | |
+|---|---|
+| 🌐 **Production URL** | https://labboy-workload-app.web.app |
+| 📦 **Current Version** | v2.7.0 |
+| 📅 **Last Updated** | 2026-06-17 |
+| 🏢 **Organization** | ICIT KMUTNB |
+| 👤 **Developer** | Pongsakon Boonnak (พงศกร บุญนาค) |
+| 📧 **Contact** | pongsakon.be1@gmail.com |
+| 📄 **License** | MIT License |
+| 🔬 **Research Context** | งานวิจัยพัฒนาระบบสารสนเทศ — มจพ. |
+| 🧪 **E2E Tests** | Playwright 40/42 passed |
 
 ---
 
 ## สารบัญ (Table of Contents)
 
 1. [ภาพรวมระบบ (System Overview)](#ภาพรวมระบบ-system-overview)
-2. [คุณสมบัติหลัก (Features)](#คุณสมบัติหลัก-features)
-3. [สถาปัตยกรรมระบบ (System Architecture)](#สถาปัตยกรรมระบบ-system-architecture)
-4. [Tech Stack](#tech-stack)
-5. [โครงสร้างโปรเจ็กต์ (Project Structure)](#โครงสร้างโปรเจ็กต์-project-structure)
-6. [ฐานข้อมูล (Database Schema)](#ฐานข้อมูล-database-schema)
-7. [สิทธิ์ผู้ใช้งาน (Roles & Permissions)](#สิทธิ์ผู้ใช้งาน-roles--permissions)
-8. [API Documentation](#api-documentation)
-9. [การติดตั้ง (Installation)](#การติดตั้ง-installation)
-10. [การ Deploy (Deployment)](#การ-deploy-deployment)
-11. [ความปลอดภัย (Security)](#ความปลอดภัย-security)
-12. [ประวัติการเปลี่ยนแปลง (Changelog)](#changelog)
-13. [การพัฒนาเพิ่มเติม (Development)](#การพัฒนาเพิ่มเติม-development)
+2. [บริบทงานวิจัย (Research Context)](#บริบทงานวิจัย-research-context)
+3. [คุณสมบัติหลัก (Features)](#คุณสมบัติหลัก-features)
+4. [สถาปัตยกรรมระบบ (System Architecture)](#สถาปัตยกรรมระบบ-system-architecture)
+5. [Tech Stack](#tech-stack)
+6. [โครงสร้างโปรเจ็กต์ (Project Structure)](#โครงสร้างโปรเจ็กต์-project-structure)
+7. [ฐานข้อมูล (Database Schema)](#ฐานข้อมูล-database-schema)
+8. [สิทธิ์ผู้ใช้งาน (Roles & Permissions)](#สิทธิ์ผู้ใช้งาน-roles--permissions)
+9. [คู่มือการใช้งาน (User Guide)](#คู่มือการใช้งาน-user-guide)
+10. [API Documentation](#api-documentation)
+11. [การติดตั้ง (Installation)](#การติดตั้ง-installation)
+12. [การ Deploy (Deployment)](#การ-deploy-deployment)
+13. [ความปลอดภัย (Security)](#ความปลอดภัย-security)
+14. [การทดสอบระบบ (Testing)](#การทดสอบระบบ-testing)
+15. [ข้อจำกัดระบบ (Limitations)](#ข้อจำกัดระบบ-limitations)
+16. [ประวัติการเปลี่ยนแปลง (Changelog)](#ประวัติการเปลี่ยนแปลง-changelog)
+17. [การพัฒนาเพิ่มเติม (Development)](#การพัฒนาเพิ่มเติม-development)
 
 ---
 
@@ -48,6 +59,42 @@
 | Staff (พนักงาน) | 8-10 คน | บันทึกงานตัวเอง, ดูสถิติส่วนตัว |
 | Admin (ผู้ดูแล) | 2-3 คน | จัดการทีม, อนุมัติ users, ดูรายงาน |
 | Superadmin | 1-2 คน | ดูแลระบบทั้งหมด, จัดการสิทธิ์ |
+
+---
+
+## บริบทงานวิจัย (Research Context)
+
+### ที่มาและความสำคัญ
+
+สำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT) มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ มีพนักงานที่ปฏิบัติหน้าที่บริการนักศึกษาและอาจารย์ประจำวัน ครอบคลุมงานหลากหลายประเภท ได้แก่ การดูแลห้องคอมพิวเตอร์ชั้น 3-4 การบริการเครื่องคอมพิวเตอร์และอุปกรณ์ต่อพ่วง การคุมสอบ Distance Learning (DL) และการแก้ไขปัญหาด้านเทคนิค
+
+ก่อนพัฒนาระบบนี้ พนักงานใช้วิธีบันทึกงานด้วยกระดาษหรือ spreadsheet ซึ่งมีข้อจำกัดด้านความเที่ยงตรงของข้อมูล การรวบรวมสถิติ และการติดตามภาระงานแบบ real-time
+
+### วัตถุประสงค์การวิจัย
+
+1. **พัฒนาระบบสารสนเทศ** เพื่อบันทึกและติดตามภาระงานพนักงาน ICIT แบบดิจิทัล
+2. **ออกแบบ UX/UI** ที่ใช้งานง่ายบนทุกอุปกรณ์ (Mobile-First, PWA)
+3. **วิเคราะห์ข้อมูลภาระงาน** ผ่าน Dashboard สถิติและกราฟเชิงลึก
+4. **ลดภาระการบริหารจัดการ** ด้วย Quick Log Templates และ Combo Templates
+5. **เพิ่มประสิทธิภาพการประสานงาน** ผ่าน Real-time Notification และ Calendar
+
+### ขอบเขตการวิจัย
+
+| ขอบเขต | รายละเอียด |
+|--------|----------|
+| **กลุ่มเป้าหมาย** | พนักงาน ICIT KMUTNB (~15 คน) |
+| **Platform** | Web App (PWA) ทำงานบน iOS, Android, Desktop |
+| **Backend** | Firebase (Serverless) ไม่ต้องจัดการ Server |
+| **ช่วงเวลาพัฒนา** | มีนาคม 2026 – มิถุนายน 2026 |
+| **Version ปัจจุบัน** | v2.7.0 (17 Releases นับจาก v1.0.0) |
+| **ข้อมูลที่บันทึก** | Worklog entries, Room/Equipment status, Exam schedules |
+
+### ผลลัพธ์ที่คาดหวัง
+
+- ระบบบันทึกงานที่ใช้งานได้จริงในองค์กร (Production-ready)
+- Dashboard วิเคราะห์ภาระงานรายบุคคลและรายทีม
+- ลดเวลาบันทึกงานต่อครั้งเหลือ < 30 วินาที (ด้วย Quick Log)
+- รองรับการส่งออกรายงานปีงบประมาณ (Thai Fiscal Year) เป็น CSV
 
 ---
 
@@ -554,6 +601,204 @@ function isSameDay(worklog) {
 2. **Worklogs Collection**: Create ได้ทุกคน, Update/Delete ได้เฉพาะเจ้าของ (หรือ Admin) และต้องไม่ locked
 3. **System Logs**: Read ได้เฉพาะ Superadmin
 4. **Notifications**: Read ได้เฉพาะของตัวเอง + broadcast
+
+---
+
+## คู่มือการใช้งาน (User Guide)
+
+### 🚀 เริ่มต้นใช้งานครั้งแรก
+
+#### ขั้นตอนที่ 1 — เข้าสู่ระบบ
+
+1. เปิด https://labboy-workload-app.web.app
+2. กดปุ่ม **"เข้าสู่ระบบด้วย Google"**
+3. เลือก account `@icit.kmutnb.ac.th` ของคุณ
+4. รอผู้ดูแล (Admin) **อนุมัติ account** ภายใน 1-2 วันทำการ
+5. หลังอนุมัติ Login ใหม่ — ระบบจะนำไปยังหน้าหลักตาม Role
+
+> **หมายเหตุ:** account ที่ยังไม่ได้รับอนุมัติจะเข้าสู่หน้า "รอการอนุมัติ"
+
+#### ขั้นตอนที่ 2 — ตั้งชื่อที่ใช้แสดง
+
+1. ไปที่เมนู **"โปรไฟล์"**
+2. กรอก **ชื่อที่ใช้ลงงาน** (ภาษาไทย เช่น "พงศกร", "สมชาย")
+3. กด **บันทึก** — ชื่อนี้จะแสดงใน Dashboard และรายงาน
+
+#### ขั้นตอนที่ 3 — ติดตั้งเป็น App (PWA)
+
+**iOS (Safari):**
+1. เปิดเว็บใน Safari
+2. กดปุ่ม Share → "Add to Home Screen"
+3. ตั้งชื่อ "labboy Workload" → Add
+
+**Android (Chrome):**
+1. เปิดเว็บใน Chrome
+2. แถบล่างจะมี Banner ถาม "Add to Home screen" → กด Add
+3. หรือกด Menu (⋮) → "Install app"
+
+---
+
+### 👤 คู่มือ Staff (พนักงาน)
+
+#### การบันทึกงาน (บันทึกงานใหม่)
+
+**วิธีที่ 1 — Quick Log (แนะนำ)**
+
+Quick Log คือปุ่มลัดสำหรับงานที่ทำซ้ำบ่อย กดครั้งเดียวบันทึกได้ทันที
+
+1. ไปที่หน้า **"บันทึกงาน"** (`/worklogs/new`)
+2. เห็นปุ่ม Quick Log เรียงเป็นแถว
+3. **กดค้าง 3 วินาที** บนปุ่มงานที่ต้องการ — รอแถบ progress เต็ม
+4. ถ้า template ต้องการ "ผู้รับบริการ" หรือ "comment" จะมี modal ให้กรอกก่อน
+5. ระบบบันทึกงานและแสดง Toast สีเขียว "บันทึกสำเร็จ"
+
+**วิธีที่ 2 — Combo Template**
+
+สำหรับงานที่ต้องบันทึกพร้อมกันหลายรายการ (เช่น ผูก Account ครบชุด)
+
+1. เลื่อนไปที่ปุ่ม Combo (มี badge สีม่วง + จำนวนงาน)
+2. กดค้าง 3 วินาที
+3. modal แสดงรายการงานทั้งหมด → กรอก "ผู้รับบริการ" ครั้งเดียว
+4. กด **"บันทึกทั้งหมด"** — บันทึกพร้อมกันทุกรายการ
+
+**วิธีที่ 3 — กรอกเอง (Manual)**
+
+1. กดปุ่ม **"กรอกเอง"** (มุมขวาบน Mobile / ด้านล่างปุ่ม Quick Log)
+2. เลือก **กลุ่มงาน** → **หน้าที่หลัก** → **งานย่อย (หัวข้อรอง)**
+3. กรอก **วันที่** และ **เวลา**
+4. กรอก **ผู้รับบริการ** (ถ้ามี) และ **หมายเหตุ**
+5. กด **"บันทึกงาน"**
+
+#### การดูและแก้ไขงาน
+
+1. ไปที่หน้า **"รายการงาน"** (`/worklogs`)
+2. สลับมุมมองระหว่าง **รายการ (List)** และ **ปฏิทิน (Calendar)**
+3. กดรายการงานที่ต้องการ → กดไอคอน **แก้ไข** (ดินสอ)
+4. **ข้อจำกัด:** Staff แก้ไขได้เฉพาะวันเดียวกัน (lock หลัง 23:59)
+
+#### การลบงาน
+
+1. กดไอคอน **ลบ** (ถังขยะ) บนรายการงาน
+2. มี **Undo 30 วินาที** — กด "ยกเลิก" เพื่อกู้คืน
+3. หลัง 30 วินาที ลบถาวร
+
+#### การ Export ข้อมูล
+
+1. ไปที่หน้า **"ส่งออกข้อมูล"** (`/export`)
+2. เลือก **ช่วงวันที่** (หรือเลือกปีงบประมาณ)
+3. กด **"Export CSV"**
+4. ไฟล์ CSV จะดาวน์โหลดอัตโนมัติ (รองรับ Thai encoding + Excel)
+
+#### การดู Dashboard ส่วนตัว
+
+ไปที่หน้า **"แดชบอร์ด"** (`/dashboard`) จะเห็น:
+
+| Widget | คำอธิบาย |
+|--------|----------|
+| **สถิติงานวันนี้/สัปดาห์/เดือน** | จำนวนงานและชั่วโมงรวม |
+| **อันดับในกลุ่ม** | เปรียบเทียบกับเพื่อนร่วมทีม |
+| **Workload Heatmap** | กราฟความถี่งาน วัน × ชั่วโมง |
+| **Hour-of-Day Chart** | กราฟแท่งแสดงช่วงเวลาที่ทำงานบ่อย |
+| **ตารางห้องวันนี้** | สถานะห้องเรียนชั้น 4 และ DL Exam |
+| **Radar Chart ทักษะ** | แสดง Top 8 หัวข้อรองที่ทำบ่อยที่สุด |
+
+#### การดูตารางห้องและคุมสอบ
+
+ไปที่หน้า **"บันทึกงาน"** → แท็บ **"ตารางห้อง"** หรือดูบน Dashboard:
+
+- **iCloudCalendarStrip** — ปฏิทินรายวัน iOS-style, Time Grid 07:00–22:00
+- ลาก drag เพื่อเลื่อนดูช่วงเวลา
+- กดปุ่มลูกศร ‹ / › เพื่อเปลี่ยนวัน
+- กดปุ่ม **"วันนี้"** เพื่อกลับมายังวันปัจจุบัน
+- แถบสีแดง = เวลาปัจจุบัน (Now line)
+- Card สีน้ำเงิน = ตารางเรียนปกติ, Card สีม่วง = คุมสอบ DL
+
+---
+
+### 👑 คู่มือ Admin/Superadmin
+
+#### การบันทึกงานให้พนักงาน
+
+1. ไปที่หน้า **"บันทึกงานให้พนักงาน"** (`/admin/record`)
+2. **เลือกพนักงาน** จาก dropdown ด้านบน
+3. ใช้ Quick Log หรือกรอกเองเช่นเดียวกับ Staff
+4. งานจะถูกบันทึกในนามพนักงานที่เลือก
+
+#### การจัดการตารางเรียน (Classroom Schedule)
+
+1. ไปที่ **"จัดการระบบ"** → แท็บ **"ตารางเรียน"**
+2. **เพิ่มตารางใหม่:** กรอกห้อง, วิชา, อาจารย์, วัน, เวลาเริ่ม/สิ้นสุด → กด "เพิ่ม"
+3. **เปิด/ปิดรายการ:** ติ๊ก checkbox หลายรายการ → กด "เปิดใช้งาน" หรือ "ปิดใช้งาน"
+4. **ลบรายการ:** กดปุ่ม "ลบ" → ยืนยัน (ลบถาวรออกจาก Firestore)
+5. **ภาพรวมวันนี้:** แถบสีด้านบนแสดงสถานะห้อง 401/402/406/407
+
+#### การจัดการตารางคุมสอบ DL
+
+1. ไปที่ **"จัดการระบบ"** → แท็บ **"คุมสอบ DL"**
+2. **เพิ่มการสอบ:** เลือกวันที่, วิชา, ประเภท (นศ./บุคลากร), ห้อง, ช่วงเวลา, ผู้คุมสอบ
+3. ผู้คุมสอบค้นหาจาก `displayName` ของ users ในระบบ
+4. **ภาพรวม:** แสดงแผนผัง 406/407/CEM พร้อมชื่อผู้คุมสอบแต่ละคน
+
+#### การจัดการ Users
+
+1. ไปที่หน้า **"จัดการผู้ใช้"** (`/admin/users`)
+2. **อนุมัติ users ใหม่:** แท็บ "รออนุมัติ" → กด "อนุมัติ" หรือ "ปฏิเสธ"
+3. **เปิด/ปิดใช้งาน:** สลับ toggle บน user card
+4. **Superadmin เท่านั้น:** เลื่อนตำแหน่ง staff → admin → superadmin
+
+#### การจัดการ Templates
+
+1. ไปที่ **"จัดการระบบ"** → แท็บ **"Templates"**
+2. **เพิ่ม Template ใหม่:** กรอกชื่อปุ่ม, กลุ่มงาน, หน้าที่หลัก, งานย่อย → กด "เพิ่ม"
+3. **Template Options:**
+   - `requireRecipient` — ต้องกรอกผู้รับบริการก่อนบันทึก
+   - `requireComment` — ต้องกรอก comment ก่อนบันทึก
+   - `isSmart` — แสดง Smart Room/Equipment picker
+4. **Combo Template:** เปิด toggle "Combo" → เพิ่มงานย่อยหลายรายการ
+
+#### การตั้งค่า Push Notification
+
+1. ไปที่ **"จัดการระบบ"** → แท็บ **"ตั้งค่า"**
+2. เปิด/ปิด **"ส่ง Daily Reminder"**
+3. เลือก **เวลาส่ง** (เช่น 20:00)
+4. เลือก **วันที่ส่ง** (จ–อา)
+5. กด **"บันทึกการตั้งค่า"**
+
+**Broadcast Push (Superadmin เท่านั้น):**
+1. กรอก Title และ Body ของข้อความ
+2. กด **"ส่งถึงทุกคน"**
+3. ระบบแสดงผลจำนวนส่งสำเร็จ/ล้มเหลว
+
+#### การดู Dashboard ทีม
+
+ไปที่หน้า **"แดชบอร์ด"** จะเห็นข้อมูลเพิ่มเติมสำหรับ Admin:
+
+| Widget | คำอธิบาย |
+|--------|----------|
+| **สถิติรวมทีม** | จำนวนงานและชั่วโมงรวมทั้งทีม |
+| **Top 3 พนักงาน** | พนักงานที่มีงานมากที่สุดในช่วงที่เลือก |
+| **Leaderboard** | อันดับพนักงานทุกคน |
+| **Seasonal Chart** | แนวโน้มงานรายสัปดาห์ |
+| **Export ทีม** | ดาวน์โหลด CSV ข้อมูลทุกคน |
+| **พิมพ์รายงาน** | Print รายงานประจำเดือนพร้อม header |
+
+---
+
+### 📱 การใช้งานบน Mobile
+
+#### iOS PWA
+- Login ผ่าน Safari ครั้งแรก → Add to Home Screen
+- หน้าจอจะเต็มจอ ไม่มี browser bar
+- กด Back gesture (swipe จากซ้าย) เพื่อย้อนกลับ
+
+#### Android PWA
+- Login ผ่าน Chrome → Install App
+- กด Back button ของ Android เพื่อย้อนกลับ
+
+#### Mobile Navigation
+- แถบ navigation ด้านบน: **‹ ชื่อหน้า ›**
+- กด **‹** หรือ **›** เพื่อไปหน้าก่อน/หน้า
+- กดชื่อหน้ากลาง เพื่อเปิด **Drawer Menu** (เมนูทั้งหมด)
 
 ---
 
@@ -1223,6 +1468,146 @@ provider.setCustomParameters({
 - Email: pongsakon.be1@gmail.com
 - ไม่ต้องเปิด public issue ก่อนแจ้ง
 - ให้รายละเอียด steps to reproduce
+
+---
+
+## การทดสอบระบบ (Testing)
+
+### กลยุทธ์การทดสอบ
+
+ระบบใช้การทดสอบ 3 ระดับ:
+
+```
+Unit Tests (Vitest)          — ทดสอบ Pure Functions & Validation Logic
+         │
+E2E Tests (Playwright)       — ทดสอบ User Flow บน Real Browser
+         │
+Security Tests (Snyk + Manual) — ทดสอบ Auth, Firestore Rules, OWASP Top 10
+```
+
+### E2E Tests (Playwright)
+
+ระบบใช้ **Playwright** สำหรับ End-to-End Testing ครอบคลุม:
+
+| Test Suite | จำนวน Tests | สถานะ |
+|-----------|-------------|-------|
+| Authentication — unauthenticated redirect | 4 | ✅ Pass |
+| Authentication — staff permissions | 6 | ✅ Pass |
+| Authentication — admin permissions | 5 | ✅ Pass |
+| Security — Firestore rules boundary | 8 | ✅ Pass |
+| Push Notification — health check | 3 | ✅ Pass |
+| E2E Flow — login → record → export | 4 | ✅ Pass |
+| **รวม** | **~42 tests** | **40/42 ✅** |
+
+> 2 tests ที่ skip: ขึ้นกับ `RENDER_URL` (Push Notification backend ที่ต้องการ env variable)
+
+**รันทดสอบ:**
+
+```bash
+cd frontend
+
+# รันทุก tests
+npx playwright test
+
+# รันเฉพาะ security suite
+npx playwright test --grep "security"
+
+# รันพร้อม UI (Headed mode)
+npx playwright test --headed
+
+# ดู test report
+npx playwright show-report
+```
+
+**ตัวอย่าง Test Cases สำคัญ:**
+
+```javascript
+// ทดสอบ: unauthenticated user ต้อง redirect ไป /login
+test('should redirect unauthenticated users from /dashboard to /login', async ({ page }) => {
+  await page.goto('/dashboard');
+  await expect(page).toHaveURL(/login/);
+});
+
+// ทดสอบ: Staff ไม่สามารถเข้า /admin/*
+test('should block staff from admin pages', async ({ page }) => {
+  // ... login as staff
+  await page.goto('/admin/users');
+  await expect(page).toHaveURL(/login|dashboard/);
+});
+```
+
+### Unit Tests (Vitest)
+
+ทดสอบ Pure Functions ที่ critical:
+
+```bash
+cd frontend
+npx vitest run
+```
+
+**Functions ที่ทดสอบ:**
+
+| Module | Function | ครอบคลุม |
+|--------|---------|---------|
+| `lib/validation.js` | `validateWorklog()` | Required fields, date format, time format |
+| `lib/csvExport.js` | `generateCSV()` | Header, encoding BOM, Thai fiscal year |
+| `lib/thaiHolidays.js` | `isHoliday()` | Hardcoded + API holidays |
+| `lib/commentSuggestions.js` | `getSuggestions()` | minorTask → suggestion mapping |
+
+### Security Testing (Snyk)
+
+```bash
+cd frontend
+
+# Scan Open Source dependencies
+snyk test
+
+# Scan Source Code (SAST)
+snyk code test
+
+# Container scan (ถ้ามี)
+snyk container test
+```
+
+**ผลการสแกน (v2.7.0):**
+
+| Category | Critical | High | Medium | Low |
+|----------|---------|------|--------|-----|
+| Open Source | 0 | 0 | 0 | 0 |
+| Source Code (SAST) | 0 | 0 | 0 | 2* |
+
+> *2 Low items เป็น false positive ที่ไม่กระทบ production code
+
+### Manual Testing Checklist
+
+ทุก Release ต้องทดสอบ:
+
+**Functional:**
+- [ ] Login ด้วย Google Account @icit.kmutnb.ac.th ได้
+- [ ] Quick Log บันทึกสำเร็จและแสดง toast
+- [ ] Combo Template บันทึกหลายงานพร้อมกัน
+- [ ] Dashboard แสดงสถิติถูกต้อง
+- [ ] Export CSV ดาวน์โหลดได้และเปิดใน Excel ได้
+- [ ] Admin สามารถดู worklog ของทุกคน
+- [ ] Staff ไม่สามารถแก้ไขงานข้ามวัน
+
+**Responsive / Cross-Browser:**
+- [ ] Chrome (Desktop)
+- [ ] Safari (iOS)
+- [ ] Chrome (Android)
+- [ ] Mobile (375px viewport)
+- [ ] Tablet (768px viewport)
+
+**PWA:**
+- [ ] Install บน iOS ได้ (Add to Home Screen)
+- [ ] Install บน Android ได้
+- [ ] Offline page แสดงเมื่อไม่มี internet
+
+**Performance (Lighthouse):**
+- [ ] Performance Score > 85
+- [ ] Accessibility Score > 90
+- [ ] Best Practices > 90
+- [ ] SEO > 80
 
 ---
 
