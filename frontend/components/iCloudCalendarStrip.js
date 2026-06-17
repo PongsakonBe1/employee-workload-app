@@ -49,8 +49,10 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const [loading, setLoading] = useState(true);
   const timelineRef = useRef(null);
   const isDragging = useRef(false);
+  const dragStartX = useRef(0);
   const dragStartY = useRef(0);
   const dragStartScrollTop = useRef(0);
+  const dragStartScrollLeft = useRef(0);
 
   // Clock tick every 30s
   useEffect(() => {
@@ -179,35 +181,39 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
       {/* ── Timeline ── */}
       <div
         ref={timelineRef}
-        className="relative overflow-y-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
+        className="relative overflow-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
         style={{ height: `${HOUR_HEIGHT * 7}px` }}
         onMouseDown={(e) => {
           isDragging.current = true;
+          dragStartX.current = e.clientX;
           dragStartY.current = e.clientY;
           dragStartScrollTop.current = timelineRef.current.scrollTop;
+          dragStartScrollLeft.current = timelineRef.current.scrollLeft;
           e.preventDefault();
         }}
         onMouseMove={(e) => {
           if (!isDragging.current) return;
-          const delta = e.clientY - dragStartY.current;
-          timelineRef.current.scrollTop = dragStartScrollTop.current - delta;
+          timelineRef.current.scrollTop  = dragStartScrollTop.current  - (e.clientY - dragStartY.current);
+          timelineRef.current.scrollLeft = dragStartScrollLeft.current - (e.clientX - dragStartX.current);
         }}
         onMouseUp={() => { isDragging.current = false; }}
         onMouseLeave={() => { isDragging.current = false; }}
         onTouchStart={(e) => {
           isDragging.current = true;
+          dragStartX.current = e.touches[0].clientX;
           dragStartY.current = e.touches[0].clientY;
-          dragStartScrollTop.current = timelineRef.current.scrollTop;
+          dragStartScrollTop.current  = timelineRef.current.scrollTop;
+          dragStartScrollLeft.current = timelineRef.current.scrollLeft;
         }}
         onTouchMove={(e) => {
           if (!isDragging.current) return;
-          const delta = e.touches[0].clientY - dragStartY.current;
-          timelineRef.current.scrollTop = dragStartScrollTop.current - delta;
+          timelineRef.current.scrollTop  = dragStartScrollTop.current  - (e.touches[0].clientY - dragStartY.current);
+          timelineRef.current.scrollLeft = dragStartScrollLeft.current - (e.touches[0].clientX - dragStartX.current);
           e.preventDefault();
         }}
         onTouchEnd={() => { isDragging.current = false; }}
       >
-        <div className="relative" style={{ height: `${HOUR_HEIGHT * (HOUR_END - HOUR_START)}px` }}>
+        <div className="relative" style={{ height: `${HOUR_HEIGHT * (HOUR_END - HOUR_START)}px`, minWidth: '560px' }}>
 
           {/* Hour grid lines */}
           {hours.map((h) => (
@@ -260,13 +266,13 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
             const totalLanes = Math.max(...evWithLane
               .filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin)
               .map((e) => e.lane)) + 1;
-            const laneWidth = `${100 / totalLanes}%`;
-            const laneLeft  = `${(ev.lane / totalLanes) * 100}%`;
+            const LANE_WIDTH = 200; // px per lane — fixed width for readability
+            const laneLeft   = ev.lane * LANE_WIDTH;
 
             return (
               <div key={ev.id}
                 className={`absolute rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
-                style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft})`, width: `calc(${laneWidth} - 0.75rem)` }}>
+                style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
                 {/* Left accent bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
                 <div className="pl-3 pr-2 py-1.5 h-full flex flex-col justify-center bg-white/95">
