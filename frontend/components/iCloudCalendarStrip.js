@@ -11,7 +11,7 @@ const DAY_LABELS_TH = ["อาทิตย์","จันทร์","อัง�
 
 const HOUR_START = 7;
 const HOUR_END = 19;
-const HOUR_HEIGHT = 52; // px per hour
+const HOUR_HEIGHT = 68; // px per hour
 
 function getNowTH() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
@@ -275,8 +275,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                 style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
                 {/* Left accent bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
-                <div className="pl-3 pr-2 pt-1.5 pb-1 h-full flex flex-col justify-start gap-0.5 bg-white/95 overflow-hidden">
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="pl-3 pr-2 py-2 h-full flex flex-col justify-center gap-1 bg-white/95 overflow-hidden">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${c.pill}`}>
                       ห้อง {ev.room}
                     </span>
@@ -289,16 +289,16 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-[13px] font-semibold text-slate-800 leading-tight line-clamp-2">{ev.subject}</p>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                  <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">{ev.subject}</p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className="flex items-center gap-1 text-[11px] text-slate-500 whitespace-nowrap">
                       <Clock size={9} className="shrink-0" />
                       {ev.startTime}–{ev.endTime}
                     </span>
                     {ev.teacher && (
-                      <span className="flex items-center gap-1 text-[11px] text-slate-500 truncate">
+                      <span className="flex items-center gap-1 text-[11px] text-slate-500 min-w-0">
                         <User size={9} className="shrink-0" />
-                        {ev.teacher}
+                        <span className="truncate">{ev.teacher}</span>
                       </span>
                     )}
                   </div>
