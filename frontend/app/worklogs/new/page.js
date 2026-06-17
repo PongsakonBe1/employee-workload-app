@@ -285,9 +285,6 @@ export default function NewWorkLogPage() {
           {/* iCloud Calendar Strip — Day View (iOS Light) */}
           <ICloudCalendarStrip />
 
-          {/* Today Room Summary */}
-          <TodayRoomSchedule />
-
           {/* Lock Notice */}
           <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
             <Clock size={15} className="text-amber-400 shrink-0" />

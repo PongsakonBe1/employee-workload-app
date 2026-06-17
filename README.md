@@ -4,7 +4,7 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.5.0  
+📦 **Current Version:** v2.6.0  
 📅 **Last Updated:** 2026-06-17  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
@@ -80,6 +80,7 @@
 | Dashboard ส่วนตัว | งานของฉัน + อันดับในกลุ่ม + leaderboard ทีม | v1.7.0 |
 | Calendar View | สลับ List/ปฏิทิน, คลิกวันดู worklog | v1.7.0 |
 | Room Usage Calendar | iOS-style compact calendar ตารางห้องวันนี้บน Dashboard (ตารางเรียน + คุมสอบ DL) | v2.4.0 |
+| iCloud Calendar Strip | ปฏิทินรายวัน iOS-style พร้อม Time Grid แสดงตารางเรียน + คุมสอบ DL พร้อมชื่อผู้คุมสอบ, นำทางข้ามวัน, now-line สีแดง, รองรับ overlap events แบบ side-by-side | v2.6.0 |
 | Thai Holidays | แสดงวันหยุดนักขัตฤกษ์ไทยในปฏิทิน | v1.7.3 |
 | Export CSV | Export ข้อมูลของตัวเอง | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ CSS @media print ซ่อน sidebar/nav/filter (เฉพาะ Admin/Superadmin) | v2.0.0 |
@@ -93,6 +94,8 @@
 | Template Options | `requireRecipient`, `requireComment`, `isSmart` | v1.9.4 |
 | Dashboard ทีม | สถิติรวม, เฉลี่ยต่อคน, Top 3, รายชื่อทุกคน | v1.7.0 |
 | RoomUsageCalendar (Week View) | ตาราง Time Grid แบบ iOS 1วัน/3วัน/สัปดาห์ + View Toggle บนหน้า admin/record | v2.4.0 |
+| จัดการตารางเรียนชั้น 4 | แสดงทุกสถานะ (active/inactive), สร้าง/แก้ไข/ลบตารางเรียน, checkbox selection + bulk toggle เปิด/ปิดที่เลือก, ภาพรวมห้องวันนี้แยกสี | v2.6.0 |
+| จัดการตารางคุมสอบ DL | สร้าง/แก้ไข/ลบตารางคุมสอบ, ภาพรวม 406/407/CEM + ผู้คุมสอบ displayName | v2.6.0 |
 | Workload Heatmap | กราฟ DOW × Hour แสดงความถี่งาน | v1.7.1 |
 | Hour-of-Day Chart | กราฟแท่งแสดงงานตามช่วงเวลา | v1.7.0 |
 | Custom Date Filter | Filter ตามช่วงวันที่ พร้อม quota alert (>90 วัน) | v1.6.0 |
@@ -1223,10 +1226,47 @@ provider.setCustomParameters({
 
 ---
 
+## ข้อจำกัดระบบ (Limitations)
+
+### ✅ สิ่งที่ระบบทำได้
+
+| ฟีเจอร์ | รายละเอียด |
+|---------|-----------|
+| บันทึก/แก้ไข/ลบ worklog | ได้เฉพาะวันเดียวกัน (staff), ไม่จำกัดวัน (admin/superadmin) |
+| Quick Log + Combo Template | บันทึกงานซ้ำๆ ด้วยปุ่มเดียว หรือหลายงานพร้อมกัน |
+| ดูตารางห้องเรียน + คุมสอบ DL | iOS-style calendar รายวัน พร้อมชื่อผู้คุมสอบ |
+| จัดการตารางเรียนชั้น 4 | สร้าง/แก้ไข/ลบ, bulk toggle เปิด/ปิดรายการที่เลือก |
+| จัดการตารางคุมสอบ DL | สร้าง/แก้ไข/ลบ, ภาพรวม 406/407/CEM + ผู้คุมสอบ |
+| Export CSV | staff ส่งออกข้อมูลตัวเอง, admin/superadmin ส่งออกทุกคน |
+| Push Notification | แจ้งเตือนเมื่อลืมบันทึกงาน (Render + Cron-job.org) |
+| Dashboard & Analytics | Heatmap, Hour-of-Day chart, leaderboard, filter ช่วงวันที่ |
+| สถานะห้องและอุปกรณ์ Real-time | ห้อง 303-407, หูฟัง ICIT01-20, ปลั๊ก ICIT21-25 |
+| PWA | ติดตั้งเป็น App บน iOS/Android/Desktop, offline บางส่วน |
+
+### ❌ สิ่งที่ระบบทำไม่ได้ (ข้อจำกัด)
+
+| ข้อจำกัด | รายละเอียด |
+|----------|-----------|
+| **แก้ไข worklog ข้ามวัน (Staff)** | Staff แก้ไขได้เฉพาะวันที่บันทึก ถ้าเลย 23:59 จะถูก lock — ต้องให้ Admin/Superadmin แก้แทน |
+| **ลบ worklog (Staff)** | Staff ลบได้เฉพาะวันเดียวกัน และมี Undo 30 วินาทีเท่านั้น |
+| **ดูข้อมูล worklog ของคนอื่น (Staff)** | Staff เห็นเฉพาะงานตัวเอง ไม่เห็น worklog ของเพื่อนร่วมงาน |
+| **Export ข้อมูลทุกคน (Staff)** | Export ได้เฉพาะข้อมูลของตัวเอง — Admin/Superadmin เท่านั้นที่ export ทั้งหมดได้ |
+| **สร้าง/แก้ไข Templates** | เฉพาะ Admin/Superadmin เท่านั้น — Staff ใช้ได้แต่ไม่สามารถสร้างหรือแก้ไขได้ |
+| **แต่งตั้ง Superadmin** | เฉพาะ Superadmin เท่านั้น — Admin ไม่สามารถแต่งตั้งคนอื่นเป็น Superadmin |
+| **Broadcast Notification** | เฉพาะ Superadmin — Admin ส่ง push notification แบบ broadcast ไม่ได้ |
+| **ดู System Logs** | เฉพาะ Superadmin — Admin และ Staff ไม่มีสิทธิ์เข้าถึง audit logs |
+| **ปฏิทินรายวันแบบข้ามเดือน** | iCloudCalendarStrip โหลด DL exam เฉพาะสัปดาห์ปัจจุบัน — ข้ามไปสัปดาห์อื่นจะไม่เห็น DL exam |
+| **Offline ครบถ้วน** | ใช้งานได้บางส่วนขณะ offline — บันทึกงานใหม่และดู real-time data ต้องการ internet |
+| **Login ด้วย email อื่น** | รองรับเฉพาะ @icit.kmutnb.ac.th เท่านั้น — email domain อื่นเข้าระบบไม่ได้ |
+| **Import worklog จำนวนมาก (Admin)** | Admin ไม่สามารถ bulk import ได้ — เฉพาะ Superadmin เท่านั้น |
+
+---
+
 ## ประวัติการเปลี่ยนแปลง (Changelog)
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.6.0** | 2026-06-17 | **FEAT: iCloudCalendarStrip**: ปฏิทินรายวัน iOS-style — Time Grid 07:00–19:00, now-line สีแดง, วันนี้ตัวเลข+ชื่อวันสีแดง, ปุ่ม วันนี้ สีแดง, นำทางข้ามวัน, overlap events แบบ side-by-side lanes, ซ่อน scrollbar, ชื่อผู้คุมสอบ DL ใช้ displayName; **FEAT: ScheduleManager**: checkbox selection + bulk toggle เปิด/ปิดรายการที่เลือก, ภาพรวมห้อง 401/402/406/407 วันนี้แบบสี; **FEAT: DLExamManager**: ภาพรวม 406/407/CEM + ผู้คุมสอบ (displayName), ลบ RoomUsageCalendar weekly view ออกจาก system tabs; **FIX: ScheduleManager isActive**: แก้ isActive ตอนสร้างตารางใหม่อ่านค่าจาก checkbox จริง; **FIX: ScheduleManager delete**: แสดงตารางทุกสถานะ (ไม่กรองเฉพาะ active); **UX: Mobile worklogs/new**: ปุ่มกรอกเอง + calendar toggle + ซ่อน TodayRoomSchedule ซ้ำซ้อน |
 | **v2.5.0** | 2026-06-17 | **FEAT: TodayRoomSchedule (iOS Compact)**: Dashboard แสดง widget ตารางห้องเรียนชั้น 4 วันนี้แบบ iOS Calendar style — ห้องที่ต้องเปิด (pill badges), กิจกรรม active/upcoming/past (color-coded cards), นาฬิกา real-time tick ทุก 1 นาที, รองรับทั้งตารางเรียน (recurring by day-of-week) และตาราง DL Exam (date-specific); **FEAT: User Manual (/help)**: หน้าคู่มือการใช้งานแบบ Accordion 8 หัวข้อ (ภาพรวม/Dashboard/บันทึกงาน/ห้องเรียน/ประวัติ/Export/Admin/FAQ); **UX: Footer**: เพิ่ม link "คู่มือการใช้งาน" ใน Footer และ Nav Drawer (Mobile); **UX: AppShell Footer**: อัปเดต version เป็น v2.5.0 |
 | **v2.4.0** | 2026-06-17 | **FEAT: RoomUsageCalendar Desktop View Toggle**: ปุ่ม 1วัน/3วัน/สัปดาห์ บนหน้า admin/record — ลบ Calendar ซ้ำออก เหลืออันเดียวพร้อม `allowViewToggle`; **UX: admin/record Layout**: สลับ Desktop layout — Calendar ซ้าย (60%), Form ขวา (40%); **FIX: Dashboard**: ลบ RoomUsageCalendar compact view ออกจาก Dashboard (แทนด้วย TodayRoomSchedule v2.5.0) |
 | **v2.3.0** | 2026-06-06 | **FEAT: Equipment Borrow/Return Export**: Admin/Superadmin ส่งออกประวัติการยืม/คืนอุปกรณ์เป็น CSV พร้อม date range picker (เลือกช่วงวันที่) — query Firestore `worklogs` จับคู่ log ยืม+คืน อัตโนมัติ, CSV columns: วันที่ยืม/เวลายืม/Barcode/รหัสอุปกรณ์/ผู้ยืม/สถานะ/ผู้รับคืน/เวลาคืน/สภาพ/หมายเหตุ, BOM สำหรับ Thai encoding; **FIX: Equipment Lost Color**: เปลี่ยนสี `lost` จากแดงเข้ม → สเลท/เทา (`slate-400/500`) ให้สื่อ "disabled/unavailable" (Apple iOS semantic); **FIX: Nested Button Hydration Error**: แก้ `<button>` ซ้อน `<button>` ใน `RoomEquipmentStatus` — เปลี่ยน inner เป็น `<div role="button">`; **FIX: คู่มืออ่านกราฟ z-index**: แก้ popup ถูก container อื่นกลบด้วย `createPortal` + `fixed z-[9999]`; **UX: Export Buttons**: ปรับ export buttons ให้ minimal Apple/iOS style — `bg-white border-slate-200/60 shadow-sm`, font 10px, icon strokeWidth 1.5; **UX: Seasonal Chart Label**: เปลี่ยน "พยากรณ์ช่วงพีค" → "ช่วงที่อาจมีงานมาก" พร้อม note "จากตารางการศึกษา (ข้อมูล 1 ปี ไม่เพียงพอสำหรับ statistical prediction)" |
