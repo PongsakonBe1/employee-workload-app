@@ -16,6 +16,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
 import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import ICloudCalendarStrip from "../../../components/iCloudCalendarStrip";
+import TodayRoomSchedule from "../../../components/TodayRoomSchedule";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
@@ -276,13 +277,16 @@ export default function NewWorkLogPage() {
         </button>
       </div>
 
-      <section className={`grid gap-5 lg:grid-cols-[1.2fr_1fr] pb-24 lg:pb-0 ${showCalendarMobile ? 'hidden lg:grid' : 'grid'}`}>
+      <section className={`grid gap-5 lg:grid-cols-[1.2fr_1fr] pb-24 lg:pb-0`}>
 
         {/* ── Left: Calendar (ซ้าย - ใหญ่กว่า) ── */}
-        <div className={`flex flex-col gap-4 order-first ${showCalendarMobile ? '' : 'hidden lg:flex'}`}>
+        <div className={`flex-col gap-4 order-first ${showCalendarMobile ? 'flex' : 'hidden lg:flex'}`}>
           
           {/* iCloud Calendar Strip — Day View (iOS Light) */}
           <ICloudCalendarStrip />
+
+          {/* Today Room Summary */}
+          <TodayRoomSchedule />
 
           {/* Lock Notice */}
           <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
@@ -295,13 +299,21 @@ export default function NewWorkLogPage() {
         </div>
 
         {/* ── Right: Form (ขวา - เล็กกว่า) ── */}
-        <div className={`flex-col gap-4 order-last ${showCalendarMobile ? 'hidden' : 'flex lg:flex'}`}>
+        <div className={`flex-col gap-4 order-last ${showCalendarMobile ? 'hidden' : 'flex'} lg:flex`}>
 
           {/* Quick Log - Original Template Buttons */}
           <div className="apple-panel p-4">
             <div className="flex items-center gap-2 mb-3">
               <Zap size={15} className="text-amber-500" />
               <span className="text-sm font-semibold text-slate-700">บันทึกด่วน</span>
+              <button
+                type="button"
+                onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition"
+              >
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                กรอกเอง
+              </button>
             </div>
             <QuickLogButtons onLogSuccess={(msg) => {
               setMessage(msg || 'บันทึกสำเร็จ');

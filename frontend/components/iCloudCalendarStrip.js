@@ -160,7 +160,7 @@ export default function ICloudCalendarStrip() {
             </p>
           </div>
           {isToday && (
-            <span className="mb-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+            <span className="mb-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
               วันนี้
             </span>
           )}
@@ -203,14 +203,24 @@ export default function ICloudCalendarStrip() {
           {isToday && nowOffset >= 0 && nowOffset <= HOUR_HEIGHT * (HOUR_END - HOUR_START) && (
             <div className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
               style={{ top: `${nowOffset}px` }}>
-              <span className="w-14 pl-3 text-xs font-bold text-blue-500 shrink-0 -mt-2.5">{nowTimeStr}</span>
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0 -ml-1" />
-              <div className="flex-1 border-t-2 border-blue-500" />
+              <span className="w-14 pl-3 text-xs font-bold text-red-500 shrink-0 -mt-2.5">{nowTimeStr}</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 -ml-1" />
+              <div className="flex-1 border-t-2 border-red-500" />
             </div>
           )}
 
-          {/* Event blocks */}
-          {events.map((ev) => {
+          {/* Event blocks — with collision lane layout */}
+          {(() => {
+            // Assign lanes to overlapping events
+            const laneMap = [];
+            const evWithLane = events.map((ev) => {
+              let lane = 0;
+              while (laneMap.some((e) => e.lane === lane && e.endMin > ev.startMin && e.startMin < ev.endMin)) lane++;
+              laneMap.push({ ...ev, lane });
+              return { ...ev, lane };
+            });
+            // Count max lanes per event (how many overlap)
+            return evWithLane.map((ev) => {
             const topMin = Math.max(ev.startMin, HOUR_START * 60);
             const botMin = Math.min(ev.endMin,   HOUR_END   * 60);
             if (botMin <= topMin) return null;
@@ -219,11 +229,17 @@ export default function ICloudCalendarStrip() {
             const c      = ROOM_ACCENT[ev.room] || ROOM_ACCENT.default;
             const ts     = TYPE_STYLE[ev.type]  || TYPE_STYLE.classroom;
             const isAct  = isToday && nowMin >= ev.startMin && nowMin < ev.endMin;
+            // Find total lanes for this time slot
+            const totalLanes = Math.max(...evWithLane
+              .filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin)
+              .map((e) => e.lane)) + 1;
+            const laneWidth = `${100 / totalLanes}%`;
+            const laneLeft  = `${(ev.lane / totalLanes) * 100}%`;
 
             return (
               <div key={ev.id}
-                className={`absolute left-14 right-3 rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
-                style={{ top: `${top + 2}px`, height: `${height}px` }}>
+                className={`absolute rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
+                style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft})`, width: `calc(${laneWidth} - 0.75rem)` }}>
                 {/* Left accent bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
                 <div className="pl-3 pr-2 py-1.5 h-full flex flex-col justify-center bg-white/95">
@@ -258,7 +274,8 @@ export default function ICloudCalendarStrip() {
                 </div>
               </div>
             );
-          })}
+          });
+          })()}
 
           {/* Empty state */}
           {!loading && events.length === 0 && (

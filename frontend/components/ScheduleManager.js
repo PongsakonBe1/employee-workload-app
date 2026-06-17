@@ -5,6 +5,14 @@ import { useAuth } from "./AuthProvider";
 import { useClassroomSchedules } from "../hooks/useClassroomSchedules";
 import { logSystemAction, SystemActions } from "../lib/systemLog";
 
+const ROOM_COLORS = {
+  "401": { bg: "bg-blue-500",    light: "bg-blue-50",    border: "border-blue-200",   text: "text-blue-700",    pill: "bg-blue-100 text-blue-700 border-blue-200" },
+  "402": { bg: "bg-violet-500",  light: "bg-violet-50",  border: "border-violet-200", text: "text-violet-700",  pill: "bg-violet-100 text-violet-700 border-violet-200" },
+  "406": { bg: "bg-emerald-500", light: "bg-emerald-50", border: "border-emerald-200",text: "text-emerald-700", pill: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  "407": { bg: "bg-sky-500",     light: "bg-sky-50",     border: "border-sky-200",    text: "text-sky-700",     pill: "bg-sky-100 text-sky-700 border-sky-200" },
+  default:{ bg: "bg-slate-500",  light: "bg-slate-50",   border: "border-slate-200",  text: "text-slate-700",  pill: "bg-slate-100 text-slate-600 border-slate-200" },
+};
+
 export default function ScheduleManager() {
   const { user } = useAuth();
   const {
@@ -98,6 +106,18 @@ export default function ScheduleManager() {
     }
   };
 
+  // Bulk toggle all schedules
+  const handleBulkToggle = async (targetActive) => {
+    const label = targetActive ? "เปิด" : "ปิด";
+    if (!confirm(`ต้องการ${label}ใช้งานตารางเรียนทั้งหมด (${schedules.length} รายการ) ใช่หรือไม่?`)) return;
+    try {
+      await Promise.all(schedules.map((s) => updateSchedule(s.id, { ...s, isActive: targetActive })));
+      await logSystemAction(SystemActions.UPDATE_WORKLOG, `Bulk ${label} all classroom schedules`, user?.uid);
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด: " + err.message);
+    }
+  };
+
   const handleDelete = async (schedule) => {
     if (!confirm(`ต้องการลบตารางเรียน "${schedule.subject}" ใช่หรือไม่?`)) {
       return;
@@ -114,11 +134,12 @@ export default function ScheduleManager() {
     }
   };
 
-  // Group schedules by day
+  // Group active schedules by day (for overview)
+  const activeSchedules = schedules.filter((s) => s.isActive !== false);
   const schedulesByDay = DAYS.map((day) => ({
     day,
     label: dayLabels[day],
-    schedules: schedules.filter((s) => s.dayOfWeek === day),
+    schedules: activeSchedules.filter((s) => s.dayOfWeek === day),
   }));
 
   if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
@@ -182,38 +203,60 @@ export default function ScheduleManager() {
         </div>
       )}
 
-      {/* Today's Schedule Summary */}
-      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
-        <h3 className="text-sm font-medium text-blue-900 mb-3">
-          ตารางเรียนวันนี้ ({dayLabels[DAYS[new Date().getDay()]]})
-        </h3>
-        {todaySchedules.length === 0 ? (
-          <p className="text-sm text-blue-600">ไม่มีตารางเรียนวันนี้</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {todaySchedules.map((schedule) => (
-              <div
-                key={schedule.id}
-                className="bg-white rounded-lg p-3 border border-blue-100"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                    ห้อง {schedule.room}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {schedule.startTime} - {schedule.endTime}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-slate-900 truncate">
-                  {schedule.subject}
-                </p>
-                {schedule.teacher && (
-                  <p className="text-xs text-slate-500">{schedule.teacher}</p>
-                )}
-              </div>
-            ))}
+      {/* Overview: Room-colored cards for today */}
+      <div className="mb-6 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-700">
+            ภาพรวมการใช้ห้องเรียนชั้น 4 — วันนี้ ({dayLabels[DAYS[new Date().getDay()]]})
+          </h3>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleBulkToggle(true)}
+              className="px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition"
+            >
+              เปิดทั้งหมด
+            </button>
+            <button
+              type="button"
+              onClick={() => handleBulkToggle(false)}
+              className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-200 transition"
+            >
+              ปิดทั้งหมด
+            </button>
           </div>
-        )}
+        </div>
+        <div className="p-4">
+          {FLOOR4_ROOMS.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              {FLOOR4_ROOMS.map((room) => {
+                const c = ROOM_COLORS[room] || ROOM_COLORS.default;
+                const roomScheds = todaySchedules.filter((s) => s.room === room);
+                return (
+                  <div key={room} className={`rounded-xl border p-3 ${c.light} ${c.border}`}>
+                    <div className={`flex items-center gap-1.5 mb-1.5`}>
+                      <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
+                      <span className={`text-sm font-bold ${c.text}`}>ห้อง {room}</span>
+                    </div>
+                    {roomScheds.length === 0 ? (
+                      <p className="text-xs text-slate-400">ว่าง</p>
+                    ) : (
+                      roomScheds.map((s) => (
+                        <div key={s.id} className="mb-1 last:mb-0">
+                          <p className={`text-xs font-semibold ${c.text} truncate`}>{s.subject}</p>
+                          <p className="text-[11px] text-slate-500">{s.startTime}–{s.endTime}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {todaySchedules.length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-2">ไม่มีตารางเรียนวันนี้</p>
+          )}
+        </div>
       </div>
 
       {/* Form Modal */}
@@ -386,8 +429,14 @@ export default function ScheduleManager() {
         </div>
       )}
 
-      {/* Schedule Table */}
+      {/* Schedule Table — all statuses */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <span className="text-sm font-semibold text-slate-700">รายการทั้งหมด ({schedules.length})</span>
+          <span className="text-xs text-slate-400">
+            เปิดใช้งาน {schedules.filter(s => s.isActive !== false).length} / {schedules.length}
+          </span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -426,8 +475,11 @@ export default function ScheduleManager() {
                   </td>
                 </tr>
               ) : (
-                schedules.map((schedule) => (
-                  <tr key={schedule.id} className="hover:bg-slate-50">
+                schedules.map((schedule) => {
+                  const c = ROOM_COLORS[schedule.room] || ROOM_COLORS.default;
+                  const isInactive = schedule.isActive === false;
+                  return (
+                  <tr key={schedule.id} className={`hover:bg-slate-50 ${isInactive ? "opacity-50" : ""}`}>
                     <td className="px-4 py-3 text-sm text-slate-900">
                       {dayLabels[schedule.dayOfWeek]}
                     </td>
@@ -435,7 +487,7 @@ export default function ScheduleManager() {
                       {schedule.startTime} - {schedule.endTime}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${c.pill}`}>
                         ห้อง {schedule.room}
                       </span>
                     </td>
@@ -497,7 +549,8 @@ export default function ScheduleManager() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

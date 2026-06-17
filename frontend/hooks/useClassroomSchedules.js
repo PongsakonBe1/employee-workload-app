@@ -37,7 +37,6 @@ export function useClassroomSchedules() {
     try {
       const q = query(
         collection(db, "classroomSchedules"),
-        where("isActive", "==", true),
         orderBy("dayOfWeek", "asc"),
         orderBy("startTime", "asc")
       );
@@ -129,7 +128,7 @@ export function useClassroomSchedules() {
     try {
       const docRef = await addDoc(collection(db, "classroomSchedules"), {
         ...scheduleData,
-        isActive: true,
+        isActive: scheduleData.isActive !== false,
         createdAt: serverTimestamp(),
       });
       await fetchSchedules();
