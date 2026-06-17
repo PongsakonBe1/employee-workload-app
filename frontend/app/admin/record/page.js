@@ -32,6 +32,7 @@ import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
 import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
+import ICloudCalendarStrip from "../../../components/iCloudCalendarStrip";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
@@ -561,19 +562,8 @@ export default function AdminRecordPage() {
 
         {/* ── Left: Sidebar ── */}
         <div className="flex flex-col gap-4 order-last lg:order-first">
-          {/* 1. วันที่/เวลา — desktop บนสุด */}
-          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
-            <p className="text-2xl font-bold text-slate-900 leading-tight">
-              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
-          </div>
-
-          {/* Room Usage Calendar — with View Toggle (1วัน/3วัน/สัปดาห์) */}
-          <div className="hidden lg:block">
-            <RoomUsageCalendar view="week" showDLExam={true} allowViewToggle={true} />
-          </div>
+          {/* iCloud Calendar Strip — Day View (iOS Light) */}
+          <ICloudCalendarStrip />
         </div>
       </section>
 

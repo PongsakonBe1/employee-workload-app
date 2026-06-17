@@ -15,6 +15,7 @@ import QuickColorLog from "../../../components/QuickColorLog";
 import { Calendar as CalendarIcon } from "lucide-react";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
 import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
+import ICloudCalendarStrip from "../../../components/iCloudCalendarStrip";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
@@ -278,26 +279,10 @@ export default function NewWorkLogPage() {
       <section className={`grid gap-5 lg:grid-cols-[1.2fr_1fr] pb-24 lg:pb-0 ${showCalendarMobile ? 'hidden lg:grid' : 'grid'}`}>
 
         {/* ── Left: Calendar (ซ้าย - ใหญ่กว่า) ── */}
-        <div className={`flex-col gap-4 order-first ${showCalendarMobile ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`flex flex-col gap-4 order-first ${showCalendarMobile ? '' : 'hidden lg:flex'}`}>
           
-          {/* Date Header */}
-          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
-            <p className="text-2xl font-bold text-slate-900">
-              {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
-          </div>
-
-          {/* Room Usage Calendar - Week View */}
-          <div className="hidden lg:block">
-            <RoomUsageCalendar view="week" showDLExam={true} allowViewToggle={true} />
-          </div>
-
-          {/* Mobile Calendar */}
-          <div className="lg:hidden">
-            <RoomUsageCalendar view="day" showDLExam={true} />
-          </div>
+          {/* iCloud Calendar Strip — Day View (iOS Light) */}
+          <ICloudCalendarStrip />
 
           {/* Lock Notice */}
           <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">

@@ -4,25 +4,25 @@ import { useState } from "react";
 import { GitBranch, GitCommit, Calendar, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const VERSION_INFO = {
-  version: "2.4.0",
-  buildDate: "2026-06-16",
-  buildTime: "07:15",
-  gitCommit: "a1b2c3d",
+  version: "2.5.0",
+  buildDate: "2026-06-17",
+  buildTime: "08:30",
+  gitCommit: "51dbe5b",
   branch: "main",
   features: [
-    "RoomUsageCalendar - Week/Compact View",
-    "iOS Apple Calendar Theme",
-    "Thailand Timezone (UTC+7)",
-    "DL Exam & Classroom Schedule",
-    "Interactive Events",
-    "Saturday Schedule Support"
+    "TodayRoomSchedule - iOS Compact Calendar (Dashboard)",
+    "User Manual /help - Accordion 8 หัวข้อ",
+    "RoomUsageCalendar - View Toggle (1วัน/3วัน/สัปดาห์)",
+    "Footer: ลิงก์คู่มือ + Nav Drawer",
+    "DL Exam & Classroom Schedule Integration",
+    "Thailand Timezone (UTC+7) Real-time Clock"
   ],
   changes: [
-    "Fixed timezone issues for DL exams",
-    "Added user name mapping for proctors",
-    "Updated Week View UI to Apple Calendar style",
-    "Added Compact View below Week View",
-    "Added Saturday option for classroom schedules"
+    "Dashboard: เพิ่ม TodayRoomSchedule widget แบบ iOS",
+    "Room pills: ห้องที่ต้องเปิด + pulse dot เมื่อ active",
+    "Event cards: active/upcoming/past color-coded",
+    "เพิ่มหน้า /help คู่มือการใช้งานแบบ Accordion",
+    "อัปเดต README.md + Changelog v2.5.0"
   ]
 };
 
