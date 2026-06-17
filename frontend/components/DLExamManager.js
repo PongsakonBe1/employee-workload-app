@@ -61,7 +61,7 @@ export default function DLExamManager() {
   // Helper to get staff name from ID
   const getStaffName = (id) => {
     const user = users.find((u) => u.id === id);
-    return user?.nickname || user?.name || user?.displayName || id;
+    return user?.displayName || user?.nickname || user?.name || id;
   };
 
   const resetForm = () => {
@@ -417,64 +417,6 @@ export default function DLExamManager() {
               </button>
             </div>
           </form>
-        </div>
-      )}
-
-      {/* Overview: ภาพรวมตารางคุมสอบ DL เดือนนี้ */}
-      {monthlyExams.length > 0 && (
-        <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden mb-2">
-          <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">
-              ภาพรวมการคุมสอบ DL — {monthNames[currentMonth - 1]} {currentYear + 543}
-            </h3>
-          </div>
-          <div className="p-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="py-2 pr-4 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">วันที่</th>
-                  <th className="py-2 pr-4 text-left text-xs font-semibold text-slate-500">ช่วงเวลา</th>
-                  <th className="py-2 pr-2 text-center text-xs font-semibold text-emerald-600">406</th>
-                  <th className="py-2 pr-2 text-center text-xs font-semibold text-sky-600">407</th>
-                  <th className="py-2 pr-4 text-center text-xs font-semibold text-orange-600">CEM</th>
-                  <th className="py-2 text-left text-xs font-semibold text-slate-500">ผู้คุมสอบ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {monthlyExams.filter(e => e.isActive !== false).map((exam) => {
-                  const locs = exam.locations || (exam.location ? [exam.location] : []);
-                  const has406 = locs.some(l => l.includes("406"));
-                  const has407 = locs.some(l => l.includes("407"));
-                  const hasCEM = locs.some(l => l.includes("CEM"));
-                  const proctorStr = usersLoading ? "..." : (exam.proctors?.map(getStaffName).join(" / ") || exam.proctorNames?.join(" / ") || "-");
-                  const examDate = new Date(exam.date + "T00:00:00");
-                  const todayStr2 = new Date().toLocaleDateString("en-CA");
-                  const isExamToday = exam.date === todayStr2;
-                  return (
-                    <tr key={exam.id} className={isExamToday ? "bg-amber-50" : ""}>
-                      <td className="py-2 pr-4 whitespace-nowrap">
-                        <span className={`font-semibold ${isExamToday ? "text-amber-700" : "text-slate-800"}`}>
-                          {examDate.toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
-                        </span>
-                        {isExamToday && <span className="ml-1 text-[10px] bg-amber-100 text-amber-700 px-1 rounded">วันนี้</span>}
-                      </td>
-                      <td className="py-2 pr-4 text-slate-600 whitespace-nowrap">{timeSlots[exam.timeSlot]?.label || "-"}</td>
-                      <td className="py-2 pr-2 text-center">
-                        {has406 ? <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold inline-flex items-center justify-center">✓</span> : <span className="text-slate-200">–</span>}
-                      </td>
-                      <td className="py-2 pr-2 text-center">
-                        {has407 ? <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 text-xs font-bold inline-flex items-center justify-center">✓</span> : <span className="text-slate-200">–</span>}
-                      </td>
-                      <td className="py-2 pr-4 text-center">
-                        {hasCEM ? <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold inline-flex items-center justify-center">✓</span> : <span className="text-slate-200">–</span>}
-                      </td>
-                      <td className="py-2 text-slate-600 text-xs">{proctorStr}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 

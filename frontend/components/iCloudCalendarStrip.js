@@ -148,28 +148,23 @@ export default function ICloudCalendarStrip() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100">
         <div className="flex items-end gap-3">
-          <span className={`text-4xl font-semibold leading-none tabular-nums ${isToday ? "text-blue-600" : "text-slate-800"}`}>
+          <span className={`text-4xl font-semibold leading-none tabular-nums ${isToday ? "text-red-600" : "text-slate-800"}`}>
             {viewDate.getDate()}
           </span>
           <div className="pb-0.5 leading-tight">
-            <p className={`text-base font-semibold ${isToday ? "text-blue-600" : "text-slate-700"}`}>
+            <p className={`text-base font-semibold ${isToday ? "text-red-600" : "text-slate-700"}`}>
               {DAY_LABELS_TH[viewDate.getDay()]}
             </p>
             <p className="text-sm text-slate-400">
               {MONTHS_TH[viewDate.getMonth()]} {viewDate.getFullYear() + 543}
             </p>
           </div>
-          {isToday && (
-            <span className="mb-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
-              วันนี้
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-1">
           <button onClick={prevDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500">
             <ChevronLeft size={16} />
           </button>
-          <button onClick={goToday} className="px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-xl transition">
+          <button onClick={goToday} className="px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl transition">
             วันนี้
           </button>
           <button onClick={nextDay} className="p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition text-slate-500">

@@ -30,6 +30,7 @@ export default function ScheduleManager() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [semester, setSemester] = useState("1/2569");
   const [formData, setFormData] = useState({
     room: "401",
@@ -106,16 +107,27 @@ export default function ScheduleManager() {
     }
   };
 
-  // Bulk toggle all schedules
+  // Bulk toggle selected schedules
   const handleBulkToggle = async (targetActive) => {
+    if (selectedIds.length === 0) return;
     const label = targetActive ? "เปิด" : "ปิด";
-    if (!confirm(`ต้องการ${label}ใช้งานตารางเรียนทั้งหมด (${schedules.length} รายการ) ใช่หรือไม่?`)) return;
+    if (!confirm(`ต้องการ${label}ใช้งานรายการที่เลือก (${selectedIds.length} รายการ) ใช่หรือไม่?`)) return;
     try {
-      await Promise.all(schedules.map((s) => updateSchedule(s.id, { ...s, isActive: targetActive })));
-      await logSystemAction(SystemActions.UPDATE_WORKLOG, `Bulk ${label} all classroom schedules`, user?.uid);
+      const toUpdate = schedules.filter((s) => selectedIds.includes(s.id));
+      await Promise.all(toUpdate.map((s) => updateSchedule(s.id, { ...s, isActive: targetActive })));
+      await logSystemAction(SystemActions.UPDATE_WORKLOG, `Bulk ${label} ${selectedIds.length} classroom schedules`, user?.uid);
+      setSelectedIds([]);
     } catch (err) {
       alert("เกิดข้อผิดพลาด: " + err.message);
     }
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === schedules.length ? [] : schedules.map((s) => s.id));
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
 
   const handleDelete = async (schedule) => {
@@ -203,61 +215,6 @@ export default function ScheduleManager() {
         </div>
       )}
 
-      {/* Overview: Room-colored cards for today */}
-      <div className="mb-6 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
-        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700">
-            ภาพรวมการใช้ห้องเรียนชั้น 4 — วันนี้ ({dayLabels[DAYS[new Date().getDay()]]})
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleBulkToggle(true)}
-              className="px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition"
-            >
-              เปิดทั้งหมด
-            </button>
-            <button
-              type="button"
-              onClick={() => handleBulkToggle(false)}
-              className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-200 transition"
-            >
-              ปิดทั้งหมด
-            </button>
-          </div>
-        </div>
-        <div className="p-4">
-          {FLOOR4_ROOMS.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-              {FLOOR4_ROOMS.map((room) => {
-                const c = ROOM_COLORS[room] || ROOM_COLORS.default;
-                const roomScheds = todaySchedules.filter((s) => s.room === room);
-                return (
-                  <div key={room} className={`rounded-xl border p-3 ${c.light} ${c.border}`}>
-                    <div className={`flex items-center gap-1.5 mb-1.5`}>
-                      <div className={`w-2.5 h-2.5 rounded-full ${c.bg}`} />
-                      <span className={`text-sm font-bold ${c.text}`}>ห้อง {room}</span>
-                    </div>
-                    {roomScheds.length === 0 ? (
-                      <p className="text-xs text-slate-400">ว่าง</p>
-                    ) : (
-                      roomScheds.map((s) => (
-                        <div key={s.id} className="mb-1 last:mb-0">
-                          <p className={`text-xs font-semibold ${c.text} truncate`}>{s.subject}</p>
-                          <p className="text-[11px] text-slate-500">{s.startTime}–{s.endTime}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {todaySchedules.length === 0 && (
-            <p className="text-sm text-slate-400 text-center py-2">ไม่มีตารางเรียนวันนี้</p>
-          )}
-        </div>
-      </div>
 
       {/* Form Modal */}
       {showForm && (
@@ -429,6 +386,36 @@ export default function ScheduleManager() {
         </div>
       )}
 
+      {/* Selection Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="mb-3 flex items-center gap-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl">
+          <span className="text-sm font-semibold text-blue-700">เลือกแล้ว {selectedIds.length} รายการ</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={() => handleBulkToggle(true)}
+              className="px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition"
+            >
+              เปิดที่เลือก
+            </button>
+            <button
+              type="button"
+              onClick={() => handleBulkToggle(false)}
+              className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-200 transition"
+            >
+              ปิดที่เลือก
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700 transition"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Schedule Table — all statuses */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -441,6 +428,14 @@ export default function ScheduleManager() {
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
+                <th className="px-4 py-3 text-center text-sm font-medium text-slate-700 w-10">
+                  <input
+                    type="checkbox"
+                    checked={schedules.length > 0 && selectedIds.length === schedules.length}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   วัน
                 </th>
@@ -478,8 +473,17 @@ export default function ScheduleManager() {
                 schedules.map((schedule) => {
                   const c = ROOM_COLORS[schedule.room] || ROOM_COLORS.default;
                   const isInactive = schedule.isActive === false;
+                  const isSelected = selectedIds.includes(schedule.id);
                   return (
-                  <tr key={schedule.id} className={`hover:bg-slate-50 ${isInactive ? "opacity-50" : ""}`}>
+                  <tr key={schedule.id} className={`hover:bg-slate-50 ${isInactive ? "opacity-50" : ""} ${isSelected ? "bg-blue-50/60" : ""}`}>
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(schedule.id)}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-900">
                       {dayLabels[schedule.dayOfWeek]}
                     </td>
