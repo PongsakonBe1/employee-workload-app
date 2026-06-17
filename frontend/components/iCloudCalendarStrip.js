@@ -40,6 +40,9 @@ const TYPE_STYLE = {
   dlExam:    { blockBg: "bg-orange-50 border-l-orange-400", label: "DL",  labelCls: "bg-orange-100 text-orange-700"},
 };
 
+const TIME_COL_W = 56; // px — width of the hour label column
+const MIN_LANE_W = 160; // px — minimum width per lane when multiple lanes
+
 export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const [now, setNow] = useState(getNowTH());
   const [viewDate, setViewDate] = useState(getNowTH());
@@ -47,12 +50,24 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const [dlExams, setDlExams] = useState([]);
   const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(true);
+  const [containerW, setContainerW] = useState(0);
   const timelineRef = useRef(null);
+  const wrapperRef = useRef(null);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const dragStartY = useRef(0);
   const dragStartScrollTop = useRef(0);
   const dragStartScrollLeft = useRef(0);
+
+  // Measure container width responsively
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerW(entry.contentRect.width);
+    });
+    ro.observe(wrapperRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   // Clock tick every 30s
   useEffect(() => {
@@ -143,6 +158,21 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const upcoming = events.filter(e => nowMin < e.startMin || !isToday);
   const hours    = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i);
 
+  // Compute max concurrent lanes for minWidth of inner timeline div
+  const maxConcurrentLanes = useMemo(() => {
+    if (events.length === 0) return 1;
+    const laneMap = [];
+    const evWithLane = events.map((ev) => {
+      let lane = 0;
+      while (laneMap.some((e) => e.lane === lane && e.endMin > ev.startMin && e.startMin < ev.endMin)) lane++;
+      laneMap.push({ ...ev, lane });
+      return { ...ev, lane };
+    });
+    return Math.max(...evWithLane.map((ev) =>
+      Math.max(...evWithLane.filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin).map((e) => e.lane)) + 1
+    ));
+  }, [events]);
+
   const prevDay  = () => { const d = new Date(viewDate); d.setDate(d.getDate()-1); setViewDate(d); };
   const nextDay  = () => { const d = new Date(viewDate); d.setDate(d.getDate()+1); setViewDate(d); };
   const goToday  = () => setViewDate(getNowTH());
@@ -179,6 +209,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
       </div>
 
       {/* ── Timeline ── */}
+      <div ref={wrapperRef} className="relative">
       <div
         ref={timelineRef}
         className="relative overflow-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
@@ -213,7 +244,13 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
         }}
         onTouchEnd={() => { isDragging.current = false; }}
       >
-        <div className="relative" style={{ height: `${HOUR_HEIGHT * (HOUR_END - HOUR_START)}px`, minWidth: '560px' }}>
+        <div className="relative" style={{
+            height: `${HOUR_HEIGHT * (HOUR_END - HOUR_START)}px`,
+            minWidth: `${maxConcurrentLanes === 1
+              ? (containerW || 320) - TIME_COL_W
+              : maxConcurrentLanes * Math.max(((containerW || 320) - TIME_COL_W) / maxConcurrentLanes, MIN_LANE_W)
+            }px`,
+          }}>
 
           {/* Hour grid lines */}
           {hours.map((h) => (
@@ -244,6 +281,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
 
           {/* Event blocks — with collision lane layout */}
           {(() => {
+            const availW = (containerW || 320) - TIME_COL_W;
             // Assign lanes to overlapping events
             const laneMap = [];
             const evWithLane = events.map((ev) => {
@@ -252,60 +290,59 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
               laneMap.push({ ...ev, lane });
               return { ...ev, lane };
             });
-            // Count max lanes per event (how many overlap)
             return evWithLane.map((ev) => {
-            const topMin = Math.max(ev.startMin, HOUR_START * 60);
-            const botMin = Math.min(ev.endMin,   HOUR_END   * 60);
-            if (botMin <= topMin) return null;
-            const top    = ((topMin - HOUR_START * 60) / 60) * HOUR_HEIGHT;
-            const height = Math.max(((botMin - topMin) / 60) * HOUR_HEIGHT - 3, 24);
-            const c      = ROOM_ACCENT[ev.room] || ROOM_ACCENT.default;
-            const ts     = TYPE_STYLE[ev.type]  || TYPE_STYLE.classroom;
-            const isAct  = isToday && nowMin >= ev.startMin && nowMin < ev.endMin;
-            // Find total lanes for this time slot
-            const totalLanes = Math.max(...evWithLane
-              .filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin)
-              .map((e) => e.lane)) + 1;
-            const LANE_WIDTH = 240; // px per lane — fixed width for readability
-            const laneLeft   = ev.lane * LANE_WIDTH;
+              const topMin = Math.max(ev.startMin, HOUR_START * 60);
+              const botMin = Math.min(ev.endMin,   HOUR_END   * 60);
+              if (botMin <= topMin) return null;
+              const top    = ((topMin - HOUR_START * 60) / 60) * HOUR_HEIGHT;
+              const height = Math.max(((botMin - topMin) / 60) * HOUR_HEIGHT - 3, 24);
+              const c      = ROOM_ACCENT[ev.room] || ROOM_ACCENT.default;
+              const ts     = TYPE_STYLE[ev.type]  || TYPE_STYLE.classroom;
+              const isAct  = isToday && nowMin >= ev.startMin && nowMin < ev.endMin;
+              // Responsive lane width: 1 lane = fill container, multiple = MIN_LANE_W each (scroll)
+              const totalLanes = Math.max(...evWithLane
+                .filter((e) => e.endMin > ev.startMin && e.startMin < ev.endMin)
+                .map((e) => e.lane)) + 1;
+              const LANE_WIDTH = totalLanes === 1 ? availW : Math.max(availW / totalLanes, MIN_LANE_W);
+              const laneLeft   = ev.lane * LANE_WIDTH;
 
-            return (
-              <div key={ev.id}
-                className={`absolute rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
-                style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
-                {/* Left accent bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
-                <div className="pl-3 pr-2 py-2 h-full flex flex-col justify-center gap-1 bg-white/95 overflow-hidden">
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${c.pill}`}>
-                      ห้อง {ev.room}
-                    </span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${ts.labelCls}`}>
-                      {ts.label}
-                    </span>
-                    {isAct && (
-                      <span className="flex items-center gap-0.5 text-[10px] font-semibold text-blue-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />กำลังใช้งาน
+              return (
+                <div key={ev.id}
+                  className={`absolute rounded-2xl border overflow-hidden z-10 ${isAct ? "shadow-md" : "shadow-sm"}`}
+                  style={{ top: `${top + 2}px`, height: `${height}px`, left: `calc(3.5rem + ${laneLeft}px + 4px)`, width: `${LANE_WIDTH - 8}px` }}>
+                  {/* Left accent bar */}
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${c.bar}`} />
+                  <div className="pl-3 pr-2 py-2 h-full flex flex-col justify-center gap-1 bg-white/95 overflow-hidden">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${c.pill}`}>
+                        ห้อง {ev.room}
                       </span>
-                    )}
-                  </div>
-                  <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">{ev.subject}</p>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className="flex items-center gap-1 text-[11px] text-slate-500 whitespace-nowrap">
-                      <Clock size={9} className="shrink-0" />
-                      {ev.startTime}–{ev.endTime}
-                    </span>
-                    {ev.teacher && (
-                      <span className="flex items-center gap-1 text-[11px] text-slate-500 min-w-0">
-                        <User size={9} className="shrink-0" />
-                        <span className="truncate">{ev.teacher}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${ts.labelCls}`}>
+                        {ts.label}
                       </span>
-                    )}
+                      {isAct && (
+                        <span className="flex items-center gap-0.5 text-[10px] font-semibold text-blue-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />กำลังใช้งาน
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">{ev.subject}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="flex items-center gap-1 text-[11px] text-slate-500 whitespace-nowrap">
+                        <Clock size={9} className="shrink-0" />
+                        {ev.startTime}–{ev.endTime}
+                      </span>
+                      {ev.teacher && (
+                        <span className="flex items-center gap-1 text-[11px] text-slate-500 min-w-0">
+                          <User size={9} className="shrink-0" />
+                          <span className="truncate">{ev.teacher}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          });
+              );
+            });
           })()}
 
           {/* Empty state */}
@@ -318,6 +355,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* ── Compact Detail Cards ── */}
