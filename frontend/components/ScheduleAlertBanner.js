@@ -87,34 +87,41 @@ export default function ScheduleAlertBanner() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 space-y-1">
+    <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-2 items-end pointer-events-none" style={{ maxWidth: "calc(100vw - 2rem)" }}>
       {activeAlerts.map((alert) => (
         <div
           key={alert.id}
-          className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-3 shadow-lg animate-in slide-in-from-top"
+          className="pointer-events-auto w-72 max-w-full bg-white border border-amber-200 rounded-2xl shadow-lg overflow-hidden"
         >
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
-            <AlertTriangle size={20} className="shrink-0" />
+          {/* Progress bar — depletes proportionally to minutesLeft out of 15 */}
+          <div className="h-1 bg-amber-100">
+            <div
+              className="h-1 bg-amber-400 transition-none"
+              style={{ width: `${Math.min((alert.minutesLeft / 15) * 100, 100)}%` }}
+            />
+          </div>
+          <div className="px-4 py-3 flex items-start gap-3">
+            <div className="mt-0.5 w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+              <AlertTriangle size={15} className="text-amber-500" />
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">
-                ห้อง {alert.room} จะปิดในอีก {alert.minutesLeft} นาที
+              <p className="text-sm font-semibold text-slate-800">
+                ห้อง {alert.room} ปิดในอีก {alert.minutesLeft} นาที
               </p>
-              <p className="text-xs text-white/80">
-                {alert.subject} {alert.teacher && `· ${alert.teacher}`}
+              <p className="text-xs text-slate-500 truncate mt-0.5">
+                {alert.subject}{alert.teacher && ` · ${alert.teacher}`}
               </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
-                <Clock size={12} />
-                {alert.endTime}
+              <div className="flex items-center gap-1 text-xs text-amber-600 font-medium mt-1">
+                <Clock size={11} />
+                ปิด {alert.endTime} น.
               </div>
-              <button
-                onClick={() => handleDismiss(alert.id)}
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={18} />
-              </button>
             </div>
+            <button
+              onClick={() => handleDismiss(alert.id)}
+              className="mt-0.5 p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+            >
+              <X size={14} />
+            </button>
           </div>
         </div>
       ))}

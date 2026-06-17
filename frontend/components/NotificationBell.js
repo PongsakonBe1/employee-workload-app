@@ -383,7 +383,7 @@ export function NotificationBell() {
     <>
       {/* Alert Banner สำหรับ notification สำคัญ */}
       {showAlert && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm px-2">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm px-2">
           <div className="bg-amber-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
             <AlertCircle size={20} className="shrink-0" />
             <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
