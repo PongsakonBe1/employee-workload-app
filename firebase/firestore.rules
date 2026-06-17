@@ -303,5 +303,23 @@ service cloud.firestore {
       // Only admin can create/delete status documents
       allow create, delete: if isAdmin();
     }
+
+    // Classroom Schedules collection (Floor 4 class schedules)
+    match /classroomSchedules/{scheduleId} {
+      // All authenticated users can read schedules
+      allow read: if isAuthenticated();
+      
+      // Only admin can create/update/delete schedules
+      allow create, update, delete: if isAdmin();
+    }
+
+    // DL Exam Schedules collection (Digital Literacy exam schedules)
+    match /dlExamSchedules/{scheduleId} {
+      // All authenticated users can read exam schedules
+      allow read: if isAuthenticated();
+      
+      // Only admin can create/update/delete exam schedules
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

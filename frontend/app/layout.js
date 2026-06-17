@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
+import FABVersionControl from "../components/FABVersionControl";
 
 export const metadata = {
   title: "labboy Workload Recorder",
@@ -44,7 +45,10 @@ export default async function RootLayout({ children }) {
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <FABVersionControl />
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

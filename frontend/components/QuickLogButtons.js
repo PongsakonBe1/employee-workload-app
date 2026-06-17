@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { getTemplatesForUser, logFromTemplate, logFromComboTemplate } from '../lib/quickLogTemplates';
+import { getTemplatesForUser, logFromTemplate, logFromComboTemplate, logFromComboCheckbox } from '../lib/quickLogTemplates';
 import { useAuth } from './AuthProvider';
 import { logSystemAction, SystemActions } from '../lib/systemLog';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
@@ -11,7 +11,6 @@ import { db } from '../lib/firebase';
 import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
-import EquipmentReturnModal from './EquipmentReturnModal';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
 
@@ -34,10 +33,10 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   // Combo modal state
   const [showComboModal, setShowComboModal] = useState(false);
   const [comboRecipient, setComboRecipient] = useState('');
-  // EquipmentReturnModal state (EH-4)
-  const [showReturnModal, setShowReturnModal] = useState(false);
-  const [returnEquipmentId, setReturnEquipmentId] = useState('');
-  const [returnEquipmentType, setReturnEquipmentType] = useState('headphones');
+  // Combo checkbox modal state
+  const [showComboCheckboxModal, setShowComboCheckboxModal] = useState(false);
+  const [comboCheckboxRecipient, setComboCheckboxRecipient] = useState('');
+  const [selectedComboItems, setSelectedComboItems] = useState([]);
   // hold-to-confirm state
   const [holdingId, setHoldingId] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
@@ -120,7 +119,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     try {
       const now = new Date();
       await logFromTemplate(template.id, logAsUser.uid || logAsUser.id, {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         comment: overrideComment || '',
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || (logAsUser.fullName || '').split(' ')[0] || '',
@@ -140,16 +139,12 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const handleQuickLog = (template) => {
     if (!user || !logAsUser) return;
 
-    // Return template: เปิด EquipmentReturnModal (EH-4)
-    if (isReturnTemplate(template)) {
+    // Combo template with checkbox mode: เปิด modal เลือก checkbox
+    if (template.isCombo && template.requireCheckbox) {
       setSelectedTemplate(template);
-      const eqType = (template.minorTask.includes('หูฟัง') || template.name.includes('หูฟัง'))
-        ? 'headphones' : 'power';
-      setReturnEquipmentType(eqType);
-      // ดึง equipment ID จากชื่อ template เช่น "คืนหูฟัง ICIT05" → "ICIT05"
-      const idMatch = template.name.match(/ICIT\d+/) || template.minorTask.match(/ICIT\d+/);
-      setReturnEquipmentId(idMatch ? idMatch[0] : '');
-      setShowReturnModal(true);
+      setComboCheckboxRecipient('');
+      setSelectedComboItems(template.comboItems.map((_, i) => i)); // เลือกทั้งหมดเป็นค่าเริ่มต้น
+      setShowComboCheckboxModal(true);
       return;
     }
 
@@ -209,7 +204,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     try {
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         recipient: comboRecipient.trim(),
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
@@ -244,6 +239,64 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     }
   };
 
+  const handleLogComboCheckbox = async () => {
+    if (!selectedTemplate || !comboCheckboxRecipient.trim()) {
+      if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
+      return;
+    }
+
+    if (selectedComboItems.length === 0) {
+      if (onLogSuccess) onLogSuccess('กรุณาเลือกอย่างน้อย 1 งาน', 'error');
+      return;
+    }
+
+    setLoggingTemplate(selectedTemplate.id);
+    setLoading(true);
+
+    try {
+      const now = new Date();
+      const extraData = {
+        date: now.toLocaleDateString('en-CA'),
+        time: now.toTimeString().slice(0, 5),
+        recipient: comboCheckboxRecipient.trim(),
+        employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
+        employeeNickname: logAsUser.nickname || '',
+        employeeFullName: logAsUser.fullName || ''
+      };
+
+      const worklogIds = await logFromComboCheckbox(
+        selectedTemplate.id,
+        logAsUser.uid || logAsUser.id,
+        selectedComboItems,
+        extraData
+      );
+
+      await logSystemAction(
+        SystemActions.WORKLOG_CREATE,
+        `Combo checkbox log: ${selectedTemplate.name} (${worklogIds.length}/${selectedTemplate.comboItems.length} งาน)`,
+        { templateId: selectedTemplate.id, selectedCount: worklogIds.length, totalCount: selectedTemplate.comboItems.length }
+      );
+
+      if (onLogSuccess) {
+        onLogSuccess(`บันทึก ${worklogIds.length} งานเรียบร้อย`);
+      }
+
+      setShowComboCheckboxModal(false);
+      setSelectedTemplate(null);
+      setComboCheckboxRecipient('');
+      setSelectedComboItems([]);
+
+    } catch (error) {
+      console.error("Error combo checkbox logging:", error);
+      if (onLogSuccess) {
+        onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+      }
+    } finally {
+      setLoading(false);
+      setLoggingTemplate(null);
+    }
+  };
+
   const handleLogWithComment = async () => {
     if (!selectedTemplate || !commentText.trim()) {
       if (onLogSuccess) onLogSuccess('กรุณากรอกความคิดเห็น', 'error');
@@ -258,7 +311,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     try {
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         comment: commentText.trim(),
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
@@ -298,7 +351,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // สร้างข้อมูลสำหรับวันนี้และเวลาปัจจุบัน
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         recipient: recipient.trim()
       };
@@ -348,7 +401,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // สร้างข้อมูลสำหรับวันนี้และเวลาปัจจุบัน
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         comment: comment.trim(),
         equipment: equipment
@@ -399,7 +452,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // สร้างข้อมูลสำหรับวันนี้และเวลาปัจจุบัน
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         comment: comment.trim(),
         minorTask: minorTask, // override minorTask ตามสถานะ
@@ -484,7 +537,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // สร้างข้อมูลสำหรับวันนี้และเวลาปัจจุบัน
       const now = new Date();
       const extraData = {
-        date: now.toISOString().slice(0, 10),
+        date: now.toLocaleDateString('en-CA'),
         time: now.toTimeString().slice(0, 5),
         comment: comment.trim(),
         minorTask: minorTask, // override minorTask ตามสถานะ
@@ -609,6 +662,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
                     <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full">
                       {template.comboItems?.length || 0} งาน
                     </span>
+                  )}
+                  {template.isCombo && template.requireCheckbox && (
+                    <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">เลือกเอง</span>
                   )}
                   {template.requireRecipient && (
                     <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
@@ -847,49 +903,101 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         </div>,
         document.body
       )}
-      {/* EquipmentReturnModal (EH-4) */}
-      {selectedTemplate && (
-        <EquipmentReturnModal
-          isOpen={showReturnModal}
-          onClose={() => { setShowReturnModal(false); setSelectedTemplate(null); }}
-          onConfirm={async (condition, note) => {
-            if (!selectedTemplate || !logAsUser) return;
-            setLoggingTemplate(selectedTemplate.id);
-            setLoading(true);
-            try {
-              const now = new Date();
-              const extraData = {
-                date: now.toISOString().slice(0, 10),
-                time: now.toTimeString().slice(0, 5),
-                equipmentCondition: condition,
-                equipmentNote: note,
-                employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
-                employeeNickname: logAsUser.nickname || '',
-                employeeFullName: logAsUser.fullName || '',
-              };
-              await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
-              await logSystemAction(
-                SystemActions.WORKLOG_CREATE,
-                `Return log: ${selectedTemplate.name} — ${condition}${note ? ` (${note})` : ''}`,
-                { templateId: selectedTemplate.id }
-              );
-              window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
-                detail: { equipmentType: returnEquipmentType, equipment: returnEquipmentId, status: 'available' }
-              }));
-              if (onLogSuccess) onLogSuccess(`บันทึก "${selectedTemplate.name}" — ${condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย'} เรียบร้อย`);
-            } catch (error) {
-              if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
-            } finally {
-              setLoading(false);
-              setLoggingTemplate(null);
-              setSelectedTemplate(null);
-            }
-          }}
-          equipmentId={returnEquipmentId}
-          equipmentType={returnEquipmentType}
-          templateName={selectedTemplate.name}
-        />
+
+      {/* Combo Checkbox Modal */}
+      {showComboCheckboxModal && selectedTemplate && mounted && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowComboCheckboxModal(false); setSelectedTemplate(null); setComboCheckboxRecipient(''); setSelectedComboItems([]); }} />
+          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-1">เลือกงานที่ทำจริง</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
+            <p className="text-xs text-slate-500 mb-4">เลือกเฉพาะงานที่ทำจริงสำหรับผู้รับบริการนี้</p>
+
+            {/* Checkbox list */}
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-slate-500 mb-2">รายการงาน *</label>
+              <div className="space-y-2">
+                {selectedTemplate.comboItems?.map((item, index) => (
+                  <label key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={selectedComboItems.includes(index)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedComboItems(prev => [...prev, index].sort());
+                        } else {
+                          setSelectedComboItems(prev => prev.filter(i => i !== index));
+                        }
+                      }}
+                      className="w-5 h-5 text-amber-600 border-slate-300 rounded focus:ring-amber-500 mt-0.5 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-slate-700">{item.name}</div>
+                      <div className="text-xs text-slate-500">{item.minorTask}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {selectedComboItems.length === 0 && (
+                <p className="text-xs text-red-500 mt-2">กรุณาเลือกอย่างน้อย 1 งาน</p>
+              )}
+            </div>
+
+            {/* Recipient input */}
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
+              <input
+                type="text"
+                value={comboCheckboxRecipient}
+                onChange={(e) => setComboCheckboxRecipient(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && comboCheckboxRecipient.trim() && selectedComboItems.length > 0 && handleLogComboCheckbox()}
+                className="apple-input"
+                placeholder="กรอกรหัสนักศึกษาหรือชื่อผู้รับบริการ"
+                autoFocus
+              />
+            </div>
+
+            {/* Quick select buttons */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setSelectedComboItems(selectedTemplate.comboItems.map((_, i) => i))}
+                className="text-xs px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                เลือกทั้งหมด
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedComboItems([])}
+                className="text-xs px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                ล้างการเลือก
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogComboCheckbox}
+                disabled={loading || !comboCheckboxRecipient.trim() || selectedComboItems.length === 0}
+                className="apple-button flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {loading
+                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
+                  : <>บันทึก {selectedComboItems.length} งาน</>
+                }
+              </button>
+              <button
+                onClick={() => { setShowComboCheckboxModal(false); setSelectedTemplate(null); setComboCheckboxRecipient(''); setSelectedComboItems([]); }}
+                className="apple-button-secondary px-4"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
+
     </div>
   );
 }

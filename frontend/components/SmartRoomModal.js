@@ -32,7 +32,7 @@ export default function SmartRoomModal({
 
       try {
         const db = getFirestore();
-        const today = new Date().toISOString().slice(0, 10);
+        const today = new Date().toLocaleDateString('en-CA'); // local timezone
         const worklogsQuery = query(
           collection(db, 'worklogs'),
           orderBy('createdAt', 'desc'),
@@ -41,16 +41,19 @@ export default function SmartRoomModal({
         const querySnapshot = await getDocs(worklogsQuery);
         const roomStatus = { ...initialStatus };
         
-        // collect วันนี้แล้ว reverse เป็น asc เพื่อให้ log ใหม่ override เก่า
-        const todayDocs = [];
+        // [SA] เก็บทุก log ที่เกี่ยวกับห้อง แล้ว reverse เป็น asc (เก่า→ใหม่)
+        // room status คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
+        const roomLogs = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          const date = data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0, 10) || '';
-          if (date === today) todayDocs.push(data);
+          const mt = (data.minorTask || '').toLowerCase();
+          const isRoomLog = mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
+                            mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
+          if (isRoomLog) roomLogs.push(data);
         });
-        todayDocs.reverse();
+        roomLogs.reverse(); // asc order: เก่า→ใหม่ ให้ log ใหม่สุด override
 
-        todayDocs.forEach((data) => {
+        roomLogs.forEach((data) => {
 
           const comment = (data.comment || '').toLowerCase();
           const minorTask = (data.minorTask || '').toLowerCase();
@@ -102,6 +105,94 @@ export default function SmartRoomModal({
     };
     window.addEventListener('roomStatusUpdated', handler);
     return () => window.removeEventListener('roomStatusUpdated', handler);
+  }, [isOpen]);
+
+  // Listen for worklogDeleted events to recalculate room status
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleWorklogDeleted = (event) => {
+      const { minorTask, room } = event.detail;
+      // Check if this is room-related
+      const isRoomRelated = minorTask && (
+        minorTask.includes('ห้อง') ||
+        minorTask.includes('เปิด') ||
+        minorTask.includes('ปิด') ||
+        minorTask.includes('เช็คอิน') ||
+        minorTask.includes('เช็คเอาท์') ||
+        room
+      );
+
+      if (isRoomRelated) {
+        console.log('🗑️ SmartRoomModal: Recalculating room status after worklog deletion');
+        // Recalculate by re-running loadRoomStatus logic
+        const recalculate = async () => {
+          setLoading(true);
+          try {
+            const db = getFirestore();
+            const today = new Date().toLocaleDateString('en-CA');
+            const worklogsQuery = query(
+              collection(db, 'worklogs'),
+              orderBy('createdAt', 'desc'),
+              limit(200)
+            );
+            const querySnapshot = await getDocs(worklogsQuery);
+            const initialStatus = {
+              '303': 'closed', '304': 'closed', '305': 'closed', '306': 'closed',
+              '401': 'closed', '402': 'closed', '406': 'closed', '407': 'closed'
+            };
+            const newRoomStatus = { ...initialStatus };
+
+            const roomLogs = [];
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              const mt = (data.minorTask || '').toLowerCase();
+              const isRoomLog = mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
+                                mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
+              if (isRoomLog) roomLogs.push(data);
+            });
+            roomLogs.reverse();
+
+            roomLogs.forEach((data) => {
+              const comment = (data.comment || '').toLowerCase();
+              const minorTask = (data.minorTask || '').toLowerCase();
+
+              if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
+                const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
+                if (comment.includes('303')) newRoomStatus['303'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('304')) newRoomStatus['304'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('305')) newRoomStatus['305'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('306')) newRoomStatus['306'] = isOpenAction ? 'open' : 'closed';
+              }
+              if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
+                const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
+                if (comment.includes('303/windows')) newRoomStatus['303'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('304/ios')) newRoomStatus['304'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('305/android')) newRoomStatus['305'] = isOpenAction ? 'open' : 'closed';
+                if (comment.includes('306/linux')) newRoomStatus['306'] = isOpenAction ? 'open' : 'closed';
+              }
+              if (minorTask.includes('เปิดห้องเรียนชั้น 4') || minorTask.includes('ปิดห้องเรียนชั้น 4')) {
+                const isOpenAction = minorTask.includes('เปิด');
+                if (new RegExp('\\b401\\b').test(comment)) newRoomStatus['401'] = isOpenAction ? 'open' : 'closed';
+                if (new RegExp('\\b402\\b').test(comment)) newRoomStatus['402'] = isOpenAction ? 'open' : 'closed';
+                if (new RegExp('\\b406\\b').test(comment)) newRoomStatus['406'] = isOpenAction ? 'open' : 'closed';
+                if (new RegExp('\\b407\\b').test(comment)) newRoomStatus['407'] = isOpenAction ? 'open' : 'closed';
+              }
+            });
+
+            setRoomStatus(newRoomStatus);
+          } catch (error) {
+            console.error('SmartRoomModal: Error recalculating status:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        recalculate();
+      }
+    };
+
+    window.addEventListener('worklogDeleted', handleWorklogDeleted);
+    return () => window.removeEventListener('worklogDeleted', handleWorklogDeleted);
   }, [isOpen]);
 
   // กรองห้องตามชั้นที่เลือก

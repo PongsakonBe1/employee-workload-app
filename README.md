@@ -4,8 +4,8 @@
 ระบบรองรับ PWA (Progressive Web App), Firebase Backend, Google Sign-In Authentication, Real-time Notifications และ Quick Log Templates
 
 🌐 **Production URL:** https://labboy-workload-app.web.app  
-📦 **Current Version:** v2.3.0  
-📅 **Last Updated:** 2026-06-06  
+📦 **Current Version:** v2.5.0  
+📅 **Last Updated:** 2026-06-17  
 🏢 **Organization:** ICIT KMUTNB  
 📄 **License:** MIT License
 
@@ -79,6 +79,7 @@
 | Undo Delete | ยกเลิกการลบภายใน 30 วินาที | v1.0.0 |
 | Dashboard ส่วนตัว | งานของฉัน + อันดับในกลุ่ม + leaderboard ทีม | v1.7.0 |
 | Calendar View | สลับ List/ปฏิทิน, คลิกวันดู worklog | v1.7.0 |
+| Room Usage Calendar | iOS-style compact calendar ตารางห้องวันนี้บน Dashboard (ตารางเรียน + คุมสอบ DL) | v2.4.0 |
 | Thai Holidays | แสดงวันหยุดนักขัตฤกษ์ไทยในปฏิทิน | v1.7.3 |
 | Export CSV | Export ข้อมูลของตัวเอง | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ CSS @media print ซ่อน sidebar/nav/filter (เฉพาะ Admin/Superadmin) | v2.0.0 |
@@ -91,6 +92,7 @@
 | จัดการ Templates | เพิ่ม/แก้ไข/ลบ Quick Log Templates + Combo Templates | v1.8.0 |
 | Template Options | `requireRecipient`, `requireComment`, `isSmart` | v1.9.4 |
 | Dashboard ทีม | สถิติรวม, เฉลี่ยต่อคน, Top 3, รายชื่อทุกคน | v1.7.0 |
+| RoomUsageCalendar (Week View) | ตาราง Time Grid แบบ iOS 1วัน/3วัน/สัปดาห์ + View Toggle บนหน้า admin/record | v2.4.0 |
 | Workload Heatmap | กราฟ DOW × Hour แสดงความถี่งาน | v1.7.1 |
 | Hour-of-Day Chart | กราฟแท่งแสดงงานตามช่วงเวลา | v1.7.0 |
 | Custom Date Filter | Filter ตามช่วงวันที่ พร้อม quota alert (>90 วัน) | v1.6.0 |
@@ -1225,6 +1227,8 @@ provider.setCustomParameters({
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.5.0** | 2026-06-17 | **FEAT: TodayRoomSchedule (iOS Compact)**: Dashboard แสดง widget ตารางห้องเรียนชั้น 4 วันนี้แบบ iOS Calendar style — ห้องที่ต้องเปิด (pill badges), กิจกรรม active/upcoming/past (color-coded cards), นาฬิกา real-time tick ทุก 1 นาที, รองรับทั้งตารางเรียน (recurring by day-of-week) และตาราง DL Exam (date-specific); **FEAT: User Manual (/help)**: หน้าคู่มือการใช้งานแบบ Accordion 8 หัวข้อ (ภาพรวม/Dashboard/บันทึกงาน/ห้องเรียน/ประวัติ/Export/Admin/FAQ); **UX: Footer**: เพิ่ม link "คู่มือการใช้งาน" ใน Footer และ Nav Drawer (Mobile); **UX: AppShell Footer**: อัปเดต version เป็น v2.5.0 |
+| **v2.4.0** | 2026-06-17 | **FEAT: RoomUsageCalendar Desktop View Toggle**: ปุ่ม 1วัน/3วัน/สัปดาห์ บนหน้า admin/record — ลบ Calendar ซ้ำออก เหลืออันเดียวพร้อม `allowViewToggle`; **UX: admin/record Layout**: สลับ Desktop layout — Calendar ซ้าย (60%), Form ขวา (40%); **FIX: Dashboard**: ลบ RoomUsageCalendar compact view ออกจาก Dashboard (แทนด้วย TodayRoomSchedule v2.5.0) |
 | **v2.3.0** | 2026-06-06 | **FEAT: Equipment Borrow/Return Export**: Admin/Superadmin ส่งออกประวัติการยืม/คืนอุปกรณ์เป็น CSV พร้อม date range picker (เลือกช่วงวันที่) — query Firestore `worklogs` จับคู่ log ยืม+คืน อัตโนมัติ, CSV columns: วันที่ยืม/เวลายืม/Barcode/รหัสอุปกรณ์/ผู้ยืม/สถานะ/ผู้รับคืน/เวลาคืน/สภาพ/หมายเหตุ, BOM สำหรับ Thai encoding; **FIX: Equipment Lost Color**: เปลี่ยนสี `lost` จากแดงเข้ม → สเลท/เทา (`slate-400/500`) ให้สื่อ "disabled/unavailable" (Apple iOS semantic); **FIX: Nested Button Hydration Error**: แก้ `<button>` ซ้อน `<button>` ใน `RoomEquipmentStatus` — เปลี่ยน inner เป็น `<div role="button">`; **FIX: คู่มืออ่านกราฟ z-index**: แก้ popup ถูก container อื่นกลบด้วย `createPortal` + `fixed z-[9999]`; **UX: Export Buttons**: ปรับ export buttons ให้ minimal Apple/iOS style — `bg-white border-slate-200/60 shadow-sm`, font 10px, icon strokeWidth 1.5; **UX: Seasonal Chart Label**: เปลี่ยน "พยากรณ์ช่วงพีค" → "ช่วงที่อาจมีงานมาก" พร้อม note "จากตารางการศึกษา (ข้อมูล 1 ปี ไม่เพียงพอสำหรับ statistical prediction)" |
 | **v2.2.0** | 2026-06-03 | **FEAT: Combo Template**: เพิ่มระบบ Combo Template — Admin สร้าง template ที่ประกอบด้วยหลาย minorTask, Staff กดครั้งเดียว กรอก recipient ครั้งเดียว → บันทึก worklogs หลายรายการพร้อมกัน (`Promise.all`); ปุ่ม combo แสดง badge สีม่วงจำนวนงาน, modal preview ก่อนบันทึก; `TemplateManager.js` เพิ่ม isCombo toggle + comboItems editor; `QuickLogButtons.js` เพิ่ม combo modal + handler; `quickLogTemplates.js` เพิ่ม `logFromComboTemplate()` |
 | **v2.1.0** | 2026-06-03 | **FEAT: Background Push Notification**: เพิ่มระบบส่ง Push Notification ผ่าน Backend (Render + Cron-job.org) — daily reminder แจ้งเตือนพนักงานที่ยังไม่ลงงาน + broadcast push สำหรับ Superadmin; **Backend**: เพิ่ม Express server (`backend/`) พร้อม endpoints `/api/notify/daily-reminder` (CRON_SECRET auth + `crypto.timingSafeEqual`), `/api/notify/broadcast` (Firebase ID Token + superadmin role check), `/api/notify/health`; **FCM Service**: `backend/src/services/fcm.js` ใช้ firebase-admin SDK ส่ง multicast push; **Frontend — Settings UI**: เพิ่มหน้าตั้งค่า Push Notification ใน Admin Settings — toggle เปิด/ปิด, เลือกเวลาส่ง `pushReminderTime`, เลือกวัน `reminderDays` (จ–อา) พร้อม `aria-pressed` accessibility; **Frontend — Broadcast UI**: Superadmin เห็น Broadcast section ใน Settings — กรอก Title/Body แล้วส่ง push ถึงทุกคน แสดงผล sent/failed count; **Security — CRON_SECRET guard (FIX-4)**: เพิ่ม production guard ใน `backend/src/config/env.js` — throw error ถ้าไม่ตั้ง `CRON_SECRET` env var ใน production ป้องกันการใช้ค่า default; **Firestore Rules**: อนุญาต user update `fcmToken` field อย่างจำกัด; **QA Sign-off**: Snyk SAST ผ่าน (0 actionable issues ใน production code), Playwright E2E 32 tests — 22 passed, 10 skipped (รอ RENDER_URL), 0 failed |

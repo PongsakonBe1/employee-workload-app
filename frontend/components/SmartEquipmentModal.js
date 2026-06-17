@@ -75,9 +75,35 @@ export default function SmartEquipmentModal({
         const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
         const details = {};
 
-        // reverse เป็น asc เพื่อให้ log ใหม่ (คืน) override log เก่า (ยืม) ถูกต้อง
-        const todayLogs = logs.filter(l => l.date === today).reverse();
-        const conditionMap = {}; // ITEM-1: track latest condition per equipment
+        // [SA] reverse เป็น asc (เก่า→ใหม่) เพื่อให้ log ใหม่ override ได้ถูกต้อง
+        const sortedLogs = [...logs].reverse();
+
+        // Pass 1: scan ทุก log ทุกวัน เพื่อหา equipmentCondition ล่าสุดของแต่ละตัว
+        // damaged/lost คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
+        const conditionMap = {};
+        sortedLogs.forEach(log => {
+          const minorTask = (log.minorTask || '').toLowerCase();
+          const commentLower = (log.comment || '').toLowerCase();
+          const isEquipmentLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') ||
+                                 minorTask.includes('ยืมหูฟัง') || minorTask.includes('ยืมปลั๊กไฟ');
+          if (!isEquipmentLog) return;
+
+          // ตรวจ field equipment ตรง (จาก SmartEquipmentModal log) ก่อน
+          if (log.equipment && log.equipmentCondition) {
+            conditionMap[log.equipment] = log.equipmentCondition;
+            return;
+          }
+          // fallback: parse จาก comment
+          [...ALL_HP, ...ALL_PW].forEach(eq => {
+            if (commentLower.includes(eq.toLowerCase()) && log.equipmentCondition) {
+              conditionMap[eq] = log.equipmentCondition;
+            }
+          });
+        });
+        setEquipmentConditionMap(conditionMap);
+
+        // Pass 2: scan เฉพาะวันนี้เพื่อคำนวณ in_use / available
+        const todayLogs = sortedLogs.filter(l => l.date === today);
         todayLogs.forEach(log => {
           const commentLower = (log.comment || '').toLowerCase();
           const minorTask = (log.minorTask || '').toLowerCase();
@@ -88,31 +114,15 @@ export default function SmartEquipmentModal({
             ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
           }
           if (minorTask.includes('คืนหูฟัง')) {
-            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) {
-              status.headphones[eq]='available'; delete details[eq];
-              // ITEM-1: เก็บ condition ล่าสุดจากการคืน
-              if (log.equipmentCondition && log.equipmentCondition !== 'normal') {
-                conditionMap[eq] = log.equipmentCondition;
-              } else {
-                delete conditionMap[eq];
-              }
-            } });
+            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='available'; delete details[eq]; } });
           }
           if (minorTask.includes('ยืมปลั๊กไฟ')) {
             ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
           }
           if (minorTask.includes('คืนปลั๊กไฟ')) {
-            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) {
-              status.power[eq]='available'; delete details[eq];
-              if (log.equipmentCondition && log.equipmentCondition !== 'normal') {
-                conditionMap[eq] = log.equipmentCondition;
-              } else {
-                delete conditionMap[eq];
-              }
-            } });
+            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='available'; delete details[eq]; } });
           }
         });
-        setEquipmentConditionMap(conditionMap);
 
         setEquipmentStatus(status[equipmentType] || {});
         setEquipmentDetails(details);
@@ -144,6 +154,83 @@ export default function SmartEquipmentModal({
     window.addEventListener('equipmentStatusUpdated', handler);
     return () => window.removeEventListener('equipmentStatusUpdated', handler);
   }, [equipmentType, isOpen]);
+
+  // Listen for worklogDeleted events to recalculate status
+  useEffect(() => {
+    if (!isOpen || !equipmentType) return;
+
+    const handleWorklogDeleted = (event) => {
+      const { minorTask, equipment } = event.detail;
+      // Check if this is equipment-related
+      const isEquipmentRelated = minorTask && (
+        minorTask.includes('หูฟัง') ||
+        minorTask.includes('ปลั๊กไฟ') ||
+        minorTask.includes('ยืม') ||
+        minorTask.includes('คืน') ||
+        equipment
+      );
+
+      if (isEquipmentRelated) {
+        console.log('🗑️ SmartEquipmentModal: Recalculating after worklog deletion');
+        // Trigger recalculation by toggling a dependency
+        // We need to call calculateStatusFromWorklogs again
+        const recalculate = async () => {
+          setLoading(true);
+          try {
+            const db = getFirestore();
+            const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
+            const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(200));
+            const querySnapshot = await getDocs(worklogsQuery);
+            const logs = [];
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              logs.push({ ...data, date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0,10) || '' });
+            });
+
+            const newStatus = {
+              headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
+              power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
+            };
+            const today = new Date().toLocaleDateString('en-CA');
+            const newDetails = {};
+            const sortedLogs = [...logs].reverse();
+
+            // Recalculate status
+            sortedLogs.forEach(log => {
+              const logDate = log.date || '';
+              const isToday = logDate === today;
+              const minorTask = (log.minorTask || '').toLowerCase();
+              const comment = (log.comment || '').toLowerCase();
+              const isBorrow = minorTask.includes('ยืม') || comment.includes('ยืม');
+              const isReturn = minorTask.includes('คืน') || comment.includes('คืน');
+
+              const allEquipment = [...ALL_HP, ...ALL_PW];
+              allEquipment.forEach(eq => {
+                const eqLower = eq.toLowerCase();
+                const hasEq = comment.includes(eqLower) || log.equipment === eq;
+                if (hasEq) {
+                  if (isBorrow) newStatus[ALL_HP.includes(eq) ? 'headphones' : 'power'][eq] = 'in_use';
+                  if (isReturn) newStatus[ALL_HP.includes(eq) ? 'headphones' : 'power'][eq] = 'available';
+                  if (log.recipient) newDetails[eq] = { user: log.recipient, time: log.time || '' };
+                }
+              });
+            });
+
+            setEquipmentStatus(isHeadphones ? newStatus.headphones : newStatus.power);
+            setEquipmentDetails(newDetails);
+          } catch (error) {
+            console.error('Error recalculating status:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        recalculate();
+      }
+    };
+
+    window.addEventListener('worklogDeleted', handleWorklogDeleted);
+    return () => window.removeEventListener('worklogDeleted', handleWorklogDeleted);
+  }, [equipmentType, isOpen, isHeadphones]);
 
   const equipmentList = getEquipmentRange();
 

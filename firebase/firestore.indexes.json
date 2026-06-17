@@ -129,6 +129,60 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "classroomSchedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "dayOfWeek",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "dlExamSchedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timeSlot",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "dlExamSchedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "proctors",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -438,6 +438,21 @@ export default function WorkLogsPage() {
       }
       await batch.commit();
 
+      // Dispatch event สำหรับแต่ละ worklog ที่ถูกลบ เพื่อให้ components อื่นอัปเดตสถานะ
+      itemsToDelete.forEach(item => {
+        window.dispatchEvent(new CustomEvent('worklogDeleted', {
+          detail: {
+            id: item.id,
+            minorTask: item.minorTask,
+            comment: item.comment,
+            room: item.room,
+            equipment: item.equipment,
+            date: item.date,
+            time: item.time
+          }
+        }));
+      });
+
       // เก็บข้อมูลสำหรับ Undo
       setDeletedItems(itemsToDelete);
       setShowUndo(true);
@@ -500,6 +515,22 @@ export default function WorkLogsPage() {
       }
 
       await deleteDoc(docRef);
+
+      // Dispatch event เพื่อให้ components อื่นอัปเดตสถานะ
+      if (docSnap.exists()) {
+        const deletedData = docSnap.data();
+        window.dispatchEvent(new CustomEvent('worklogDeleted', {
+          detail: {
+            id: id,
+            minorTask: deletedData.minorTask,
+            comment: deletedData.comment,
+            room: deletedData.room,
+            equipment: deletedData.equipment,
+            date: deletedData.date,
+            time: deletedData.time
+          }
+        }));
+      }
 
       // Log action
       await logSystemAction(

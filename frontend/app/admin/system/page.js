@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../components/AuthProvider";
 import { AppShell } from "../../../components/AppShell";
 import TemplateManager from "../../../components/TemplateManager";
+import DLExamManager from "../../../components/DLExamManager";
+import ScheduleManager from "../../../components/ScheduleManager";
+import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import {
   collection,
   query,
@@ -33,6 +36,8 @@ import {
   Smartphone,
   Send,
   Megaphone,
+  GraduationCap,
+  BookOpen,
 } from "lucide-react";
 
 // Helper function สำหรับบันทึก log
@@ -708,6 +713,28 @@ export default function SystemManagementPage() {
           <FileSpreadsheet size={18} />
           Templates
         </button>
+        <button
+          onClick={() => setActiveTab("classroom-schedules")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
+            activeTab === "classroom-schedules"
+              ? "bg-white text-slate-950 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <BookOpen size={18} />
+          ตารางเรียน
+        </button>
+        <button
+          onClick={() => setActiveTab("dl-exam")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
+            activeTab === "dl-exam"
+              ? "bg-white text-slate-950 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <GraduationCap size={18} />
+          ตารางคุมสอบ DL
+        </button>
         {isSuperAdmin && (
           <>
             <button
@@ -1374,6 +1401,32 @@ export default function SystemManagementPage() {
       {/* Templates Tab */}
       {activeTab === "templates" && (
         <TemplateManager />
+      )}
+
+      {/* Classroom Schedules Tab */}
+      {activeTab === "classroom-schedules" && (
+        <div className="space-y-6">
+          <div className="apple-panel p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              ภาพรวมการใช้ห้องเรียนชั้น 4
+            </h2>
+            <RoomUsageCalendar view="week" showDLExam={true} />
+          </div>
+          <ScheduleManager />
+        </div>
+      )}
+
+      {/* DL Exam Schedules Tab */}
+      {activeTab === "dl-exam" && (
+        <div className="space-y-6">
+          <div className="apple-panel p-6">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              ภาพรวมการใช้ห้องสอบ DL
+            </h2>
+            <RoomUsageCalendar view="week" showDLExam={true} />
+          </div>
+          <DLExamManager />
+        </div>
       )}
 
       {/* Import Worklogs Tab */}

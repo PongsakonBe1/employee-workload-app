@@ -31,6 +31,7 @@ import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
+import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
@@ -43,6 +44,8 @@ import { today, nowTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask, dispatchEquipmentStatusEvents } from "../../../lib/worklogUtils";
 import { isAdminRole } from "../../../lib/authUtils";
 import { useLoadingTimeout } from "../../../hooks/useLoadingTimeout";
+import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
+import ScheduleAlertBanner from "../../../components/ScheduleAlertBanner";
 import { Toast } from "../../../components/Toast";
 
 export default function AdminRecordPage() {
@@ -68,6 +71,9 @@ export default function AdminRecordPage() {
     dutyGroup: "",
     comment: "",
   });
+
+  // Auto-update date/time every minute on desktop mode
+  useAutoUpdateDateTime(setForm);
 
   // Redirect non-admin users (allow admin and superadmin)
   const isAdmin = isAdminRole(user);
@@ -113,10 +119,15 @@ export default function AdminRecordPage() {
         collection(db, "users"),
         where("role", "==", "admin"),
       );
+      const superadminQuery = query(
+        collection(db, "users"),
+        where("role", "==", "superadmin"),
+      );
 
-      const [staffSnapshot, adminSnapshot] = await Promise.all([
+      const [staffSnapshot, adminSnapshot, superadminSnapshot] = await Promise.all([
         getDocs(staffQuery),
         getDocs(adminQuery),
+        getDocs(superadminQuery),
       ]);
 
       // รวมผลลัพธ์
@@ -127,12 +138,17 @@ export default function AdminRecordPage() {
       adminSnapshot.forEach((doc) =>
         allUsers.push({ id: doc.id, ...doc.data() }),
       );
+      superadminSnapshot.forEach((doc) =>
+        allUsers.push({ id: doc.id, ...doc.data() }),
+      );
 
       console.log(
         "[AdminRecord] Staff:",
         staffSnapshot.size,
         "Admin:",
         adminSnapshot.size,
+        "Superadmin:",
+        superadminSnapshot.size,
       );
 
       // กรอง active ที่ client side และกรองข้อมูลซ้ำ
@@ -148,12 +164,18 @@ export default function AdminRecordPage() {
         return true;
       });
 
-      // เรียงลำดับ: admin ก่อน (เพื่อให้ admin เจอตัวเองง่าย) แล้วตามด้วย staff ตามชื่อ
+      // เรียงลำดับ: superadmin → admin → staff (เพื่อให้ admin/superadmin เจอตัวเองง่าย)
       staff.sort((a, b) => {
-        // admin ก่อน
-        if (a.role === "admin" && b.role !== "admin") return -1;
-        if (a.role !== "admin" && b.role === "admin") return 1;
-        // เรียงตามชื่อ
+        // ลำดับ priority: superadmin=3, admin=2, staff=1
+        const getPriority = (role) => {
+          if (role === "superadmin") return 3;
+          if (role === "admin") return 2;
+          return 1;
+        };
+        const priorityA = getPriority(a.role);
+        const priorityB = getPriority(b.role);
+        if (priorityA !== priorityB) return priorityB - priorityA;
+        // ถ้า priority เท่ากัน เรียงตามชื่อ
         const nameA = (
           a.displayName ||
           a.fullName ||
@@ -335,6 +357,7 @@ export default function AdminRecordPage() {
 
   return (
     <AppShell>
+      <ScheduleAlertBanner />
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
 
@@ -350,7 +373,7 @@ export default function AdminRecordPage() {
         <RoomEquipmentStatusCollapsible />
       </div>
 
-      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] pb-24 lg:pb-0">
+      <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr] pb-24 lg:pb-0">
         {/* ── Right: Form + QuickLog ── order-first on mobile */}
         <div className="order-first lg:order-last flex flex-col gap-4">
           {/* Quick Log */}
@@ -547,41 +570,9 @@ export default function AdminRecordPage() {
             <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
           </div>
 
-          {/* 2. วิธีบันทึก — desktop only */}
-          <div className="hidden lg:block rounded-2xl bg-slate-950 p-5 text-white">
-            <p className="text-sm font-semibold mb-3">วิธีบันทึก</p>
-            <ol className="text-sm leading-7 text-white/70 list-decimal list-inside space-y-0.5">
-              <li>เลือก <span className="text-white font-medium">พนักงาน</span></li>
-              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span></li>
-              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> อัตโนมัติ</li>
-              <li>กด <span className="text-white font-medium">บันทึก</span></li>
-            </ol>
-            <p className="text-[11px] text-white/30 mt-3">เคล็ด: กดค้าง quick log เพื่อยืนยันก่อนบันทึก</p>
-          </div>
-
-          {/* 3. Admin notice — ล่างสุด */}
-          <div className="rounded-2xl bg-emerald-950 p-5 text-white">
-            <div className="flex items-start gap-3">
-              <Sparkles size={18} className="mt-0.5 flex-shrink-0 text-emerald-400" />
-              <div>
-                <p className="text-sm font-semibold">สิทธิพิเศษของ Admin</p>
-                <ul className="mt-2 text-sm leading-6 text-white/75 list-disc list-inside space-y-1">
-                  <li>บันทึกงานแทนพนักงานได้ทุกคน</li>
-                  <li>ไม่ถูกล็อกเวลา แก้ไขได้ตลอด</li>
-                  <li>ระบุสถานะ "บันทึกโดยผู้ดูแลระบบ"</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Staff count */}
-          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p className="text-sm font-semibold text-slate-700">
-              พนักงานที่ใช้งานได้
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-slate-950">
-              {staffList.length} คน
-            </p>
+          {/* Room Usage Calendar — with View Toggle (1วัน/3วัน/สัปดาห์) */}
+          <div className="hidden lg:block">
+            <RoomUsageCalendar view="week" showDLExam={true} allowViewToggle={true} />
           </div>
         </div>
       </section>

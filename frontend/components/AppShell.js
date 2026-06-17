@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   ChevronLeft,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { isAdminRole } from "../lib/authUtils";
@@ -286,7 +287,15 @@ export function AppShell({ children }) {
                 );
               })}
             </nav>
-            <div className="px-3 py-4 border-t border-slate-100">
+            <div className="px-3 py-4 border-t border-slate-100 space-y-1">
+              <Link
+                href="/help"
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+              >
+                <HelpCircle size={18} />
+                คู่มือการใช้งาน
+              </Link>
               <button
                 onClick={() => { setDrawerOpen(false); logout(); }}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50 transition"
@@ -304,8 +313,17 @@ export function AppShell({ children }) {
         {children}
       </main>
 
-      <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400">
-        labboy Workload Recorder &mdash; v2.3.0
+      <footer className="mx-auto mt-8 mb-4 max-w-7xl text-center text-xs text-slate-400 space-y-1">
+        <div>
+          <Link href="/help" className="inline-flex items-center gap-1 text-slate-400 hover:text-blue-500 transition">
+            <HelpCircle size={11} />
+            คู่มือการใช้งาน
+          </Link>
+          <span className="mx-2">·</span>
+          <span>labboy Workload Recorder</span>
+          <span className="mx-2">&mdash;</span>
+          <span>v2.5.0</span>
+        </div>
       </footer>
     </div>
   );

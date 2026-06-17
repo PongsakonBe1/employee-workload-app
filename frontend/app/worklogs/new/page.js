@@ -11,7 +11,10 @@ import { apiFetch } from "../../../lib/api";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
+import QuickColorLog from "../../../components/QuickColorLog";
+import { Calendar as CalendarIcon } from "lucide-react";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
+import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import {
@@ -25,6 +28,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { today, nowTime, getLockTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask } from "../../../lib/worklogUtils";
+import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
 
 export default function NewWorkLogPage() {
   const t = useTranslations("worklog");
@@ -46,6 +50,12 @@ export default function NewWorkLogPage() {
   const [error, setError] = useState("");
   const [lastSaved, setLastSaved] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
+  
+  // Mobile toggle: show form or calendar
+  const [showCalendarMobile, setShowCalendarMobile] = useState(false);
+
+  // Auto-update date/time every minute on desktop mode
+  useAutoUpdateDateTime(setForm);
 
   // Redirect admin users - they don't record worklogs
   useEffect(() => {
@@ -254,48 +264,79 @@ export default function NewWorkLogPage() {
         <RoomEquipmentStatusCollapsible />
       </div>
 
-      <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] pb-24 lg:pb-0">
+      {/* Mobile Toggle Button */}
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={() => setShowCalendarMobile(!showCalendarMobile)}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-50 text-blue-600 rounded-xl font-medium hover:bg-blue-100 transition"
+        >
+          <CalendarIcon className="w-5 h-5" />
+          {showCalendarMobile ? 'กลับไปบันทึกงาน' : 'ดูตารางห้องเรียน'}
+        </button>
+      </div>
 
-        {/* ── Right: Form + QuickLog ── order-first on mobile */}
-        <div className="order-first lg:order-last flex flex-col gap-4">
+      <section className={`grid gap-5 lg:grid-cols-[1.2fr_1fr] pb-24 lg:pb-0 ${showCalendarMobile ? 'hidden lg:grid' : 'grid'}`}>
 
-          {/* Quick Log */}
+        {/* ── Left: Calendar (ซ้าย - ใหญ่กว่า) ── */}
+        <div className={`flex-col gap-4 order-first ${showCalendarMobile ? 'flex' : 'hidden lg:flex'}`}>
+          
+          {/* Date Header */}
+          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
+            <p className="text-2xl font-bold text-slate-900">
+              {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
+          </div>
+
+          {/* Room Usage Calendar - Week View */}
+          <div className="hidden lg:block">
+            <RoomUsageCalendar view="week" showDLExam={true} allowViewToggle={true} />
+          </div>
+
+          {/* Mobile Calendar */}
+          <div className="lg:hidden">
+            <RoomUsageCalendar view="day" showDLExam={true} />
+          </div>
+
+          {/* Lock Notice */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
+            <Clock size={15} className="text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-700">
+              แก้ไขได้ถึง <strong>23:59</strong> วันที่{' '}
+              <strong>{new Date(form.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</strong>
+            </p>
+          </div>
+        </div>
+
+        {/* ── Right: Form (ขวา - เล็กกว่า) ── */}
+        <div className={`flex-col gap-4 order-last ${showCalendarMobile ? 'hidden' : 'flex lg:flex'}`}>
+
+          {/* Quick Log - Original Template Buttons */}
           <div className="apple-panel p-4">
             <div className="flex items-center gap-2 mb-3">
               <Zap size={15} className="text-amber-500" />
               <span className="text-sm font-semibold text-slate-700">บันทึกด่วน</span>
-              <button
-                type="button"
-                onClick={scrollToForm}
-                aria-label="เลื่อนไปยังฟอร์มกรอกเอง"
-                className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition"
-              >
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                กรอกเอง
-              </button>
             </div>
-            <QuickLogButtons onLogSuccess={(msg, type = 'success') => {
-              if (type === 'error') { setError(msg); setTimeout(() => setError(""), 3000); }
-              else { setMessage(msg); setTimeout(() => setMessage(""), 3000); }
+            <QuickLogButtons onLogSuccess={(msg) => {
+              setMessage(msg || 'บันทึกสำเร็จ');
+              setTimeout(() => setMessage(''), 3000);
             }} />
           </div>
 
-          {/* Form card */}
+          {/* Form */}
           <form ref={formRef} onSubmit={onSubmit} className="apple-panel p-5 sm:p-6 lg:sticky lg:top-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">บันทึกงานแบบกรอกฟอร์ม</p>
-
-            {/* Date/Time — compact collapsible row */}
             <DateTimeRow form={form} setForm={setForm} t={t} />
-
+            
             {/* Recipient */}
             <div className="mt-4">
-              <label htmlFor="recipient-input" className="apple-label">{t("form.recipient")}</label>
+              <label className="apple-label">{t('form.recipient')}</label>
               <input
-                id="recipient-input"
                 className="apple-input"
                 value={form.recipient}
                 onChange={(e) => setForm((c) => ({ ...c, recipient: e.target.value }))}
-                placeholder={t("form.recipientPlaceholder")}
+                placeholder={t('form.recipientPlaceholder')}
               />
             </div>
 
@@ -304,92 +345,36 @@ export default function NewWorkLogPage() {
               <MinorTaskSelector
                 value={form.minorTask}
                 onChange={handleMinorTaskChange}
-                label={t("form.minorTask")}
-                placeholder={t("form.minorTaskPlaceholder")}
+                label={t('form.minorTask')}
+                placeholder={t('form.minorTaskPlaceholder')}
               />
             </div>
 
-            {form.minorTask && (
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs text-slate-400">หัวข้อหลัก:</span>
-                <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">{form.mainDuty}</span>
-              </div>
-            )}
-
             {/* Comment */}
             <div className="mt-4">
-              <label htmlFor="comment-textarea" className="apple-label">{t("form.comment")}</label>
+              <label className="apple-label">{t('form.comment')}</label>
               <CommentSuggestions
                 minorTask={form.minorTask}
                 selected={form.comment}
                 onSelect={handleCommentSuggestion}
               />
               <textarea
-                id="comment-textarea"
                 ref={textareaRef}
-                className="apple-input mt-2 resize-none overflow-hidden"
-                style={{ minHeight: "80px" }}
+                className="apple-input mt-2 resize-none"
+                style={{ minHeight: '80px' }}
                 value={form.comment}
                 onChange={(e) => setForm((c) => ({ ...c, comment: e.target.value }))}
-                placeholder={t("form.commentPlaceholder")}
+                placeholder={t('form.commentPlaceholder')}
               />
             </div>
-
-            {lastSaved && !draftRestored && (
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
-                <CheckCircle2 size={12} />
-                ร่างบันทึกอัตโนมัติ {lastSaved.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-                {(form.recipient || form.minorTask || form.comment) && (
-                  <button type="button"
-                    onClick={() => { clearDraft(); setForm((c) => ({ ...c, recipient: "", minorTask: "", mainDuty: "", dutyGroup: "main", comment: "" })); }}
-                    className="ml-auto text-slate-300 hover:text-red-400 transition">
-                    ล้างร่าง
-                  </button>
-                )}
-              </div>
-            )}
 
             <button
               disabled={saving || !form.minorTask}
               className="apple-button mt-5 w-full disabled:opacity-40 hidden lg:flex items-center justify-center gap-2"
             >
-              {saving ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t("form.saving")}</> : t("form.save")}
+              {saving ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{t('form.saving')}</> : t('form.save')}
             </button>
           </form>
-        </div>
-
-        {/* ── Left: Sidebar ── */}
-        <div className="flex flex-col gap-4 order-last lg:order-first">
-
-          {/* 1. วันที่/เวลา — desktop บนสุด */}
-          <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">วันนี้</p>
-            <p className="text-2xl font-bold text-slate-900 leading-tight">
-              {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <p className="text-sm text-slate-400 mt-0.5">ปี {new Date().getFullYear() + 543}</p>
-          </div>
-
-          {/* 2. วิธีบันทึก — desktop only */}
-          <div className="hidden lg:block rounded-2xl bg-slate-950 p-5 text-white">
-            <p className="text-sm font-semibold mb-3">วิธีบันทึก</p>
-            <ol className="text-sm leading-7 text-white/70 list-decimal list-inside space-y-0.5">
-              <li>เลือก <span className="text-white font-medium">หัวข้อรอง</span></li>
-              <li>ระบบกรอก <span className="text-white font-medium">หัวข้อหลัก</span> อัตโนมัติ</li>
-              <li>เลือกหรือกรอก <span className="text-white font-medium">รายละเอียด</span></li>
-              <li>กด <span className="text-white font-medium">บันทึก</span></li>
-            </ol>
-            <p className="text-[11px] text-white/30 mt-3">เคล็ด: กดค้าง quick log เพื่อยืนยันก่อนบันทึก</p>
-          </div>
-
-          {/* 3. Lock notice — ล่างสุด */}
-          <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3">
-            <Clock size={15} className="text-amber-400 shrink-0" />
-            <p className="text-sm text-amber-700">
-              แก้ไขได้ถึง <strong>23:59</strong> วันที่{" "}
-              <strong>{new Date(form.date).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}</strong>
-            </p>
-          </div>
         </div>
       </section>
 

@@ -31,7 +31,8 @@ export default function TemplateManager() {
     requireComment: false,
     isSmart: false,
     isCombo: false,
-    comboItems: []
+    comboItems: [],
+    requireCheckbox: false
   });
 
   // Auto-fill mainDuty และ dutyGroup เมื่อเลือก minorTask
@@ -117,7 +118,8 @@ export default function TemplateManager() {
       requireComment: template.requireComment || false,
       isSmart: template.isSmart || false,
       isCombo: template.isCombo || false,
-      comboItems: template.comboItems || []
+      comboItems: template.comboItems || [],
+      requireCheckbox: template.requireCheckbox || false
     });
     setShowForm(true);
   };
@@ -152,7 +154,8 @@ export default function TemplateManager() {
       requireComment: false,
       isSmart: false,
       isCombo: false,
-      comboItems: []
+      comboItems: [],
+      requireCheckbox: false
     });
     setEditingTemplate(null);
   };
@@ -396,7 +399,7 @@ export default function TemplateManager() {
                   <input
                     type="checkbox"
                     checked={formData.isCombo}
-                    onChange={(e) => setFormData({...formData, isCombo: e.target.checked, isSmart: e.target.checked ? false : formData.isSmart})}
+                    onChange={(e) => setFormData({...formData, isCombo: e.target.checked, isSmart: e.target.checked ? false : formData.isSmart, requireCheckbox: e.target.checked ? formData.requireCheckbox : false})}
                     className="w-5 h-5 text-violet-600 border-slate-300 rounded focus:ring-violet-500"
                   />
                   <div className="flex-1">
@@ -412,6 +415,30 @@ export default function TemplateManager() {
                     </div>
                   </div>
                 </label>
+
+                {/* Require Checkbox for Combo */}
+                {formData.isCombo && (
+                  <label className="flex items-center gap-4 p-4 border border-amber-200 rounded-lg cursor-pointer hover:bg-amber-50 transition-colors ml-6">
+                    <input
+                      type="checkbox"
+                      checked={formData.requireCheckbox}
+                      onChange={(e) => setFormData({...formData, requireCheckbox: e.target.checked})}
+                      className="w-5 h-5 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900">ให้เลือกเฉพาะงานที่ทำจริง</span>
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">Checkbox Mode</span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">
+                        📝 Staff สามารถเลือกเฉพาะบางงานที่ทำจริงได้ (เหมาะสำหรับงานที่อาจทำไม่ครบทุกขั้นตอน)
+                      </p>
+                      <div className="mt-2 p-2 bg-amber-50 rounded text-xs text-amber-700">
+                        <strong>เหมาะสำหรับ:</strong> ผูก Account นักศึกษาใหม่ (บางคนอาจมีบางอย่างแล้ว)
+                      </div>
+                    </div>
+                  </label>
+                )}
               </div>
             </div>
 

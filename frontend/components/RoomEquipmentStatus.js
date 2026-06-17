@@ -191,27 +191,27 @@ const DevicePreview = ({ item }) => {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-3 sm:space-y-4">
-      {/* 3D Preview */}
-      <div className="relative py-2">
+    <div className="h-full flex flex-col space-y-2 justify-center">
+      {/* 3D Preview - Compact */}
+      <div className="relative py-1 flex-shrink-0">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-100/50 to-transparent rounded-2xl" />
         {render3D()}
       </div>
       
-      {/* Status indicator */}
-      <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center gap-1.5 sm:gap-2 ${
+      {/* Status indicator - Compact */}
+      <div className={`rounded-lg p-2 flex flex-col items-center gap-1 flex-shrink-0 ${
         item.inUse ? 'bg-red-50/80 border border-red-100'
         : item.condition === 'damaged' ? 'bg-amber-50/80 border border-amber-100'
         : item.condition === 'lost' ? 'bg-slate-100/80 border border-slate-200'
         : 'bg-emerald-50/80 border border-emerald-100'
       }`}>
-        <div className={`w-3 h-3 rounded-full ${
+        <div className={`w-2 h-2 rounded-full ${
           item.inUse ? 'bg-red-400 animate-pulse'
           : item.condition === 'damaged' ? 'bg-amber-400'
           : item.condition === 'lost' ? 'bg-slate-400'
           : 'bg-emerald-400'
         }`} />
-        <span className={`text-sm font-bold ${
+        <span className={`text-xs font-bold ${
           item.inUse ? 'text-red-700'
           : item.condition === 'damaged' ? 'text-amber-700'
           : item.condition === 'lost' ? 'text-slate-500'
@@ -224,31 +224,31 @@ const DevicePreview = ({ item }) => {
         </span>
       </div>
 
-      {/* Info */}
-      <div className="text-center space-y-0.5 sm:space-y-1">
+      {/* Info - Compact */}
+      <div className="text-center space-y-0.5 flex-shrink-0">
         <p className="text-[10px] text-slate-400 uppercase tracking-wider">{item.location}</p>
-        <p className="text-lg sm:text-xl font-bold text-slate-800 font-mono">{item.id}</p>
+        <p className="text-base font-bold text-slate-800 font-mono">{item.id}</p>
         {item.os && <p className="text-xs text-slate-500">{item.os}</p>}
         
-        {/* Equipment Details - Barcode & Item No */}
+        {/* Equipment Details - Compact */}
         {EQUIPMENT_DETAILS[item.id] && (
-          <div className="pt-2 space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-full">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500">
+          <div className="pt-1">
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 rounded-full">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-500">
                 <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
               </svg>
-              <span className="text-[10px] font-mono text-slate-600 tracking-tight">
+              <span className="text-[9px] font-mono text-slate-600 tracking-tight">
                 {EQUIPMENT_DETAILS[item.id].barcode}
               </span>
             </div>
-            <p className="text-[9px] text-slate-400">Item #{EQUIPMENT_DETAILS[item.id].itemNo}</p>
+            <p className="text-[8px] text-slate-400 mt-0.5">Item #{EQUIPMENT_DETAILS[item.id].itemNo}</p>
           </div>
         )}
       </div>
 
-      {/* Usage Details */}
+      {/* Usage Details - DYNAMIC BASED ON STATUS */}
       {item.inUse && item.detail ? (
-        <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-100 space-y-1.5 sm:space-y-2 shadow-sm">
+        <div className="bg-white rounded-lg p-2 border border-slate-100 space-y-1.5 shadow-sm flex-shrink-0">
           <div className="flex items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400 shrink-0">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -264,7 +264,7 @@ const DevicePreview = ({ item }) => {
         </div>
       ) : item.condition ? (
         // [SE] Show condition badge for returned equipment with issues
-        <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-3 border shadow-sm ${getConditionBadge(item.condition)?.color || 'bg-slate-50 border-slate-100'}`}>
+        <div className={`rounded-lg p-2 border shadow-sm flex-shrink-0 ${getConditionBadge(item.condition)?.color || 'bg-slate-50 border-slate-100'}`}>
           <div className="flex items-center gap-2 justify-center">
             {(() => {
               const badge = getConditionBadge(item.condition);
@@ -280,9 +280,18 @@ const DevicePreview = ({ item }) => {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-sm">
-          <p className="text-xs text-slate-400 text-center">
-            {item.type === 'room' ? 'ห้องว่าง สามารถเช็คอินได้' : 'พร้อมให้ยืมใช้งาน'}
+        <div className="bg-white rounded-lg p-2 border border-slate-100 shadow-sm flex-shrink-0">
+          <p className={`text-xs text-center font-medium ${
+            item.inUse 
+              ? 'text-red-500' 
+              : item.type === 'room' 
+                ? 'text-emerald-600' 
+                : 'text-slate-400'
+          }`}>
+            {item.inUse 
+              ? (item.type === 'room' ? 'ห้องกำลังใช้งานอยู่' : 'อุปกรณ์ถูกยืมใช้งาน')
+              : (item.type === 'room' ? 'ห้องว่าง พร้อมเช็คอิน' : 'พร้อมให้ยืมใช้งาน')
+            }
           </p>
         </div>
       )}
@@ -302,6 +311,9 @@ export default function RoomEquipmentStatus() {
   const [expanded, setExpanded] = useState(false);
   const [equipmentDetails, setEquipmentDetails] = useState({});
   const [selectedItem, setSelectedItem] = useState(null);
+  
+  // [SE] View toggle: 'rooms' | 'equipment'
+  const [activeView, setActiveView] = useState('rooms');
 
   // SE: Date range for transaction history export
   const [startDate, setStartDate] = useState(() => {
@@ -516,30 +528,61 @@ export default function RoomEquipmentStatus() {
     const handleRoomStatusUpdate = (event) => {
       console.log('🏠 RoomEquipmentStatus: Received room status update', event.detail);
       const { room, status } = event.detail;
-      
+
       setRoomStatus(prev => ({
         ...prev,
         [room]: status
       }));
-      
+
       setLastUpdated(new Date());
+    };
+
+    // Handler สำหรับเมื่อ worklog ถูกลบ - ต้อง recalculate status
+    const handleWorklogDeleted = (event) => {
+      console.log('🗑️ RoomEquipmentStatus: Worklog deleted, recalculating status', event.detail);
+      const { minorTask, room, equipment } = event.detail;
+
+      // ถ้าเป็นงานที่เกี่ยวข้องกับห้องหรืออุปกรณ์ ให้ recalculate status
+      const isRoomRelated = minorTask && (
+        minorTask.includes('ห้อง') ||
+        minorTask.includes('เปิด') ||
+        minorTask.includes('ปิด') ||
+        minorTask.includes('เช็คอิน') ||
+        minorTask.includes('เช็คเอาท์') ||
+        room
+      );
+
+      const isEquipmentRelated = minorTask && (
+        minorTask.includes('หูฟัง') ||
+        minorTask.includes('ปลั๊กไฟ') ||
+        minorTask.includes('ยืม') ||
+        minorTask.includes('คืน') ||
+        equipment
+      );
+
+      if (isRoomRelated || isEquipmentRelated) {
+        console.log('🔄 Recalculating status after worklog deletion...');
+        loadStatus(); // Recalculate จาก worklogs ใหม่
+      }
     };
 
     // เพิ่ม event listeners
     window.addEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
     window.addEventListener('roomStatusUpdated', handleRoomStatusUpdate);
+    window.addEventListener('worklogDeleted', handleWorklogDeleted);
 
     // Load initial status
     loadStatus();
-    
+
     // อัปเดตทุก 5 นาที
     const interval = setInterval(loadStatus, 5 * 60 * 1000);
-    
+
     // Cleanup
     return () => {
       clearInterval(interval);
       window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
       window.removeEventListener('roomStatusUpdated', handleRoomStatusUpdate);
+      window.removeEventListener('worklogDeleted', handleWorklogDeleted);
     };
   }, []);
 
@@ -761,15 +804,18 @@ export default function RoomEquipmentStatus() {
   const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
   const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0;
 
-  // --- Navigation list for preview ---
-  const navItems = [
-    ...allRooms3.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 3', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
-    ...allRooms4.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 4', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
-    ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-    ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-    ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-    ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-  ];
+  // --- Navigation list for preview - Dynamic based on active view ---
+  const navItems = activeView === 'rooms' 
+    ? [
+        ...allRooms3.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 3', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
+        ...allRooms4.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 4', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
+      ]
+    : [
+        ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+        ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+        ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+        ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+      ];
 
   // --- Navigation handlers ---
   const navigatePrev = () => {
@@ -786,51 +832,54 @@ export default function RoomEquipmentStatus() {
     setSelectedItem(navItems[nextIndex]);
   };
 
-  // --- Compact bar: กลุ่มละ dots + label ---
-  const groups = [
-    {
-      key: 'room3',
-      label: 'ชั้น 3',
-      items: allRooms3,
-      getStatus: r => roomStatus[r] === 'in_use',
-      inUseCount: allRooms3.filter(r => roomStatus[r] === 'in_use').length,
-    },
-    {
-      key: 'room4',
-      label: 'ชั้น 4',
-      items: allRooms4,
-      getStatus: r => roomStatus[r] === 'in_use',
-      inUseCount: allRooms4.filter(r => roomStatus[r] === 'in_use').length,
-    },
-    {
-      key: 'hp3',
-      label: 'หูฟัง',
-      items: allHeadphones3,
-      getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
-      inUseCount: allHeadphones3.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
-    },
-    {
-      key: 'pw3',
-      label: 'ปลั๊ก',
-      items: allPower3,
-      getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
-      inUseCount: allPower3.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
-    },
-    {
-      key: 'hpFinn',
-      label: 'Finn🎧',
-      items: allHeadphonesFinn,
-      getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
-      inUseCount: allHeadphonesFinn.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
-    },
-    {
-      key: 'pwFinn',
-      label: 'Finn🔌',
-      items: allPowerFinn,
-      getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
-      inUseCount: allPowerFinn.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
-    },
-  ];
+  // --- Compact bar: กลุ่มละ dots + label - Dynamic based on active view ---
+  const groups = activeView === 'rooms'
+    ? [
+        {
+          key: 'room3',
+          label: 'ชั้น 3',
+          items: allRooms3,
+          getStatus: r => roomStatus[r] === 'in_use',
+          inUseCount: allRooms3.filter(r => roomStatus[r] === 'in_use').length,
+        },
+        {
+          key: 'room4',
+          label: 'ชั้น 4',
+          items: allRooms4,
+          getStatus: r => roomStatus[r] === 'in_use',
+          inUseCount: allRooms4.filter(r => roomStatus[r] === 'in_use').length,
+        },
+      ]
+    : [
+        {
+          key: 'hp3',
+          label: 'หูฟัง ชั้น 3',
+          items: allHeadphones3,
+          getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
+          inUseCount: allHeadphones3.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
+        },
+        {
+          key: 'pw3',
+          label: 'ปลั๊ก ชั้น 3',
+          items: allPower3,
+          getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
+          inUseCount: allPower3.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
+        },
+        {
+          key: 'hpFinn',
+          label: 'หูฟัง Finn',
+          items: allHeadphonesFinn,
+          getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
+          inUseCount: allHeadphonesFinn.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
+        },
+        {
+          key: 'pwFinn',
+          label: 'ปลั๊ก Finn',
+          items: allPowerFinn,
+          getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
+          inUseCount: allPowerFinn.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
+        },
+      ];
 
   return (
     <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm">
@@ -843,15 +892,28 @@ export default function RoomEquipmentStatus() {
           if (!next) {
             setSelectedItem(null);
           } else if (!selectedItem) {
-            // Default to room 303 on first expand
-            setSelectedItem({
-              type: 'room',
-              id: '303',
-              label: '303',
-              location: 'ห้องบริการ ชั้น 3',
-              inUse: roomStatus['303'] === 'in_use',
-              os: roomOsMap['303']
-            });
+            // Default based on active view
+            if (activeView === 'rooms') {
+              setSelectedItem({
+                type: 'room',
+                id: '303',
+                label: '303',
+                location: 'ห้องบริการ ชั้น 3',
+                inUse: roomStatus['303'] === 'in_use',
+                os: roomOsMap['303']
+              });
+            } else {
+              const defaultId = allHeadphones3[0];
+              setSelectedItem({
+                type: 'headphones',
+                id: defaultId,
+                label: `หูฟัง 01`,
+                num: 1,
+                location: 'ชั้น 3',
+                inUse: (equipmentStatus.headphones||{})[defaultId] === 'in_use',
+                condition: equipmentConditions[defaultId]
+              });
+            }
           }
         }}
         className="w-full flex items-center gap-0 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
@@ -877,27 +939,79 @@ export default function RoomEquipmentStatus() {
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* ชั้น 3: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[2px]">{allHeadphones3.map(h=>{const s=(equipmentStatus.headphones||{})[h];const c=equipmentConditions[h];return <div key={h} className={`w-1 h-1 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
-              <span className={`text-[10px] font-medium ${allHeadphones3.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':allHeadphones3.some(h=>equipmentConditions[h]==='damaged'||equipmentConditions[h]==='lost')?'text-amber-500':'text-slate-400'}`}>หูฟัง</span>
+              <div className="flex gap-[2px]">
+                {allHeadphones3.map(h => {
+                  const s = (equipmentStatus.headphones || {})[h];
+                  const c = equipmentConditions[h];
+                  let color = 'bg-emerald-400';
+                  if (s === 'in_use') color = 'bg-red-400';
+                  else if (c === 'damaged') color = 'bg-amber-400';
+                  else if (c === 'lost') color = 'bg-slate-400';
+                  return <div key={h} className={`w-1 h-1 rounded-full ${color}`} />;
+                })}
+              </div>
+              <span className={`text-[10px] font-medium ${
+                allHeadphones3.some(h => (equipmentStatus.headphones || {})[h] === 'in_use') ? 'text-red-500' : 
+                allHeadphones3.some(h => equipmentConditions[h] === 'damaged' || equipmentConditions[h] === 'lost') ? 'text-amber-500' : 'text-slate-400'
+              }`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* ชั้น 3: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">{allPower3.map(p=>{const s=(equipmentStatus.power||{})[p];const c=equipmentConditions[p];return <div key={p} className={`w-1.5 h-1.5 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
-              <span className={`text-[10px] font-medium ${allPower3.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':allPower3.some(p=>equipmentConditions[p]==='damaged'||equipmentConditions[p]==='lost')?'text-amber-500':'text-slate-400'}`}>ปลั๊ก</span>
+              <div className="flex gap-[3px]">
+                {allPower3.map(p => {
+                  const s = (equipmentStatus.power || {})[p];
+                  const c = equipmentConditions[p];
+                  let color = 'bg-emerald-400';
+                  if (s === 'in_use') color = 'bg-red-400';
+                  else if (c === 'damaged') color = 'bg-amber-400';
+                  else if (c === 'lost') color = 'bg-slate-400';
+                  return <div key={p} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
+                })}
+              </div>
+              <span className={`text-[10px] font-medium ${
+                allPower3.some(p => (equipmentStatus.power || {})[p] === 'in_use') ? 'text-red-500' : 
+                allPower3.some(p => equipmentConditions[p] === 'damaged' || equipmentConditions[p] === 'lost') ? 'text-amber-500' : 'text-slate-400'
+              }`}>ปลั๊ก</span>
             </div>
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* Finn: หูฟัง */}
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-[9px] text-slate-300 font-medium">Finn</span>
-              <div className="flex gap-[2px]">{allHeadphonesFinn.map(h=>{const s=(equipmentStatus.headphones||{})[h];const c=equipmentConditions[h];return <div key={h} className={`w-1 h-1 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
-              <span className={`text-[10px] font-medium ${allHeadphonesFinn.some(h=>(equipmentStatus.headphones||{})[h]==='in_use')?'text-red-500':allHeadphonesFinn.some(h=>equipmentConditions[h]==='damaged'||equipmentConditions[h]==='lost')?'text-amber-500':'text-slate-400'}`}>หูฟัง</span>
+              <div className="flex gap-[2px]">
+                {allHeadphonesFinn.map(h => {
+                  const s = (equipmentStatus.headphones || {})[h];
+                  const c = equipmentConditions[h];
+                  let color = 'bg-emerald-400';
+                  if (s === 'in_use') color = 'bg-red-400';
+                  else if (c === 'damaged') color = 'bg-amber-400';
+                  else if (c === 'lost') color = 'bg-slate-400';
+                  return <div key={h} className={`w-1 h-1 rounded-full ${color}`} />;
+                })}
+              </div>
+              <span className={`text-[10px] font-medium ${
+                allHeadphonesFinn.some(h => (equipmentStatus.headphones || {})[h] === 'in_use') ? 'text-red-500' : 
+                allHeadphonesFinn.some(h => equipmentConditions[h] === 'damaged' || equipmentConditions[h] === 'lost') ? 'text-amber-500' : 'text-slate-400'
+              }`}>หูฟัง</span>
             </div>
             <span className="text-slate-200 text-[10px] shrink-0">|</span>
             {/* Finn: ปลั๊ก */}
             <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">{allPowerFinn.map(p=>{const s=(equipmentStatus.power||{})[p];const c=equipmentConditions[p];return <div key={p} className={`w-1.5 h-1.5 rounded-full ${s==='in_use'?'bg-red-400':c==='damaged'?'bg-amber-400':c==='lost'?'bg-slate-400':'bg-emerald-400'}`}/>})}</div>
-              <span className={`text-[10px] font-medium ${allPowerFinn.some(p=>(equipmentStatus.power||{})[p]==='in_use')?'text-red-500':allPowerFinn.some(p=>equipmentConditions[p]==='damaged'||equipmentConditions[p]==='lost')?'text-amber-500':'text-slate-400'}`}>ปลั๊ก</span>
+              <div className="flex gap-[3px]">
+                {allPowerFinn.map(p => {
+                  const s = (equipmentStatus.power || {})[p];
+                  const c = equipmentConditions[p];
+                  let color = 'bg-emerald-400';
+                  if (s === 'in_use') color = 'bg-red-400';
+                  else if (c === 'damaged') color = 'bg-amber-400';
+                  else if (c === 'lost') color = 'bg-slate-400';
+                  return <div key={p} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
+                })}
+              </div>
+              <span className={`text-[10px] font-medium ${
+                allPowerFinn.some(p => (equipmentStatus.power || {})[p] === 'in_use') ? 'text-red-500' : 
+                allPowerFinn.some(p => equipmentConditions[p] === 'damaged' || equipmentConditions[p] === 'lost') ? 'text-amber-500' : 'text-slate-400'
+              }`}>ปลั๊ก</span>
             </div>
           </div>
         )}
@@ -966,61 +1080,125 @@ export default function RoomEquipmentStatus() {
           )}
           <div className="flex flex-col-reverse md:flex-row">
             {/* ฝั่งซ้าย: Grid Cards - 40% - Fixed height with smooth scroll */}
-            <div className="w-full md:w-[42%] p-2 space-y-2 overflow-y-auto h-[420px] md:h-[480px] scroll-smooth snap-y snap-mandatory">
-
-              {/* Section: ห้อง ชั้น 3 */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 3</p>
-                <div className="grid grid-cols-5 sm:grid-cols-8 gap-1">
-                  {allRooms3.map(r => {
-                    const inUse = roomStatus[r] === 'in_use';
-                    return (
-                      <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 3',inUse,os:roomOsMap[r]})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="w-full md:w-[42%] overflow-y-auto h-[420px] md:h-[480px] scroll-smooth snap-y snap-mandatory">
+              
+              {/* [SE] View Toggle Tabs */}
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-100 p-2 flex gap-1">
+                <button
+                  onClick={() => { 
+                    setActiveView('rooms'); 
+                    // Default to room 303
+                    setSelectedItem({
+                      type: 'room',
+                      id: '303',
+                      label: '303',
+                      location: 'ห้องบริการ ชั้น 3',
+                      inUse: roomStatus['303'] === 'in_use',
+                      os: roomOsMap['303']
+                    });
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all ${
+                    activeView === 'rooms'
+                      ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-200'
+                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                  }`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-8h6v8"/>
+                  </svg>
+                  ห้องบริการ
+                </button>
+                <button
+                  onClick={() => { 
+                    setActiveView('equipment'); 
+                    // Default to ICIT01 (first headphones)
+                    const defaultId = allHeadphones3[0];
+                    const inUse = (equipmentStatus.headphones||{})[defaultId] === 'in_use';
+                    const cond = equipmentConditions[defaultId];
+                    setSelectedItem({
+                      type: 'headphones',
+                      id: defaultId,
+                      label: `หูฟัง 01`,
+                      num: 1,
+                      location: 'ชั้น 3',
+                      inUse,
+                      condition: cond
+                    });
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all ${
+                    activeView === 'equipment'
+                      ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200'
+                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                  }`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v14a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M12 11h.01"/>
+                  </svg>
+                  อุปกรณ์
+                </button>
               </div>
 
-              {/* Section: ห้อง ชั้น 4 */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 4</p>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
-                  {allRooms4.map(r => {
-                    const inUse = roomStatus[r] === 'in_use';
-                    return (
-                      <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 4',inUse,os:roomOsMap[r]})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
-                          selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                        <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <div className="p-2 space-y-2">
+                {activeView === 'rooms' ? (
+                  <>
+                    {/* Section: ห้อง ชั้น 3 */}
+                    <div>
+                      <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 3</p>
+                      <div className="grid grid-cols-5 sm:grid-cols-8 gap-1">
+                        {allRooms3.map(r => {
+                          const inUse = roomStatus[r] === 'in_use';
+                          return (
+                            <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 3',inUse,os:roomOsMap[r]})}
+                              className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                                selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
+                              }`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                              <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
+                    {/* Section: ห้อง ชั้น 4 */}
+                    <div>
+                      <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ห้องบริการ ชั้น 4</p>
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
+                        {allRooms4.map(r => {
+                          const inUse = roomStatus[r] === 'in_use';
+                          return (
+                            <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 4',inUse,os:roomOsMap[r]})}
+                              className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
+                                selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
+                              }`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${inUse ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                              <span className={`text-[10px] font-bold ${inUse ? 'text-red-700' : 'text-emerald-700'}`}>{r}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Section: ตารางเรียนวันนี้ ชั้น 4 */}
+                    <ClassroomScheduleSection />
+            </>
+          ) : (
+            <>
               {/* Section: หูฟัง ชั้น 3 */}
               <div>
                 <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง ชั้น 3</p>
-                <div className="grid grid-cols-8 sm:grid-cols-10 gap-0.5">
+                <div className="grid grid-cols-6 sm:grid-cols-10 gap-0.5">
                   {allHeadphones3.map(id => {
                     const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
                     const det = equipmentDetails[id];
                     const cond = equipmentConditions[id];
                     const num = parseInt(id.replace('ICIT',''),10);
-                    // [SE] Show condition styling
                     let bgClass = 'bg-slate-50 border-slate-100';
                     if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
                     else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
                     else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200'; // UX: Gray for lost (disabled semantic)
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
                     return (
                       <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
                         className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
@@ -1122,10 +1300,13 @@ export default function RoomEquipmentStatus() {
                   })}
                 </div>
               </div>
-            </div>
+            </>
+          )}
+        </div>
+      </div>
 
-            {/* ฝั่งขวา: 3D Preview Panel - 60% - Fixed height container */}
-            <div className="relative w-full md:w-[58%] bg-gradient-to-b from-slate-50/80 to-white border-b md:border-b-0 md:border-l border-slate-100 p-3 md:p-4 flex flex-col h-[420px] md:h-[480px] overflow-hidden">
+      {/* ฝั่งขวา: 3D Preview Panel - 60% - Fixed height container */}
+      <div className="relative w-full md:w-[58%] bg-gradient-to-b from-slate-50/80 to-white border-b md:border-b-0 md:border-l border-slate-100 p-3 md:p-4 flex flex-col h-[420px] md:h-[480px] overflow-hidden">
               {/* Navigation buttons */}
               <div className="absolute top-3 left-3 right-3 z-10 flex justify-between pointer-events-none">
                 <button
@@ -1152,8 +1333,8 @@ export default function RoomEquipmentStatus() {
                 </button>
               </div>
 
-              {/* Fixed content wrapper for smooth transitions */}
-              <div className="flex-1 flex flex-col relative overflow-y-auto overflow-x-hidden pt-12">
+              {/* Fixed content wrapper for smooth transitions - NO SCROLLBAR */}
+              <div className="flex-1 flex flex-col relative overflow-hidden pt-10">
                 <div className={`transition-all duration-300 ease-out ${!selectedItem ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
                   {/* Empty state */}
                   <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-3">
@@ -1181,6 +1362,130 @@ export default function RoomEquipmentStatus() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Component แสดงตารางเรียนวันนี้
+function ClassroomScheduleSection() {
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const dayLabels = {
+    sunday: "อาทิตย์",
+    monday: "จันทร์",
+    tuesday: "อังคาร",
+    wednesday: "พุธ",
+    thursday: "พฤหัสบดี",
+    friday: "ศุกร์",
+    saturday: "เสาร์",
+  };
+
+  const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const db = (await import('../lib/firebase')).db;
+        const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore');
+
+        const today = new Date();
+        const dayOfWeek = DAYS[today.getDay()];
+
+        const q = query(
+          collection(db, "classroomSchedules"),
+          where("isActive", "==", true),
+          where("dayOfWeek", "==", dayOfWeek),
+          orderBy("startTime", "asc")
+        );
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSchedules(data);
+      } catch (err) {
+        console.error("Error fetching schedules:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedules();
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchSchedules, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+        <p className="text-[9px] font-semibold text-blue-400 uppercase tracking-wider mb-2">ตารางเรียนวันนี้</p>
+        <div className="animate-pulse space-y-1">
+          <div className="h-4 bg-blue-100 rounded w-3/4"></div>
+          <div className="h-4 bg-blue-100 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (schedules.length === 0) {
+    return (
+      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+        <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ตารางเรียนวันนี้</p>
+        <p className="text-[10px] text-slate-500">ไม่มีตารางเรียนชั้น 4 วันนี้</p>
+      </div>
+    );
+  }
+
+  const now = new Date();
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  return (
+    <div className="p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+      <p className="text-[9px] font-semibold text-blue-600 uppercase tracking-wider mb-2">
+        ตารางเรียนวันนี้ ({schedules.length} รายการ)
+      </p>
+      <div className="space-y-1.5">
+        {schedules.map((schedule) => {
+          const isInProgress = currentTime >= schedule.startTime && currentTime < schedule.endTime;
+          const isUpcoming = currentTime < schedule.startTime;
+
+          return (
+            <div
+              key={schedule.id}
+              className={`p-1.5 rounded-md text-xs ${
+                isInProgress
+                  ? "bg-amber-50 border border-amber-200"
+                  : isUpcoming
+                  ? "bg-white/80 border border-blue-100"
+                  : "bg-slate-50/50 border border-slate-100 opacity-60"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                  isInProgress ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                }`}>
+                  ห้อง {schedule.room}
+                </span>
+                <span className="text-[10px] text-slate-600">
+                  {schedule.startTime} - {schedule.endTime}
+                </span>
+                {isInProgress && (
+                  <span className="text-[9px] font-medium text-amber-600 animate-pulse">
+                    กำลังเรียน
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] font-medium text-slate-700 mt-1 truncate">{schedule.subject}</p>
+              {schedule.teacher && (
+                <p className="text-[9px] text-slate-500">{schedule.teacher}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
