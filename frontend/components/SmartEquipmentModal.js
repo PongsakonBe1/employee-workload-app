@@ -60,7 +60,7 @@ export default function SmartEquipmentModal({
       try {
         const db = getFirestore();
         const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-        const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(200));
+        const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(500));
         const querySnapshot = await getDocs(worklogsQuery);
         const logs = [];
         querySnapshot.forEach((doc) => {
@@ -78,15 +78,15 @@ export default function SmartEquipmentModal({
         // [SA] reverse เป็น asc (เก่า→ใหม่) เพื่อให้ log ใหม่ override ได้ถูกต้อง
         const sortedLogs = [...logs].reverse();
 
-        // Pass 1: scan ทุก log ทุกวัน เพื่อหา equipmentCondition ล่าสุดของแต่ละตัว
-        // damaged/lost คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
+        // Pass 1: scan เฉพาะ log "คืน" เพื่อหา equipmentCondition ล่าสุดของแต่ละตัว
+        // [FIX] condition (damaged/lost/normal) ถูกรายงานตอน "คืน" เท่านั้น
+        // log "ยืม" ต้องไม่ override condition — เพราะการยืมออกไปไม่ได้หมายความว่าอุปกรณ์ปกติ
         const conditionMap = {};
         sortedLogs.forEach(log => {
           const minorTask = (log.minorTask || '').toLowerCase();
           const commentLower = (log.comment || '').toLowerCase();
-          const isEquipmentLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') ||
-                                 minorTask.includes('ยืมหูฟัง') || minorTask.includes('ยืมปลั๊กไฟ');
-          if (!isEquipmentLog) return;
+          const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ');
+          if (!isReturnLog) return;
 
           // ตรวจ field equipment ตรง (จาก SmartEquipmentModal log) ก่อน
           if (log.equipment && log.equipmentCondition) {
@@ -179,7 +179,7 @@ export default function SmartEquipmentModal({
           try {
             const db = getFirestore();
             const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-            const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(200));
+            const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(500));
             const querySnapshot = await getDocs(worklogsQuery);
             const logs = [];
             querySnapshot.forEach((doc) => {

@@ -366,12 +366,13 @@ export default function RoomEquipmentStatus() {
     const conditions = {};
 
     // Pass 1: scan ทุก log เพื่อหา equipmentCondition ล่าสุดของแต่ละ equipment
+    // [FIX] condition (damaged/lost/normal) ถูกรายงานตอน "คืน" เท่านั้น
+    // log "ยืม" ต้องไม่ override condition — เพราะการยืมออกไปไม่ได้หมายความว่าอุปกรณ์ปกติ
     sortedLogs.forEach(log => {
       const minorTask = (log.minorTask || '').toLowerCase();
       const comment = (log.comment || '').toLowerCase();
-      const isEquipmentLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') ||
-                             minorTask.includes('ยืมหูฟัง') || minorTask.includes('ยืมปลั๊กไฟ');
-      if (!isEquipmentLog) return;
+      const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ');
+      if (!isReturnLog) return;
 
       // ตรวจ field equipment ตรง (จาก SmartEquipmentModal) ก่อน
       if (log.equipment && log.equipmentCondition) {
@@ -474,10 +475,11 @@ export default function RoomEquipmentStatus() {
         const db = getFirestore();
         
         // ดึงข้อมูล worklogs จาก Firestore (desc แล้ว reverse เป็น asc ใน JS)
+        // [FIX] ใช้ limit 500 เพื่อให้ครอบคลุม condition logs ที่อาจเก่ากว่า 2 สัปดาห์
         const worklogsQuery = query(
           collection(db, 'worklogs'),
           orderBy('createdAt', 'desc'),
-          limit(200)
+          limit(500)
         );
         
         const querySnapshot = await getDocs(worklogsQuery);
