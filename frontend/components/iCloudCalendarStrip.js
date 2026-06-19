@@ -364,8 +364,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
 
       {/* ── Compact Detail Cards ── */}
       {showCompactCards && events.length > 0 && (
-        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 max-h-[280px] sm:max-h-[360px] overflow-y-auto">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 sticky top-0 bg-slate-50/95 backdrop-blur-sm pb-1 z-10">
             {events.length} กิจกรรม{isToday ? "วันนี้" : `  ${viewDate.getDate()} ${MONTHS_TH[viewDate.getMonth()]}`}
           </p>
           <div className="space-y-1.5">
