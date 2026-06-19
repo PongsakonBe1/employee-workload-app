@@ -392,7 +392,7 @@ export default function RoomEquipmentStatus() {
       }
     });
 
-    // [SA] Pass 2: scan ทุก log เพื่อหา room status ล่าสุดของแต่ละห้อง
+    // [SA] Pass 2A: scan room logs เพื่อหา room status ล่าสุดของแต่ละห้อง
     // room status (in_use/available) คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
     const roomLogs = sortedLogs.filter(log => {
       const mt = (log.minorTask || '').toLowerCase();
@@ -401,11 +401,8 @@ export default function RoomEquipmentStatus() {
     });
 
     roomLogs.forEach(log => {
-      const commentLower = (log.comment || '').toLowerCase();
-      const comment = commentLower;
+      const comment = (log.comment || '').toLowerCase();
       const minorTask = (log.minorTask || '').toLowerCase();
-      const userName = log.recipient || log.employeeDisplayName || log.userName || '-';
-      const userTime = log.time || '';
 
       // ชั้น 3: เช็คอินห้องแลกเปลี่ยนความรู้ / ปิดห้องแลกเปลี่ยนความรู้
       if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
@@ -423,6 +420,22 @@ export default function RoomEquipmentStatus() {
         if (/\b406\b/.test(comment)) roomStatus['406'] = isOpenAction ? 'in_use' : 'available';
         if (/\b407\b/.test(comment)) roomStatus['407'] = isOpenAction ? 'in_use' : 'available';
       }
+    });
+
+    // [SA] Pass 2B: scan equipment logs เพื่อหา equipment status ล่าสุด (ยืม/คืน)
+    // [FIX] แยก filter สำหรับ equipment ออกจาก roomLogs — เพราะ roomLogs กรองเฉพาะ
+    // log ห้อง ทำให้ log ยืม/คืนอุปกรณ์ถูกตัดออกไปหมด → สถานะ equipment กลับเป็น available เสมอ
+    const equipmentLogs = sortedLogs.filter(log => {
+      const mt = (log.minorTask || '').toLowerCase();
+      return mt.includes('ยืมหูฟัง') || mt.includes('คืนหูฟัง') ||
+             mt.includes('ยืมปลั๊กไฟ') || mt.includes('คืนปลั๊กไฟ');
+    });
+
+    equipmentLogs.forEach(log => {
+      const comment = (log.comment || '').toLowerCase();
+      const minorTask = (log.minorTask || '').toLowerCase();
+      const userName = log.recipient || log.employeeDisplayName || log.userName || '-';
+      const userTime = log.time || '';
 
       // ตรวจสอบหูฟัง ICIT01-20
       if (minorTask.includes('ยืมหูฟัง')) {
