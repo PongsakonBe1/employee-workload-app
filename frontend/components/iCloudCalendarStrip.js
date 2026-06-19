@@ -208,8 +208,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
         </div>
       </div>
 
-      {/* ── Timeline ── */}
-      <div ref={wrapperRef} className="relative">
+      {/* ── Timeline (hidden on mobile, show on sm+) ── */}
+      <div ref={wrapperRef} className="relative hidden sm:block">
       <div
         ref={timelineRef}
         className="relative overflow-auto bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
