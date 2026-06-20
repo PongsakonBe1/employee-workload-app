@@ -2,6 +2,28 @@
 
 ---
 
+## [2026-06-20 07:50] - [UX/UI + SE] Software Engineer — v2.8.0 Admin UI Redesign & Mobile UX
+
+**Task:** ปรับ UI admin/superadmin ให้ใช้งานสะดวกบน mobile ทุกหน้า + redesign navbar PC เป็น icon-only hover-expand + อัปเดต README + version control
+
+**Files Modified:**
+- `frontend/components/AppShell.js` — [UX/UI + SE]
+  - `getNav()`: แยก nav items สำหรับ staff / admin+superadmin อย่างชัดเจน เพิ่ม `group` field ("main"/"admin")
+  - Admin nav items ครบ: เพิ่ม `วิเคราะห์ประสิทธิภาพ` (BarChart2), `สุขภาพอุปกรณ์` (Headphones), `Audit Logs` (ScrollText), `ตั้งค่า` (ShieldCheck)
+  - Desktop navbar: Admin/Superadmin → icon-only pills + CSS `max-w-0 → max-w-[8rem]` hover expand animation
+  - Mobile Drawer: grouped sections "ทั่วไป" / "จัดการระบบ" + role badge (purple=superadmin, blue=admin) ใน drawer header
+  - `PAGE_LABELS`: เพิ่ม `/admin`, `/admin/staff-analytics`, `/admin/equipment-health`, `/admin/audit-logs`, `/admin/cleanup`
+  - Footer version: `v2.5.0` → `v2.8.0`
+- `frontend/components/FABVersionControl.js` — [SE] อัปเดต v2.8.0, buildDate, features, changes ครบ
+- `README.md` — [Doc] อัปเดต version header, ขอบเขตการวิจัย, features table (admin section), changelog v2.8.0
+
+**Note to Next Agent:**
+- SE: Navbar icon-only ใช้ Tailwind `max-w-0 overflow-hidden group-hover:max-w-[8rem]` — ถ้า Tailwind purge ตัด class นี้ออก ให้เพิ่มใน `safelist` ใน `tailwind.config.js`
+- QA: ทดสอบ hover expand บน Chrome/Safari desktop และ mobile drawer grouped sections ก่อน release ถัดไป
+- Doc: README v2.8.0 อัปเดตแล้ว DeepWiki จะ sync อัตโนมัติ
+
+---
+
 ## [2026-06-05 09:29] - [UX/UI] Designer — ITEM-4 Seasonal Legend & InfoTooltip Spec
 
 **Task:** ITEM-4 — ออกแบบ legend + popover ⓘ สำหรับ `SeasonalPatternChart` ตาม `KMUTNB_ACADEMIC_CALENDAR.md`
