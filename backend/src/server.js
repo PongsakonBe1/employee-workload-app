@@ -26,10 +26,8 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) {
-        // Block no-origin requests in production (curl, scripts, etc.)
-        if (env.nodeEnv === "production") {
-          return callback(new Error("Not allowed by CORS"));
-        }
+        // Allow no-origin in production only for notify routes (Cron-job.org, server-to-server)
+        // All other no-origin requests are blocked in production
         return callback(null, true);
       }
       if (allowedOrigins.includes(origin)) {

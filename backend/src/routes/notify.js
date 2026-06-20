@@ -117,14 +117,14 @@ router.post("/broadcast", async (req, res) => {
 /**
  * Daily Reminder Notification
  * ส่ง reminder เฉพาะ user ที่ยังไม่ได้ลง worklog วันนี้
- * 
- * Auth: Cron Secret Header (x-cron-secret)
- * POST /api/notify/daily-reminder
+ *
+ * Auth: Cron Secret — รับจาก header "x-cron-secret" หรือ query param "?secret="
+ * GET  /api/notify/daily-reminder  (สำหรับ Cron-job.org)
+ * POST /api/notify/daily-reminder  (สำหรับ manual trigger)
  */
-router.post("/daily-reminder", async (req, res) => {
+async function handleDailyReminder(req, res) {
   try {
-    // Verify cron secret (constant-time comparison ป้องกัน timing attack)
-    const cronSecret = req.headers["x-cron-secret"];
+    const cronSecret = req.headers["x-cron-secret"] || req.query.secret;
     const expectedSecret = env.cronSecret;
     
     if (!cronSecret || !expectedSecret) {
@@ -213,7 +213,10 @@ router.post("/daily-reminder", async (req, res) => {
       error: error.message,
     });
   }
-});
+}
+
+router.get("/daily-reminder", handleDailyReminder);
+router.post("/daily-reminder", handleDailyReminder);
 
 /**
  * Test Notification (Development only)
