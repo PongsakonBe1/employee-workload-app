@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | 🌐 **Production URL** | https://labboy-workload-app.web.app |
-| 📦 **Current Version** | v2.7.0 |
-| 📅 **Last Updated** | 2026-06-17 |
+| 📦 **Current Version** | v2.8.0 |
+| 📅 **Last Updated** | 2026-06-20 |
 | 🏢 **Organization** | ICIT KMUTNB |
 | 👤 **Developer** | Pongsakon Rawangwong (พงศกร ระวังวงศ์) |
 | 📧 **Contact** | pongsakon.be1@gmail.com |
@@ -86,7 +86,7 @@
 | **Platform** | Web App (PWA) ทำงานบน iOS, Android, Desktop |
 | **Backend** | Firebase (Serverless) ไม่ต้องจัดการ Server |
 | **ช่วงเวลาพัฒนา** | มีนาคม 2026 – มิถุนายน 2026 |
-| **Version ปัจจุบัน** | v2.7.0 (17 Releases นับจาก v1.0.0) |
+| **Version ปัจจุบัน** | v2.8.0 (18 Releases นับจาก v1.0.0) |
 | **ข้อมูลที่บันทึก** | Worklog entries, Room/Equipment status, Exam schedules |
 
 ### ผลลัพธ์ที่คาดหวัง
@@ -127,7 +127,7 @@
 | Dashboard ส่วนตัว | งานของฉัน + อันดับในกลุ่ม + leaderboard ทีม | v1.7.0 |
 | Calendar View | สลับ List/ปฏิทิน, คลิกวันดู worklog | v1.7.0 |
 | Room Usage Calendar | iOS-style compact calendar ตารางห้องวันนี้บน Dashboard (ตารางเรียน + คุมสอบ DL) | v2.4.0 |
-| iCloud Calendar Strip | ปฏิทินรายวัน iOS-style พร้อม Time Grid แสดงตารางเรียน + คุมสอบ DL พร้อมชื่อผู้คุมสอบ, นำทางข้ามวัน, now-line สีแดง, รองรับ overlap events แบบ side-by-side | v2.6.0 |
+| iCloud Calendar Strip | ปฏิทินรายวัน iOS-style พร้อม Time Grid แสดงตารางเรียน + คุมสอบ DL พร้อมชื่อผู้คุมสอบ, นำทางข้ามวัน, now-line สีแดง, รองรับ overlap events แบบ side-by-side; **บน Mobile แสดงเฉพาะ Compact Cards** (ไม่มี Timeline) ป้องกันล้นหน้าจอ | v2.6.0–v2.8.0 |
 | Thai Holidays | แสดงวันหยุดนักขัตฤกษ์ไทยในปฏิทิน | v1.7.3 |
 | Export CSV | Export ข้อมูลของตัวเอง | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ CSS @media print ซ่อน sidebar/nav/filter (เฉพาะ Admin/Superadmin) | v2.0.0 |
@@ -137,6 +137,9 @@
 | ฟีเจอร์ | รายละเอียด | เวอร์ชันที่เพิ่ม |
 |---------|-----------|----------------|
 | บันทึกงานให้พนักงาน | เลือกพนักงานจาก dropdown แล้วบันทึกในนามพนักงาน | v1.8.0 |
+| Navbar Icon-only + Hover Expand | Admin/Superadmin บน PC เห็น navbar เป็น icon ย่อ เมื่อ hover แสดงชื่อเมนู (ป้องกันตัวหนังสือซ้อนกัน) | v2.8.0 |
+| Mobile Drawer แบบ Grouped | เมนู mobile แบ่งกลุ่ม "ทั่วไป" / "จัดการระบบ" พร้อม role badge | v2.8.0 |
+| Admin Nav ครบทุกหน้า | เข้าถึง วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs ได้จาก navbar/drawer โดยตรง | v2.8.0 |
 | จัดการ Templates | เพิ่ม/แก้ไข/ลบ Quick Log Templates + Combo Templates | v1.8.0 |
 | Template Options | `requireRecipient`, `requireComment`, `isSmart` | v1.9.4 |
 | Dashboard ทีม | สถิติรวม, เฉลี่ยต่อคน, Top 3, รายชื่อทุกคน | v1.7.0 |
@@ -1651,6 +1654,7 @@ snyk container test
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.8.0** | 2026-06-20 | **UX: Admin/Superadmin Navbar Redesign**: navbar บน PC เปลี่ยนเป็น icon-only pills; hover แสดงชื่อเมนูแบบ expand (ป้องกันตัวหนังสือซ้อนกันเมื่อมีเมนูเยอะ); **UX: Mobile Drawer Grouped**: แบ่งกลุ่ม "ทั่วไป" / "จัดการระบบ" + role badge (purple/blue) ใน header; **FEAT: Admin Nav ครบ**: เพิ่ม วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs ใน nav ทั้ง desktop + mobile drawer; **UX: iCloudCalendarStrip Mobile**: ซ่อน Timeline บน mobile (`hidden sm:block`) — แสดงเฉพาะ Compact Cards พร้อม `max-h` + scroll ป้องกันล้นหน้าจอ; **FIX: RoomEquipmentStatus**: แยก Pass 2A (room logs) / 2B (equipment logs) filter อิสระ — แก้ bug สถานะ equipment reset กลับเป็น available หลัง reload; **FIX: SmartEquipmentModal**: condition อ่านจาก return log เท่านั้น (limit 500) — สถานะ damaged/lost คงอยู่ถูกต้อง; **VCS: Footer + FABVersionControl** อัปเดต v2.8.0 |
 | **v2.7.0** | 2026-06-17 | **UX: iCloudCalendarStrip redesign**: ขยาย timeline scope 07:00–22:00; card background ใช้สีโปร่งใสประจำห้อง (blue/violet/emerald/sky); subject font ปรับขนาด dynamic ตาม card height (sm ≥90px / xs ≥64px / 11px); แสดง proctor ครบทุกคน (ลบ cap 2 คน); **FIX: Classroom Schedules delete**: เปลี่ยน soft delete → hard delete (`deleteDoc`) ลบออกจาก Firestore จริง; **UX: NotificationBell alert**: ย้าย toast จาก `top-4` → `bottom-20` ไม่บัง navbar; **UX: ScheduleAlertBanner**: toast bottom-right ไม่บัง navbar; **VCS: FABVersionControl** อัปเดต v2.7.0 features/changes |
 | **v2.6.0** | 2026-06-17 | **FEAT: iCloudCalendarStrip**: ปฏิทินรายวัน iOS-style — Time Grid 07:00–19:00, now-line สีแดง, วันนี้ตัวเลข+ชื่อวันสีแดง, ปุ่ม วันนี้ สีแดง, นำทางข้ามวัน, overlap events แบบ side-by-side lanes, ซ่อน scrollbar, ชื่อผู้คุมสอบ DL ใช้ displayName; **FEAT: ScheduleManager**: checkbox selection + bulk toggle เปิด/ปิดรายการที่เลือก, ภาพรวมห้อง 401/402/406/407 วันนี้แบบสี; **FEAT: DLExamManager**: ภาพรวม 406/407/CEM + ผู้คุมสอบ (displayName), ลบ RoomUsageCalendar weekly view ออกจาก system tabs; **FIX: ScheduleManager isActive**: แก้ isActive ตอนสร้างตารางใหม่อ่านค่าจาก checkbox จริง; **FIX: ScheduleManager delete**: แสดงตารางทุกสถานะ (ไม่กรองเฉพาะ active); **UX: Mobile worklogs/new**: ปุ่มกรอกเอง + calendar toggle + ซ่อน TodayRoomSchedule ซ้ำซ้อน |
 | **v2.5.0** | 2026-06-17 | **FEAT: TodayRoomSchedule (iOS Compact)**: Dashboard แสดง widget ตารางห้องเรียนชั้น 4 วันนี้แบบ iOS Calendar style — ห้องที่ต้องเปิด (pill badges), กิจกรรม active/upcoming/past (color-coded cards), นาฬิกา real-time tick ทุก 1 นาที, รองรับทั้งตารางเรียน (recurring by day-of-week) และตาราง DL Exam (date-specific); **FEAT: User Manual (/help)**: หน้าคู่มือการใช้งานแบบ Accordion 8 หัวข้อ (ภาพรวม/Dashboard/บันทึกงาน/ห้องเรียน/ประวัติ/Export/Admin/FAQ); **UX: Footer**: เพิ่ม link "คู่มือการใช้งาน" ใน Footer และ Nav Drawer (Mobile); **UX: AppShell Footer**: อัปเดต version เป็น v2.5.0 |

@@ -19,6 +19,11 @@ import {
   X,
   ChevronLeft,
   HelpCircle,
+  BarChart2,
+  ClipboardList,
+  ShieldCheck,
+  Headphones,
+  ScrollText,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { isAdminRole } from "../lib/authUtils";
@@ -30,52 +35,56 @@ const getNav = (t, role) => {
   const isSuperadmin = role === "superadmin";
   const isStaff = role === "staff";
 
-  const items = [
-    { href: "/dashboard", label: t("navigation.dashboard"), icon: LayoutGrid },
-    { href: "/worklogs", label: t("navigation.worklogs"), icon: ListChecks },
-    { href: "/export", label: t("navigation.export"), icon: Download },
-    { href: "/profile", label: "โปรไฟล์", icon: User },
-  ];
-
-  // Show Record Work for staff only (admin uses admin/record instead)
   if (isStaff) {
-    items.splice(1, 0, {
-      href: "/worklogs/new",
-      label: t("navigation.newWorklog"),
-      icon: PlusCircle,
-    });
+    return [
+      { href: "/dashboard",    label: t("navigation.dashboard"),  icon: LayoutGrid },
+      { href: "/worklogs/new", label: t("navigation.newWorklog"), icon: PlusCircle },
+      { href: "/worklogs",     label: t("navigation.worklogs"),   icon: ListChecks },
+      { href: "/export",       label: t("navigation.export"),     icon: Download },
+      { href: "/profile",      label: "โปรไฟล์",                  icon: User },
+    ];
   }
 
-  // Show Admin menu for admin and superadmin
   if (isAdmin || isSuperadmin) {
-    // ใส่ 'บันทึกงานให้พนักงาน' หลัง 'แดชบอร์ด' (index 1)
-    items.splice(1, 0, {
-      href: "/admin/record",
-      label: "บันทึกงานให้พนักงาน",
-      icon: UserPlus,
-    });
-    items.push({
-      href: "/admin/users",
-      label: "จัดการผู้ใช้",
-      icon: Users,
-    });
-    // หมายเหตุ: จัดการระบบเป็นไอคอนแยกต่างหาก (ไม่มีชื่อ)
+    return [
+      { href: "/dashboard",              label: "แดชบอร์ด",              icon: LayoutGrid,    group: "main" },
+      { href: "/admin/record",           label: "บันทึกงาน",              icon: UserPlus,      group: "main" },
+      { href: "/worklogs",               label: "รายการงาน",              icon: ListChecks,    group: "main" },
+      { href: "/admin/users",            label: "จัดการผู้ใช้",            icon: Users,         group: "admin" },
+      { href: "/admin/staff-analytics",  label: "วิเคราะห์ประสิทธิภาพ",   icon: BarChart2,     group: "admin" },
+      { href: "/admin/equipment-health", label: "สุขภาพอุปกรณ์",          icon: Headphones,    group: "admin" },
+      { href: "/admin/audit-logs",       label: "Audit Logs",             icon: ScrollText,    group: "admin" },
+      { href: "/admin/system",           label: "จัดการระบบ",             icon: Settings,      group: "admin" },
+      { href: "/admin/settings",         label: "ตั้งค่า",                icon: ShieldCheck,   group: "admin" },
+      { href: "/export",                 label: "ส่งออกข้อมูล",           icon: Download,      group: "main" },
+      { href: "/profile",                label: "โปรไฟล์",                icon: User,          group: "main" },
+    ];
   }
 
-  return items;
+  return [
+    { href: "/dashboard", label: t("navigation.dashboard"), icon: LayoutGrid },
+    { href: "/worklogs",  label: t("navigation.worklogs"),  icon: ListChecks },
+    { href: "/export",    label: t("navigation.export"),    icon: Download },
+    { href: "/profile",   label: "โปรไฟล์",                 icon: User },
+  ];
 };
 
 const PAGE_LABELS = {
-  "/dashboard": "แดชบอร์ด",
-  "/worklogs": "รายการงาน",
-  "/worklogs/new": "บันทึกงาน",
-  "/export": "ส่งออกข้อมูล",
-  "/profile": "โปรไฟล์",
-  "/admin/record": "บันทึกงานให้พนักงาน",
-  "/admin/users": "จัดการผู้ใช้",
-  "/admin/system": "จัดการระบบ",
-  "/admin/templates": "จัดการ Templates",
-  "/admin/settings": "ตั้งค่า",
+  "/dashboard":              "แดชบอร์ด",
+  "/worklogs":               "รายการงาน",
+  "/worklogs/new":           "บันทึกงาน",
+  "/export":                 "ส่งออกข้อมูล",
+  "/profile":                "โปรไฟล์",
+  "/admin":                  "ศูนย์ควบคุม Admin",
+  "/admin/record":           "บันทึกงานให้พนักงาน",
+  "/admin/users":            "จัดการผู้ใช้",
+  "/admin/system":           "จัดการระบบ",
+  "/admin/templates":        "จัดการ Templates",
+  "/admin/settings":         "ตั้งค่า",
+  "/admin/staff-analytics":  "วิเคราะห์ประสิทธิภาพ",
+  "/admin/equipment-health": "สุขภาพอุปกรณ์",
+  "/admin/audit-logs":       "Audit Logs",
+  "/admin/cleanup":          "ล้างข้อมูล",
 };
 
 export function AppShell({ children }) {
@@ -163,45 +172,64 @@ export function AppShell({ children }) {
           </div>
         </Link>
 
-        <div className="items-center hidden gap-2 lg:flex">
-          {getNav(t, user?.role).map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                  active
-                    ? "bg-slate-950 text-white"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950"
-                }`}
-              >
-                <Icon size={16} />
-                {item.label}
-              </Link>
-            );
-          })}
+        {/* Desktop nav — staff: text pills | admin/superadmin: icon-only + hover expand */}
+        <div className="items-center hidden gap-1 lg:flex">
+          {isAdminRole(user) ? (
+            // Admin/Superadmin: icon-only pills with hover tooltip expand
+            getNav(t, user?.role).map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group relative flex items-center rounded-full p-2.5 transition-all duration-200 ${
+                    active
+                      ? "bg-slate-950 text-white"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                  }`}
+                >
+                  <Icon size={17} />
+                  {/* Hover expand label */}
+                  <span className={`max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-200 group-hover:max-w-[8rem] group-hover:ml-1.5 ${active ? "max-w-[8rem] ml-1.5" : ""}`}>
+                    {item.label}
+                  </span>
+                  {/* Tooltip fallback สำหรับ items ที่ไม่ได้ active */}
+                  {!active && (
+                    <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:hidden rounded-lg bg-slate-800 px-2 py-1 text-xs text-white whitespace-nowrap z-50">
+                      {item.label}
+                    </span>
+                  )}
+                </Link>
+              );
+            })
+          ) : (
+            // Staff: text pills (เดิม)
+            getNav(t, user?.role).map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+                    active
+                      ? "bg-slate-950 text-white"
+                      : "text-slate-600 hover:bg-white hover:text-slate-950"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              );
+            })
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Notification Bell - ทุก role */}
           <NotificationBell />
 
-          {/* Settings icon for admin/superadmin - tooltip style */}
-          {isAdminRole(user) && (
-            <Link
-              href="/admin/system"
-              className="relative p-3 transition border rounded-full border-slate-200 bg-white/80 text-slate-600 hover:text-slate-950 group"
-              title="จัดการระบบ"
-            >
-              <Settings size={18} />
-              {/* Tooltip */}
-              <span className="absolute px-2 py-1 mt-2 text-xs text-white transition -translate-x-1/2 rounded opacity-0 pointer-events-none top-full left-1/2 bg-slate-800 group-hover:opacity-100 whitespace-nowrap">
-                จัดการระบบ
-              </span>
-            </Link>
-          )}
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold text-slate-950">
               {user.displayName || user.nickname || user.fullName || "User"}
@@ -259,49 +287,72 @@ export function AppShell({ children }) {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
           {/* Sheet */}
           <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">{user?.displayName || user?.nickname || "User"}</p>
-                <p className="text-xs text-slate-400">{user?.role}</p>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center text-white">
+                  <User size={16} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{user?.displayName || user?.nickname || "User"}</p>
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${user?.role === "superadmin" ? "bg-purple-100 text-purple-700" : user?.role === "admin" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"}`}>
+                    {user?.role}
+                  </span>
+                </div>
               </div>
               <button onClick={() => setDrawerOpen(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-500">
                 <X size={18} />
               </button>
             </div>
-            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-              {getNav(t, user?.role).map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setDrawerOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition ${
-                      active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <Icon size={18} />
-                    {item.label}
-                  </Link>
-                );
-              })}
+            <nav className="flex-1 overflow-y-auto px-3 py-3">
+              {isAdminRole(user) ? (
+                <>
+                  {/* Main section */}
+                  <p className="px-4 pt-1 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">ทั่วไป</p>
+                  {getNav(t, user?.role).filter(i => i.group === "main").map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname === item.href;
+                    return (
+                      <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition mb-0.5 ${active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+                        <Icon size={17} />{item.label}
+                      </Link>
+                    );
+                  })}
+                  {/* Admin section */}
+                  <div className="my-2 border-t border-slate-100" />
+                  <p className="px-4 pt-1 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">จัดการระบบ</p>
+                  {getNav(t, user?.role).filter(i => i.group === "admin").map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname === item.href;
+                    return (
+                      <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition mb-0.5 ${active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+                        <Icon size={17} />{item.label}
+                      </Link>
+                    );
+                  })}
+                </>
+              ) : (
+                getNav(t, user?.role).map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.href;
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition mb-0.5 ${active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+                      <Icon size={17} />{item.label}
+                    </Link>
+                  );
+                })
+              )}
             </nav>
-            <div className="px-3 py-4 border-t border-slate-100 space-y-1">
-              <Link
-                href="/help"
-                onClick={() => setDrawerOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
-              >
-                <HelpCircle size={18} />
-                คู่มือการใช้งาน
+            <div className="px-3 py-3 border-t border-slate-100 space-y-0.5">
+              <Link href="/help" onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+                <HelpCircle size={17} />คู่มือการใช้งาน
               </Link>
-              <button
-                onClick={() => { setDrawerOpen(false); logout(); }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50 transition"
-              >
-                <LogOut size={18} />
-                ออกจากระบบ
+              <button onClick={() => { setDrawerOpen(false); logout(); }}
+                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50 transition">
+                <LogOut size={17} />ออกจากระบบ
               </button>
             </div>
           </div>
@@ -322,7 +373,7 @@ export function AppShell({ children }) {
           <span className="mx-2">·</span>
           <span>labboy Workload Recorder</span>
           <span className="mx-2">&mdash;</span>
-          <span>v2.5.0</span>
+          <span>v2.8.0</span>
         </div>
       </footer>
     </div>

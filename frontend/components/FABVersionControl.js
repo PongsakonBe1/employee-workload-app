@@ -4,28 +4,28 @@ import { useState } from "react";
 import { GitBranch, GitCommit, Calendar, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const VERSION_INFO = {
-  version: "2.7.0",
-  buildDate: "2026-06-17",
-  buildTime: "21:50",
-  gitCommit: "e1738d5",
+  version: "2.8.0",
+  buildDate: "2026-06-20",
+  buildTime: "07:50",
+  gitCommit: "9d648f0",
   branch: "main",
   features: [
-    "iCloudCalendarStrip - Drag-to-scroll 2D timeline",
-    "iCloudCalendarStrip - Responsive lane layout (ResizeObserver)",
-    "iCloudCalendarStrip - Timeline scope 07:00–22:00",
-    "iCloudCalendarStrip - Card bg สีตามห้อง + subject font dynamic",
-    "iCloudCalendarStrip - แสดง proctor ครบทุกคน",
-    "Classroom Schedules - Hard delete (ลบออกจาก Firestore จริง)",
-    "NotificationBell - Alert toast ย้ายจาก top → bottom",
-    "ScheduleAlertBanner - Toast bottom-right ไม่บัง navbar"
+    "AppShell - Admin/Superadmin navbar icon-only + hover expand label",
+    "AppShell - Mobile drawer แบบ grouped (ทั่วไป / จัดการระบบ) + role badge",
+    "AppShell - Admin nav ครบ: วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs",
+    "iCloudCalendarStrip - Mobile แสดงเฉพาะ Compact Cards (ไม่มี Timeline)",
+    "iCloudCalendarStrip - Compact Cards มี max-height + scroll เมื่อมีหลาย events",
+    "RoomEquipmentStatus - แยก Pass 2A (room) และ 2B (equipment) filter ถูกต้อง",
+    "SmartEquipmentModal - condition อ่านจาก return log เท่านั้น (limit 500)",
+    "Equipment Status - สถานะ damaged/lost คงอยู่ถูกต้องข้ามวัน"
   ],
   changes: [
-    "iCalendar: HOUR_END 19→22, card redesign ด้วยสีประจำห้อง",
-    "iCalendar: subject font scale ตาม card height (sm/xs/11px)",
-    "iCalendar: ลบ cap proctors.slice(0,2) → แสดงครบ",
-    "Schedules: deleteSchedule เปลี่ยนเป็น hard delete (deleteDoc)",
-    "UI: NotificationBell alert banner ย้ายจาก top-4 → bottom-20",
-    "อัปเดต README.md + Changelog v2.7.0"
+    "fix(equipment-status): แยก roomLogs / equipmentLogs filter → สถานะไม่ reset หลัง reload",
+    "fix(equipment): condition only from return logs → ป้องกัน borrow override damaged",
+    "ui(calendar): mobile shows only compact cards, hide timeline on small screens",
+    "fix(calendar): max-h compact cards ป้องกันล้นหน้าจอ mobile",
+    "ui(navbar): icon-only pills + hover expand สำหรับ admin/superadmin บน PC",
+    "ui(drawer): grouped sections + role badge สำหรับ mobile admin"
   ]
 };
 
