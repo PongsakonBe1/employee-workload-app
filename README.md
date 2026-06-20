@@ -1,4 +1,4 @@
-# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT
+# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.8.1)
 
 > **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
 > มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | 🌐 **Production URL** | https://labboy-workload-app.web.app |
-| 📦 **Current Version** | v2.8.0 |
+| 📦 **Current Version** | v2.8.1 |
 | 📅 **Last Updated** | 2026-06-20 |
 | 🏢 **Organization** | ICIT KMUTNB |
 | 👤 **Developer** | Pongsakon Rawangwong (พงศกร ระวังวงศ์) |
@@ -172,37 +172,43 @@
 ## สถาปัตยกรรมระบบ (System Architecture)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Client Layer (Frontend)                       │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
-│  │  Next.js 15  │ │   React 19   │ │  TailwindCSS │             │
-│  │  (App Router)│ │   (Hooks)    │ │   (Styling)  │             │
-│  └──────────────┘ └──────────────┘ └──────────────┘             │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
-│  │ next-intl    │ │ Recharts     │ │ next-pwa     │             │
-│  │ (i18n TH/EN) │ │ (Charts)     │ │ (PWA)        │             │
-│  └──────────────┘ └──────────────┘ └──────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              │ HTTPS
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Firebase Platform                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
-│  │  Authentication │  │  Cloud Firestore │  │   Hosting       │   │
-│  │  (Google Sign-In)│  │  (NoSQL Database)│  │  (CDN/SSL)      │   │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              │ Real-time
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    External Services                             │
-│  ┌─────────────────┐  ┌─────────────────┐                       │
-│  │ iApp API        │  │ Google APIs     │                       │
-│  │ (Thai Holidays) │  │ (Auth/Fonts)    │                       │
-│  └─────────────────┘  └─────────────────┘                       │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    Client Layer (Frontend)                        │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐              │
+│  │  Next.js 15  │ │   React 19   │ │  TailwindCSS │              │
+│  │  (App Router)│ │   (Hooks)    │ │   (Styling)  │              │
+│  └──────────────┘ └──────────────┘ └──────────────┘              │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐              │
+│  │ next-intl    │ │ Recharts     │ │ next-pwa     │              │
+│  │ (i18n TH)    │ │ (Charts)     │ │ (PWA/FCM SW) │              │
+│  └──────────────┘ └──────────────┘ └──────────────┘              │
+└──────────────────────────────────────────────────────────────────┘
+              │ HTTPS                        │ FCM Push
+              ▼                              ▼
+┌─────────────────────────────┐   ┌──────────────────────────────┐
+│      Firebase Platform      │   │   Backend (Render.com)        │
+│  ┌──────────────────────┐   │   │   Express.js + Firebase Admin │
+│  │ Authentication       │   │   │   ┌──────────────────────┐    │
+│  │ (Google Sign-In)     │   │   │   │ POST /daily-reminder  │    │
+│  └──────────────────────┘   │   │   │ POST /broadcast       │    │
+│  ┌──────────────────────┐   │   │   │ GET  /health          │    │
+│  │ Cloud Firestore      │◄──┼───┤   └──────────────────────┘    │
+│  │ (NoSQL, real-time)   │   │   │              ▲                 │
+│  └──────────────────────┘   │   │              │ HTTP (CRON_SECRET)
+│  ┌──────────────────────┐   │   └──────────────────────────────┘
+│  │ Hosting (CDN/SSL)    │   │              ▲
+│  └──────────────────────┘   │              │ Trigger ทุกวัน 17:00
+└─────────────────────────────┘   ┌──────────────────────────────┐
+              │                   │   Cron-job.org (Scheduler)    │
+              │ Real-time         │   - Daily Reminder (17:00)    │
+              ▼                   │   - Health Ping (ทุก 14 นาที) │
+┌─────────────────────────────┐   └──────────────────────────────┘
+│      External Services      │
+│  ┌──────────────┐           │
+│  │ iApp API     │           │
+│  │ (Thai Holiday│           │
+│  └──────────────┘           │
+└─────────────────────────────┘
 ```
 
 ### Data Flow Diagram
@@ -213,6 +219,12 @@ User Action → Frontend Component → Firebase Auth Check → Firestore Operati
                                                     Real-time Update
                                                           ↓
                                               onSnapshot Listener (All Clients)
+
+Cron-job.org (17:00 daily)
+    → GET /api/notify/daily-reminder?secret=CRON_SECRET
+    → Backend checks Firestore for users without today's log
+    → Sends FCM push to matching users
+    → Users receive OS push notification
 ```
 
 ---
@@ -221,16 +233,19 @@ User Action → Frontend Component → Firebase Auth Check → Firestore Operati
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15 (App Router), React 19, Tailwind CSS |
-| Charts | Recharts (lazy-loaded via `next/dynamic`) |
-| Auth | Firebase Authentication (Google Provider) |
-| Database | Cloud Firestore (NoSQL, real-time) |
-| Hosting | Firebase Hosting (CDN, custom domain-ready) |
-| PWA | `next-pwa`, Web App Manifest, Service Worker |
-| Icons | Lucide React |
-| i18n | next-intl (TH/EN) |
-| Security | Snyk SAST, DOMPurify input sanitization, CSP headers |
-| Testing | Playwright (E2E) |
+| **Frontend** | Next.js 15 (App Router, Static Export), React 19, Tailwind CSS |
+| **Charts** | Recharts (lazy-loaded via `next/dynamic`, no SSR) |
+| **Auth** | Firebase Authentication (Google Sign-In, domain restricted) |
+| **Database** | Cloud Firestore (NoSQL, real-time `onSnapshot`) |
+| **Hosting** | Firebase Hosting (CDN, SSL, HTTP/2) |
+| **PWA** | `next-pwa`, Web App Manifest, Service Worker, FCM SW |
+| **Push Notification** | Firebase Cloud Messaging (FCM) — foreground + background |
+| **Backend** | Express.js on Render.com (Node 20) — FCM multicast sender |
+| **Scheduler** | Cron-job.org — daily reminder trigger + health ping |
+| **Icons** | Lucide React |
+| **i18n** | next-intl (Thai, static messages) |
+| **Security** | Snyk SAST, DOMPurify input sanitization, CSP headers, Firestore Rules |
+| **Testing** | Playwright (E2E), Vitest (unit) |
 
 ---
 
@@ -238,41 +253,60 @@ User Action → Frontend Component → Firebase Auth Check → Firestore Operati
 
 ```
 employee-workload-app/
-├── frontend/                   # Next.js app
+├── frontend/                        # Next.js 15 App (Static Export → Firebase Hosting)
 │   ├── app/
-│   │   ├── dashboard/page.js   # Dashboard หลัก (charts, stats, filter)
+│   │   ├── layout.js                # Root layout — NextIntlClientProvider + AuthProvider
+│   │   ├── dashboard/page.js        # Dashboard หลัก (charts, stats, filter, calendar)
 │   │   ├── worklogs/
-│   │   │   ├── page.js         # รายการ worklogs + calendar view
-│   │   │   └── new/page.js     # บันทึกงานใหม่
-│   │   ├── export/page.js      # Export CSV
-│   │   ├── profile/page.js     # โปรไฟล์ผู้ใช้
-│   │   ├── login/page.js       # หน้า Login
+│   │   │   ├── page.js              # รายการ worklogs + calendar view
+│   │   │   └── new/page.js          # บันทึกงานใหม่ (Quick Log + Combo + Manual)
+│   │   ├── export/page.js           # Export CSV (ตัวเอง / ทุกคนถ้า Admin)
+│   │   ├── profile/page.js          # โปรไฟล์ผู้ใช้
+│   │   ├── help/page.js             # คู่มือการใช้งาน (accordion 8 หัวข้อ)
+│   │   ├── login/page.js            # หน้า Login (Google Sign-In)
 │   │   └── admin/
-│   │       ├── users/page.js   # จัดการ users
-│   │       ├── record/page.js  # Admin บันทึกงาน
-│   │       ├── settings/page.js
-│   │       ├── audit-logs/page.js
-│   │       └── system/page.js
+│   │       ├── users/page.js        # จัดการ users (อนุมัติ/ปฏิเสธ/เปิดปิด)
+│   │       ├── record/page.js       # Admin บันทึกงานให้พนักงาน
+│   │       ├── settings/page.js     # ตั้งค่าระบบ (ทั่วไป/แจ้งเตือน/ข้อมูล/ความปลอดภัย)
+│   │       ├── audit-logs/page.js   # Audit logs (Superadmin only)
+│   │       ├── system/page.js       # จัดการระบบ (Templates/ตารางเรียน/คุมสอบ/Broadcast)
+│   │       ├── staff-analytics/page.js   # วิเคราะห์ประสิทธิภาพพนักงาน (Radar + List/Single view)
+│   │       └── equipment-health/page.js  # สุขภาพอุปกรณ์ (filter วัน/สัปดาห์/เดือน/ไตรมาส/ปี)
 │   ├── components/
-│   │   ├── AuthProvider.js     # Firebase Auth context + loginWithGoogle
-│   │   ├── AppShell.js         # Layout shell + navigation
-│   │   ├── NotificationBell.js # In-app notification (Firestore onSnapshot)
-│   │   ├── DashboardCharts.js  # Recharts: Heatmap, HourOfDay, Trend, Pie, Bar
+│   │   ├── AuthProvider.js          # Firebase Auth context + loginWithGoogle
+│   │   ├── AppShell.js              # Layout shell + navigation (icon-only navbar สำหรับ Admin)
+│   │   ├── NotificationBell.js      # In-app + FCM foreground notification
+│   │   ├── DashboardCharts.js       # Recharts: Heatmap, HourOfDay, Trend, Pie, Bar
+│   │   ├── StaffRadarChart.js       # Radar chart สำหรับ Staff Analytics
+│   │   ├── RoomEquipmentStatus.js   # Widget สถานะห้อง + อุปกรณ์ real-time
+│   │   ├── iCloudCalendarStrip.js   # iOS-style Time Grid calendar
+│   │   ├── FABVersionControl.js     # FAB badge แสดง version
 │   │   ├── MinorTaskSelector.js
 │   │   └── CommentSuggestions.js
 │   ├── lib/
-│   │   ├── firebase.js         # Firebase init + googleProvider
+│   │   ├── firebase.js              # Firebase init + getFCMToken + onFCMMessage
+│   │   ├── staffMetrics.js          # คำนวณ metrics 6 มิติ (Volume/Versatility/Consistency/...)
 │   │   ├── commentSuggestions.js
-│   │   ├── thaiHolidays.js     # Thai public holidays (iApp API + localStorage cache + fallback)
-│   │   ├── validation.js       # Form validation helpers
-│   │   └── systemLog.js        # Audit log helper
+│   │   ├── thaiHolidays.js          # Thai public holidays (iApp API + localStorage cache + fallback)
+│   │   ├── validation.js            # Form validation helpers
+│   │   └── systemLog.js             # Audit log helper
+│   ├── messages/
+│   │   ├── th.json                  # Thai translations (next-intl)
+│   │   └── en.json                  # English translations
 │   └── public/
-│       ├── manifest.json       # PWA manifest
-│       └── sw.js               # Service Worker
+│       ├── manifest.json            # PWA manifest
+│       ├── firebase-messaging-sw.js # FCM Service Worker (background push)
+│       └── sw.js                    # Service Worker (next-pwa)
+├── backend/                         # Express.js Backend (Render.com)
+│   └── src/
+│       ├── server.js                # Express app entry point
+│       ├── config/env.js            # Environment config (PORT, CRON_SECRET, etc.)
+│       ├── routes/notify.js         # GET/POST /api/notify/daily-reminder + /broadcast + /health
+│       └── services/fcm.js          # Firebase Admin SDK — ส่ง FCM, ดึง tokens, ตรวจ missing log
 ├── firebase/
-│   ├── firestore.rules         # Firestore security rules
-│   ├── firestore.indexes.json  # Composite indexes
-│   └── firebase.json           # Hosting + rules config
+│   ├── firestore.rules              # Firestore security rules
+│   ├── firestore.indexes.json       # Composite indexes
+│   └── firebase.json                # Hosting + rules config
 └── README.md
 ```
 
@@ -604,6 +638,105 @@ function isSameDay(worklog) {
 2. **Worklogs Collection**: Create ได้ทุกคน, Update/Delete ได้เฉพาะเจ้าของ (หรือ Admin) และต้องไม่ locked
 3. **System Logs**: Read ได้เฉพาะ Superadmin
 4. **Notifications**: Read ได้เฉพาะของตัวเอง + broadcast
+
+---
+
+## Backend API (Render.com)
+
+Backend เป็น Express.js service ที่ deploy บน Render.com ทำหน้าที่หลักคือส่ง Push Notification ผ่าน Firebase Admin SDK เท่านั้น (ไม่จัดการ business logic อื่น)
+
+### URL & Endpoints
+
+| Method | Endpoint | Auth | คำอธิบาย |
+|--------|----------|------|---------|
+| `GET` | `/health` | ไม่ต้อง | Health check — ใช้ Cron-job.org ping ป้องกัน Render sleep |
+| `GET/POST` | `/api/notify/daily-reminder` | `x-cron-secret` header หรือ `?secret=` | ส่ง daily reminder ให้ users ที่ยังไม่ได้ลงงานวันนี้ |
+| `POST` | `/api/notify/broadcast` | Firebase ID Token + superadmin role | Broadcast push ถึงทุก user ที่มี FCM token |
+
+> **Base URL:** `https://employee-workload-app.onrender.com`
+
+### Environment Variables (Render)
+
+```env
+CRON_SECRET=<random-secret>          # ใช้ authenticate /daily-reminder
+FIREBASE_SERVICE_ACCOUNT=<json>      # Firebase Admin SDK credentials (base64 หรือ JSON string)
+PORT=10000                           # Render default
+```
+
+### Push Notification Flow
+
+```
+1. Cron-job.org ยิง GET /api/notify/daily-reminder?secret=CRON_SECRET ทุกวัน 17:00 ICT
+2. Backend ดึง reminderSettings จาก Firestore (เวลา/วันที่เปิดใช้งาน)
+3. ตรวจสอบ isReminderDay() + isReminderTime() (±5 นาที)
+4. ดึง users ทั้งหมดที่มี fcmToken ใน Firestore
+5. กรอง users ที่ยังไม่มี worklog วันนี้ (getUsersWithoutTodayLog)
+6. ส่ง FCM multicast ไปยัง tokens เหล่านั้น
+7. Return { sentCount, failedCount, targetUsers }
+```
+
+### Cron-job.org Configuration
+
+| Job | URL | Method | ความถี่ | Header |
+|-----|-----|--------|---------|--------|
+| Health Ping | `/health` | GET | ทุก 14 นาที | — |
+| Daily Reminder | `/api/notify/daily-reminder` | GET | ทุกวัน 17:00 ICT | `x-cron-secret: <secret>` หรือ `?secret=<secret>` |
+
+---
+
+## Staff Analytics (วิเคราะห์ประสิทธิภาพพนักงาน)
+
+หน้า `/admin/staff-analytics` ให้ Admin/Superadmin วิเคราะห์ประสิทธิภาพพนักงานผ่าน **Radar Chart 6 มิติ**
+
+### 6 Metric Dimensions
+
+| Metric | ชื่อไทย | การคำนวณ | ฟังก์ชัน |
+|--------|---------|---------|---------|
+| **Volume** | ปริมาณงาน | จำนวน worklogs ÷ เป้าหมาย (normalize 0–100) | `calcVolumeScore()` |
+| **Versatility** | ความหลากหลาย | จำนวน unique `minorTask` ÷ max ของทีม | `calcVersatilityScore()` |
+| **Consistency** | ความสม่ำเสมอ | `100 - CV` (Coefficient of Variation ของงานต่อวัน) | `calcConsistencyScore()` |
+| **Peak Handling** | จัดการช่วงพีค | สัดส่วนงานช่วง 14:00–17:00 | `calcPeakScore()` |
+| **Documentation** | เอกสารละเอียด | สัดส่วน comment ≥ 20 ตัวอักษร | `calcDocumentationScore()` |
+| **Combo Usage** | ใช้ combo | อัตราการใช้ Combo Templates | `calcComboScore()` |
+
+คำนวณโดย `frontend/lib/staffMetrics.js` — แสดงผลผ่าน `StaffRadarChart` component
+
+### 2 View Modes
+
+| View | คำอธิบาย |
+|------|---------|
+| **List View** | ตารางพนักงานทุกคน พร้อม metrics 6 มิติ + คะแนนเฉลี่ย ค้นหา/เรียงลำดับ/Export CSV |
+| **Single View** | แสดงทีละคนพร้อม Radar Chart ขนาดใหญ่ นำทางด้วยปุ่ม ‹ › |
+
+### Date Range Filters
+
+`วัน / สัปดาห์ / เดือน / ไตรมาส / ปีงบประมาณ (ต.ค.–ก.ย.) / ปี / กำหนดเอง`
+
+---
+
+## Equipment Health (สุขภาพอุปกรณ์)
+
+หน้า `/admin/equipment-health` ให้ Admin/Superadmin ติดตามสภาพอุปกรณ์ (หูฟัง ICIT01–20, ปลั๊กไฟ ICIT21–25)
+
+### Date Range Filters
+
+| โหมด | คำอธิบาย |
+|------|---------|
+| วัน | วันปัจจุบัน |
+| สัปดาห์ | 7 วันล่าสุด |
+| เดือน | เดือนปัจจุบัน (default) |
+| ไตรมาส | Q1–Q4 ปัจจุบัน |
+| ปีงบประมาณ | ต.ค.–ก.ย. (Thai fiscal year) |
+| ปี | ปีปฏิทิน |
+| กำหนดเอง | เลือกช่วงวันที่เอง |
+
+### Widgets
+
+- **StatCards** — รวมรายงานชำรุด/สูญหาย, อุปกรณ์ที่มีปัญหา, % สุขภาพ
+- **EquipmentDamageChart** — แท่งกราฟจำนวน damage/loss ต่อวัน
+- **DamageCategoryPie** — Pie chart แยกประเภทอุปกรณ์
+- **EquipmentHealthTimeline** — Timeline สถานะอุปกรณ์รายชิ้น
+- **Export CSV** — Export รายการชำรุด/สูญหายตามช่วงเวลาที่กรอง
 
 ---
 
@@ -1631,22 +1764,33 @@ snyk container test
 | สถานะห้องและอุปกรณ์ Real-time | ห้อง 303-407, หูฟัง ICIT01-20, ปลั๊ก ICIT21-25 |
 | PWA | ติดตั้งเป็น App บน iOS/Android/Desktop, offline บางส่วน |
 
-### ❌ สิ่งที่ระบบทำไม่ได้ (ข้อจำกัด)
+### ❌ สิ่งที่ระบบทำไม่ได้ — ข้อจำกัดตามสิทธิ์
 
 | ข้อจำกัด | รายละเอียด |
 |----------|-----------|
 | **แก้ไข worklog ข้ามวัน (Staff)** | Staff แก้ไขได้เฉพาะวันที่บันทึก ถ้าเลย 23:59 จะถูก lock — ต้องให้ Admin/Superadmin แก้แทน |
-| **ลบ worklog (Staff)** | Staff ลบได้เฉพาะวันเดียวกัน และมี Undo 30 วินาทีเท่านั้น |
-| **ดูข้อมูล worklog ของคนอื่น (Staff)** | Staff เห็นเฉพาะงานตัวเอง ไม่เห็น worklog ของเพื่อนร่วมงาน |
-| **Export ข้อมูลทุกคน (Staff)** | Export ได้เฉพาะข้อมูลของตัวเอง — Admin/Superadmin เท่านั้นที่ export ทั้งหมดได้ |
-| **สร้าง/แก้ไข Templates** | เฉพาะ Admin/Superadmin เท่านั้น — Staff ใช้ได้แต่ไม่สามารถสร้างหรือแก้ไขได้ |
-| **แต่งตั้ง Superadmin** | เฉพาะ Superadmin เท่านั้น — Admin ไม่สามารถแต่งตั้งคนอื่นเป็น Superadmin |
-| **Broadcast Notification** | เฉพาะ Superadmin — Admin ส่ง push notification แบบ broadcast ไม่ได้ |
-| **ดู System Logs** | เฉพาะ Superadmin — Admin และ Staff ไม่มีสิทธิ์เข้าถึง audit logs |
-| **ปฏิทินรายวันแบบข้ามเดือน** | iCloudCalendarStrip โหลด DL exam เฉพาะสัปดาห์ปัจจุบัน — ข้ามไปสัปดาห์อื่นจะไม่เห็น DL exam |
-| **Offline ครบถ้วน** | ใช้งานได้บางส่วนขณะ offline — บันทึกงานใหม่และดู real-time data ต้องการ internet |
-| **Login ด้วย email อื่น** | รองรับเฉพาะ @icit.kmutnb.ac.th เท่านั้น — email domain อื่นเข้าระบบไม่ได้ |
-| **Import worklog จำนวนมาก (Admin)** | Admin ไม่สามารถ bulk import ได้ — เฉพาะ Superadmin เท่านั้น |
+| **ลบ worklog (Staff)** | Staff ลบได้เฉพาะวันเดียวกัน มี Undo 30 วินาที |
+| **ดูข้อมูล worklog ของคนอื่น (Staff)** | Staff เห็นเฉพาะงานตัวเอง |
+| **Export ข้อมูลทุกคน (Staff)** | Export ได้เฉพาะข้อมูลตัวเอง — Admin/Superadmin เท่านั้น export ทั้งหมดได้ |
+| **สร้าง/แก้ไข Templates** | เฉพาะ Admin/Superadmin — Staff ใช้ได้แต่สร้างหรือแก้ไขไม่ได้ |
+| **แต่งตั้ง Superadmin** | เฉพาะ Superadmin — Admin แต่งตั้งไม่ได้ |
+| **Broadcast Push Notification** | เฉพาะ Superadmin — Admin ส่ง broadcast ไม่ได้ |
+| **ดู System Logs / Staff Analytics / Equipment Health** | เฉพาะ Admin/Superadmin — Staff ไม่มีสิทธิ์เข้าถึง |
+| **ปฏิทินรายวันแบบข้ามเดือน** | iCloudCalendarStrip โหลด DL exam เฉพาะสัปดาห์ปัจจุบัน |
+| **Offline ครบถ้วน** | บันทึกงานใหม่และ real-time data ต้องการ internet |
+| **Login ด้วย email อื่น** | รองรับเฉพาะ @icit.kmutnb.ac.th เท่านั้น |
+| **Bulk Import (Admin)** | เฉพาะ Superadmin เท่านั้น |
+
+### 🚧 ฟีเจอร์ที่ยังไม่ได้ implement (Planned / TODO)
+
+| ฟีเจอร์ | สถานะ | หมายเหตุ |
+|---------|-------|---------|
+| **Profile Radar Chart** | 📋 Planned | แสดง Top 8 minorTask ที่ทำบ่อยสุดเป็น radar บนหน้า Profile ของ staff แต่ละคน |
+| **InfoTooltip บน Seasonal Chart** | 📋 Planned | อธิบายสี/ความหมายแท่งกราฟ Seasonal Pattern บน Dashboard |
+| **2FA สำหรับ Admin** | 🔲 UI-only | UI ใน Settings มีแล้ว แต่ logic ยังไม่ implement — แสดง note "coming soon" |
+| **Session Timeout จริง** | 🔲 UI-only | UI ตั้งค่าใน Settings มีแล้ว แต่ยังไม่ enforce ใน AuthProvider |
+| **Push Notification E2E Tests** | ⚠️ Skip | 2 tests skip เพราะต้องการ `RENDER_URL` + `SUPERADMIN_ID_TOKEN` env ใน CI |
+| **`displayName` Lock (Staff)** | 📋 Planned | ป้องกัน staff แก้ไข `displayName` ใน Firestore Rules + ซ่อน input บน profile page |
 
 ---
 
@@ -1654,6 +1798,7 @@ snyk container test
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.8.1** | 2026-06-20 | **FIX: Settings page crash**: เพิ่ม `Lock` icon import ที่ขาดหายใน `settings/page.js` (root cause ของ `TypeError: Illegal constructor`); **FIX: layout.js static export**: แทน `getLocale()/getMessages()` (server-only) ด้วย import `th.json` โดยตรง รองรับ `output: "export"`; **FIX: Backend daily-reminder GET**: เพิ่ม `GET /api/notify/daily-reminder` route และรับ secret จาก `?secret=` query param — แก้ปัญหา Cron-job.org ส่ง GET แต่ server รับแค่ POST (`Route not found`); **FIX: CORS no-origin block**: อนุญาต no-origin requests ผ่านได้ (security ยังอยู่ที่ CRON_SECRET) — Cron-job.org ไม่มี `origin` header จึงถูก block ใน production |
 | **v2.8.0** | 2026-06-20 | **UX: Admin/Superadmin Navbar Redesign**: navbar บน PC เปลี่ยนเป็น icon-only pills; hover แสดงชื่อเมนูแบบ expand (ป้องกันตัวหนังสือซ้อนกันเมื่อมีเมนูเยอะ); **UX: Mobile Drawer Grouped**: แบ่งกลุ่ม "ทั่วไป" / "จัดการระบบ" + role badge (purple/blue) ใน header; **FEAT: Admin Nav ครบ**: เพิ่ม วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs ใน nav ทั้ง desktop + mobile drawer; **UX: iCloudCalendarStrip Mobile**: ซ่อน Timeline บน mobile (`hidden sm:block`) — แสดงเฉพาะ Compact Cards พร้อม `max-h` + scroll ป้องกันล้นหน้าจอ; **FIX: RoomEquipmentStatus**: แยก Pass 2A (room logs) / 2B (equipment logs) filter อิสระ — แก้ bug สถานะ equipment reset กลับเป็น available หลัง reload; **FIX: SmartEquipmentModal**: condition อ่านจาก return log เท่านั้น (limit 500) — สถานะ damaged/lost คงอยู่ถูกต้อง; **VCS: Footer + FABVersionControl** อัปเดต v2.8.0 |
 | **v2.7.0** | 2026-06-17 | **UX: iCloudCalendarStrip redesign**: ขยาย timeline scope 07:00–22:00; card background ใช้สีโปร่งใสประจำห้อง (blue/violet/emerald/sky); subject font ปรับขนาด dynamic ตาม card height (sm ≥90px / xs ≥64px / 11px); แสดง proctor ครบทุกคน (ลบ cap 2 คน); **FIX: Classroom Schedules delete**: เปลี่ยน soft delete → hard delete (`deleteDoc`) ลบออกจาก Firestore จริง; **UX: NotificationBell alert**: ย้าย toast จาก `top-4` → `bottom-20` ไม่บัง navbar; **UX: ScheduleAlertBanner**: toast bottom-right ไม่บัง navbar; **VCS: FABVersionControl** อัปเดต v2.7.0 features/changes |
 | **v2.6.0** | 2026-06-17 | **FEAT: iCloudCalendarStrip**: ปฏิทินรายวัน iOS-style — Time Grid 07:00–19:00, now-line สีแดง, วันนี้ตัวเลข+ชื่อวันสีแดง, ปุ่ม วันนี้ สีแดง, นำทางข้ามวัน, overlap events แบบ side-by-side lanes, ซ่อน scrollbar, ชื่อผู้คุมสอบ DL ใช้ displayName; **FEAT: ScheduleManager**: checkbox selection + bulk toggle เปิด/ปิดรายการที่เลือก, ภาพรวมห้อง 401/402/406/407 วันนี้แบบสี; **FEAT: DLExamManager**: ภาพรวม 406/407/CEM + ผู้คุมสอบ (displayName), ลบ RoomUsageCalendar weekly view ออกจาก system tabs; **FIX: ScheduleManager isActive**: แก้ isActive ตอนสร้างตารางใหม่อ่านค่าจาก checkbox จริง; **FIX: ScheduleManager delete**: แสดงตารางทุกสถานะ (ไม่กรองเฉพาะ active); **UX: Mobile worklogs/new**: ปุ่มกรอกเอง + calendar toggle + ซ่อน TodayRoomSchedule ซ้ำซ้อน |
