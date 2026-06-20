@@ -149,7 +149,16 @@ async function handleDailyReminder(req, res) {
     }
 
     // ดึง reminder settings
-    const { reminderTime, reminderDays } = await getReminderSettings();
+    const { reminderTime, reminderDays, enabled } = await getReminderSettings();
+
+    // ตรวจสอบว่า Push Notification เปิดอยู่
+    if (!enabled) {
+      return res.status(200).json({
+        success: true,
+        message: "Push notifications are disabled in settings",
+        sentCount: 0,
+      });
+    }
 
     // ตรวจสอบว่าวันนี้เป็น reminder day
     if (!isReminderDay(reminderDays)) {

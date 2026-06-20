@@ -214,8 +214,9 @@ export async function getReminderSettings() {
 
     const data = settingsDoc.data();
     return {
-      reminderTime: data.reminderTime || "17:00",
+      reminderTime: data.pushReminderTime || data.reminderTime || "17:00",
       reminderDays: data.reminderDays || ["mon", "tue", "wed", "thu", "fri"],
+      enabled: data.enablePushNotifications !== false,
     };
   } catch (error) {
     console.error("❌ Failed to get reminder settings:", error.message);
@@ -223,6 +224,7 @@ export async function getReminderSettings() {
     return {
       reminderTime: "17:00",
       reminderDays: ["mon", "tue", "wed", "thu", "fri"],
+      enabled: true,
     };
   }
 }
