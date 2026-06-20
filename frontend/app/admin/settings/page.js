@@ -7,19 +7,15 @@ import {
   Settings,
   Save,
   Bell,
-  Lock,
-  Database,
-  Users,
   FileSpreadsheet,
   AlertCircle,
   CheckCircle,
-  Clock,
   Download,
-  Trash2,
   Shield,
   ChevronRight,
   Smartphone,
   Radio,
+  BarChart2,
 } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
@@ -29,12 +25,11 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   collection,
   getDocs,
+  getCountFromServer,
   query,
   where,
-  orderBy,
   limit,
 } from "firebase/firestore";
 
@@ -124,20 +119,12 @@ export default function SettingsPage() {
 
   async function loadStats() {
     try {
-      const worklogsQuery = query(collection(db, "worklogs"), limit(1));
-      const usersQuery = query(
-        collection(db, "users"),
-        where("active", "==", true),
-        limit(100),
-      );
-
-      const [worklogsSnap, usersSnap] = await Promise.all([
-        getDocs(worklogsQuery),
-        getDocs(usersQuery),
+      const [worklogsCount, usersSnap] = await Promise.all([
+        getCountFromServer(collection(db, "worklogs")),
+        getDocs(query(collection(db, "users"), where("active", "==", true), limit(100))),
       ]);
-
       setStats({
-        totalWorklogs: worklogsSnap.size,
+        totalWorklogs: worklogsCount.data().count,
         totalUsers: usersSnap.size,
         backupSize: "-",
       });
@@ -168,20 +155,43 @@ export default function SettingsPage() {
     }
   }
 
-  async function triggerBackup() {
-    // ในอนาคตจะเชื่อมต่อกับ Cloud Function
-    alert("ฟีเจอร์นี้จะเชื่อมต่อกับ Cloud Function สำหรับสำรองข้อมูล");
-  }
-
   function updateSetting(key, value) {
     setSettings((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function exportAllWorklogs() {
+    try {
+      const snap = await getDocs(collection(db, "worklogs"));
+      const rows = snap.docs.map((d) => {
+        const r = d.data();
+        return [
+          r.date || "", r.time || "",
+          r.employeeDisplayName || r.employeeId || "",
+          r.majorTask || "", r.minorTask || "",
+          r.comment || "", r.status || "",
+        ].join(",");
+      });
+      const header = "วันที่,เวลา,พนักงาน,หัวข้อหลัก,หัวข้อรอง,หมายเหตุ,สถานะ";
+      const csv = [header, ...rows].join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `worklogs-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMessage("ส่งออกข้อมูลสำเร็จ");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      setError("ส่งออกไม่สำเร็จ: " + err.message);
+    }
+  }
+
   const tabs = [
-    { id: "general", label: "ทั่วไป", icon: Settings },
+    { id: "general",       label: "ทั่วไป",        icon: Settings },
     { id: "notifications", label: "การแจ้งเตือน", icon: Bell },
-    { id: "backup", label: "สำรองข้อมูล", icon: Database },
-    { id: "security", label: "ความปลอดภัย", icon: Shield },
+    { id: "data",          label: "ข้อมูล",        icon: BarChart2 },
+    { id: "security",      label: "ความปลอดภัย",  icon: Shield },
   ];
 
   if (!isAdmin) {
@@ -594,150 +604,49 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-medium text-slate-900">
-                      การแจ้งเตือน Slack
-                    </h3>
-
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="enableSlack"
-                        className="w-5 h-5 rounded border-slate-300"
-                        checked={settings.enableSlackNotifications}
-                        onChange={(e) =>
-                          updateSetting(
-                            "enableSlackNotifications",
-                            e.target.checked,
-                          )
-                        }
-                      />
-                      <label
-                        htmlFor="enableSlack"
-                        className="text-sm text-slate-700"
-                      >
-                        เปิดใช้งานการแจ้งเตือน Slack
-                      </label>
-                    </div>
-
-                    <div>
-                      <label className="apple-label">Slack Webhook URL</label>
-                      <input
-                        type="text"
-                        className="apple-input"
-                        value={settings.slackWebhookUrl}
-                        onChange={(e) =>
-                          updateSetting("slackWebhookUrl", e.target.value)
-                        }
-                        placeholder="https://hooks.slack.com/services/..."
-                        disabled={!settings.enableSlackNotifications}
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
 
-              {/* Backup */}
-              {activeTab === "backup" && (
+              {/* Data Overview */}
+              {activeTab === "data" && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold text-slate-950 flex items-center gap-2">
-                    <Database size={20} />
-                    การสำรองข้อมูล
+                    <BarChart2 size={20} />
+                    ภาพรวมข้อมูล
                   </h2>
 
-                  <div className="grid gap-4 md:grid-cols-3 mb-6">
-                    <div className="apple-panel p-4 text-center">
-                      <p className="text-sm text-slate-500">จำนวนรายการงาน</p>
-                      <p className="text-2xl font-semibold text-slate-950">
-                        {stats.totalWorklogs}
+                  <div className="grid gap-4 md:grid-cols-2 mb-2">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">รายการงานทั้งหมด</p>
+                      <p className="text-3xl font-semibold text-slate-950">
+                        {stats.totalWorklogs.toLocaleString()}
                       </p>
+                      <p className="text-xs text-slate-400 mt-1">รายการใน Firestore worklogs</p>
                     </div>
-                    <div className="apple-panel p-4 text-center">
-                      <p className="text-sm text-slate-500">จำนวนผู้ใช้</p>
-                      <p className="text-2xl font-semibold text-slate-950">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">ผู้ใช้งานที่ active</p>
+                      <p className="text-3xl font-semibold text-slate-950">
                         {stats.totalUsers}
                       </p>
-                    </div>
-                    <div className="apple-panel p-4 text-center">
-                      <p className="text-sm text-slate-500">ขนาดข้อมูล</p>
-                      <p className="text-2xl font-semibold text-slate-950">
-                        {stats.backupSize}
-                      </p>
+                      <p className="text-xs text-slate-400 mt-1">บัญชีที่มีสถานะ active</p>
                     </div>
                   </div>
 
-                  <div className="space-y-4 border-b border-slate-100 pb-6">
-                    <h3 className="font-medium text-slate-900">
-                      ตั้งค่าการสำรอง
+                  <div className="space-y-3 border-t border-slate-100 pt-6">
+                    <h3 className="font-medium text-slate-900 flex items-center gap-2">
+                      <Download size={16} />
+                      ส่งออกข้อมูล
                     </h3>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <label className="apple-label">ความถี่การสำรอง</label>
-                        <select
-                          className="apple-input"
-                          value={settings.backupFrequency}
-                          onChange={(e) =>
-                            updateSetting("backupFrequency", e.target.value)
-                          }
-                        >
-                          <option value="daily">รายวัน</option>
-                          <option value="weekly">รายสัปดาห์</option>
-                          <option value="monthly">รายเดือน</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="apple-label">
-                          จำนวน backup ที่เก็บไว้
-                        </label>
-                        <input
-                          type="number"
-                          className="apple-input"
-                          value={settings.backupRetentionCount}
-                          onChange={(e) =>
-                            updateSetting(
-                              "backupRetentionCount",
-                              parseInt(e.target.value),
-                            )
-                          }
-                          min="1"
-                          max="30"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-medium text-slate-900">ดำเนินการ</h3>
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={triggerBackup}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-xl hover:bg-slate-800 transition"
-                      >
-                        <Download size={18} />
-                        สำรองข้อมูลตอนนี้
-                      </button>
-
-                      {isSuperAdmin && (
-                        <button
-                          onClick={() =>
-                            alert(
-                              "ฟีเจอร์กู้คืนข้อมูลจะเชื่อมต่อกับ Cloud Function",
-                            )
-                          }
-                          className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition"
-                        >
-                          <Trash2 size={18} />
-                          กู้คืนข้อมูล
-                        </button>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-slate-500">
-                      การสำรองข้อมูลจะทำงานอัตโนมัติผ่าน Firebase Cloud
-                      Functions
+                    <p className="text-sm text-slate-500">Export รายการงานทั้งหมดเป็น CSV (รวม {stats.totalWorklogs.toLocaleString()} รายการ)</p>
+                    <button
+                      onClick={exportAllWorklogs}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-xl hover:bg-slate-800 transition text-sm font-medium"
+                    >
+                      <Download size={16} />
+                      Export worklogs ทั้งหมด (.csv)
+                    </button>
+                    <p className="text-xs text-slate-400">
+                      หรือใช้หน้า <a href="/export" className="underline text-slate-600">ส่งออกข้อมูล</a> สำหรับ filter ตามช่วงวันที่
                     </p>
                   </div>
                 </div>

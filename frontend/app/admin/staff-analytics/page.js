@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Download, X, Plus, Users, Search, TrendingUp } from "lucide-react";
+import { Download, Users, Search, BarChart2, Activity, Award, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, LayoutList, User } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { isAdminRole } from "../../../lib/authUtils";
@@ -14,22 +13,11 @@ import {
 import {
   calculateRadarMetrics,
   getTeamAverage,
-  getRankingByMetric,
 } from "../../../lib/staffMetrics";
-import { metricsToChartData, ScoreBadge, SLOT_COLORS, AXES } from "../../../components/StaffRadarChart";
-
-// Dynamic import — no SSR for Recharts
-const StaffRadarChart = dynamic(
-  () => import("../../../components/StaffRadarChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-80">
-        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
-      </div>
-    ),
-  }
-);
+import { SLOT_COLORS, AXES } from "../../../components/StaffRadarChart";
+import {
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
+} from "recharts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TIME_RANGES = [
@@ -46,6 +34,15 @@ const METRIC_SHORT = {
   peakHandling:  "Pk",
   documentation: "Doc",
   comboUsage:    "Cmb",
+};
+
+const METRIC_FULL_TH = {
+  volume:        "ปริมาณงาน — จำนวนรายการที่บันทึกในช่วงเวลานี้",
+  versatility:   "หลากหลาย — ทำงานหลายประเภท",
+  consistency:   "สม่ำเสมอ — บันทึกงานสม่ำเสมอทุกวัน",
+  peakHandling:  "รับงานหนัก — รับมือวันที่มีงานเยอะ",
+  documentation: "ลงรายละเอียด — กรอกหมายเหตุครบถ้วน",
+  comboUsage:    "ใช้ระบบครบ — ใช้ฟีเจอร์ระบบครบ",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -87,16 +84,34 @@ function exportCSV(rows) {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function MetricCell({ value }) {
+function MetricPill({ value, label }) {
   const v = Math.round(value ?? 0);
   const color =
-    v >= 75 ? "text-emerald-700 bg-emerald-50" :
-    v >= 50 ? "text-slate-700" :
-              "text-amber-700 bg-amber-50";
+    v >= 75 ? "text-emerald-700 bg-emerald-50 border-emerald-200" :
+    v >= 50 ? "text-slate-700 bg-slate-50 border-slate-200" :
+              "text-amber-700 bg-amber-50 border-amber-200";
   return (
-    <span className={`inline-block rounded-lg px-1.5 py-0.5 text-xs font-semibold tabular-nums ${color}`}>
-      {v}
-    </span>
+    <div className="flex flex-col items-center">
+      <span className={`inline-block rounded-lg px-2 py-0.5 text-sm font-bold tabular-nums border ${color}`}>{v}</span>
+      <span className="text-[10px] text-slate-400 mt-0.5">{label}</span>
+    </div>
+  );
+}
+
+// Mini radar — ใช้ recharts โดยตรงเพื่อ performance
+function MiniRadar({ metrics, color = "#6366f1", height = 150 }) {
+  const data = AXES.map(({ key, labelTH }) => ({
+    subject: labelTH,
+    value: Math.round(metrics?.[key] ?? 0),
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <RadarChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
+        <PolarGrid stroke="#e2e8f0" />
+        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: "#94a3b8" }} />
+        <Radar dataKey="value" stroke={color} fill={color} fillOpacity={0.2} strokeWidth={1.5} />
+      </RadarChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -111,14 +126,22 @@ export default function StaffAnalyticsPage() {
     if (user && !isAdminRole(user)) { router.replace("/dashboard"); }
   }, [user, router]);
 
-  const [timeRange,    setTimeRange]    = useState("1M");
-  const [staffList,    setStaffList]    = useState([]);   // all users
-  const [worklogs,     setWorklogs]     = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState("");
-  const [searchQuery,  setSearchQuery]  = useState("");
-  const [selectedIds,  setSelectedIds]  = useState([]);   // selected for chart (max 3)
-  const [sortMetric,   setSortMetric]   = useState("avg");
+  const [timeRange,      setTimeRange]      = useState("1M");
+  const [confirmPending, setConfirmPending] = useState(null); // pending timeRange value
+  const [staffList,      setStaffList]      = useState([]);   // all users
+  const [worklogs,       setWorklogs]       = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState("");
+  const [searchQuery,    setSearchQuery]    = useState("");
+  const [sortMetric,     setSortMetric]     = useState("count");
+
+  function handleTimeRangeChange(val) {
+    if (val === "1Y") {
+      setConfirmPending(val);
+    } else {
+      setTimeRange(val);
+    }
+  }
 
   const dateRange = useMemo(() => {
     const days = TIME_RANGES.find((t) => t.value === timeRange)?.days ?? 30;
@@ -173,6 +196,27 @@ export default function StaffAnalyticsPage() {
     return getTeamAverage(metrics);
   }, [allStaffMetrics]);
 
+  // Worklog count ต่อคน (ตัวเลขจริง)
+  const worklogCountByUid = useMemo(() => {
+    const map = {};
+    for (const w of worklogs) {
+      if (w.employeeId) map[w.employeeId] = (map[w.employeeId] || 0) + 1;
+    }
+    return map;
+  }, [worklogs]);
+
+  // Summary stats
+  const summaryStats = useMemo(() => {
+    const total = worklogs.length;
+    const days  = TIME_RANGES.find((t) => t.value === timeRange)?.days ?? 30;
+    const avgPerDay = total > 0 ? (total / days).toFixed(1) : "0";
+    const topStaff  = allStaffMetrics.reduce((best, s) => {
+      const cnt = worklogCountByUid[s.uid] || 0;
+      return cnt > (worklogCountByUid[best?.uid] || 0) ? s : best;
+    }, null);
+    return { total, avgPerDay, topStaff };
+  }, [worklogs, allStaffMetrics, worklogCountByUid, timeRange]);
+
   // Filtered + sorted ranking list
   const filteredStaff = useMemo(() => {
     let list = allStaffMetrics.filter((s) =>
@@ -180,38 +224,20 @@ export default function StaffAnalyticsPage() {
     );
     if (sortMetric === "avg") {
       list = list.sort((a, b) => avgMetrics(b.metrics) - avgMetrics(a.metrics));
+    } else if (sortMetric === "count") {
+      list = list.sort((a, b) => (worklogCountByUid[b.uid] || 0) - (worklogCountByUid[a.uid] || 0));
     } else {
       list = list.sort((a, b) => (b.metrics[sortMetric] ?? 0) - (a.metrics[sortMetric] ?? 0));
     }
     return list;
-  }, [allStaffMetrics, searchQuery, sortMetric]);
+  }, [allStaffMetrics, searchQuery, sortMetric, worklogCountByUid]);
 
-  // Selected staff for chart
-  const selectedStaff = useMemo(
-    () => allStaffMetrics.filter((s) => selectedIds.includes(s.uid)),
-    [allStaffMetrics, selectedIds]
-  );
+  const [expandedUid,  setExpandedUid]  = useState(null);
+  const [viewMode,      setViewMode]      = useState("list"); // "list" | "single"
+  const [singleIndex,   setSingleIndex]   = useState(0);
 
-  const handleSelectStaff = useCallback((uid) => {
-    setSelectedIds((prev) => {
-      if (prev.includes(uid)) return prev.filter((id) => id !== uid);
-      if (prev.length >= 3)   return prev; // max 3
-      return [...prev, uid];
-    });
-  }, []);
-
-  // Build chart props
-  const isCompare = selectedStaff.length > 1;
-
-  const chartStaffList = selectedStaff.map((s, i) => ({
-    name:      s.name,
-    chartData: metricsToChartData(s.metrics, null),
-    color:     SLOT_COLORS[i] || SLOT_COLORS[0],
-  }));
-
-  const singleChartData = selectedStaff.length === 1
-    ? metricsToChartData(selectedStaff[0].metrics, benchmarkData)
-    : null;
+  // reset index when filteredStaff changes
+  const singleStaff = filteredStaff[singleIndex] ?? null;
 
   if (!user || !isAdminRole(user)) return null;
 
@@ -221,7 +247,7 @@ export default function StaffAnalyticsPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-950">Staff Analytics</h1>
-          <p className="mt-0.5 text-sm text-slate-400">ประสิทธิภาพพนักงาน 6 มิติ</p>
+          <p className="mt-0.5 text-sm text-slate-400">ภาระงานและประสิทธิภาพทีม — ช่วง {timeRange}</p>
         </div>
         {/* Time Range */}
         <div role="radiogroup" aria-label="ช่วงเวลา" className="flex gap-1 rounded-2xl bg-slate-100 p-1">
@@ -230,7 +256,7 @@ export default function StaffAnalyticsPage() {
               key={t.value}
               role="radio"
               aria-checked={timeRange === t.value}
-              onClick={() => setTimeRange(t.value)}
+              onClick={() => handleTimeRangeChange(t.value)}
               className={`rounded-xl px-3 py-1.5 text-sm font-medium transition-all ${
                 timeRange === t.value
                   ? "bg-white text-slate-900 shadow-sm"
@@ -243,195 +269,315 @@ export default function StaffAnalyticsPage() {
         </div>
       </div>
 
+      {confirmPending && (
+        <div className="mb-4 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-amber-800">โหลดข้อมูล 1 ปีย้อนหลัง?</p>
+            <p className="text-xs text-amber-600 mt-0.5">จะใช้ reads มากกว่าปกติ ~1,200+ รายการ อาจโหลดช้าลง</p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => setConfirmPending(null)}
+              className="px-3 py-1.5 rounded-lg text-sm text-amber-700 border border-amber-300 hover:bg-amber-100 transition"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={() => { setTimeRange(confirmPending); setConfirmPending(null); }}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition"
+            >
+              โหลดเลย
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {/* ── Radar Chart Section ─────────────────────────────────────────── */}
-      {selectedStaff.length > 0 && (
-        <div className="apple-panel mb-6 p-4 md:p-6">
-          {/* Selected chips */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            {selectedStaff.map((s, i) => (
-              <span
-                key={s.uid}
-                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium"
-                style={{
-                  borderColor: SLOT_COLORS[i],
-                  color: SLOT_COLORS[i],
-                  backgroundColor: SLOT_COLORS[i] + "15",
-                }}
-              >
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: SLOT_COLORS[i] }}
-                />
-                {s.name}
-                <button
-                  onClick={() => handleSelectStaff(s.uid)}
-                  aria-label={`ลบ ${s.name} ออกจากการเปรียบเทียบ`}
-                  className="ml-0.5 rounded-full p-0.5 hover:bg-black/10"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-            {selectedStaff.length < 3 && (
-              <span className="text-xs text-slate-400">
-                + เลือกพนักงานจากตารางด้านล่าง (สูงสุด 3 คน)
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            {/* Chart */}
-            <div className="flex-1 w-full">
-              {isCompare ? (
-                <StaffRadarChart
-                  staffList={chartStaffList}
-                  showBenchmark={!!benchmarkData}
-                  benchmarkData={benchmarkData}
-                  size={360}
-                />
-              ) : (
-                <StaffRadarChart
-                  data={singleChartData}
-                  staffName={selectedStaff[0]?.name}
-                  color={SLOT_COLORS[0]}
-                  showBenchmark={!!benchmarkData}
-                  benchmarkData={benchmarkData}
-                  size={320}
-                  newEmployee={
-                    worklogs.filter((w) => w.employeeId === selectedStaff[0]?.uid).length < 3
-                  }
-                />
-              )}
+      {/* ── Summary Cards ────────────────────────────────────────────────── */}
+      {!loading && (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-100 bg-white p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity size={14} className="text-indigo-400" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">รายการงาน</p>
             </div>
-
-            {/* Score Badges — single mode only */}
-            {!isCompare && singleChartData && (
-              <div className="sm:w-48 w-full">
-                <ScoreBadge
-                  data={singleChartData}
-                  staffName={selectedStaff[0]?.name}
-                  color={SLOT_COLORS[0]}
-                />
-              </div>
-            )}
+            <p className="text-2xl font-bold text-slate-950">{summaryStats.total.toLocaleString()}</p>
+            <p className="text-xs text-slate-400 mt-0.5">รวมในช่วง {timeRange}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart2 size={14} className="text-sky-400" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">เฉลี่ย/วัน</p>
+            </div>
+            <p className="text-2xl font-bold text-slate-950">{summaryStats.avgPerDay}</p>
+            <p className="text-xs text-slate-400 mt-0.5">รายการต่อวัน (ทั้งทีม)</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Award size={14} className="text-amber-400" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">งานมากสุด</p>
+            </div>
+            <p className="text-lg font-bold text-slate-950 truncate">
+              {summaryStats.topStaff?.name || "-"}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {summaryStats.topStaff ? (worklogCountByUid[summaryStats.topStaff.uid] || 0) + " รายการ" : ""}
+            </p>
           </div>
         </div>
       )}
 
-      {/* ── Rankings Table Section ─────────────────────────────────────── */}
+      {/* ── Staff Panel ────────────────────────────────────────────────── */}
       <div className="apple-panel p-4 md:p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Users size={18} className="text-slate-400" />
-            <h2 className="text-lg font-semibold text-slate-950">Rankings</h2>
-            <span className="text-xs text-slate-400">{filteredStaff.length} คน</span>
+        {/* Toolbar row 1 */}
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Users size={18} className="text-slate-400 flex-shrink-0" />
+            <h2 className="text-base font-semibold text-slate-950 whitespace-nowrap">ภาระงานรายคน</h2>
+            <span className="text-xs text-slate-400 whitespace-nowrap">{filteredStaff.length} คน</span>
           </div>
-          <div className="flex gap-2">
-            {/* Search */}
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="search"
-                placeholder="ค้นหาพนักงาน..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50 py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 w-48"
-              />
-            </div>
-            {/* Export */}
+          {/* View toggle */}
+          <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 flex-shrink-0">
             <button
-              onClick={() => exportCSV(filteredStaff)}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                viewMode === "list" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+              }`}
             >
-              <Download size={14} />
-              CSV
+              <LayoutList size={13} />
+              <span className="hidden sm:inline">รายการ</span>
+            </button>
+            <button
+              onClick={() => { setViewMode("single"); setSingleIndex(0); }}
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                viewMode === "single" ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              <User size={13} />
+              <span className="hidden sm:inline">ทีละคน</span>
             </button>
           </div>
         </div>
+        {/* Toolbar row 2 */}
+        <div className="mb-4 flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              placeholder="ค้นหา..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+          </div>
+          <select
+            value={sortMetric}
+            onChange={(e) => setSortMetric(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 max-w-[130px]"
+          >
+            <option value="count">งาน</option>
+            <option value="avg">Avg</option>
+            {Object.entries(METRIC_SHORT).map(([k, sh]) => (
+              <option key={k} value={k}>{sh}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => exportCSV(filteredStaff)}
+            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex-shrink-0"
+          >
+            <Download size={13} />
+            <span className="hidden sm:inline">CSV</span>
+          </button>
+        </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-16">
             <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
           </div>
+        ) : filteredStaff.length === 0 ? (
+          <p className="py-10 text-center text-sm text-slate-400">ไม่มีข้อมูล</p>
+        ) : viewMode === "single" ? (
+          /* ─── SINGLE VIEW ────────────────────────────────────────────── */
+          singleStaff ? (
+            <div>
+              {/* Navigation bar */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setSingleIndex((i) => Math.max(0, i - 1))}
+                  disabled={singleIndex === 0}
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={16} /> ก่อนหน้า
+                </button>
+                <div className="text-center">
+                  <p className="text-xs text-slate-400">คนที่ {singleIndex + 1} / {filteredStaff.length}</p>
+                  <p className="text-base font-bold text-slate-900">{singleStaff.name}</p>
+                </div>
+                <button
+                  onClick={() => setSingleIndex((i) => Math.min(filteredStaff.length - 1, i + 1))}
+                  disabled={singleIndex >= filteredStaff.length - 1}
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  ถัดไป <ChevronRight size={16} />
+                </button>
+              </div>
+
+              {/* 30:70 layout — single person */}
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {/* LEFT 30% */}
+                <div className="w-full md:w-[30%] flex-shrink-0 space-y-4">
+                  {/* rank + count + avg */}
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: SLOT_COLORS[singleIndex % SLOT_COLORS.length] }}
+                      />
+                      <span className="text-xs text-slate-500">อันดับ {singleIndex + 1}</span>
+                    </div>
+                    <div className="flex justify-around">
+                      <div className="text-center">
+                        <p className="text-3xl font-bold text-indigo-600">{worklogCountByUid[singleStaff.uid] || 0}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">รายการงาน</p>
+                      </div>
+                      <div className="w-px bg-slate-200" />
+                      <div className="text-center">
+                        <p className={`text-3xl font-bold ${
+                          avgMetrics(singleStaff.metrics) >= 75 ? "text-emerald-600"
+                          : avgMetrics(singleStaff.metrics) >= 50 ? "text-slate-700"
+                          : "text-amber-600"
+                        }`}>{avgMetrics(singleStaff.metrics)}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Avg Score</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* metric progress bars */}
+                  <div className="space-y-3">
+                    {AXES.map(({ key, labelTH }) => {
+                      const v = Math.round(singleStaff.metrics?.[key] ?? 0);
+                      const barColor = v >= 75 ? "#10b981" : v >= 50 ? "#6366f1" : "#f59e0b";
+                      return (
+                        <div key={key}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium text-slate-700">{labelTH}</span>
+                            <span className="text-xs font-bold" style={{ color: barColor }}>{v}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${v}%`, backgroundColor: barColor }}
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{METRIC_FULL_TH[key]?.split(" — ")[1] || ""}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* RIGHT 70% — big radar */}
+                <div className="flex-1 w-full">
+                  <MiniRadar
+                    metrics={singleStaff.metrics}
+                    color={SLOT_COLORS[singleIndex % SLOT_COLORS.length]}
+                    height={320}
+                  />
+                </div>
+              </div>
+
+              {/* dot pagination */}
+              <div className="mt-6 flex justify-center gap-1.5 flex-wrap">
+                {filteredStaff.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSingleIndex(i)}
+                    className={`rounded-full transition-all ${
+                      i === singleIndex
+                        ? "w-5 h-2 bg-indigo-600"
+                        : "w-2 h-2 bg-slate-300 hover:bg-slate-400"
+                    }`}
+                    title={filteredStaff[i]?.name}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null
         ) : (
+          /* ─── LIST VIEW — ตารางปกติ ──────────────────────────────────── */
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="pb-3 pl-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 w-8">#</th>
-                  <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">ชื่อ</th>
+                  <th className="pb-3 pr-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400 w-6">#</th>
+                  <th className="pb-3 pr-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">ชื่อ</th>
+                  <th
+                    onClick={() => setSortMetric("count")}
+                    className={`pb-3 pr-2 text-center text-xs font-semibold uppercase tracking-wide cursor-pointer select-none transition-colors ${
+                      sortMetric === "count" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                    title="จำนวนรายการงาน"
+                  >
+                    งาน{sortMetric === "count" && " ↓"}
+                  </th>
                   {Object.entries(METRIC_SHORT).map(([key, short]) => (
                     <th
                       key={key}
                       onClick={() => setSortMetric(key)}
-                      className={`pb-3 text-center text-xs font-semibold uppercase tracking-wide cursor-pointer select-none transition-colors ${
+                      className={`pb-3 pr-2 text-center text-xs font-semibold uppercase tracking-wide cursor-pointer select-none transition-colors ${
                         sortMetric === key ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
                       }`}
-                      title={AXES.find((a) => a.key === key)?.labelTH}
+                      title={METRIC_FULL_TH[key]}
                     >
-                      {short}
-                      {sortMetric === key && <span className="ml-0.5">↓</span>}
+                      {short}{sortMetric === key && " ↓"}
                     </th>
                   ))}
                   <th
                     onClick={() => setSortMetric("avg")}
-                    className={`pb-3 text-center text-xs font-semibold uppercase tracking-wide cursor-pointer select-none ${
+                    className={`pb-3 text-center text-xs font-semibold uppercase tracking-wide cursor-pointer select-none transition-colors ${
                       sortMetric === "avg" ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
                     }`}
+                    title="คะแนนเฉลี่ย 6 มิติ"
                   >
-                    Avg{sortMetric === "avg" && <span className="ml-0.5">↓</span>}
+                    Avg{sortMetric === "avg" && " ↓"}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredStaff.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-sm text-slate-400">
-                      ไม่มีข้อมูล
-                    </td>
-                  </tr>
-                )}
                 {filteredStaff.map((s, rank) => {
-                  const isSelected = selectedIds.includes(s.uid);
-                  const slotIdx    = selectedIds.indexOf(s.uid);
+                  const avg   = avgMetrics(s.metrics);
+                  const count = worklogCountByUid[s.uid] || 0;
+                  const color = SLOT_COLORS[rank % SLOT_COLORS.length];
                   return (
-                    <tr
-                      key={s.uid}
-                      onClick={() => handleSelectStaff(s.uid)}
-                      className={`border-b border-slate-50 cursor-pointer transition-colors ${
-                        isSelected ? "bg-indigo-50/60" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <td className="py-2.5 pl-2 text-xs text-slate-400 w-8">{rank + 1}</td>
-                      <td className="py-2.5">
-                        <div className="flex items-center gap-2">
-                          {isSelected && (
-                            <span
-                              className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: SLOT_COLORS[slotIdx] }}
-                            />
-                          )}
-                          <span
-                            className={`font-medium ${isSelected ? "text-slate-900" : "text-slate-700"}`}
-                            aria-pressed={isSelected}
-                          >
-                            {s.name}
-                          </span>
+                    <tr key={s.uid} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 pr-2 text-xs text-slate-400">{rank + 1}</td>
+                      <td className="py-2.5 pr-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className="font-medium text-slate-800 whitespace-nowrap">{s.name}</span>
                         </div>
                       </td>
-                      {Object.keys(METRIC_SHORT).map((key) => (
-                        <td key={key} className="py-2.5 text-center">
-                          <MetricCell value={s.metrics[key]} />
-                        </td>
-                      ))}
+                      <td className="py-2.5 pr-2 text-center">
+                        <span className="text-sm font-bold text-indigo-600">{count}</span>
+                      </td>
+                      {Object.keys(METRIC_SHORT).map((key) => {
+                        const v = Math.round(s.metrics[key] ?? 0);
+                        const cls = v >= 75 ? "text-emerald-700 bg-emerald-50"
+                                  : v >= 50 ? "text-slate-700"
+                                  : "text-amber-700 bg-amber-50";
+                        return (
+                          <td key={key} className="py-2.5 pr-2 text-center">
+                            <span className={`inline-block rounded-lg px-1 py-0.5 text-xs font-semibold tabular-nums ${cls}`}>{v}</span>
+                          </td>
+                        );
+                      })}
                       <td className="py-2.5 text-center">
-                        <span className="text-sm font-bold text-slate-800">
-                          {avgMetrics(s.metrics)}
-                        </span>
+                        <span className={`text-sm font-bold ${
+                          avg >= 75 ? "text-emerald-600" : avg >= 50 ? "text-slate-700" : "text-amber-600"
+                        }`}>{avg}</span>
                       </td>
                     </tr>
                   );
@@ -440,6 +586,16 @@ export default function StaffAnalyticsPage() {
             </table>
           </div>
         )}
+
+        {/* Legend */}
+        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-1">
+          <p className="text-xs text-slate-400 w-full mb-1 font-medium">คำอธิบาย metrics (hover ที่หัวคอลัมน์เพื่อดูรายละเอียด)</p>
+          {Object.entries(METRIC_FULL_TH).map(([key, desc]) => (
+            <span key={key} className="text-xs text-slate-400">
+              <span className="font-semibold text-slate-600">{METRIC_SHORT[key]}</span> = {desc.split(" — ")[0]}
+            </span>
+          ))}
+        </div>
       </div>
     </AppShell>
   );

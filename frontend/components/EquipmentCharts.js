@@ -19,9 +19,9 @@ import {
 
 // ─── Color Tokens ────────────────────────────────────────────────────────────
 const COLORS = {
-  normal:  "#22c55e", // green-500
-  damaged: "#f59e0b", // amber-500
-  lost:    "#ef4444", // red-500
+  normal:  "#10b981", // emerald-500  ─ สมบูรณ์
+  damaged: "#f59e0b", // amber-500    ─ ชำรุด
+  lost:    "#f43f5e", // rose-500     ─ สูญหาย
 };
 
 const CONDITION_LABEL = {
@@ -62,19 +62,21 @@ function ChartTooltip({ active, payload, label }) {
  */
 export function EquipmentDamageChart({ data = [] }) {
   const isEmpty = !data || data.length === 0;
+  // คำนวณ height ตามจำนวน data points — ไม่จำกัดไว้ 240px ถ้าข้อมูลเยอะ
+  const chartHeight = Math.max(240, Math.min(data.length * 28, 480));
   return (
     <div className="apple-panel p-6">
       <h3 className="mb-1 text-lg font-semibold text-slate-950">อัตราความเสียหายรายเดือน</h3>
-      <p className="mb-4 text-xs text-slate-400">จำแนกตามสภาพอุปกรณ์เมื่อคืน</p>
+      <p className="mb-4 text-xs text-slate-400">จำแนกตามสภาพอุปกรณ์เมื่อคืน · {data.length} เดือน</p>
       {isEmpty ? <EmptyState /> : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 11, fill: "#94a3b8" }}
               tickFormatter={(v) => {
-                const [y, m] = v.split("-");
+                const [, m] = v.split("-");
                 const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
                                 "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
                 return months[parseInt(m, 10) - 1] || v;
@@ -105,14 +107,15 @@ export function EquipmentDamageChart({ data = [] }) {
 export function EquipmentHealthTimeline({ data = [], equipmentKeys = ["headphones", "power"] }) {
   const isEmpty = !data || data.length === 0;
   const KEY_LABEL = { headphones: "หูฟัง", power: "ปลั๊กไฟ" };
-  const LINE_COLORS = ["#6366f1", "#f59e0b", "#22c55e", "#ef4444"];
+  // indigo-500 (headphones) + sky-500 (power) ─ match ธีมเว็บ
+  const LINE_COLORS = ["#6366f1", "#0ea5e9", "#10b981", "#f43f5e"];
 
   return (
     <div className="apple-panel p-6">
       <h3 className="mb-1 text-lg font-semibold text-slate-950">Timeline ความเสียหายแต่ละประเภท</h3>
       <p className="mb-4 text-xs text-slate-400">จำนวนชำรุด+สูญหาย แยกตามประเภทอุปกรณ์</p>
       {isEmpty ? <EmptyState /> : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={Math.max(240, Math.min(data.length * 22, 420))}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis

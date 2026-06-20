@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Download, AlertTriangle, XCircle, CheckCircle, Headphones, Plug } from "lucide-react";
+import { Download, AlertTriangle, XCircle, CheckCircle, Headphones, Plug, Calendar } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { isAdminRole } from "../../../lib/authUtils";
@@ -82,8 +82,48 @@ export default function EquipmentHealthPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filterType, setFilterType] = useState("all"); // "all" | "headphones" | "power"
-  const [filterCondition, setFilterCondition] = useState("all"); // "all" | "damaged" | "lost" | "normal"
+  const [filterType,      setFilterType]      = useState("all");   // "all"|"headphones"|"power"
+  const [filterCondition, setFilterCondition] = useState("all");   // "all"|"damaged"|"lost"|"normal"
+  const [dateMode,        setDateMode]        = useState("month");  // "day"|"week"|"month"|"quarter"|"fiscalYear"|"year"|"custom"
+  const [customStart,     setCustomStart]     = useState("");
+  const [customEnd,       setCustomEnd]       = useState("");
+
+  // คำนวณ date range จาก mode
+  const activeDateRange = useMemo(() => {
+    const today = new Date();
+    const fmt = (d) => d.toISOString().slice(0, 10);
+    if (dateMode === "day") {
+      const s = fmt(today); return { start: s, end: s };
+    }
+    if (dateMode === "week") {
+      const mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + 1);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      return { start: fmt(mon), end: fmt(sun) };
+    }
+    if (dateMode === "month") {
+      const s = new Date(today.getFullYear(), today.getMonth(), 1);
+      const e = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      return { start: fmt(s), end: fmt(e) };
+    }
+    if (dateMode === "year") {
+      return { start: `${today.getFullYear()}-01-01`, end: `${today.getFullYear()}-12-31` };
+    }
+    if (dateMode === "quarter") {
+      const q = Math.floor(today.getMonth() / 3);
+      const s = new Date(today.getFullYear(), q * 3, 1);
+      const e = new Date(today.getFullYear(), q * 3 + 3, 0);
+      return { start: fmt(s), end: fmt(e) };
+    }
+    if (dateMode === "fiscalYear") {
+      // ปีงบประมาณไทย: ต.ค. - ก.ย.
+      const fy = today.getMonth() >= 9 ? today.getFullYear() : today.getFullYear() - 1;
+      return { start: `${fy}-10-01`, end: `${fy + 1}-09-30` };
+    }
+    if (dateMode === "custom" && customStart && customEnd) {
+      return { start: customStart, end: customEnd };
+    }
+    return null; // null = ไม่ filter
+  }, [dateMode, customStart, customEnd]);
 
   // Guard — admin only
   useEffect(() => {
@@ -134,19 +174,25 @@ export default function EquipmentHealthPage() {
     loadLogs();
   }, [user]);
 
+  // ─── Date-filtered base logs ──────────────────────────────────────────────
+  const dateLogs = useMemo(() => {
+    if (!activeDateRange) return logs;
+    return logs.filter((l) => l.date >= activeDateRange.start && l.date <= activeDateRange.end);
+  }, [logs, activeDateRange]);
+
   // ─── Derived stats ────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const returnLogs = logs.filter((l) => l.minorTask?.includes("คืน"));
+    const returnLogs = dateLogs.filter((l) => l.minorTask?.includes("คืน"));
     const total = returnLogs.length;
     const damaged = returnLogs.filter((l) => l.equipmentCondition === "damaged").length;
     const lost = returnLogs.filter((l) => l.equipmentCondition === "lost").length;
     const normal = returnLogs.filter((l) => !l.equipmentCondition || l.equipmentCondition === "normal").length;
     return { total, damaged, lost, normal };
-  }, [logs]);
+  }, [dateLogs]);
 
   // ─── Chart data: monthly damage ───────────────────────────────────────────
   const damageChartData = useMemo(() => {
-    const returnLogs = logs.filter((l) => l.minorTask?.includes("คืน") && l.date);
+    const returnLogs = dateLogs.filter((l) => l.minorTask?.includes("คืน") && l.date);
     const byMonth = {};
     returnLogs.forEach((l) => {
       const month = l.date.slice(0, 7);
@@ -155,11 +201,11 @@ export default function EquipmentHealthPage() {
       byMonth[month][cond] = (byMonth[month][cond] || 0) + 1;
     });
     return Object.values(byMonth).sort((a, b) => a.month.localeCompare(b.month));
-  }, [logs]);
+  }, [dateLogs]);
 
   // ─── Chart data: timeline by equipment type ───────────────────────────────
   const timelineData = useMemo(() => {
-    const returnLogs = logs.filter(
+    const returnLogs = dateLogs.filter(
       (l) => l.minorTask?.includes("คืน") && l.date &&
              (l.equipmentCondition === "damaged" || l.equipmentCondition === "lost")
     );
@@ -171,18 +217,18 @@ export default function EquipmentHealthPage() {
       byMonth[month][eqType] = (byMonth[month][eqType] || 0) + 1;
     });
     return Object.values(byMonth).sort((a, b) => a.month.localeCompare(b.month));
-  }, [logs]);
+  }, [dateLogs]);
 
   // ─── Filtered table rows ──────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    return logs.filter((l) => {
+    return dateLogs.filter((l) => {
       const eqType = detectEquipmentType(l);
       if (filterType !== "all" && eqType !== filterType) return false;
       const cond = l.equipmentCondition || "normal";
       if (filterCondition !== "all" && cond !== filterCondition) return false;
       return true;
     });
-  }, [logs, filterType, filterCondition]);
+  }, [dateLogs, filterType, filterCondition]);
 
   const CONDITION_BADGE = {
     normal:  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5"><CheckCircle size={11} />สมบูรณ์</span>,
@@ -193,12 +239,10 @@ export default function EquipmentHealthPage() {
   return (
     <AppShell>
       {/* Header */}
-      <section className="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <section className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Admin</p>
-          <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
-            Equipment Health
-          </h1>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">Equipment Health</h1>
           <p className="mt-2 text-sm text-slate-500">ติดตามสุขภาพอุปกรณ์ — ชำรุด / สูญหาย</p>
         </div>
         <button
@@ -209,6 +253,57 @@ export default function EquipmentHealthPage() {
           <Download size={16} />
           Export CSV
         </button>
+      </section>
+
+      {/* ── Date Range Filter ─────────────────────────────────────────────── */}
+      <section className="mb-6 apple-panel p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Calendar size={15} className="text-slate-400 flex-shrink-0" />
+          <span className="text-xs font-semibold text-slate-500 mr-1">ช่วงเวลา</span>
+          {[
+            { value: "day",        label: "วันนี้" },
+            { value: "week",       label: "สัปดาห์นี้" },
+            { value: "month",      label: "เดือนนี้" },
+            { value: "quarter",    label: "ไตรมาสนี้" },
+            { value: "fiscalYear", label: "ปีงบ" },
+            { value: "year",       label: "ปีนี้" },
+            { value: "custom",     label: "กำหนดเอง" },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setDateMode(value)}
+              className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                dateMode === value
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          {dateMode === "custom" && (
+            <div className="flex items-center gap-2 ml-1">
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <span className="text-xs text-slate-400">ถึง</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+          )}
+          {activeDateRange && (
+            <span className="ml-auto text-xs text-slate-400">
+              {activeDateRange.start} – {activeDateRange.end}
+            </span>
+          )}
+        </div>
       </section>
 
       {error && (
