@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import {
   Settings,
   Save,
@@ -16,6 +15,7 @@ import {
   Smartphone,
   Radio,
   BarChart2,
+  Lock,
 } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
@@ -76,7 +76,6 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function SettingsPage() {
-  const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);

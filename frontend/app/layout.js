@@ -1,8 +1,8 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 import FABVersionControl from "../components/FABVersionControl";
+import thMessages from "../messages/th.json";
 
 export const metadata = {
   title: "labboy Workload Recorder",
@@ -37,14 +37,11 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({ children }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-
+export default function RootLayout({ children }) {
   return (
-    <html lang={locale}>
+    <html lang="th">
       <body>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
           <AuthProvider>
             {children}
             <FABVersionControl />
