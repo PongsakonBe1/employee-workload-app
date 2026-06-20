@@ -87,14 +87,14 @@ export default function EquipmentHealthPage() {
 
   // Guard — admin only
   useEffect(() => {
-    if (user && !isAdminRole(user.role)) {
+    if (user && !isAdminRole(user)) {
       router.replace("/dashboard");
     }
   }, [user, router]);
 
   // Load worklogs ที่เกี่ยวกับอุปกรณ์
   useEffect(() => {
-    if (!user || !isAdminRole(user.role)) return;
+    if (!user || !isAdminRole(user)) return;
 
     async function loadLogs() {
       setLoading(true);
