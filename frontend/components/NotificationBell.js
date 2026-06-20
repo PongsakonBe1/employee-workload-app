@@ -67,7 +67,6 @@ export function NotificationBell() {
         try {
           await updateDoc(doc(db, "users", user.uid), {
             fcmToken: token,
-            fcmUpdatedAt: new Date(),
           });
           setFcmTokenStatus("saved");
         } catch (err) {
@@ -288,7 +287,6 @@ export function NotificationBell() {
         if (token) {
           await updateDoc(doc(db, "users", user.uid), {
             fcmToken: token,
-            fcmUpdatedAt: new Date(),
           });
           setFcmTokenStatus("saved");
         } else {
