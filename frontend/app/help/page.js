@@ -17,6 +17,10 @@ import {
   Users,
   BarChart2,
   HelpCircle,
+  Bell,
+  Smartphone,
+  Activity,
+  Wrench,
 } from "lucide-react";
 
 const sections = [
@@ -28,14 +32,14 @@ const sections = [
     content: (
       <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
         <p>
-          <strong>labboy Workload Recorder</strong> คือระบบบันทึกและติดตามภาระงานของบุคลากร
-          พัฒนาสำหรับใช้งานภายในองค์กร รองรับทั้ง Desktop และ Mobile (PWA)
+          <strong>labboy Workload Recorder</strong> คือระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล
+          สำหรับบุคลากร ICIT มจพ. รองรับ Desktop และ Mobile (PWA) เข้าสู่ระบบด้วย Google (@icit.kmutnb.ac.th)
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {[
-            { icon: PlusCircle, label: "บันทึกงาน", desc: "ระบุงาน เวลา และผู้รับงาน" },
-            { icon: Calendar, label: "ตารางห้องเรียน", desc: "ดูการใช้ห้องเรียนชั้น 4 แบบ Real-time" },
-            { icon: BarChart2, label: "วิเคราะห์ข้อมูล", desc: "สถิติงาน รายเดือน รายปี" },
+            { icon: PlusCircle, label: "บันทึกงาน", desc: "Quick Log, Combo Template และ Manual" },
+            { icon: Calendar, label: "ตารางห้องเรียน", desc: "ห้องชั้น 4 + DL Exam แบบ Real-time" },
+            { icon: BarChart2, label: "วิเคราะห์ข้อมูล", desc: "Dashboard, Staff Analytics, Equipment Health" },
           ].map((item) => (
             <div key={item.label} className="rounded-xl bg-blue-50 border border-blue-100 p-3 flex items-start gap-3">
               <item.icon size={16} className="text-blue-500 mt-0.5 shrink-0" />
@@ -43,6 +47,19 @@ const sections = [
                 <p className="font-semibold text-slate-800 text-xs">{item.label}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
               </div>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 space-y-1">
+          <p className="font-semibold">3 บทบาทในระบบ</p>
+          {[
+            ["👤 Staff", "บันทึกงานตัวเอง, ดู Dashboard, Export ข้อมูลตัวเอง"],
+            ["🛡️ Admin", "บันทึกงานให้พนักงาน, จัดการ Users, ดู Staff Analytics"],
+            ["⚡ Superadmin", "สิทธิ์ทั้งหมด + Broadcast Push, ดู Audit Logs"],
+          ].map(([role, desc]) => (
+            <div key={role} className="flex gap-2">
+              <span className="shrink-0">{role}</span>
+              <span className="text-blue-600">— {desc}</span>
             </div>
           ))}
         </div>
@@ -56,13 +73,15 @@ const sections = [
     color: "violet",
     content: (
       <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-        <p>หน้าหลักหลังเข้าสู่ระบบ แสดงสรุปภาระงานของคุณในวันนี้และสัปดาห์นี้</p>
+        <p>หน้าหลักหลังเข้าสู่ระบบ แสดงสรุปภาระงานและ Widget ต่างๆ</p>
         <ul className="space-y-2 mt-2">
           {[
-            ["สรุปงานวันนี้", "จำนวนงานที่บันทึก, เวลารวม, งานที่เสร็จ"],
-            ["กราฟรายสัปดาห์", "แผนภูมิแท่งแสดงภาระงานย้อนหลัง 7 วัน"],
-            ["Quick Access", "ปุ่มลัดไปหน้าบันทึกงาน และดูประวัติ"],
-            ["การแจ้งเตือน", "แจ้งเตือนงานที่รอดำเนินการหรือใกล้ครบกำหนด"],
+            ["Stat Cards", "สรุปงานวันนี้, สัปดาห์นี้, เดือนนี้"],
+            ["Heatmap", "แผนที่ความร้อนภาระงานย้อนหลัง 1 ปี"],
+            ["Hour-of-Day Chart", "ช่วงเวลาที่ทำงานบ่อยสุดรายชั่วโมง"],
+            ["Leaderboard", "อันดับผู้บันทึกงานมากที่สุดในเดือนนี้"],
+            ["ตารางห้องเรียน", "Widget แสดงตารางชั้น 4 วันนี้แบบ Compact"],
+            ["สถานะห้อง + อุปกรณ์", "Real-time ห้อง 303–407, หูฟัง ICIT01–20, ปลั๊ก ICIT21–25"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2">
               <ChevronRight size={14} className="text-violet-400 mt-0.5 shrink-0" />
@@ -80,32 +99,29 @@ const sections = [
     color: "green",
     content: (
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <p>บันทึกภาระงานผ่านฟอร์มในหน้า <strong>บันทึกงาน</strong> (สำหรับ Staff) หรือ <strong>บันทึกงานให้พนักงาน</strong> (สำหรับ Admin)</p>
+        <p>บันทึกภาระงานผ่านหน้า <strong>บันทึกงาน</strong> — มี 3 วิธี</p>
 
-        <div className="rounded-xl border border-green-100 bg-green-50 p-4 space-y-2">
-          <p className="font-semibold text-green-800 text-xs uppercase tracking-wider">ขั้นตอนการบันทึก</p>
-          {[
-            ["1", "เลือก วันที่ และ เวลา ที่ทำงาน"],
-            ["2", "ระบุ ผู้รับงาน หรือหน่วยงานที่เกี่ยวข้อง"],
-            ["3", "เลือก หัวข้องาน จาก Task Selector"],
-            ["4", "เพิ่ม คอมเมนต์ รายละเอียดเพิ่มเติม (ถ้ามี)"],
-            ["5", "กด บันทึก เพื่อส่งข้อมูล"],
-          ].map(([step, desc]) => (
-            <div key={step} className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">{step}</span>
-              <span>{desc}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
-          <p className="font-semibold text-amber-700 text-xs mb-1 flex items-center gap-1"><Zap size={12} /> Quick Color Log</p>
-          <p className="text-xs text-amber-700">บันทึกด่วนด้วยสีโดยไม่ต้องกรอกฟอร์ม — กดสีที่ต้องการแล้วระบบจะบันทึกสถานะทันที</p>
-          <div className="flex gap-2 mt-2">
-            {[["🟢","เสร็จแล้ว"],["🔵","กำลังทำ"],["🟡","ติดปัญหา"],["🔴","เร่งด่วน"],["⚪","อื่นๆ"]].map(([dot, label]) => (
-              <div key={label} className="text-center">
-                <div className="text-base">{dot}</div>
-                <div className="text-[10px] text-amber-600">{label}</div>
+        <div className="rounded-xl border border-green-100 bg-green-50 p-4 space-y-3">
+          <div>
+            <p className="font-semibold text-green-800 text-xs uppercase tracking-wider mb-2">⚡ Quick Log (เร็วที่สุด)</p>
+            <p className="text-xs text-green-700">กดปุ่มสีจาก Template ที่ Admin สร้างไว้ → กรอก Recipient → บันทึกทันที</p>
+          </div>
+          <div>
+            <p className="font-semibold text-green-800 text-xs uppercase tracking-wider mb-2">🔗 Combo Template</p>
+            <p className="text-xs text-green-700">บันทึกหลายงานพร้อมกันครั้งเดียว (เช่น เปิดห้อง + เปิดแอร์ + เปิดโปรเจกเตอร์) กดปุ่ม Combo → กรอก Recipient → ยืนยัน</p>
+          </div>
+          <div>
+            <p className="font-semibold text-green-800 text-xs uppercase tracking-wider mb-2">📝 Manual (ละเอียด)</p>
+            {[
+              ["1", "เลือก วันที่ และ เวลา ที่ทำงาน"],
+              ["2", "ระบุ ผู้รับงาน หรือหน่วยงานที่เกี่ยวข้อง"],
+              ["3", "เลือก หัวข้องาน จาก Task Selector"],
+              ["4", "เพิ่ม คอมเมนต์ รายละเอียดเพิ่มเติม (ถ้ามี)"],
+              ["5", "กด บันทึก เพื่อส่งข้อมูล"],
+            ].map(([step, desc]) => (
+              <div key={step} className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">{step}</span>
+                <span className="text-xs">{desc}</span>
               </div>
             ))}
           </div>
@@ -113,7 +129,7 @@ const sections = [
 
         <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-500">
           <Clock size={12} className="inline mr-1" />
-          แก้ไขงานได้ถึง <strong>23:59 น.</strong> ของวันที่บันทึก หลังจากนั้นระบบจะล็อกอัตโนมัติ
+          แก้ไขงานได้ถึง <strong>23:59 น.</strong> ของวันที่บันทึก หลังจากนั้นระบบจะล็อกอัตโนมัติ — ติดต่อ Admin ถ้าต้องการแก้ไขย้อนหลัง
         </div>
       </div>
     ),
@@ -174,19 +190,56 @@ const sections = [
     ),
   },
   {
+    id: "notifications",
+    icon: Bell,
+    title: "การแจ้งเตือน",
+    color: "orange",
+    content: (
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <p>ระบบมีการแจ้งเตือน 2 ประเภท</p>
+        <div className="space-y-3">
+          <div className="rounded-xl border border-orange-100 bg-orange-50 p-3">
+            <p className="font-semibold text-orange-800 text-xs mb-1 flex items-center gap-1"><Smartphone size={12} /> Push Notification (Background)</p>
+            <p className="text-xs text-orange-700">แจ้งเตือนผ่านมือถือแม้ปิดแอปอยู่ — ส่งเมื่อยังไม่ได้บันทึกงานตามเวลาที่ตั้งไว้ (ค่าเริ่มต้น 17:00 จ–ศ)</p>
+            <div className="mt-2 space-y-1">
+              {[
+                ["1", "กดไอคอน 🔔 Bell ที่มุมบนขวา"],
+                ["2", "กด \"เปิด\" เพื่ออนุญาตการแจ้งเตือน"],
+                ["3", "เห็น \"✓ พร้อมรับ Push\" = ลงทะเบียนสำเร็จ"],
+              ].map(([step, desc]) => (
+                <div key={step} className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center shrink-0 font-bold">{step}</span>
+                  <span className="text-xs">{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+            <p className="font-semibold text-amber-800 text-xs mb-1">🔔 In-App Reminder</p>
+            <p className="text-xs text-amber-700">แจ้งเตือนภายในแอปเมื่อถึงเวลาที่กำหนดและยังไม่ได้บันทึกงาน (ต้องเปิดแอปทิ้งไว้)</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-500">
+          Admin ปรับเวลาและวันที่ส่งได้ที่ <strong>ตั้งค่าระบบ → การแจ้งเตือน</strong> แล้วกด <strong>บันทึกการตั้งค่า</strong>
+        </div>
+      </div>
+    ),
+  },
+  {
     id: "export",
     icon: Download,
     title: "Export ข้อมูล",
     color: "teal",
     content: (
       <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-        <p>Export ข้อมูลภาระงานเป็นไฟล์ Excel หรือ CSV สำหรับทำรายงาน</p>
+        <p>Export ข้อมูลภาระงานเป็นไฟล์ CSV สำหรับทำรายงาน</p>
         <ul className="space-y-2">
           {[
-            ["เลือกช่วงเวลา", "เลือกเดือน/ปีที่ต้องการ Export"],
-            ["ไฟล์ Excel (.xlsx)", "รองรับสูตร SUM อัตโนมัติ"],
-            ["ไฟล์ CSV", "เหมาะสำหรับนำไปวิเคราะห์ต่อ"],
-            ["ปีงบประมาณ", "รองรับการ Export แบบปีงบประมาณไทย (ต.ค.–ก.ย.)"],
+            ["เลือกช่วงเวลา", "วัน / สัปดาห์ / เดือน / ไตรมาส / ปีงบประมาณ / ปี / กำหนดเอง"],
+            ["Staff", "Export เฉพาะข้อมูลของตัวเอง"],
+            ["Admin/Superadmin", "Export ข้อมูลทุกคน หรือเลือกรายบุคคล"],
+            ["ปีงบประมาณ", "รองรับ ต.ค.–ก.ย. (Thai fiscal year)"],
+            ["Equipment Borrow/Return", "Admin Export ประวัติยืม/คืนอุปกรณ์แยกต่างหาก"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2">
               <ChevronRight size={14} className="text-teal-400 mt-0.5 shrink-0" />
@@ -203,22 +256,27 @@ const sections = [
     title: "สำหรับ Admin",
     color: "red",
     content: (
-      <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
         <p>ฟีเจอร์สำหรับ Admin และ Superadmin เท่านั้น</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            ["จัดการผู้ใช้", "เพิ่ม/แก้ไข/ระงับบัญชีผู้ใช้"],
-            ["บันทึกงานให้พนักงาน", "Admin บันทึกงานแทนพนักงาน"],
-            ["ตารางเรียน", "จัดการตารางห้องเรียนชั้น 4"],
-            ["ตาราง DL", "จัดการตารางคุมสอบ Distance Learning"],
-            ["Audit Log", "ประวัติการเข้าใช้งานระบบ"],
-            ["สถิติบุคลากร", "วิเคราะห์ภาระงานรายบุคคล"],
+            ["จัดการผู้ใช้", "อนุมัติ/ปฏิเสธ/ระงับบัญชี, กำหนด Role"],
+            ["บันทึกงานให้พนักงาน", "Admin บันทึกงานแทนพนักงานได้"],
+            ["จัดการระบบ", "Templates, ตารางเรียน, ตาราง DL Exam, Broadcast"],
+            ["ตั้งค่าระบบ", "Time Lock, Push Notification, Security"],
+            ["Audit Logs", "ประวัติทุก action ในระบบ (Superadmin only)"],
+            ["Staff Analytics", "Radar Chart 6 มิติ วิเคราะห์ประสิทธิภาพรายบุคคล"],
+            ["Equipment Health", "ติดตามสุขภาพอุปกรณ์ หูฟัง/ปลั๊กไฟ"],
+            ["Broadcast Push", "ส่ง Push Notification ถึงทุก User (Superadmin only)"],
           ].map(([title, desc]) => (
             <div key={title} className="rounded-lg bg-red-50 border border-red-100 p-3">
               <p className="font-semibold text-slate-800 text-xs">{title}</p>
               <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
             </div>
           ))}
+        </div>
+        <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-xs text-red-700">
+          <strong>Staff Analytics — 6 มิติ:</strong> Volume · Versatility · Consistency · Peak Handling · Documentation · Combo Usage
         </div>
       </div>
     ),
@@ -231,11 +289,13 @@ const sections = [
     content: (
       <div className="space-y-4 text-sm text-slate-600">
         {[
-          ["ลืมบันทึกงานเมื่อวาน ทำอย่างไร?", "ระบบรองรับการเลือกวันที่ย้อนหลัง แต่แก้ไขได้เฉพาะวันที่บันทึกภายใน 23:59 น. ของวันนั้น หากเลยเวลาแล้วให้ติดต่อ Admin"],
-          ["ข้อมูลหายไปไหน?", "ข้อมูลทั้งหมดบันทึกใน Firestore Cloud Database ไม่สูญหาย สามารถ Export ได้ตลอดเวลา"],
-          ["ใช้บนมือถือได้ไหม?", "รองรับ PWA (Progressive Web App) สามารถ Add to Home Screen เพื่อใช้งานแบบ App ได้เลย"],
-          ["ใส่เวลาซ้ำกันได้ไหม?", "ได้ ระบบไม่ได้ล็อกเวลาซ้ำ แต่แนะนำให้บันทึกแต่ละงานแยกกันเพื่อความถูกต้องของสถิติ"],
-          ["แก้ไขงานของคนอื่นได้ไหม?", "ไม่ได้ Staff แก้ไขได้เฉพาะงานของตัวเอง Admin เท่านั้นที่แก้ไขงานของทุกคนได้"],
+          ["ลืมบันทึกงานเมื่อวาน ทำอย่างไร?", "เลือกวันที่ย้อนหลังได้ แต่แก้ไขได้เฉพาะภายใน 23:59 น. ของวันนั้น หากเลยแล้วให้ติดต่อ Admin"],
+          ["ข้อมูลหายไปไหน?", "ข้อมูลบันทึกใน Firebase Firestore Cloud Database ไม่สูญหาย Export ได้ตลอดเวลา"],
+          ["ใช้บนมือถือได้ไหม?", "รองรับ PWA — เปิดในเบราว์เซอร์แล้วกด \"เพิ่มไปยังหน้าจอหลัก\" เพื่อใช้งานแบบ App"],
+          ["ทำไม Bell แสดงว่าลงทะเบียนไม่สำเร็จ?", "ต้องอนุญาต Notification Permission ในเบราว์เซอร์ก่อน → กด Bell → กด \"เปิด\" → รอสักครู่จนเห็น ✓ พร้อมรับ Push"],
+          ["ไม่ได้รับ Push Notification เลย?", "1) ตรวจสอบว่าเห็น ✓ พร้อมรับ Push ใน Bell  2) Admin ต้องเปิด Push Notification ใน ตั้งค่าระบบ  3) ตรวจสอบว่าวันนั้นอยู่ใน reminderDays"],
+          ["แก้ไขงานของคนอื่นได้ไหม?", "ไม่ได้ Staff แก้ไขได้เฉพาะงานตัวเอง Admin/Superadmin เท่านั้นที่แก้ไขงานของทุกคนได้"],
+          ["Login ด้วย email ส่วนตัวได้ไหม?", "ไม่ได้ รองรับเฉพาะ @icit.kmutnb.ac.th เท่านั้น และต้องรอ Admin อนุมัติก่อนใช้งาน"],
         ].map(([q, a]) => (
           <div key={q} className="rounded-xl border border-purple-100 bg-purple-50 p-4">
             <p className="font-semibold text-purple-800 mb-1">Q: {q}</p>
@@ -296,7 +356,7 @@ export default function HelpPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900">คู่มือการใช้งาน</h1>
-              <p className="text-xs text-slate-400">labboy Workload Recorder — v2.5.0</p>
+              <p className="text-xs text-slate-400">labboy Workload Recorder — v2.8.1</p>
             </div>
           </div>
           <p className="text-sm text-slate-500 mt-3 leading-relaxed">
@@ -340,7 +400,7 @@ export default function HelpPage() {
           <p className="text-xs text-slate-400">
             หากพบปัญหาการใช้งาน ติดต่อผู้ดูแลระบบ
           </p>
-          <p className="text-xs text-slate-300 mt-1">labboy Workload Recorder &mdash; v2.5.0</p>
+          <p className="text-xs text-slate-300 mt-1">labboy Workload Recorder &mdash; v2.8.1</p>
         </div>
       </div>
     </AppShell>
