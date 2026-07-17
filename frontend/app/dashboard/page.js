@@ -267,16 +267,16 @@ export default function DashboardPage() {
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
 
-      // STEP 1: Paginated fetch — ดึง worklogs ครบทุก doc ไม่จำกัด 1000
+      // STEP 1: Quota-aware fetch — batch แรก 1000, ถ้ามีเพิ่มเตือนก่อน
       let totalInRange = 0;
       let allWorklogsInRange = [];
       let worklogs = [];
 
       let hasMoreThanLimit = false;
+      const BATCH = 1000;
 
       // Helper: paginated getDocs (batch 1000, วน loop จนหมด)
-      async function fetchAllDocs(baseConstraints) {
-        const BATCH = 1000;
+      async function fetchAllPaginated(baseConstraints) {
         let allDocs = [];
         let lastDoc = null;
         let hasMore = true;
@@ -302,7 +302,20 @@ export default function DashboardPage() {
           );
         }
 
-        const allDocs = await fetchAllDocs(baseConstraints);
+        let allDocs;
+
+        if (showAllData) {
+          // ผู้ใช้กดยืนยันแล้ว — ดึงครบทุก doc
+          allDocs = await fetchAllPaginated(baseConstraints);
+        } else {
+          // Phase 1: ดึง batch แรก 1000 เพื่อประเมินขนาด
+          const firstBatchSnap = await getDocs(
+            query(worklogsRef, ...baseConstraints, limit(BATCH))
+          );
+          allDocs = firstBatchSnap.docs;
+          hasMoreThanLimit = firstBatchSnap.size === BATCH;
+        }
+
         let docsById = new Map(
           allDocs.map((d) => [d.id, { id: d.id, ...d.data() }]),
         );
@@ -367,9 +380,16 @@ export default function DashboardPage() {
       }
 
       setActualCount(totalInRange);
-      setHasMoreData(false);
-      setDataWarning("");
-      setShowLimitModal(false);
+      setHasMoreData(hasMoreThanLimit);
+
+      // Quota warning: ถ้ายังไม่กด showAllData แต่มีมากกว่า 1000
+      if (hasMoreThanLimit && !showAllData) {
+        setDataWarning(`ข้อมูลในช่วงนี้มีมากกว่า 1,000 รายการ — กราฟแสดงจาก 1,000 รายการแรก กดปุ่ม "โหลดทั้งหมด" เพื่อดูข้อมูลครบ`);
+        setShowLimitModal(true);
+      } else {
+        setDataWarning("");
+        setShowLimitModal(false);
+      }
 
       // Use actual count for display
       const actualTotal = totalInRange;
@@ -588,28 +608,28 @@ export default function DashboardPage() {
 
             {/* Load All Data Button (for expanding quota) */}
             <button
-              onClick={() => actualCount > 300 && setShowAllData(!showAllData)}
-              disabled={actualCount <= 300}
+              onClick={() => (hasMoreData || showAllData) && setShowAllData(!showAllData)}
+              disabled={!hasMoreData && !showAllData}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition border ${
                 showAllData
                   ? "bg-amber-100 text-amber-700 border-amber-300"
-                  : actualCount > 300
+                  : hasMoreData
                     ? "bg-white text-amber-600 border-amber-300 hover:bg-amber-50 animate-pulse"
                     : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
               }`}
               title={
-                actualCount <= 300
-                  ? "ข้อมูลในช่วงนี้ไม่เกิน 300 รายการ"
+                !hasMoreData && !showAllData
+                  ? `ข้อมูลครบแล้ว (${actualCount} รายการ)`
                   : showAllData
-                    ? "กำลังแสดงข้อมูลทั้งหมด (ใช้ quota มาก)"
-                    : `มี ${actualCount} รายการ - คลิกเพื่อแสดงทั้งหมด`
+                    ? `กำลังแสดงข้อมูลทั้งหมด (${actualCount} รายการ)`
+                    : "ข้อมูลเกิน 1,000 — คลิกเพื่อโหลดทั้งหมด"
               }
             >
-              {actualCount <= 300
+              {!hasMoreData && !showAllData
                 ? `✓ ครบแล้ว (${actualCount})`
                 : showAllData
-                  ? `แสดงทั้งหมด (${actualCount}${hasMoreData ? "+" : ""})`
-                  : `โหลดเพิ่ม (${actualCount}${hasMoreData ? "+" : ""})`}
+                  ? `✓ แสดงทั้งหมด (${actualCount})`
+                  : `โหลดทั้งหมด (1,000+)`}
             </button>
 
             {/* Custom Date Range Button */}
@@ -680,9 +700,9 @@ export default function DashboardPage() {
             <span className="ml-2">
               • จำนวน: {actualCount}
               {hasMoreData ? "+" : ""} รายการ
-              {actualCount > 300 && !showAllData && (
+              {hasMoreData && !showAllData && (
                 <span className="text-amber-600 ml-1">
-                  (แสดง 300 รายการล่าสุด)
+                  (แสดง 1,000 รายการแรก)
                 </span>
               )}
             </span>
@@ -721,7 +741,7 @@ export default function DashboardPage() {
                 return days > 90 ? (
                   <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
                     ⚠️ ช่วงวันที่เลือก <strong>{days} วัน</strong> อาจใช้ Firestore quota มาก
-                    ระบบจะดึงข้อมูลสูงสุด 1,000 รายการ
+                    ระบบจะดึง 1,000 รายการแรก แล้วให้กดโหลดเพิ่มได้
                   </div>
                 ) : null;
               })()}
@@ -763,8 +783,8 @@ export default function DashboardPage() {
           label={t("dashboard.totalRecords")}
           value={`${actualCount}${hasMoreData ? "+" : ""}`}
           hint={
-            actualCount > 300 && !showAllData
-              ? `แสดง 300 จาก ${actualCount}${hasMoreData ? "+" : ""} รายการ`
+            hasMoreData && !showAllData
+              ? `แสดง 1,000 จาก ${actualCount}+ รายการ`
               : data?.scope === "all"
                 ? t("common.all")
                 : t("dashboard.byEmployee")
@@ -797,18 +817,12 @@ export default function DashboardPage() {
               </h3>
               <p className="text-sm text-amber-800 mb-3">
                 ช่วงเวลาที่เลือกมี{" "}
-                <strong>
-                  {actualCount}
-                  {hasMoreData ? "+" : ""} รายการ
-                </strong>
+                <strong>มากกว่า 1,000 รายการ</strong>
                 <br />
-                กำลังแสดง <strong>300 รายการล่าสุด</strong> เพื่อประหยัด quota
+                กำลังแสดงกราฟจาก <strong>1,000 รายการแรก</strong> เพื่อประหยัด Firestore quota
                 <br />
                 <span className="text-xs text-amber-700">
-                  กดโหลดเพิ่มเพื่อดูข้อมูลทั้งหมด
-                  {hasMoreData
-                    ? " (อาจมีมากกว่า 1000 รายการ)"
-                    : ` (${actualCount} รายการ)`}
+                  กด &quot;โหลดทั้งหมด&quot; เพื่อดึงข้อมูลครบถ้วน (ใช้ quota เพิ่ม)
                 </span>
               </p>
               <div className="flex gap-2">
@@ -816,13 +830,13 @@ export default function DashboardPage() {
                   onClick={() => setShowAllData(true)}
                   className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
                 >
-                  โหลดทั้งหมด ({actualCount} รายการ)
+                  โหลดทั้งหมด
                 </button>
                 <button
                   onClick={() => setShowLimitModal(false)}
                   className="px-4 py-2 bg-white text-amber-700 border border-amber-300 rounded-lg text-sm font-medium hover:bg-amber-50 transition"
                 >
-                  ปิด (แสดง 300 รายการ)
+                  ปิด (แสดง 1,000 รายการ)
                 </button>
               </div>
             </div>
