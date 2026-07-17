@@ -75,14 +75,14 @@ export function WorkloadHeatmap({ data }) {
                 return (
                   <div
                     key={hour}
-                    className={`flex-1 h-5 rounded-sm ${bg} cursor-default transition-transform hover:scale-110`}
+                    className={`flex-1 h-7 rounded-sm ${bg} cursor-default transition-transform hover:scale-110`}
                     onMouseEnter={(e) => {
                       if (!count) return;
                       const rect = containerRef.current?.getBoundingClientRect();
                       const cellRect = e.currentTarget.getBoundingClientRect();
                       setTooltip({
                         dow, hour, count,
-                        top: cellRect.top - (rect?.top ?? 0) - 38,
+                        top: cellRect.bottom - (rect?.top ?? 0) + 6,
                         left: cellRect.left - (rect?.left ?? 0) + cellRect.width / 2,
                       });
                     }}
@@ -238,14 +238,14 @@ export function WorkloadByDutyChart({ data }) {
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
         สัดส่วนงานตามหัวข้อหลัก
       </h3>
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height={380}>
         <PieChart>
           <Pie
             data={shortData}
             cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            cy="45%"
+            innerRadius={70}
+            outerRadius={110}
             paddingAngle={5}
             dataKey="count"
             nameKey="label"
