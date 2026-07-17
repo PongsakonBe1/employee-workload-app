@@ -2,6 +2,25 @@
 
 ---
 
+## [2026-07-17 12:09] - [PM → DA → SA → SE → UX/UI → Doc] v2.9.0 — Dashboard Fix & Print Improvements
+
+- **Task:**
+  1. **Bug #1 (DA→SE):** Dashboard ปีงบแสดงไม่ครบ — Root cause: `limit(1000)` ใน Firestore query → เปลี่ยนเป็น paginated fetch (batch 1000 loop จนครบ)
+  2. **Bug #2 (SA→SE):** Classroom alert ไม่แสดงสำหรับ Staff — `ScheduleAlertBanner` import เฉพาะ `admin/record` → เพิ่มใน `worklogs/new/page.js`
+  3. **Bug #3 (UX→SE):** สี Pie chart "สัดส่วนงานตามหัวข้อหลัก" จำแนกยากเมื่อพิมพ์ — เปลี่ยน grayscale 6 สี → 8 สีสันแยกชัด + label % บน slice
+  4. **Bug #4 (SE):** PDF กราฟแนวโน้มรายวันเพี้ยน — แก้ DailyWorkloadTrend: fixed height container, `isAnimationActive=false`, tick formatter DD/MM, print CSS min-height
+- **Files Modified:**
+  - `frontend/app/dashboard/page.js` — Paginated fetch, ลบ limit(1000)
+  - `frontend/app/worklogs/new/page.js` — เพิ่ม ScheduleAlertBanner import
+  - `frontend/components/DashboardCharts.js` — COLORS palette 8 สี, Pie label %, DailyWorkloadTrend print fix
+  - `frontend/app/globals.css` — Print CSS recharts min-height
+  - `frontend/components/AppShell.js` — Footer v2.9.0
+  - `frontend/app/help/page.js` — Version v2.9.0
+  - `README.md` — Version + Changelog v2.9.0
+- **Note to Next Agent:** Deploy เสร็จแล้ว ทดสอบ Dashboard ปีงบ + Print PDF ที่ production
+
+---
+
 ## [2026-06-20 07:50] - [UX/UI + SE] Software Engineer — v2.8.0 Admin UI Redesign & Mobile UX
 
 **Task:** ปรับ UI admin/superadmin ให้ใช้งานสะดวกบน mobile ทุกหน้า + redesign navbar PC เป็น icon-only hover-expand + อัปเดต README + version control
