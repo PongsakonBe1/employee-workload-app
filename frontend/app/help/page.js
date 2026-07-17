@@ -356,7 +356,7 @@ export default function HelpPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900">คู่มือการใช้งาน</h1>
-              <p className="text-xs text-slate-400">labboy Workload Recorder — v2.8.1</p>
+              <p className="text-xs text-slate-400">labboy Workload Recorder — v2.9.0</p>
             </div>
           </div>
           <p className="text-sm text-slate-500 mt-3 leading-relaxed">
@@ -400,7 +400,7 @@ export default function HelpPage() {
           <p className="text-xs text-slate-400">
             หากพบปัญหาการใช้งาน ติดต่อผู้ดูแลระบบ
           </p>
-          <p className="text-xs text-slate-300 mt-1">labboy Workload Recorder &mdash; v2.8.1</p>
+          <p className="text-xs text-slate-300 mt-1">labboy Workload Recorder &mdash; v2.9.0</p>
         </div>
       </div>
     </AppShell>

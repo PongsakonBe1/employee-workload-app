@@ -15,6 +15,7 @@ import {
   getDocs,
   orderBy,
   limit,
+  startAfter,
 } from "firebase/firestore";
 import {
   getThaiFiscalYearDates,
@@ -266,35 +267,48 @@ export default function DashboardPage() {
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
 
-      // STEP 1: Count actual records in date range (for accurate display)
+      // STEP 1: Paginated fetch — ดึง worklogs ครบทุก doc ไม่จำกัด 1000
       let totalInRange = 0;
       let allWorklogsInRange = [];
       let worklogs = [];
 
       let hasMoreThanLimit = false;
 
-      if (!showAllData) {
-        // Query up to 1000 records
-        let countQuery;
+      // Helper: paginated getDocs (batch 1000, วน loop จนหมด)
+      async function fetchAllDocs(baseConstraints) {
+        const BATCH = 1000;
+        let allDocs = [];
+        let lastDoc = null;
+        let hasMore = true;
+        while (hasMore) {
+          const paginationConstraints = lastDoc
+            ? [...baseConstraints, orderBy("__name__"), startAfter(lastDoc), limit(BATCH)]
+            : [...baseConstraints, limit(BATCH)];
+          const snap = await getDocs(query(worklogsRef, ...paginationConstraints));
+          snap.docs.forEach((d) => allDocs.push(d));
+          hasMore = snap.size === BATCH;
+          if (snap.size > 0) lastDoc = snap.docs[snap.docs.length - 1];
+        }
+        return allDocs;
+      }
+
+      {
+        // Build base constraints with date range
+        const baseConstraints = [...constraints];
         if (dateRange) {
-          countQuery = query(
-            worklogsRef,
-            ...constraints,
+          baseConstraints.push(
             where("date", ">=", dateRange.start),
             where("date", "<=", dateRange.end),
-            limit(1000),
           );
-        } else {
-          countQuery = query(worklogsRef, ...constraints, limit(1000));
         }
 
-        const countSnapshot = await getDocs(countQuery);
+        const allDocs = await fetchAllDocs(baseConstraints);
         let docsById = new Map(
-          countSnapshot.docs.map((d) => [d.id, { id: d.id, ...d.data() }]),
+          allDocs.map((d) => [d.id, { id: d.id, ...d.data() }]),
         );
 
         // ถ้า filter รายบุคคล: query เพิ่มด้วย employeeDisplayName/employeeName == displayName
-        // เพื่อดึง worklogs เก่าที่บันทึกชื่อแทน uid (ไม่ใช้ where date เพื่อหลีกเลี่ยง composite index)
+        // เพื่อดึง worklogs เก่าที่บันทึกชื่อแทน uid
         if (isAdmin && selectedEmployee !== "all" && selectedDisplayName) {
           const nameSnapshots = await Promise.all([
             getDocs(
@@ -335,70 +349,14 @@ export default function DashboardPage() {
 
         allWorklogsInRange = Array.from(docsById.values());
         totalInRange = allWorklogsInRange.length;
-        hasMoreThanLimit = countSnapshot.size >= 1000;
 
-        // Sort and take only first 300 for display
+        // Sort by date descending
         allWorklogsInRange.sort((a, b) => {
           if (!a.date) return 1;
           if (!b.date) return -1;
           return b.date.localeCompare(a.date);
         });
-        worklogs = allWorklogsInRange.slice(0, 300);
-      } else {
-        // Showing all data - load up to 1000
-        const dataLimit = 1000;
-        q = query(worklogsRef, ...constraints, limit(dataLimit));
-
-        const snapshot = await getDocs(q);
-        let docsById = new Map(
-          snapshot.docs.map((d) => [d.id, { id: d.id, ...d.data() }]),
-        );
-
-        // merge worklogs เก่าที่ใช้ชื่อ
-        if (isAdmin && selectedEmployee !== "all" && selectedDisplayName) {
-          const nameSnapshots = await Promise.all([
-            getDocs(
-              query(
-                worklogsRef,
-                where("employeeDisplayName", "==", selectedDisplayName),
-                limit(500),
-              ),
-            ),
-            getDocs(
-              query(
-                worklogsRef,
-                where("employeeName", "==", selectedDisplayName),
-                limit(500),
-              ),
-            ),
-          ]);
-          nameSnapshots.forEach((snap) => {
-            snap.docs.forEach((d) => {
-              if (!docsById.has(d.id))
-                docsById.set(d.id, { id: d.id, ...d.data() });
-            });
-          });
-        }
-
-        worklogs = Array.from(docsById.values());
-
-        // Client-side sort
-        worklogs.sort((a, b) => {
-          if (!a.date) return 1;
-          if (!b.date) return -1;
-          return b.date.localeCompare(a.date);
-        });
-
-        // Filter by date range if specified
-        if (dateRange) {
-          worklogs = worklogs.filter((log) => {
-            if (!log.date) return false;
-            return log.date >= dateRange.start && log.date <= dateRange.end;
-          });
-        }
-
-        totalInRange = worklogs.length;
-        allWorklogsInRange = worklogs; // DA-3: เก็บ full dataset สำหรับ leaderboard
+        worklogs = allWorklogsInRange;
       }
 
       // DA-3: สำหรับ staff — filter worklogs เฉพาะของตัวเองสำหรับแสดง chart/stats
@@ -409,23 +367,9 @@ export default function DashboardPage() {
       }
 
       setActualCount(totalInRange);
-      setHasMoreData(hasMoreThanLimit);
-
-      // DA-1: Show warning when aggregating from truncated data
-      if (hasMoreThanLimit) {
-        setDataWarning(`ข้อมูลในช่วงนี้มีมากกว่า 1,000 รายการ — กราฟและสถิติแสดงจากข้อมูลบางส่วนเท่านั้น`);
-      } else if (totalInRange > 300 && !showAllData) {
-        setDataWarning(`กราฟแสดงจาก 300 รายการล่าสุด (จากทั้งหมด ${totalInRange} รายการ)`);
-      } else {
-        setDataWarning("");
-      }
-
-      // Show modal if count > 300
-      if (totalInRange > 300 && !showAllData) {
-        setShowLimitModal(true);
-      } else {
-        setShowLimitModal(false);
-      }
+      setHasMoreData(false);
+      setDataWarning("");
+      setShowLimitModal(false);
 
       // Use actual count for display
       const actualTotal = totalInRange;

@@ -19,6 +19,7 @@ import ICloudCalendarStrip from "../../../components/iCloudCalendarStrip";
 import TodayRoomSchedule from "../../../components/TodayRoomSchedule";
 import AddMissingTemplates from "../../../components/AddMissingTemplates";
 import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
+import ScheduleAlertBanner from "../../../components/ScheduleAlertBanner";
 import {
   getCommentSuggestions,
   getMainDutyFromMinorTask,
@@ -250,6 +251,7 @@ export default function NewWorkLogPage() {
 
   return (
     <AppShell>
+      <ScheduleAlertBanner />
       <AddMissingTemplates />
       <SmartTemplatesSeeder />
 

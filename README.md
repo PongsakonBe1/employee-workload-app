@@ -1,4 +1,4 @@
-# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.8.1)
+# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.9.0)
 
 > **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
 > มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | 🌐 **Production URL** | https://labboy-workload-app.web.app |
-| 📦 **Current Version** | v2.8.1 |
-| 📅 **Last Updated** | 2026-06-20 |
+| 📦 **Current Version** | v2.9.0 |
+| 📅 **Last Updated** | 2026-07-17 |
 | 🏢 **Organization** | ICIT KMUTNB |
 | 👤 **Developer** | Pongsakon Rawangwong (พงศกร ระวังวงศ์) |
 | 📧 **Contact** | pongsakon.be1@gmail.com |
@@ -1798,6 +1798,7 @@ snyk container test
 
 | Version | วันที่ | การเปลี่ยนแปลง |
 |---------|--------|----------------|
+| **v2.9.0** | 2026-07-17 | **FIX: Dashboard query limit**: เปลี่ยนจาก `limit(1000)` เป็น paginated fetch (batch 1000, loop จนครบ) — แก้ปัญหาปีงบแสดงไม่ครบเมื่อมี >1000 worklogs; **FIX: Classroom alert สำหรับ Staff**: เพิ่ม `ScheduleAlertBanner` ใน `worklogs/new/page.js` — เดิมแสดงเฉพาะ admin/record; **UX: Pie chart color palette**: เปลี่ยนจาก grayscale 6 สี → 8 สีสันแยกชัด (print-friendly) + label % บน slice; **UX: PDF export กราฟแนวโน้มรายวัน**: แก้ `DailyWorkloadTrend` — fixed height container, `isAnimationActive=false`, tick formatter DD/MM, `interval=preserveStartEnd`; **UX: Print CSS**: เพิ่ม min-height สำหรับ recharts containers + Pie label visibility |
 | **v2.8.1** | 2026-06-20 | **FIX: Settings page crash**: เพิ่ม `Lock` icon import ที่ขาดหายใน `settings/page.js` (root cause ของ `TypeError: Illegal constructor`); **FIX: layout.js static export**: แทน `getLocale()/getMessages()` (server-only) ด้วย import `th.json` โดยตรง รองรับ `output: "export"`; **FIX: Backend daily-reminder GET**: เพิ่ม `GET /api/notify/daily-reminder` route และรับ secret จาก `?secret=` query param — แก้ปัญหา Cron-job.org ส่ง GET แต่ server รับแค่ POST (`Route not found`); **FIX: CORS no-origin block**: อนุญาต no-origin requests ผ่านได้ (security ยังอยู่ที่ CRON_SECRET) — Cron-job.org ไม่มี `origin` header จึงถูก block ใน production |
 | **v2.8.0** | 2026-06-20 | **UX: Admin/Superadmin Navbar Redesign**: navbar บน PC เปลี่ยนเป็น icon-only pills; hover แสดงชื่อเมนูแบบ expand (ป้องกันตัวหนังสือซ้อนกันเมื่อมีเมนูเยอะ); **UX: Mobile Drawer Grouped**: แบ่งกลุ่ม "ทั่วไป" / "จัดการระบบ" + role badge (purple/blue) ใน header; **FEAT: Admin Nav ครบ**: เพิ่ม วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs ใน nav ทั้ง desktop + mobile drawer; **UX: iCloudCalendarStrip Mobile**: ซ่อน Timeline บน mobile (`hidden sm:block`) — แสดงเฉพาะ Compact Cards พร้อม `max-h` + scroll ป้องกันล้นหน้าจอ; **FIX: RoomEquipmentStatus**: แยก Pass 2A (room logs) / 2B (equipment logs) filter อิสระ — แก้ bug สถานะ equipment reset กลับเป็น available หลัง reload; **FIX: SmartEquipmentModal**: condition อ่านจาก return log เท่านั้น (limit 500) — สถานะ damaged/lost คงอยู่ถูกต้อง; **VCS: Footer + FABVersionControl** อัปเดต v2.8.0 |
 | **v2.7.0** | 2026-06-17 | **UX: iCloudCalendarStrip redesign**: ขยาย timeline scope 07:00–22:00; card background ใช้สีโปร่งใสประจำห้อง (blue/violet/emerald/sky); subject font ปรับขนาด dynamic ตาม card height (sm ≥90px / xs ≥64px / 11px); แสดง proctor ครบทุกคน (ลบ cap 2 คน); **FIX: Classroom Schedules delete**: เปลี่ยน soft delete → hard delete (`deleteDoc`) ลบออกจาก Firestore จริง; **UX: NotificationBell alert**: ย้าย toast จาก `top-4` → `bottom-20` ไม่บัง navbar; **UX: ScheduleAlertBanner**: toast bottom-right ไม่บัง navbar; **VCS: FABVersionControl** อัปเดต v2.7.0 features/changes |

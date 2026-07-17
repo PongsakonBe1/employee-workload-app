@@ -121,4 +121,21 @@ input[type="time"] {
   section {
     break-inside: avoid;
   }
+
+  /* Force chart containers to have explicit dimensions for print */
+  .recharts-responsive-container {
+    min-height: 200px !important;
+  }
+  .recharts-wrapper {
+    min-height: 200px !important;
+  }
+  .recharts-surface {
+    overflow: visible !important;
+  }
+
+  /* Pie chart labels visible in print */
+  .recharts-pie-label-text {
+    font-size: 10px !important;
+    fill: #334155 !important;
+  }
 }

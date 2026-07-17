@@ -154,11 +154,13 @@ export function HourOfDayChart({ data }) {
 
 const COLORS = [
   "#0f172a",
-  "#334155",
-  "#64748b",
-  "#94a3b8",
-  "#cbd5e1",
-  "#e2e8f0",
+  "#2563eb",
+  "#059669",
+  "#d97706",
+  "#dc2626",
+  "#7c3aed",
+  "#0891b2",
+  "#be185d",
 ];
 
 export function WorkloadByEmployeeChart({ data }) {
@@ -247,6 +249,10 @@ export function WorkloadByDutyChart({ data }) {
             paddingAngle={5}
             dataKey="count"
             nameKey="label"
+            label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(0)}%`
+            }
+            labelLine={{ stroke: "#94a3b8", strokeWidth: 1 }}
           >
             {shortData.map((entry, index) => (
               <Cell
@@ -300,28 +306,44 @@ export function DailyWorkloadTrend({ data, dateRange }) {
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
         แนวโน้มงานรายวัน {dateRange && `(${dateRange})`}
       </h3>
-      <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
-          <YAxis stroke="#64748b" fontSize={12} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
-              fontSize: "12px",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="count"
-            stroke="#0f172a"
-            strokeWidth={2}
-            dot={{ fill: "#0f172a" }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div style={{ width: "100%", height: 250, minHeight: 250 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis
+              dataKey="date"
+              stroke="#64748b"
+              fontSize={11}
+              tickFormatter={(v) => {
+                if (!v) return "";
+                const parts = v.split("-");
+                return parts.length === 3 ? `${parts[2]}/${parts[1]}` : v;
+              }}
+              interval="preserveStartEnd"
+              angle={-30}
+              textAnchor="end"
+              height={50}
+            />
+            <YAxis stroke="#64748b" fontSize={12} allowDecimals={false} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                fontSize: "12px",
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="#0f172a"
+              strokeWidth={2}
+              dot={chartData.length <= 60 ? { fill: "#0f172a", r: 2 } : false}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
