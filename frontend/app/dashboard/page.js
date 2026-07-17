@@ -276,15 +276,20 @@ export default function DashboardPage() {
       const BATCH = 1000;
 
       // Helper: paginated getDocs (batch 1000, วน loop จนหมด)
-      async function fetchAllPaginated(baseConstraints) {
+      async function fetchAllPaginated(baseConstraints, hasDateRange) {
         let allDocs = [];
         let lastDoc = null;
         let hasMore = true;
         while (hasMore) {
-          const paginationConstraints = lastDoc
-            ? [...baseConstraints, orderBy("__name__"), startAfter(lastDoc), limit(BATCH)]
-            : [...baseConstraints, limit(BATCH)];
-          const snap = await getDocs(query(worklogsRef, ...paginationConstraints));
+          const page = [...baseConstraints];
+          // ถ้ามี date range → Firestore implicit orderBy("date") อยู่แล้ว ใช้ cursor ต่อได้เลย
+          // ถ้าไม่มี → ต้อง orderBy("__name__") เพื่อให้มี cursor
+          if (!hasDateRange) {
+            page.push(orderBy("__name__"));
+          }
+          if (lastDoc) page.push(startAfter(lastDoc));
+          page.push(limit(BATCH));
+          const snap = await getDocs(query(worklogsRef, ...page));
           snap.docs.forEach((d) => allDocs.push(d));
           hasMore = snap.size === BATCH;
           if (snap.size > 0) lastDoc = snap.docs[snap.docs.length - 1];
@@ -306,7 +311,7 @@ export default function DashboardPage() {
 
         if (showAllData) {
           // ผู้ใช้กดยืนยันแล้ว — ดึงครบทุก doc
-          allDocs = await fetchAllPaginated(baseConstraints);
+          allDocs = await fetchAllPaginated(baseConstraints, !!dateRange);
         } else {
           // Phase 1: ดึง batch แรก 1000 เพื่อประเมินขนาด
           const firstBatchSnap = await getDocs(
