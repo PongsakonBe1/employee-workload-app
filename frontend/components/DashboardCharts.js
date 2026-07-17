@@ -301,26 +301,32 @@ export function DailyWorkloadTrend({ data, dateRange }) {
     );
   }
 
+  // คำนวณ interval ให้แสดง tick สูงสุด ~12 ตัว เพื่อไม่ให้ label ล้น
+  const maxTicks = 12;
+  const tickInterval = chartData.length > maxTicks
+    ? Math.ceil(chartData.length / maxTicks) - 1
+    : 0;
+
   return (
-    <div className="apple-panel p-6">
+    <div className="apple-panel p-6 print-chart-container">
       <h3 className="mb-4 text-lg font-semibold text-slate-950">
         แนวโน้มงานรายวัน {dateRange && `(${dateRange})`}
       </h3>
-      <div style={{ width: "100%", height: 250, minHeight: 250 }}>
+      <div style={{ width: "100%", height: 250, minHeight: 250, overflow: "hidden" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="date"
               stroke="#64748b"
-              fontSize={11}
+              fontSize={10}
               tickFormatter={(v) => {
                 if (!v) return "";
                 const parts = v.split("-");
                 return parts.length === 3 ? `${parts[2]}/${parts[1]}` : v;
               }}
-              interval="preserveStartEnd"
-              angle={-30}
+              interval={tickInterval}
+              angle={-45}
               textAnchor="end"
               height={50}
             />

@@ -122,20 +122,33 @@ input[type="time"] {
     break-inside: avoid;
   }
 
-  /* Force chart containers to have explicit dimensions for print */
+  /* Force chart containers to stay within page width */
   .recharts-responsive-container {
     min-height: 200px !important;
+    max-width: 100% !important;
   }
   .recharts-wrapper {
     min-height: 200px !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
   .recharts-surface {
-    overflow: visible !important;
+    overflow: hidden !important;
+    max-width: 100% !important;
   }
 
   /* Pie chart labels visible in print */
   .recharts-pie-label-text {
     font-size: 10px !important;
     fill: #334155 !important;
+  }
+
+  /* Trend chart — prevent overflow on A4 */
+  .print-chart-container {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  .print-chart-container svg {
+    max-width: 100% !important;
   }
 }
