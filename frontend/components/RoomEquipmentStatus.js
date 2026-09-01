@@ -1358,6 +1358,35 @@ export default function RoomEquipmentStatus() {
                 </div>
               </div>
 
+              {/* Section: USB ชั้น 3 */}
+              <div>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">USB ชั้น 3</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5">
+                  {allUsb3.map(id => {
+                    const inUse = (equipmentStatus.usb||{})[id] === 'in_use';
+                    const det = equipmentDetails[id];
+                    const cond = equipmentConditions[id];
+                    const num = parseInt(id.replace('ICIT',''),10);
+                    let bgClass = 'bg-slate-50 border-slate-100';
+                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
+                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
+                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
+                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
+                    return (
+                      <button key={id} onClick={() => setSelectedItem({type:'usb',id,label:`USB ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
+                        }`} />
+                        <span className={`text-[9px] font-bold ${
+                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
+                        }`}>{num}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Section: หูฟัง Finn */}
               <div>
                 <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง Finn Space</p>
