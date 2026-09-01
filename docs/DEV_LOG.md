@@ -8,6 +8,10 @@
 - **Files Modified:**
   - `frontend/app/page.js` — ลบเงื่อนไข `isAdminRole`, authenticated user ทุกคน redirect ไป `/worklogs/new`
   - `frontend/app/login/page.js` — ลบ `isAdminRole` branch ที่ไป `/dashboard`; ผู้ใช้ login แล้ว redirect ไป `/worklogs/new` ทุก role
+- **Deployed:**
+  - Build ผ่าน (`npm run build`)
+  - Hosting: `firebase deploy --only hosting`
+  - URL: https://labboy-workload-app.web.app
 - **Note to [QA]:**
   - ทดสอบ login ด้วย admin, superadmin, staff → ต้องไป `/worklogs/new`
   - ทดสอบ PWA/standalone mode ว่าไม่เกิด redirect loop
