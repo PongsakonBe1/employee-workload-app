@@ -1,5 +1,41 @@
 # QA & Security Report — labboy Workload Recorder
 
+---
+
+## Sprint v2.4.0 QA Report
+
+**วันที่ทำ QA:** 2 กันยายน 2569  
+**ผู้รับผิดชอบ:** QA Agent (Cascade)  
+**ขอบเขต:** BUG-1, FEAT-1, FEAT-2, OBSERVE-1
+
+### ผลการทดสอบ
+
+| # | รายการ | ผลลัพธ์ | หมายเหตุ |
+|---|--------|---------|----------|
+| 1 | BUG-1: `sanitizePhotoURL` crash admin/users pending tab | ✅ PASS | เพิ่ม inline helper function — null-safe URL validation |
+| 2 | FEAT-1: USB borrow/return minorTasks + ICIT25-28 suggestions | ✅ PASS | เพิ่มใน `commentSuggestions.js` + SmartEquipmentModal + equipment-health |
+| 3 | FEAT-2: Firestore rules `equipmentItems` collection | ✅ PASS | admin read/write, staff read — validation: name+minorTask+active required |
+| 4 | FEAT-2: Admin equipment items page (`/admin/equipment-items`) | ✅ PASS | CRUD + toggle active + location + grouped by minorTask |
+| 5 | FEAT-2: `getEquipmentSuggestions()` dynamic Firestore loader | ✅ PASS | Falls back to static `commentSuggestionMap` if Firestore fails |
+| 6 | OBSERVE-1: Dashboard staff count inconsistency | ✅ PASS | Staff query now uses `employeeId` filter before limit — leaderboard uses separate query |
+| 7 | Unit tests: `commentSuggestions.test.js` | ✅ PASS | 23/23 tests pass — updated count 28→30 + USB tests added |
+| 8 | Build: `npm run build` (Next.js static export) | ✅ PASS | 28 pages compile — `/admin/equipment-items` included |
+
+### Pre-existing Test Failures (NOT related to v2.4.0)
+
+| Test File | Failed Tests | Reason |
+|-----------|-------------|--------|
+| `analytics.test.js` | 4 tests | `predictNextPeak` + `getTrendIndicator` threshold mismatches |
+| `staffMetrics.test.js` | 2 tests | `calculateConsistency` + `calculateRadarMetrics` boundary values |
+| `validation.test.js` | 1 test | `validateDate` tomorrow logic — date-dependent test |
+
+### สรุป
+
+**ทุกรายการใน Sprint v2.4.0 ผ่านการทดสอบ** — ไม่มี regression จากโค้ดใหม่  
+Test failures ที่พบเป็น pre-existing issues ที่ไม่เกี่ยวข้องกับ v2.4.0
+
+---
+
 **วันที่ทำ QA:** 3 มิถุนายน 2569 (รอบที่ 2 — Final Pre-Production)  
 **ผู้รับผิดชอบ:** QA & Security Engineer (Cascade)  
 **ขอบเขต:** Full stack — `frontend/`, `backend/src/`, `firebase/`  

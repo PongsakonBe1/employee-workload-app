@@ -11,8 +11,13 @@ import {
 // ── MINOR_TASKS ──────────────────────────────────────────────────────────────
 
 describe("MINOR_TASKS", () => {
-  it("contains 28 tasks (25 original + 3 additional)", () => {
-    expect(MINOR_TASKS).toHaveLength(28);
+  it("contains 30 tasks (25 original + 3 additional + 2 USB)", () => {
+    expect(MINOR_TASKS).toHaveLength(30);
+  });
+
+  it("includes USB borrow/return tasks", () => {
+    expect(MINOR_TASKS).toContain("ยืม USB");
+    expect(MINOR_TASKS).toContain("คืน USB");
   });
 
   it("has no duplicate entries", () => {
@@ -51,6 +56,16 @@ describe("getCommentSuggestions", () => {
     expect(suggestions).toContain("MATLAB");
   });
 
+  it("returns USB IDs for USB borrow task", () => {
+    const suggestions = getCommentSuggestions("ยืม USB");
+    expect(suggestions).toEqual(["ICIT25", "ICIT26", "ICIT27", "ICIT28"]);
+  });
+
+  it("returns USB IDs for USB return task", () => {
+    const suggestions = getCommentSuggestions("คืน USB");
+    expect(suggestions).toEqual(["ICIT25", "ICIT26", "ICIT27", "ICIT28"]);
+  });
+
   it("returns empty array for task without suggestions", () => {
     expect(getCommentSuggestions("ดูแลความสะอาด")).toEqual([]);
   });
@@ -75,6 +90,11 @@ describe("getMainDutyFromMinorTask", () => {
     expect(getMainDutyFromMinorTask("ยืมหูฟัง")).toBe(
       "ดูแลห้องบริการคอมพิวเตอร์",
     );
+  });
+
+  it("maps USB tasks to room service duty", () => {
+    expect(getMainDutyFromMinorTask("ยืม USB")).toBe("ดูแลห้องบริการคอมพิวเตอร์");
+    expect(getMainDutyFromMinorTask("คืน USB")).toBe("ดูแลห้องบริการคอมพิวเตอร์");
   });
 
   it("maps IT-related tasks to IT service duty", () => {
