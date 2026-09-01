@@ -42,7 +42,7 @@ export default function SmartEquipmentModal({
   // full ranges สำหรับ scan worklogs
   const ALL_HP = Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
   const ALL_PW = ['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'];
-  const ALL_USB = ['ICIT25','ICIT26','ICIT27','ICIT28'];
+  const ALL_USB = ['ICIT26','ICIT27','ICIT28','ICIT29'];
 
   // range ที่แสดงใน grid ตาม template
   const getEquipmentRange = () => {

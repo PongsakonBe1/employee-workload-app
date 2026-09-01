@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seed Equipment Items</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 1.5em; }
+    button { padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px; background: #4f46e5; color: white; cursor: pointer; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    pre { background: #f1f5f9; padding: 16px; border-radius: 8px; white-space: pre-wrap; font-size: 13px; max-height: 400px; overflow-y: auto; }
+    .ok { color: #16a34a; } .err { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <h1>Seed Equipment Items → Firestore</h1>
+  <p>กดปุ่มเพื่อเพิ่มอุปกรณ์ 29 รายการลง collection <code>equipmentItems</code></p>
+  <button id="btn" onclick="runSeed()">เริ่ม Seed</button>
+  <pre id="log"></pre>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, writeBatch, doc, limit, query }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHzKEfi2CJSuY5YfW-CnniJBDuKzL_sJY",
+      authDomain: "labboy-workload-app.firebaseapp.com",
+      projectId: "labboy-workload-app",
+      storageBucket: "labboy-workload-app.firebasestorage.app",
+      messagingSenderId: "448907570498",
+      appId: "1:448907570498:web:17c3d72b7e25eaeb7ea8a0",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const logEl = document.getElementById("log");
+    const btnEl = document.getElementById("btn");
+
+    function log(msg, cls) {
+      const span = document.createElement("span");
+      span.className = cls || "";
+      span.textContent = msg + "\n";
+      logEl.appendChild(span);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const items = [
+      // หูฟัง — ห้องบริการชั้น 3 (ICIT01–ICIT12)
+      ...Array.from({ length: 12 }, (_, i) => ({
+        name: `ICIT${String(i + 1).padStart(2, "0")}`,
+        minorTask: "ยืมหูฟัง",
+        location: "ห้องบริการชั้น 3",
+        active: true,
+        order: i + 1,
+      })),
+      // หูฟัง — ห้อง Finn ชั้น 4 (ICIT13–ICIT20)
+      ...Array.from({ length: 8 }, (_, i) => ({
+        name: `ICIT${String(i + 13).padStart(2, "0")}`,
+        minorTask: "ยืมหูฟัง",
+        location: "ห้องบริการชั้น 4 (Finn)",
+        active: true,
+        order: i + 13,
+      })),
+      // ปลั๊กไฟ — ห้องบริการชั้น 3 (ICIT21–ICIT23)
+      ...Array.from({ length: 3 }, (_, i) => ({
+        name: `ICIT${21 + i}`,
+        minorTask: "ยืมปลั๊กไฟ",
+        location: "ห้องบริการชั้น 3",
+        active: true,
+        order: 21 + i,
+      })),
+      // ปลั๊กไฟ — ห้อง Finn ชั้น 4 (ICIT24–ICIT25)
+      ...Array.from({ length: 2 }, (_, i) => ({
+        name: `ICIT${24 + i}`,
+        minorTask: "ยืมปลั๊กไฟ",
+        location: "ห้องบริการชั้น 4 (Finn)",
+        active: true,
+        order: 24 + i,
+      })),
+      // USB — ห้องบริการชั้น 3 (ICIT26–ICIT29)
+      ...Array.from({ length: 4 }, (_, i) => ({
+        name: `ICIT${26 + i}`,
+        minorTask: "ยืม USB",
+        location: "ห้องบริการชั้น 3",
+        active: true,
+        order: 26 + i,
+      })),
+    ];
+
+    window.runSeed = async function () {
+      btnEl.disabled = true;
+      try {
+        // Sign in
+        log("🔐 กำลัง Sign in ด้วย Google...");
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        log(`✅ Signed in as: ${result.user.email}`, "ok");
+
+        // Check existing
+        log("🔍 ตรวจสอบ collection equipmentItems...");
+        const existing = await getDocs(query(collection(db, "equipmentItems"), limit(1)));
+        if (!existing.empty) {
+          log("⚠️  collection มีข้อมูลอยู่แล้ว — ข้ามการ seed", "err");
+          log("   หากต้องการ seed ใหม่ ให้ลบ collection เดิมก่อน");
+          btnEl.disabled = false;
+          return;
+        }
+
+        // Batch write
+        log(`📦 กำลังเพิ่มอุปกรณ์ ${items.length} รายการ...`);
+        const batch = writeBatch(db);
+        const now = new Date();
+        items.forEach((item) => {
+          const ref = doc(collection(db, "equipmentItems"));
+          batch.set(ref, {
+            ...item,
+            createdAt: now,
+            updatedAt: now,
+            createdBy: result.user.uid,
+          });
+        });
+        await batch.commit();
+
+        log(`✅ Seed สำเร็จ — เพิ่มอุปกรณ์ ${items.length} รายการ`, "ok");
+        log("   หูฟัง:    ICIT01–ICIT20 (12 ชั้น3 + 8 Finn)");
+        log("   ปลั๊กไฟ:  ICIT21–ICIT25 (3 ชั้น3 + 2 Finn)");
+        log("   USB:      ICIT26–ICIT29 (4 ชั้น3)");
+      } catch (err) {
+        log("❌ Error: " + err.message, "err");
+        btnEl.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

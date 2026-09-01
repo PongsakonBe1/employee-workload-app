@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Monitor, Headphones, Plug, Wifi, Activity, Download, AlertTriangle, Wrench, Ban } from 'lucide-react';
+import { Monitor, Headphones, Plug, Wifi, Activity, Download, AlertTriangle, Wrench, Ban, Usb } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useAuth } from './AuthProvider';
 import { isAdminRole } from '../lib/authUtils';
@@ -35,6 +35,11 @@ const EQUIPMENT_DETAILS = {
   'ICIT23': { barcode: 'BA1614455', itemNo: 23, name: 'ปลั๊กไฟ' },
   'ICIT24': { barcode: 'BA1614444', itemNo: 24, name: 'ปลั๊กไฟ' },
   'ICIT25': { barcode: 'BA1614442', itemNo: 25, name: 'ปลั๊กไฟ' },
+  // USB ICIT26-29
+  'ICIT26': { barcode: '-', itemNo: 26, name: 'USB' },
+  'ICIT27': { barcode: '-', itemNo: 27, name: 'USB' },
+  'ICIT28': { barcode: '-', itemNo: 28, name: 'USB' },
+  'ICIT29': { barcode: '-', itemNo: 29, name: 'USB' },
 };
 
 // ─── 3D Device Preview Components (CSS-based, GPU accelerated) ───
@@ -177,6 +182,28 @@ const getConditionBadge = (condition) => {
   }
 };
 
+// USB Flash Drive 3D
+const Usb3D = ({ inUse = false }) => (
+  <Device3DContainer inUse={inUse}>
+    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-xl">
+      {/* USB body */}
+      <rect x="35" y="15" width="30" height="55" rx="4" fill="#27272a" />
+      <rect x="38" y="18" width="24" height="49" rx="2" fill={inUse ? '#1a1a2e' : '#3f3f46'} />
+      {/* Connector */}
+      <rect x="38" y="70" width="24" height="18" rx="2" fill="#a1a1aa" />
+      <rect x="40" y="72" width="20" height="14" rx="1" fill="#d4d4d8" />
+      {/* USB pins */}
+      <rect x="43" y="74" width="4" height="8" rx="0.5" fill="#71717a" />
+      <rect x="53" y="74" width="4" height="8" rx="0.5" fill="#71717a" />
+      {/* LED */}
+      <circle cx="50" cy="28" r="3" fill={inUse ? '#ef4444' : '#22c55e'} className="animate-pulse" />
+      {/* Label */}
+      <rect x="42" y="38" width="16" height="3" rx="1" fill="#52525b" />
+      <rect x="44" y="44" width="12" height="2" rx="0.5" fill="#52525b" opacity="0.6" />
+    </svg>
+  </Device3DContainer>
+);
+
 // Preview Panel Component
 const DevicePreview = ({ item }) => {
   if (!item) return null;
@@ -185,6 +212,7 @@ const DevicePreview = ({ item }) => {
     switch (item.type) {
       case 'headphones': return <Headphones3D inUse={item.inUse} />;
       case 'power': return <PowerStrip3D inUse={item.inUse} />;
+      case 'usb': return <Usb3D inUse={item.inUse} />;
       case 'room': return <Room3D os={item.os} inUse={item.inUse} />;
       default: return null;
     }
@@ -348,6 +376,9 @@ export default function RoomEquipmentStatus() {
     power: {
       "ICIT21": "available", "ICIT22": "available", "ICIT23": "available",
       "ICIT24": "available", "ICIT25": "available"
+    },
+    usb: {
+      "ICIT26": "available", "ICIT27": "available", "ICIT28": "available", "ICIT29": "available"
     }
   };
 
@@ -371,7 +402,7 @@ export default function RoomEquipmentStatus() {
     sortedLogs.forEach(log => {
       const minorTask = (log.minorTask || '').toLowerCase();
       const comment = (log.comment || '').toLowerCase();
-      const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ');
+      const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') || minorTask.includes('คืน usb');
       if (!isReturnLog) return;
 
       // ตรวจ field equipment ตรง (จาก SmartEquipmentModal) ก่อน
@@ -383,7 +414,8 @@ export default function RoomEquipmentStatus() {
       // fallback: parse จาก comment
       const allEquipment = [
         ...Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`),
-        ...['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25']
+        ...['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'],
+        ...['ICIT26','ICIT27','ICIT28','ICIT29']
       ];
       for (const eq of allEquipment) {
         if (comment.includes(eq.toLowerCase()) && log.equipmentCondition) {
@@ -428,7 +460,8 @@ export default function RoomEquipmentStatus() {
     const equipmentLogs = sortedLogs.filter(log => {
       const mt = (log.minorTask || '').toLowerCase();
       return mt.includes('ยืมหูฟัง') || mt.includes('คืนหูฟัง') ||
-             mt.includes('ยืมปลั๊กไฟ') || mt.includes('คืนปลั๊กไฟ');
+             mt.includes('ยืมปลั๊กไฟ') || mt.includes('คืนปลั๊กไฟ') ||
+             mt.includes('ยืม usb') || mt.includes('คืน usb');
     });
 
     equipmentLogs.forEach(log => {
@@ -472,6 +505,26 @@ export default function RoomEquipmentStatus() {
           const equipment = `ICIT${i}`;
           if (comment.includes(equipment.toLowerCase())) {
             equipmentStatus.power[equipment] = 'available';
+            delete details[equipment];
+          }
+        }
+      }
+
+      // ตรวจสอบ USB ICIT26-29
+      if (minorTask.includes('ยืม usb')) {
+        for (let i = 26; i <= 29; i++) {
+          const equipment = `ICIT${i}`;
+          if (comment.includes(equipment.toLowerCase())) {
+            equipmentStatus.usb[equipment] = 'in_use';
+            details[equipment] = { user: userName, time: userTime, action: 'ยืม' };
+          }
+        }
+      }
+      if (minorTask.includes('คืน usb')) {
+        for (let i = 26; i <= 29; i++) {
+          const equipment = `ICIT${i}`;
+          if (comment.includes(equipment.toLowerCase())) {
+            equipmentStatus.usb[equipment] = 'available';
             delete details[equipment];
           }
         }
@@ -661,6 +714,23 @@ export default function RoomEquipmentStatus() {
       ]);
     });
 
+    // USB
+    allUsb3.forEach(id => {
+      const inUse = (equipmentStatus.usb || {})[id] === 'in_use';
+      const condition = equipmentConditions[id] || 'normal';
+      const details = EQUIPMENT_DETAILS[id];
+      rows.push([
+        id,
+        'USB',
+        'ชั้น 3',
+        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
+        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
+        lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
+        details?.barcode || '-',
+        details?.itemNo || '-'
+      ]);
+    });
+
     // Create CSV content with BOM for Thai characters
     const csvContent = '\uFEFF' + [
       headers.join(','),
@@ -803,6 +873,7 @@ export default function RoomEquipmentStatus() {
 
   const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
   const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+  const usbStats = Object.values(equipmentStatus.usb || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
 
   const allRooms3 = ['303','304','305','306'];
   const allRooms4 = ['401','402','406','407'];
@@ -813,11 +884,13 @@ export default function RoomEquipmentStatus() {
   const allPower3    = ['ICIT21','ICIT22','ICIT23'];
   const allPowerFinn = ['ICIT24','ICIT25'];
   const allPower     = [...allPower3, ...allPowerFinn];
+  const allUsb3      = ['ICIT26','ICIT27','ICIT28','ICIT29'];
 
   const roomsInUse = allRooms.filter(r => roomStatus[r] === 'in_use');
   const hpInUse = allHeadphones.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use');
   const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
-  const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0;
+  const usbInUse = allUsb3.filter(u => (equipmentStatus.usb||{})[u] === 'in_use');
+  const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0 || usbInUse.length > 0;
 
   // --- Navigation list for preview - Dynamic based on active view ---
   const navItems = activeView === 'rooms' 
@@ -830,6 +903,7 @@ export default function RoomEquipmentStatus() {
         ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
         ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
         ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
+        ...allUsb3.map(id => ({ type: 'usb', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.usb||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
       ];
 
   // --- Navigation handlers ---
@@ -893,6 +967,13 @@ export default function RoomEquipmentStatus() {
           items: allPowerFinn,
           getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
           inUseCount: allPowerFinn.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
+        },
+        {
+          key: 'usb3',
+          label: 'USB ชั้น 3',
+          items: allUsb3,
+          getStatus: u => (equipmentStatus.usb||{})[u] === 'in_use',
+          inUseCount: allUsb3.filter(u => (equipmentStatus.usb||{})[u] === 'in_use').length,
         },
       ];
 
@@ -988,6 +1069,25 @@ export default function RoomEquipmentStatus() {
                 allPower3.some(p => (equipmentStatus.power || {})[p] === 'in_use') ? 'text-red-500' : 
                 allPower3.some(p => equipmentConditions[p] === 'damaged' || equipmentConditions[p] === 'lost') ? 'text-amber-500' : 'text-slate-400'
               }`}>ปลั๊ก</span>
+            </div>
+            <span className="text-slate-200 text-[10px] shrink-0">|</span>
+            {/* ชั้น 3: USB */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex gap-[3px]">
+                {allUsb3.map(u => {
+                  const s = (equipmentStatus.usb || {})[u];
+                  const c = equipmentConditions[u];
+                  let color = 'bg-emerald-400';
+                  if (s === 'in_use') color = 'bg-red-400';
+                  else if (c === 'damaged') color = 'bg-amber-400';
+                  else if (c === 'lost') color = 'bg-slate-400';
+                  return <div key={u} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
+                })}
+              </div>
+              <span className={`text-[10px] font-medium ${
+                allUsb3.some(u => (equipmentStatus.usb || {})[u] === 'in_use') ? 'text-red-500' : 
+                allUsb3.some(u => equipmentConditions[u] === 'damaged' || equipmentConditions[u] === 'lost') ? 'text-amber-500' : 'text-slate-400'
+              }`}>USB</span>
             </div>
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
             {/* Finn: หูฟัง */}

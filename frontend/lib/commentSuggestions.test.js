@@ -58,12 +58,12 @@ describe("getCommentSuggestions", () => {
 
   it("returns USB IDs for USB borrow task", () => {
     const suggestions = getCommentSuggestions("ยืม USB");
-    expect(suggestions).toEqual(["ICIT25", "ICIT26", "ICIT27", "ICIT28"]);
+    expect(suggestions).toEqual(["ICIT26", "ICIT27", "ICIT28", "ICIT29"]);
   });
 
   it("returns USB IDs for USB return task", () => {
     const suggestions = getCommentSuggestions("คืน USB");
-    expect(suggestions).toEqual(["ICIT25", "ICIT26", "ICIT27", "ICIT28"]);
+    expect(suggestions).toEqual(["ICIT26", "ICIT27", "ICIT28", "ICIT29"]);
   });
 
   it("returns empty array for task without suggestions", () => {

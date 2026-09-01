@@ -24,6 +24,8 @@ export default function EquipmentModal({
       return Array.from({ length: 12 }, (_, i) => `ICIT${String(i + 1).padStart(2, '0')}`);
     } else if (templateMinorTask.includes('ปลั๊กไฟ')) {
       return ['ICIT21', 'ICIT22', 'ICIT23'];
+    } else if (templateMinorTask.includes('USB')) {
+      return ['ICIT26', 'ICIT27', 'ICIT28', 'ICIT29'];
     }
     return [];
   };

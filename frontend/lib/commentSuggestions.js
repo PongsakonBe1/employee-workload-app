@@ -94,8 +94,8 @@ export const commentSuggestionMap = {
   "คุมสอบ DL": ["เช้า", "บ่าย", "เช้า/บ่าย"],
 
   // USB (ติดตั้งโปรแกรมนักศึกษา — ประจำห้องบริการชั้น 3)
-  "ยืม USB": ["ICIT25", "ICIT26", "ICIT27", "ICIT28"],
-  "คืน USB": ["ICIT25", "ICIT26", "ICIT27", "ICIT28"],
+  "ยืม USB": ["ICIT26", "ICIT27", "ICIT28", "ICIT29"],
+  "คืน USB": ["ICIT26", "ICIT27", "ICIT28", "ICIT29"],
 
   // Microsoft Authenticator
   "Microsoft Authenticator": ["Reset Microsoft Authenticator"],
