@@ -23,6 +23,7 @@ import {
   ClipboardList,
   ShieldCheck,
   Headphones,
+  Package,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { isAdminRole } from "../lib/authUtils";
@@ -52,6 +53,7 @@ const getNav = (t, role) => {
       { href: "/admin/users",            label: "จัดการผู้ใช้",            icon: Users,         group: "admin" },
       { href: "/admin/staff-analytics",  label: "วิเคราะห์ประสิทธิภาพ",   icon: BarChart2,     group: "admin" },
       { href: "/admin/equipment-health", label: "สุขภาพอุปกรณ์",          icon: Headphones,    group: "admin" },
+      { href: "/admin/equipment-items",  label: "จัดการอุปกรณ์",          icon: Package,       group: "admin" },
       { href: "/admin/system",           label: "จัดการระบบ",             icon: Settings,      group: "admin" },
       { href: "/admin/settings",         label: "ตั้งค่า",                icon: ShieldCheck,   group: "admin" },
       { href: "/export",                 label: "ส่งออกข้อมูล",           icon: Download,      group: "main" },
@@ -81,6 +83,7 @@ const PAGE_LABELS = {
   "/admin/settings":         "ตั้งค่า",
   "/admin/staff-analytics":  "วิเคราะห์ประสิทธิภาพ",
   "/admin/equipment-health": "สุขภาพอุปกรณ์",
+  "/admin/equipment-items":  "จัดการอุปกรณ์",
   "/admin/audit-logs":       "Audit Logs",
   "/admin/cleanup":          "ล้างข้อมูล",
 };

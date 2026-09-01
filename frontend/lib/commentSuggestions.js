@@ -160,6 +160,33 @@ export const minorTaskToMainDuty = {
 };
 
 /**
+ * Load active equipment items from Firestore for a given minorTask
+ * Returns only active items' names, merged with static fallback
+ * @param {string} minorTask - The selected minor task
+ * @returns {Promise<string[]>} - Array of equipment names
+ */
+export async function getEquipmentSuggestions(minorTask) {
+  try {
+    const { collection, query, where, getDocs } = await import("firebase/firestore");
+    const { db } = await import("./firebase");
+    const q = query(
+      collection(db, "equipmentItems"),
+      where("minorTask", "==", minorTask),
+      where("active", "==", true)
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return commentSuggestionMap[minorTask] || [];
+    const items = snapshot.docs
+      .map((d) => ({ name: d.data().name, order: d.data().order || 0 }))
+      .sort((a, b) => a.order - b.order)
+      .map((i) => i.name);
+    return items;
+  } catch {
+    return commentSuggestionMap[minorTask] || [];
+  }
+}
+
+/**
  * Get comment suggestions for a minor task
  * @param {string} minorTask - The selected minor task
  * @returns {string[]} - Array of suggested comments or empty array
