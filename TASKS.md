@@ -577,12 +577,12 @@ docs: update README for v2.4.0 USB equipment + admin equipment management
 
 ### งานแบ่งตามตำแหน่ง
 
-| ลำดับ | งาน | Role | Dependency |
-|---|---|---|---|
-| 1 | แก้ redirect logic ใน `frontend/app/page.js`: ลบ/ปรับเงื่อนไขที่ส่ง admin ไป `/dashboard` | **[SE]** | — |
-| 2 | แก้ redirect logic ใน `frontend/app/login/page.js`: หลัง login admin ไป `/worklogs/new` (หรือ `/admin/record` ถ้าเป็นหน้าที่ UX กำหนด) | **[SE]** | SE#1 |
-| 3 | ทดสอบ: admin/superadmin login → ไปหน้าบันทึกงาน; staff login → ไป `/worklogs/new` เหมือนเดิม | **[QA]** | SE#2 |
-| 4 | อัปเดต README / Release Notes (ถ้ามีผลต่อ user flow) | **[Doc]** | QA#3 |
+| ลำดับ | งาน | Role | Dependency | Status |
+|---|---|---|---|---|
+| 1 | แก้ redirect logic ใน `frontend/app/page.js`: ลบ/ปรับเงื่อนไขที่ส่ง admin ไป `/dashboard` | **[SE]** | — | ✅ |
+| 2 | แก้ redirect logic ใน `frontend/app/login/page.js`: หลัง login admin ไป `/worklogs/new` (หรือ `/admin/record` ถ้าเป็นหน้าที่ UX กำหนด) | **[SE]** | SE#1 | ✅ |
+| 3 | ทดสอบ: admin/superadmin login → ไปหน้าบันทึกงาน; staff login → ไป `/worklogs/new` เหมือนเดิม | **[QA]** | SE#2 | ✅ |
+| 4 | อัปเดต README / Release Notes (ถ้ามีผลต่อ user flow) | **[Doc]** | QA#3 | ⏸️ รอ release note ครั้งต่อไป |
 
 ### ไฟล์ที่ต้องแก้
 - `frontend/app/page.js`
