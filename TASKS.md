@@ -565,3 +565,29 @@ refactor(suggestions): load equipment items from Firestore with static fallback
 fix(dashboard): query user worklogs by employeeId before applying limit
 docs: update README for v2.4.0 USB equipment + admin equipment management
 ```
+
+---
+
+## FEAT-3: เปลี่ยน Landing Page ของ Admin/Superadmin เป็นหน้าบันทึกงาน
+
+### Requirement
+- admin/superadmin ที่เข้าแอป (โดยตรงจาก `/` หรือหลัง login) ให้ redirect ไปหน้าบันทึกงาน (`/worklogs/new` หรือ `/admin/record`) แทนหน้า `/dashboard`
+- staff ยังคงไป `/worklogs/new` เหมือนเดิม
+- ต้องไม่ทำให้เกิด redirect loop บน PWA / standalone mode
+
+### งานแบ่งตามตำแหน่ง
+
+| ลำดับ | งาน | Role | Dependency |
+|---|---|---|---|
+| 1 | แก้ redirect logic ใน `frontend/app/page.js`: ลบ/ปรับเงื่อนไขที่ส่ง admin ไป `/dashboard` | **[SE]** | — |
+| 2 | แก้ redirect logic ใน `frontend/app/login/page.js`: หลัง login admin ไป `/worklogs/new` (หรือ `/admin/record` ถ้าเป็นหน้าที่ UX กำหนด) | **[SE]** | SE#1 |
+| 3 | ทดสอบ: admin/superadmin login → ไปหน้าบันทึกงาน; staff login → ไป `/worklogs/new` เหมือนเดิม | **[QA]** | SE#2 |
+| 4 | อัปเดต README / Release Notes (ถ้ามีผลต่อ user flow) | **[Doc]** | QA#3 |
+
+### ไฟล์ที่ต้องแก้
+- `frontend/app/page.js`
+- `frontend/app/login/page.js`
+
+### Note
+- หน้า `/dashboard` ยังคงมีอยู่ ผ่านเมนูนำทางได้ตามปกติ
+- การตัดสินใจ: ใช้ `/worklogs/new` เป็นหน้าแรกของ admin ด้วย (ไม่ใช่ `/admin/record`) เพราะ admin ก็ต้องบันทึกงานเป็นหลัก เหมือน staff

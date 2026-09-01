@@ -2,6 +2,17 @@
 
 ---
 
+## [2026-09-02 05:14] - [PM] Project Manager — FEAT-3: Admin/Superadmin Landing Page Change
+
+- **Task:** รับ Requirement จากผู้ใช้ให้ role admin/superadmin หน้าแรกที่เข้าแอปไปที่หน้าบันทึกงาน แทน `/dashboard`
+- **Files Modified:**
+  - `TASKS.md` — เพิ่ม section FEAT-3 พร้อมรายละเอียด requirement, งานแบ่งตาม role, ไฟล์ที่ต้องแก้
+- **Note to Next Agent:**
+  - **[SE]** แก้ redirect logic ใน `frontend/app/page.js` และ `frontend/app/login/page.js`: admin/superadmin ให้ไป `/worklogs/new` เหมือน staff (`isAdminRole(user)` branch → `/worklogs/new`); staff branch คงเดิม; ระวัง redirect loop บน PWA
+  - **[QA]** ทดสอบ login ด้วย admin/superadmin/staff ว่าไปหน้าที่ถูกต้อง
+
+---
+
 ## [2026-09-02] - [PM → SE → SA → DA → QA → Doc] Sprint v2.10.0 — Bug Fix + USB Equipment + Admin Equipment Management
 
 - **Task:** Full sprint — 6 phases ครบทุกตำแหน่ง
