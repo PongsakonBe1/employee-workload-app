@@ -1,4 +1,4 @@
-# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.9.0)
+# labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.10.0)
 
 > **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
 > มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | 🌐 **Production URL** | https://labboy-workload-app.web.app |
-| 📦 **Current Version** | v2.9.0 |
-| 📅 **Last Updated** | 2026-07-17 |
+| 📦 **Current Version** | v2.10.0 |
+| 📅 **Last Updated** | 2026-09-02 |
 | 🏢 **Organization** | ICIT KMUTNB |
 | 👤 **Developer** | Pongsakon Rawangwong (พงศกร ระวังวงศ์) |
 | 📧 **Contact** | pongsakon.be1@gmail.com |
@@ -2031,6 +2031,20 @@ cd frontend && npm update
 # Deploy
 cd firebase && firebase deploy
 ```
+
+## Changelog
+
+### v2.10.0 (2026-09-02)
+
+- **แก้ไข:** หน้า Admin Users crash เมื่อเปิดแท็บ "รออนุมัติ" (`sanitizePhotoURL` undefined)
+- **เพิ่ม:** หัวข้อรอง "ยืม USB" / "คืน USB" พร้อมอุปกรณ์ ICIT25–ICIT28 (ประจำห้องบริการชั้น 3)
+- **เพิ่ม:** หน้า Admin จัดการอุปกรณ์ (`/admin/equipment-items`) — CRUD + toggle active/inactive + ระบุสถานที่
+- **เพิ่ม:** Firestore collection `equipmentItems` สำหรับจัดการอุปกรณ์แบบ dynamic
+- **เพิ่ม:** `getEquipmentSuggestions()` โหลดอุปกรณ์จาก Firestore (เฉพาะ active) พร้อม static fallback
+- **แก้ไข:** Dashboard ของ Staff แสดงจำนวนงานไม่ครบ — แก้ query ให้ filter `employeeId` ก่อน limit
+- **USB SmartEquipmentModal:** รองรับ USB ใน modal ยืม/คืน + Equipment Health + CSV export
+
+---
 
 ## Contributing
 

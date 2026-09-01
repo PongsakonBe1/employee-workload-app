@@ -374,7 +374,7 @@ export function AppShell({ children }) {
           <span className="mx-2">·</span>
           <span>labboy Workload Recorder</span>
           <span className="mx-2">&mdash;</span>
-          <span>v2.9.0</span>
+          <span>v2.10.0</span>
         </div>
       </footer>
     </div>

@@ -2,17 +2,23 @@
 
 ---
 
-## [2026-09-02 04:04] - [PM] Sprint v2.4.0 — Bug Fix + USB Equipment + Admin Equipment Management
+## [2026-09-02] - [PM → SE → SA → DA → QA → Doc] Sprint v2.10.0 — Bug Fix + USB Equipment + Admin Equipment Management
 
-- **Task:** วิเคราะห์ Requirement จาก user feedback และวางแผนแบ่งงานให้ทีม
+- **Task:** Full sprint — 6 phases ครบทุกตำแหน่ง
 - **Files Modified:**
-  - `TASKS.md` — เพิ่ม Sprint v2.4.0 plan (BUG-1, FEAT-1, FEAT-2, OBSERVE-1)
-- **Analysis Summary:**
-  - **BUG-1 (Critical):** `sanitizePhotoURL` ไม่ได้ define ใน `admin/users/page.js` → crash ทันทีที่เปิด pending tab
-  - **FEAT-1:** เพิ่ม minorTask ยืม/คืน USB (ICIT25–28) ประจำห้องชั้น 3
-  - **FEAT-2:** ระบบ admin จัดการอุปกรณ์ — CRUD + location + toggle active/inactive สำหรับอุปกรณ์ชำรุด
-  - **OBSERVE-1:** Dashboard user count ไม่ตรง — สงสัย limit ตัดก่อน filter employeeId
-- **Note to Next Agent:** SE: เริ่ม Phase 1 — แก้ BUG-1 `sanitizePhotoURL` ก่อนเป็นอันดับแรก (Critical bug ที่ production) แล้ว commit บน branch `hotfix/admin-users-crash`
+  - `frontend/app/admin/users/page.js` — BUG-1: เพิ่ม `sanitizePhotoURL` helper
+  - `frontend/lib/commentSuggestions.js` — FEAT-1: เพิ่ม ยืม/คืน USB + ICIT25-28 + `getEquipmentSuggestions()`
+  - `frontend/components/SmartEquipmentModal.js` — FEAT-1: USB equipment type support
+  - `frontend/app/admin/equipment-health/page.js` — FEAT-1: USB detection + CSV
+  - `firebase/firestore.rules` — FEAT-2: `equipmentItems` collection rules
+  - `frontend/app/admin/equipment-items/page.js` — FEAT-2: (**สร้างใหม่**) Admin CRUD page
+  - `frontend/components/AppShell.js` — FEAT-2: nav link + Package icon + v2.10.0
+  - `frontend/app/dashboard/page.js` — OBSERVE-1: Staff query employeeId before limit
+  - `frontend/lib/commentSuggestions.test.js` — QA: USB tests + count 28→30
+  - `QA_REPORT.md` — QA: Sprint v2.10.0 report (8/8 pass)
+  - `README.md` — Doc: v2.10.0 changelog + version bump
+  - `frontend/app/help/page.js` — Doc: v2.10.0
+- **Note to Next Agent:** Deploy hosting + Firestore rules ก่อนทดสอบ production
 
 ---
 

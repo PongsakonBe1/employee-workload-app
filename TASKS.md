@@ -546,13 +546,13 @@ Dashboard user กรองด้วย `employeeId === user.uid` (บรรท�
 
 | Phase | งาน | Role | Branch | Status |
 |---|---|---|---|---|
-| **Phase 1** | BUG-1: แก้ `sanitizePhotoURL` crash | **[SE]** | `hotfix/admin-users-crash` | ⬜ |
-| **Phase 2** | FEAT-1: เพิ่ม minorTask ยืม/คืน USB + suggestions | **[SE]** | `feature/usb-equipment` | ⬜ |
-| **Phase 3a** | FEAT-2 SA: ออกแบบ schema + Firestore rules สำหรับ `equipmentItems` | **[SA]** | `feature/admin-equipment-mgmt` | ⬜ |
-| **Phase 3b** | FEAT-2 SE: สร้างหน้า admin จัดการอุปกรณ์ + แก้ commentSuggestions | **[SE]** | `feature/admin-equipment-mgmt` | ⬜ |
-| **Phase 4** | OBSERVE-1: DA วิเคราะห์ + SE แก้ dashboard count | **[DA]** → **[SE]** | `fix/dashboard-count` | ⬜ |
-| **Phase 5** | QA: ทดสอบทุก phase | **[QA]** | (ทดสอบบน main หลัง merge) | ⬜ |
-| **Phase 6** | Doc: อัปเดต README + Release Notes | **[Doc]** | `docs/v2.4.0` | ⬜ |
+| **Phase 1** | BUG-1: แก้ `sanitizePhotoURL` crash | **[SE]** | `hotfix/admin-users-crash` | ✅ |
+| **Phase 2** | FEAT-1: เพิ่ม minorTask ยืม/คืน USB + suggestions | **[SE]** | `feature/usb-equipment` | ✅ |
+| **Phase 3a** | FEAT-2 SA: ออกแบบ schema + Firestore rules สำหรับ `equipmentItems` | **[SA]** | `feature/admin-equipment-mgmt` | ✅ |
+| **Phase 3b** | FEAT-2 SE: สร้างหน้า admin จัดการอุปกรณ์ + แก้ commentSuggestions | **[SE]** | `feature/admin-equipment-mgmt` | ✅ |
+| **Phase 4** | OBSERVE-1: DA วิเคราะห์ + SE แก้ dashboard count | **[DA]** → **[SE]** | `fix/dashboard-count` | ✅ |
+| **Phase 5** | QA: ทดสอบทุก phase | **[QA]** | (ทดสอบบน main หลัง merge) | ✅ |
+| **Phase 6** | Doc: อัปเดต README + Release Notes | **[Doc]** | `docs/v2.10.0` | ✅ |
 
 ### Commit Convention v2.4.0
 
