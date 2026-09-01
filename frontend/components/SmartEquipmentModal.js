@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Headphones, Plug, User, Clock, RotateCcw, AlertTriangle, Ban } from 'lucide-react';
+import { X, Headphones, Plug, Usb, User, Clock, RotateCcw, AlertTriangle, Ban } from 'lucide-react';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
 export default function SmartEquipmentModal({ 
@@ -30,8 +30,10 @@ export default function SmartEquipmentModal({
   const tTask = templateMinorTask || '';
   const equipmentType = (tTask.includes('หูฟัง') || tName.includes('หูฟัง')) ? 'headphones'
                       : (tTask.includes('ปลั๊กไฟ') || tName.includes('ปลั๊กไฟ')) ? 'power'
+                      : (tTask.includes('USB') || tName.includes('USB')) ? 'usb'
                       : null;
   const isHeadphones = equipmentType === 'headphones';
+  const isUsb = equipmentType === 'usb';
 
   // ตรวจว่า template เป็นของห้องไหน
   const isFinn   = tName.toLowerCase().includes('finn') || tTask.toLowerCase().includes('finn');
@@ -40,6 +42,7 @@ export default function SmartEquipmentModal({
   // full ranges สำหรับ scan worklogs
   const ALL_HP = Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
   const ALL_PW = ['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'];
+  const ALL_USB = ['ICIT25','ICIT26','ICIT27','ICIT28'];
 
   // range ที่แสดงใน grid ตาม template
   const getEquipmentRange = () => {
@@ -48,6 +51,7 @@ export default function SmartEquipmentModal({
       if (isFloor3) return Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
       return ALL_HP;
     }
+    if (isUsb) return ALL_USB;
     if (isFinn)   return ['ICIT24','ICIT25'];
     if (isFloor3) return ['ICIT21','ICIT22','ICIT23'];
     return ALL_PW;
@@ -71,6 +75,7 @@ export default function SmartEquipmentModal({
         const status = {
           headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
           power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
+          usb:        Object.fromEntries(ALL_USB.map(e => [e,'available'])),
         };
         const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
         const details = {};
@@ -85,7 +90,7 @@ export default function SmartEquipmentModal({
         sortedLogs.forEach(log => {
           const minorTask = (log.minorTask || '').toLowerCase();
           const commentLower = (log.comment || '').toLowerCase();
-          const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ');
+          const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') || minorTask.includes('คืน usb');
           if (!isReturnLog) return;
 
           // ตรวจ field equipment ตรง (จาก SmartEquipmentModal log) ก่อน
@@ -94,7 +99,7 @@ export default function SmartEquipmentModal({
             return;
           }
           // fallback: parse จาก comment
-          [...ALL_HP, ...ALL_PW].forEach(eq => {
+          [...ALL_HP, ...ALL_PW, ...ALL_USB].forEach(eq => {
             if (commentLower.includes(eq.toLowerCase()) && log.equipmentCondition) {
               conditionMap[eq] = log.equipmentCondition;
             }
@@ -122,6 +127,12 @@ export default function SmartEquipmentModal({
           if (minorTask.includes('คืนปลั๊กไฟ')) {
             ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='available'; delete details[eq]; } });
           }
+          if (minorTask.includes('ยืม usb')) {
+            ALL_USB.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.usb[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
+          }
+          if (minorTask.includes('คืน usb')) {
+            ALL_USB.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.usb[eq]='available'; delete details[eq]; } });
+          }
         });
 
         setEquipmentStatus(status[equipmentType] || {});
@@ -129,6 +140,8 @@ export default function SmartEquipmentModal({
       } catch (error) {
         const fallback = isHeadphones
           ? Object.fromEntries(ALL_HP.map(e=>[e,'available']))
+          : isUsb
+          ? Object.fromEntries(ALL_USB.map(e=>[e,'available']))
           : Object.fromEntries(ALL_PW.map(e=>[e,'available']));
         setEquipmentStatus(fallback);
       } finally {
@@ -190,6 +203,7 @@ export default function SmartEquipmentModal({
             const newStatus = {
               headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
               power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
+              usb:        Object.fromEntries(ALL_USB.map(e => [e,'available'])),
             };
             const today = new Date().toLocaleDateString('en-CA');
             const newDetails = {};
@@ -204,19 +218,20 @@ export default function SmartEquipmentModal({
               const isBorrow = minorTask.includes('ยืม') || comment.includes('ยืม');
               const isReturn = minorTask.includes('คืน') || comment.includes('คืน');
 
-              const allEquipment = [...ALL_HP, ...ALL_PW];
+              const allEquipment = [...ALL_HP, ...ALL_PW, ...ALL_USB];
               allEquipment.forEach(eq => {
                 const eqLower = eq.toLowerCase();
                 const hasEq = comment.includes(eqLower) || log.equipment === eq;
                 if (hasEq) {
-                  if (isBorrow) newStatus[ALL_HP.includes(eq) ? 'headphones' : 'power'][eq] = 'in_use';
-                  if (isReturn) newStatus[ALL_HP.includes(eq) ? 'headphones' : 'power'][eq] = 'available';
+                  const bucket = ALL_HP.includes(eq) ? 'headphones' : ALL_USB.includes(eq) ? 'usb' : 'power';
+                  if (isBorrow) newStatus[bucket][eq] = 'in_use';
+                  if (isReturn) newStatus[bucket][eq] = 'available';
                   if (log.recipient) newDetails[eq] = { user: log.recipient, time: log.time || '' };
                 }
               });
             });
 
-            setEquipmentStatus(isHeadphones ? newStatus.headphones : newStatus.power);
+            setEquipmentStatus(isHeadphones ? newStatus.headphones : isUsb ? newStatus.usb : newStatus.power);
             setEquipmentDetails(newDetails);
           } catch (error) {
             console.error('Error recalculating status:', error);
@@ -277,7 +292,7 @@ export default function SmartEquipmentModal({
       alert('กรุณากรอกโน้ตสั้นๆ เพื่ออธิบายสภาพอุปกรณ์');
       return;
     }
-    const itemType = templateMinorTask.includes('หูฟัง') || tName.includes('หูฟัง') ? 'หูฟัง' : 'ปลั๊กไฟ';
+    const itemType = templateMinorTask.includes('หูฟัง') || tName.includes('หูฟัง') ? 'หูฟัง' : templateMinorTask.includes('USB') || tName.includes('USB') ? ' USB' : 'ปลั๊กไฟ';
     const actionShort = isReturn ? 'คืน' : 'ยืม';
     const comment = `${actionShort}${itemType} ${selectedEquipment}`;
     const minorTask = `${actionShort}${itemType}`;
@@ -340,7 +355,7 @@ export default function SmartEquipmentModal({
               </div>
 
               {/* Equipment Grid */}
-              <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-5 sm:grid-cols-8' : 'grid-cols-3 sm:grid-cols-5'}`}>
+              <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-5 sm:grid-cols-8' : isUsb ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-5'}`}>
                 {filteredEquipment.map((equipment) => {
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);
@@ -385,7 +400,7 @@ export default function SmartEquipmentModal({
                           {equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost'
                             ? <Ban className="w-2.5 h-2.5" />
                             : isAvailable
-                            ? (isHeadphones ? <Headphones className="w-2.5 h-2.5" /> : <Plug className="w-2.5 h-2.5" />)
+                            ? (isHeadphones ? <Headphones className="w-2.5 h-2.5" /> : isUsb ? <Usb className="w-2.5 h-2.5" /> : <Plug className="w-2.5 h-2.5" />)
                             : <RotateCcw className="w-2.5 h-2.5" />
                           }
                           {equipmentConditionMap[equipment] === 'damaged' ? 'ชำรุด' : equipmentConditionMap[equipment] === 'lost' ? 'สูญหาย' : action}

@@ -34,6 +34,7 @@ function detectEquipmentType(log) {
   const t = (log.minorTask || "") + (log.comment || "");
   if (t.includes("หูฟัง")) return "headphones";
   if (t.includes("ปลั๊กไฟ")) return "power";
+  if (t.includes("USB")) return "usb";
   return "other";
 }
 
@@ -43,7 +44,7 @@ function exportCSV(logs) {
   const rows = logs.map((l) => [
     l.date || "",
     l.time || "",
-    detectEquipmentType(l) === "headphones" ? "หูฟัง" : detectEquipmentType(l) === "power" ? "ปลั๊กไฟ" : "อื่นๆ",
+    detectEquipmentType(l) === "headphones" ? "หูฟัง" : detectEquipmentType(l) === "power" ? "ปลั๊กไฟ" : detectEquipmentType(l) === "usb" ? "USB" : "อื่นๆ",
     l.comment || "",
     l.employeeDisplayName || l.employeeId || "",
     l.equipmentCondition === "normal" ? "สมบูรณ์" : l.equipmentCondition === "damaged" ? "ชำรุด" : l.equipmentCondition === "lost" ? "สูญหาย" : "",
@@ -142,6 +143,7 @@ export default function EquipmentHealthPage() {
       try {
         const EQUIPMENT_TASKS = [
           "คืนหูฟัง", "ยืมหูฟัง", "คืนปลั๊กไฟ", "ยืมปลั๊กไฟ",
+          "ยืม USB", "คืน USB",
         ];
         const snaps = await Promise.all(
           EQUIPMENT_TASKS.map((task) =>

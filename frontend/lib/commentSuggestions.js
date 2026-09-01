@@ -33,6 +33,8 @@ export const MINOR_TASKS = [
   "ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย",
   "สนับสนุนการทำงานของสำนักคอมพิวเตอร์(ฝ่ายอื่นๆ)",
   "คุมสอบ DL",
+  "ยืม USB",
+  "คืน USB",
 ];
 
 export const commentSuggestionMap = {
@@ -91,6 +93,10 @@ export const commentSuggestionMap = {
   // DL Exam Proctoring (คุมสอบ DL)
   "คุมสอบ DL": ["เช้า", "บ่าย", "เช้า/บ่าย"],
 
+  // USB (ติดตั้งโปรแกรมนักศึกษา — ประจำห้องบริการชั้น 3)
+  "ยืม USB": ["ICIT25", "ICIT26", "ICIT27", "ICIT28"],
+  "คืน USB": ["ICIT25", "ICIT26", "ICIT27", "ICIT28"],
+
   // Microsoft Authenticator
   "Microsoft Authenticator": ["Reset Microsoft Authenticator"],
 
@@ -123,6 +129,8 @@ export const minorTaskToMainDuty = {
   คืนปลั๊กไฟ: "ดูแลห้องบริการคอมพิวเตอร์",
   ยืมปลั๊กไฟ: "ดูแลห้องบริการคอมพิวเตอร์",
   ดูแลความสะอาด: "ดูแลห้องบริการคอมพิวเตอร์",
+  "ยืม USB": "ดูแลห้องบริการคอมพิวเตอร์",
+  "คืน USB": "ดูแลห้องบริการคอมพิวเตอร์",
 
   // ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ (16 tasks)
   "Microsoft Authenticator": "ให้บริการรับแจ้งและแก้ไขปัญหาระบบสารสนเทศ",
