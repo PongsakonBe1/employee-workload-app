@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ShieldCheck, Chrome } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
-import { isAdminRole } from "../../lib/authUtils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,16 +12,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // ถ้า login แล้ว ให้ redirect ตาม role
+  // ถ้า login แล้ว redirect ไปหน้าบันทึกงาน (ทุก role)
   // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
     if (!loading) {
       if (user) {
-        if (isAdminRole(user)) {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/worklogs/new");
-        }
+        router.replace("/worklogs/new");
       } else if (pendingApproval) {
         router.replace("/pending");
       }

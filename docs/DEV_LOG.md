@@ -2,6 +2,19 @@
 
 ---
 
+## [2026-09-02 05:15] - [SE] Software Engineer — FEAT-3: Implement admin/superadmin landing redirect
+
+- **Task:** แก้ redirect logic ให้ admin/superadmin หน้าแรกไป `/worklogs/new` แทน `/dashboard`
+- **Files Modified:**
+  - `frontend/app/page.js` — ลบเงื่อนไข `isAdminRole`, authenticated user ทุกคน redirect ไป `/worklogs/new`
+  - `frontend/app/login/page.js` — ลบ `isAdminRole` branch ที่ไป `/dashboard`; ผู้ใช้ login แล้ว redirect ไป `/worklogs/new` ทุก role
+- **Note to [QA]:**
+  - ทดสอบ login ด้วย admin, superadmin, staff → ต้องไป `/worklogs/new`
+  - ทดสอบ PWA/standalone mode ว่าไม่เกิด redirect loop
+  - ยืนยันว่า `/dashboard` ยังเข้าถึงได้ผ่านเมนูนำทาง
+
+---
+
 ## [2026-09-02 05:14] - [PM] Project Manager — FEAT-3: Admin/Superadmin Landing Page Change
 
 - **Task:** รับ Requirement จากผู้ใช้ให้ role admin/superadmin หน้าแรกที่เข้าแอปไปที่หน้าบันทึกงาน แทน `/dashboard`

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
-import { isAdminRole } from "../lib/authUtils";
 
 export default function Home() {
   const router = useRouter();
@@ -19,12 +18,8 @@ export default function Home() {
       if (!user) {
         console.log("[Home] No user, redirect to /login");
         router.push("/login");
-      } else if (isAdminRole(user)) {
-        console.log("[Home] Admin user, redirect to /dashboard");
-        router.push("/dashboard");
       } else {
-        // Staff and other roles go to worklogs/new (new record page)
-        console.log("[Home] Staff user, redirect to /worklogs/new");
+        console.log("[Home] Authenticated user, redirect to /worklogs/new");
         router.push("/worklogs/new");
       }
     }
