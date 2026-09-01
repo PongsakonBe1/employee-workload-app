@@ -321,5 +321,25 @@ service cloud.firestore {
       // Only admin can create/update/delete exam schedules
       allow create, update, delete: if isAdmin();
     }
+
+    // Equipment Items collection (admin-managed equipment inventory)
+    // Schema: { name, minorTask, location, active, order, createdAt, updatedAt, createdBy }
+    match /equipmentItems/{itemId} {
+      // All authenticated users can read (staff needs active items for comment suggestions)
+      allow read: if isAuthenticated();
+      
+      // Only admin can create equipment items
+      allow create: if isAdmin() &&
+        request.resource.data.keys().hasAll(['name', 'minorTask', 'active']) &&
+        request.resource.data.name is string &&
+        request.resource.data.minorTask is string &&
+        request.resource.data.active is bool;
+      
+      // Only admin can update equipment items
+      allow update: if isAdmin();
+      
+      // Only admin can delete equipment items
+      allow delete: if isAdmin();
+    }
   }
 }
