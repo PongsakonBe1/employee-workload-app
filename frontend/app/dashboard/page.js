@@ -261,8 +261,12 @@ export default function DashboardPage() {
       }
 
       // Role-based filtering
-      // DA-3: Staff ไม่ filter employeeId ใน query เพื่อใช้ข้อมูลร่วมคำนวณ leaderboard ได้เลย (ลด query ซ้ำซ้อน)
-      if (isAdmin && selectedEmployee !== "all") {
+      // FIX OBSERVE-1: Staff ต้อง filter employeeId ใน query เพื่อให้ได้ข้อมูลครบ
+      // (ก่อนหน้านี้ staff ดึงทั้งหมดแล้วกรอง client-side ทำให้ limit ตัดข้อมูลก่อน filter)
+      // Leaderboard จะ query แยกเบาๆ ทีหลัง
+      if (!isAdmin) {
+        constraints.push(where("employeeId", "==", user.uid));
+      } else if (selectedEmployee !== "all") {
         // Admin เลือกดูรายบุคคล
         constraints.push(where("employeeId", "==", selectedEmployee));
       }
@@ -377,12 +381,8 @@ export default function DashboardPage() {
         worklogs = allWorklogsInRange;
       }
 
-      // DA-3: สำหรับ staff — filter worklogs เฉพาะของตัวเองสำหรับแสดง chart/stats
-      // (allWorklogsInRange ยังเก็บข้อมูลทุกคนไว้ใช้คำนวณ leaderboard)
-      if (!isAdmin) {
-        worklogs = worklogs.filter((log) => log.employeeId === user.uid);
-        totalInRange = allWorklogsInRange.filter((log) => log.employeeId === user.uid).length;
-      }
+      // FIX OBSERVE-1: Staff query มี employeeId filter แล้ว ไม่ต้องกรองซ้ำ
+      // worklogs ของ staff เป็นข้อมูลของตัวเองครบแล้ว
 
       setActualCount(totalInRange);
       setHasMoreData(hasMoreThanLimit);
@@ -494,21 +494,34 @@ export default function DashboardPage() {
         uidToName,
       });
 
-      // Staff leaderboard — DA-3: คำนวณจาก allWorklogsInRange ที่ได้มาแล้ว (ไม่ต้อง query แยก)
+      // Staff leaderboard — FIX OBSERVE-1: query แยกเบาๆ เพื่อนับ count ต่อ employee
+      // (main query ถูก filter ด้วย employeeId แล้ว จึงมีเฉพาะข้อมูลตัวเอง)
       if (!isAdmin) {
-        const lbByEmp = {};
-        allWorklogsInRange.forEach((log) => {
-          const empId = log.employeeId;
-          if (empId) lbByEmp[empId] = (lbByEmp[empId] || 0) + 1;
-        });
-        const lb = Object.entries(lbByEmp)
-          .map(([uid, count]) => ({
-            uid,
-            label: uidToName[uid] || uid,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count);
-        setLeaderboard(lb);
+        try {
+          const lbConstraints = [];
+          if (dateRange) {
+            lbConstraints.push(
+              where("date", ">=", dateRange.start),
+              where("date", "<=", dateRange.end),
+            );
+          }
+          const lbDocs = await fetchAllPaginated(lbConstraints, !!dateRange);
+          const lbByEmp = {};
+          lbDocs.forEach((d) => {
+            const empId = d.data().employeeId;
+            if (empId) lbByEmp[empId] = (lbByEmp[empId] || 0) + 1;
+          });
+          const lb = Object.entries(lbByEmp)
+            .map(([uid, count]) => ({
+              uid,
+              label: uidToName[uid] || uid,
+              count,
+            }))
+            .sort((a, b) => b.count - a.count);
+          setLeaderboard(lb);
+        } catch (lbErr) {
+          console.warn("[Dashboard] Leaderboard query error:", lbErr);
+        }
       }
     }
 
