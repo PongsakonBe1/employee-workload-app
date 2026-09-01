@@ -452,3 +452,116 @@ fix(seasonal): update PERIOD_COLORS to match app theme
 feat(profile): embed radar chart and stats summary in user profile page
 feat(dashboard): add InfoTooltip and empty state for seasonal section
 ```
+
+---
+
+# Sprint v2.4.0 — Bug Fix + USB Equipment + Admin Minor Task Management
+
+**วันที่วางแผน:** 2026-09-02
+**PM:** Auto-planned by PM Agent
+
+---
+
+## BUG-1: หน้า Admin Users crash เมื่อกดแท็บ "รออนุมัติ" (Critical 🔴)
+
+### สาเหตุ (Root Cause)
+ไฟล์ `frontend/app/admin/users/page.js` บรรทัด 493 เรียกใช้ `sanitizePhotoURL(u.photoURL)` แต่ **ไม่เคย define หรือ import ฟังก์ชันนี้** ทำให้เกิด `ReferenceError: sanitizePhotoURL is not defined` ทันทีที่ pending users tab render
+
+### แก้ไข
+- **[SE]** เพิ่มฟังก์ชัน `sanitizePhotoURL` ใน `page.js` (หรือ import จาก lib) — เป็น simple null-safe function ที่ validate URL ก่อนแสดง
+- Fix แบบ minimal: define inline helper function ที่ตรวจ photoURL ว่าเป็น valid URL หรือ return null
+
+### ไฟล์ที่ต้องแก้
+- `frontend/app/admin/users/page.js`
+
+---
+
+## FEAT-1: เพิ่มหัวข้อรอง "ยืม/คืน USB" สำหรับติดตั้งโปรแกรมนักศึกษา
+
+### Requirement
+- เพิ่ม minorTask ใหม่: **ยืม USB** และ **คืน USB**
+- USB มี 4 ตัวในปัจจุบัน: **ICIT25, ICIT26, ICIT27, ICIT28** (ต่อจากเลขอุปกรณ์เดิม)
+- ประจำอยู่ที่ **ห้องบริการชั้น 3**
+- อาจเพิ่มจำนวนในอนาคต → ต้องรองรับการจัดการผ่าน admin
+
+### งานแบ่งตามตำแหน่ง
+
+| ลำดับ | งาน | Role | Dependency |
+|---|---|---|---|
+| 1 | เพิ่ม "ยืม USB" / "คืน USB" ใน `MINOR_TASKS`, `commentSuggestionMap`, `minorTaskToMainDuty` | **[SE]** | — |
+| 2 | เพิ่ม comment suggestions: ICIT25–ICIT28 | **[SE]** | — |
+| 3 | ตรวจ Firestore rules ว่ารองรับ minorTask ใหม่ได้ | **[SA]** | — |
+| 4 | ทดสอบ: ยืม/คืน USB flow ครบ + equipment health page | **[QA]** | SE#1, SE#2 |
+
+### ไฟล์ที่ต้องแก้
+- `frontend/lib/commentSuggestions.js` — เพิ่ม minorTask + suggestions + mapping
+
+---
+
+## FEAT-2: Admin จัดการหัวข้อรอง (Minor Task) + หมวดหมู่อุปกรณ์
+
+### Requirement
+- admin/superadmin สามารถ **เพิ่ม/แก้ไข/ปิดการใช้งาน** หัวข้อรองได้
+- สามารถ **จัดหมวดหมู่** ว่าอุปกรณ์ชิ้นไหนอยู่ที่ไหน (ชั้น 3, ชั้น 4 เป็นต้น)
+- สามารถ **ปิดการใช้งาน** อุปกรณ์ที่ชำรุดได้ เพื่อไม่ให้แสดงใน comment suggestions
+
+### งานแบ่งตามตำแหน่ง
+
+| ลำดับ | งาน | Role | Dependency |
+|---|---|---|---|
+| 1 | ออกแบบ Firestore schema: collection `equipmentItems` (id, name, location, minorTask, active, order) | **[SA]** | — |
+| 2 | เขียน Firestore rules สำหรับ `equipmentItems` (admin read/write, staff read) | **[SA]** | SA#1 |
+| 3 | สร้างหน้า Admin จัดการอุปกรณ์ (`/admin/equipment-items`) — CRUD + toggle active + ระบุ location | **[SE]** | SA#1, SA#2 |
+| 4 | แก้ `commentSuggestions.js` ให้ดึง equipment items จาก Firestore แทน hardcode (fallback ใช้ static ถ้าโหลดไม่ได้) | **[SE]** | SA#1, SE#3 |
+| 5 | ทดสอบ: เพิ่ม/ปิด/แก้อุปกรณ์ + ตรวจว่า staff เห็นเฉพาะ active items | **[QA]** | SE#3, SE#4 |
+| 6 | อัปเดต README + Release Notes | **[Doc]** | QA#5 |
+
+### ไฟล์ที่ต้องสร้าง/แก้
+- **สร้างใหม่:** `frontend/app/admin/equipment-items/page.js`
+- **แก้:** `frontend/lib/commentSuggestions.js`, `firebase/firestore.rules`
+
+---
+
+## OBSERVE-1: จำนวนงานไม่ตรงกันระหว่าง Dashboard ของ User vs Admin
+
+### สาเหตุที่น่าจะเป็น
+Dashboard user กรองด้วย `employeeId === user.uid` (บรรทัด 383 ใน `dashboard/page.js`) แต่มี limit 1000 records → ถ้ามี worklog มากกว่า 1000 ใน range เดียวกัน user จะเห็นไม่ครบ (เพราะ limit ตัดก่อนกรอง) ในขณะที่ admin เห็นทั้งหมด
+
+### งาน
+
+| ลำดับ | งาน | Role | Dependency |
+|---|---|---|---|
+| 1 | วิเคราะห์ root cause: ตรวจ query logic ใน `dashboard/page.js` ว่า limit ตัดก่อนหรือหลัง filter employeeId | **[DA]** | — |
+| 2 | ถ้ายืนยัน: แก้ query ให้ user query เฉพาะ employeeId ของตัวเอง (ไม่ต้องดึง 1000 แล้วกรอง) | **[SE]** | DA#1 |
+| 3 | ทดสอบ: ลงงานจาก user คนละเครื่อง/อุปกรณ์ ตรวจ count ให้ตรง | **[QA]** | SE#2 |
+
+### ไฟล์ที่ต้องแก้
+- `frontend/app/dashboard/page.js`
+
+---
+
+## ลำดับการทำงาน (Execution Order)
+
+> ⚠️ **กฎ:** ทำทีละขั้นตอน, commit ให้เรียบร้อยก่อนเริ่มขั้นถัดไป, ห้ามส่งผลกระทบส่วนอื่น
+
+| Phase | งาน | Role | Branch | Status |
+|---|---|---|---|---|
+| **Phase 1** | BUG-1: แก้ `sanitizePhotoURL` crash | **[SE]** | `hotfix/admin-users-crash` | ⬜ |
+| **Phase 2** | FEAT-1: เพิ่ม minorTask ยืม/คืน USB + suggestions | **[SE]** | `feature/usb-equipment` | ⬜ |
+| **Phase 3a** | FEAT-2 SA: ออกแบบ schema + Firestore rules สำหรับ `equipmentItems` | **[SA]** | `feature/admin-equipment-mgmt` | ⬜ |
+| **Phase 3b** | FEAT-2 SE: สร้างหน้า admin จัดการอุปกรณ์ + แก้ commentSuggestions | **[SE]** | `feature/admin-equipment-mgmt` | ⬜ |
+| **Phase 4** | OBSERVE-1: DA วิเคราะห์ + SE แก้ dashboard count | **[DA]** → **[SE]** | `fix/dashboard-count` | ⬜ |
+| **Phase 5** | QA: ทดสอบทุก phase | **[QA]** | (ทดสอบบน main หลัง merge) | ⬜ |
+| **Phase 6** | Doc: อัปเดต README + Release Notes | **[Doc]** | `docs/v2.4.0` | ⬜ |
+
+### Commit Convention v2.4.0
+
+```
+fix(admin-users): add sanitizePhotoURL to prevent pending tab crash
+feat(equipment): add USB borrow/return minor tasks with ICIT25-28
+feat(rules): add equipmentItems collection rules for admin management
+feat(admin): create equipment items management page
+refactor(suggestions): load equipment items from Firestore with static fallback
+fix(dashboard): query user worklogs by employeeId before applying limit
+docs: update README for v2.4.0 USB equipment + admin equipment management
+```

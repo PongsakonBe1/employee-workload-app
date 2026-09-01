@@ -2,6 +2,20 @@
 
 ---
 
+## [2026-09-02 04:04] - [PM] Sprint v2.4.0 — Bug Fix + USB Equipment + Admin Equipment Management
+
+- **Task:** วิเคราะห์ Requirement จาก user feedback และวางแผนแบ่งงานให้ทีม
+- **Files Modified:**
+  - `TASKS.md` — เพิ่ม Sprint v2.4.0 plan (BUG-1, FEAT-1, FEAT-2, OBSERVE-1)
+- **Analysis Summary:**
+  - **BUG-1 (Critical):** `sanitizePhotoURL` ไม่ได้ define ใน `admin/users/page.js` → crash ทันทีที่เปิด pending tab
+  - **FEAT-1:** เพิ่ม minorTask ยืม/คืน USB (ICIT25–28) ประจำห้องชั้น 3
+  - **FEAT-2:** ระบบ admin จัดการอุปกรณ์ — CRUD + location + toggle active/inactive สำหรับอุปกรณ์ชำรุด
+  - **OBSERVE-1:** Dashboard user count ไม่ตรง — สงสัย limit ตัดก่อน filter employeeId
+- **Note to Next Agent:** SE: เริ่ม Phase 1 — แก้ BUG-1 `sanitizePhotoURL` ก่อนเป็นอันดับแรก (Critical bug ที่ production) แล้ว commit บน branch `hotfix/admin-users-crash`
+
+---
+
 ## [2026-07-17 12:09] - [PM → DA → SA → SE → UX/UI → Doc] v2.9.0 — Dashboard Fix & Print Improvements
 
 - **Task:**

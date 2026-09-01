@@ -34,6 +34,18 @@ import {
   limit,
 } from "firebase/firestore";
 
+// Sanitize photoURL — return valid URL or null
+function sanitizePhotoURL(url) {
+  if (!url || typeof url !== "string") return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminUsersPage() {
   const t = useTranslations();
   const router = useRouter();
