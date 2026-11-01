@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "Brand asset and complete morning, afternoon, evening schedule render",
+      "status": "passed"
+    },
+    {
+      "name": "Equipment selection requires explicit confirmation; borrow/return updates shared counts",
+      "status": "passed"
+    },
+    {
+      "name": "Combo preview shows all three tasks and cancellation creates no record",
+      "status": "passed"
+    },
+    {
+      "name": "Manual form retains selected staff and previews task and business date",
+      "status": "passed"
+    },
+    {
+      "name": "Calendar navigation, resource summary, keyboard loop, and System theme",
+      "status": "passed"
+    },
+    {
+      "name": "Responsive layout, mobile task order, and visible bottom navigation",
+      "status": "passed"
+    },
+    {
+      "name": "Semantic text/control token contrast and zero runtime errors",
+      "status": "passed"
+    }
+  ],
+  "runtimeErrors": []
+}
