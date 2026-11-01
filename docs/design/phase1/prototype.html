@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>labboy · ต้นแบบ UX เฟส 1</title>
+  <link rel="stylesheet" href="prototype.css">
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <div class="workspace">
+    <aside class="sidebar">
+      <a class="brand" href="#equipment"><span class="brand-mark" aria-hidden="true">L</span><span>labboy<small>Workload & resources</small></span></a>
+      <div class="workspace-label">พื้นที่ทำงาน ICIT</div>
+      <nav aria-label="เมนูหลัก">
+        <a href="#equipment" data-page="equipment"><span aria-hidden="true">▦</span>อุปกรณ์และบันทึกด่วน</a>
+        <a href="#usage" data-page="usage"><span aria-hidden="true">▥</span>การใช้งานอุปกรณ์</a>
+        <a href="#schedules" data-page="schedules"><span aria-hidden="true">▤</span>ตารางสอบและเรียน</a>
+        <a href="#staff" data-page="staff"><span aria-hidden="true">◷</span>ภาระงานบุคลากร</a>
+      </nav>
+      <div class="sidebar-foot"><span class="avatar">A</span><div>ผู้ดูแลตัวอย่าง<small>Admin · ข้อมูลสังเคราะห์</small></div></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><span class="breadcrumb">ICIT <span aria-hidden="true">/</span> <span id="breadcrumb">อุปกรณ์</span></span><label class="theme-label">รูปแบบ <select id="theme" aria-label="รูปแบบสี"><option value="system">ตามระบบ</option><option value="light">สว่าง</option><option value="dark">มืด</option></select></label></header>
+      <div class="prototype-notice"><span class="dot" aria-hidden="true"></span>ต้นแบบสำหรับตรวจแบบ · ข้อมูลสังเคราะห์ · การเปลี่ยนแปลงอยู่ในเครื่องและหายเมื่อรีเฟรช</div>
+      <main id="content" tabindex="-1"></main>
+      <footer>labboy / UX exploration 01 <span>ออกแบบสำหรับงานประจำวันของทีม</span></footer>
+    </div>
+  </div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+</body>
+</html>

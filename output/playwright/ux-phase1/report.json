@@ -1,0 +1,49 @@
+{
+  "browser": "Chromium/Edge headless",
+  "prototype": "phase1",
+  "results": [
+    {
+      "name": "Equipment move updates Quick Log and preserves historical location",
+      "status": "passed"
+    },
+    {
+      "name": "New item is available and inactive item blocks new borrowing",
+      "status": "passed"
+    },
+    {
+      "name": "Image preview is local; draft requires matching, review, and valid count",
+      "status": "passed"
+    },
+    {
+      "name": "Evening round is 17:00–18:30 and repeated actions do not duplicate",
+      "status": "passed"
+    },
+    {
+      "name": "Fiscal year/month filters, chart, and CSV have matching ranges and totals",
+      "status": "passed"
+    },
+    {
+      "name": "All four pages fit desktop and mobile; System theme follows browser",
+      "status": "passed"
+    },
+    {
+      "name": "Semantic text tokens meet 4.5:1 and native dialog contains keyboard focus",
+      "status": "passed"
+    },
+    {
+      "name": "No runtime JavaScript errors and no HTTP requests",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "screenshots": [
+    "equipment-light.png",
+    "equipment-mobile.png",
+    "import-mobile.png",
+    "schedule-confirmed.png",
+    "schedule-import-light.png",
+    "staff-dark.png",
+    "usage-dark.png"
+  ]
+}
