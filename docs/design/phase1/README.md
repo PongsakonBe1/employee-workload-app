@@ -12,6 +12,8 @@
 
 ล่าสุด: ผู้ใช้รับทิศทาง revision2 และอนุมัติให้ทำแบบใน Figma แล้ว ตรวจ [Figma handoff](revision2/FIGMA_HANDOFF.md) สำหรับ 8 หน้าจอที่สร้างและข้อจำกัด QA ที่ยังค้างอยู่ ก่อนอนุมัติเฟส implementation
 
+อัปเดต 2 พฤศจิกายน 2569: ผู้ใช้อนุมัติให้ขยายการออกแบบทั้งเว็บและเพิ่มภาษาภาพ Liquid Glass ดู [UI review 03](revision3/README.md) และ [บอร์ดรวม](revision3/gallery.html) ครอบคลุม 24 มุมมอง/96 รูปแบบ ต้นแบบเว็บผ่านการตรวจเบื้องต้นแล้ว แต่การนำชุดใหม่นี้ขึ้น Figma ยังติดโควตา Starter และยังรอตรวจแบบก่อน implementation
+
 ## เปิดตรวจต้นแบบ
 
 เปิด [prototype.html](prototype.html) ด้วย browser โดยตรง ไม่ต้องติดตั้งแพ็กเกจหรือเชื่อม Firebase

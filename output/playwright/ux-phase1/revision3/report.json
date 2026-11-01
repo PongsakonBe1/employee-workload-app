@@ -1,0 +1,449 @@
+{
+  "date": "2026-11-02",
+  "routeCount": 24,
+  "renderCount": 96,
+  "results": [
+    {
+      "name": "render dashboard desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render record desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render dl desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render usage desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render staff desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render profile desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render export desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render admin desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render users desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render templates desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render system desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render settings desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render audit desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render imports desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render help desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render login desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render pending desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render design desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render record desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dl desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render usage desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render staff desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render profile desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render admin desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render users desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render templates desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render system desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render settings desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render audit desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render imports desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render help desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render login desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render pending desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render design desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render record mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render dl mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render usage mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render staff mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render profile mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render export mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render admin mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render users mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render templates mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render system mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render settings mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render audit mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render imports mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render help mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render login mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render pending mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render design mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render record mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dl mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render usage mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render staff mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render profile mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render admin mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render users mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render templates mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render system mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render settings mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render audit mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render imports mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render help mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render login mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render pending mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render design mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "Navigation menu exposes all 24 review views and keyboard opens it",
+      "status": "passed"
+    },
+    {
+      "name": "Borrow/return requires selection and records correct shared status",
+      "status": "passed"
+    },
+    {
+      "name": "Moving equipment changes Quick Log grouping without rewriting old log text",
+      "status": "passed"
+    },
+    {
+      "name": "New equipment immediately appears in Quick Log",
+      "status": "passed"
+    },
+    {
+      "name": "DL evening 17:00–18:30, capacity threshold, duplicates, and unique proctors",
+      "status": "passed"
+    },
+    {
+      "name": "Fiscal year/month changes scope and data, including Oct/Sep boundaries",
+      "status": "passed"
+    },
+    {
+      "name": "Image import is explicitly a sample, validates fields, and skips existing rows",
+      "status": "passed"
+    },
+    {
+      "name": "Dark/material/reduced-motion preferences work and system theme follows media",
+      "status": "passed"
+    },
+    {
+      "name": "Offline prevents writes; empty, error, loading and retry states are visible",
+      "status": "passed"
+    },
+    {
+      "name": "Dialog keyboard focus remains inside; mobile bottom navigation clears final content",
+      "status": "passed"
+    },
+    {
+      "name": "All routes remain within 375, 760, 768, 1024 pixel viewports",
+      "status": "passed"
+    },
+    {
+      "name": "Role preview hides admin tools for Staff and rejects direct restricted navigation",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "networkOrigins": [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
+  ],
+  "limitations": [
+    "Synthetic prototype; no backend/OCR/authentication integration",
+    "Edge only; not Safari/iOS UAT",
+    "Figma publication remains blocked by Starter MCP quota"
+  ]
+}
