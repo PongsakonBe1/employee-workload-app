@@ -1,6 +1,8 @@
 # Design review 02: หน้าบันทึกงาน
 
-สถานะ: เสนอทิศทางใหม่หลังผู้ใช้ไม่รับต้นแบบรอบแรก รอ Tech Lead ตรวจแบบ ไม่ใช่การแก้แอป production
+สถานะ: ผู้ใช้รับทิศทางรอบนี้และอนุมัติให้ทำแบบใน Figma แล้ว รอตรวจรายละเอียด Figma ก่อนเริ่ม implementation ของแอป
+
+[เปิดแบบใน Figma](https://www.figma.com/design/aVicg4a7OqVnYZiGS31lus?node-id=8-134) · [รายละเอียดส่งมอบและข้อจำกัด](FIGMA_HANDOFF.md)
 
 เปิด [index.html](index.html) ด้วย browser แล้วเลือกรูปแบบสีจากปุ่ม appearance บนแถบนำทาง รองรับ System / Light / Dark
 
