@@ -1,0 +1,1452 @@
+{
+  "fileKey": "aVicg4a7OqVnYZiGS31lus",
+  "pageId": "0:1",
+  "status": "prepared-only",
+  "frames": [
+    {
+      "route": "dashboard",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 2324,
+      "counts": {
+        "layers": 542,
+        "text": 203,
+        "images": 1
+      }
+    },
+    {
+      "route": "dashboard",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 2324,
+      "counts": {
+        "layers": 542,
+        "text": 203,
+        "images": 1
+      }
+    },
+    {
+      "route": "dashboard",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 536,
+        "text": 202,
+        "images": 1
+      }
+    },
+    {
+      "route": "dashboard",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 536,
+        "text": 202,
+        "images": 1
+      }
+    },
+    {
+      "route": "record",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1318,
+      "counts": {
+        "layers": 288,
+        "text": 90,
+        "images": 1
+      }
+    },
+    {
+      "route": "record",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1318,
+      "counts": {
+        "layers": 288,
+        "text": 90,
+        "images": 1
+      }
+    },
+    {
+      "route": "record",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 282,
+        "text": 89,
+        "images": 1
+      }
+    },
+    {
+      "route": "record",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 282,
+        "text": 89,
+        "images": 1
+      }
+    },
+    {
+      "route": "worklogs",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1099,
+      "counts": {
+        "layers": 351,
+        "text": 110,
+        "images": 1
+      }
+    },
+    {
+      "route": "worklogs",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1099,
+      "counts": {
+        "layers": 351,
+        "text": 110,
+        "images": 1
+      }
+    },
+    {
+      "route": "worklogs",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 345,
+        "text": 109,
+        "images": 1
+      }
+    },
+    {
+      "route": "worklogs",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 345,
+        "text": 109,
+        "images": 1
+      }
+    },
+    {
+      "route": "new-log",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1620,
+      "counts": {
+        "layers": 281,
+        "text": 93,
+        "images": 1
+      }
+    },
+    {
+      "route": "new-log",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1620,
+      "counts": {
+        "layers": 281,
+        "text": 93,
+        "images": 1
+      }
+    },
+    {
+      "route": "new-log",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 275,
+        "text": 92,
+        "images": 1
+      }
+    },
+    {
+      "route": "new-log",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 275,
+        "text": 92,
+        "images": 1
+      }
+    },
+    {
+      "route": "dl",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1187,
+      "counts": {
+        "layers": 321,
+        "text": 104,
+        "images": 1
+      }
+    },
+    {
+      "route": "dl",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1187,
+      "counts": {
+        "layers": 321,
+        "text": 104,
+        "images": 1
+      }
+    },
+    {
+      "route": "dl",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 297,
+        "text": 94,
+        "images": 1
+      }
+    },
+    {
+      "route": "dl",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 297,
+        "text": 94,
+        "images": 1
+      }
+    },
+    {
+      "route": "classrooms",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1057,
+      "counts": {
+        "layers": 151,
+        "text": 41,
+        "images": 1
+      }
+    },
+    {
+      "route": "classrooms",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1057,
+      "counts": {
+        "layers": 151,
+        "text": 41,
+        "images": 1
+      }
+    },
+    {
+      "route": "classrooms",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 145,
+        "text": 40,
+        "images": 1
+      }
+    },
+    {
+      "route": "classrooms",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 145,
+        "text": 40,
+        "images": 1
+      }
+    },
+    {
+      "route": "equipment",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 221,
+        "text": 66,
+        "images": 1
+      }
+    },
+    {
+      "route": "equipment",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 221,
+        "text": 66,
+        "images": 1
+      }
+    },
+    {
+      "route": "equipment",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 215,
+        "text": 65,
+        "images": 1
+      }
+    },
+    {
+      "route": "equipment",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 215,
+        "text": 65,
+        "images": 1
+      }
+    },
+    {
+      "route": "usage",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1689,
+      "counts": {
+        "layers": 331,
+        "text": 104,
+        "images": 1
+      }
+    },
+    {
+      "route": "usage",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1689,
+      "counts": {
+        "layers": 331,
+        "text": 104,
+        "images": 1
+      }
+    },
+    {
+      "route": "usage",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 392,
+        "text": 123,
+        "images": 1
+      }
+    },
+    {
+      "route": "usage",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 392,
+        "text": 123,
+        "images": 1
+      }
+    },
+    {
+      "route": "staff",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1749,
+      "counts": {
+        "layers": 341,
+        "text": 115,
+        "images": 1
+      }
+    },
+    {
+      "route": "staff",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1749,
+      "counts": {
+        "layers": 341,
+        "text": 115,
+        "images": 1
+      }
+    },
+    {
+      "route": "staff",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 446,
+        "text": 148,
+        "images": 1
+      }
+    },
+    {
+      "route": "staff",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 446,
+        "text": 148,
+        "images": 1
+      }
+    },
+    {
+      "route": "profile",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1426,
+      "counts": {
+        "layers": 179,
+        "text": 58,
+        "images": 1
+      }
+    },
+    {
+      "route": "profile",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1426,
+      "counts": {
+        "layers": 179,
+        "text": 58,
+        "images": 1
+      }
+    },
+    {
+      "route": "profile",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 173,
+        "text": 57,
+        "images": 1
+      }
+    },
+    {
+      "route": "profile",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 173,
+        "text": 57,
+        "images": 1
+      }
+    },
+    {
+      "route": "export",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 97,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "export",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 97,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "export",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 91,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "export",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 91,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "admin",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 172,
+        "text": 42,
+        "images": 1
+      }
+    },
+    {
+      "route": "admin",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 172,
+        "text": 42,
+        "images": 1
+      }
+    },
+    {
+      "route": "admin",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 166,
+        "text": 41,
+        "images": 1
+      }
+    },
+    {
+      "route": "admin",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 166,
+        "text": 41,
+        "images": 1
+      }
+    },
+    {
+      "route": "users",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1078,
+      "counts": {
+        "layers": 217,
+        "text": 70,
+        "images": 1
+      }
+    },
+    {
+      "route": "users",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1078,
+      "counts": {
+        "layers": 217,
+        "text": 70,
+        "images": 1
+      }
+    },
+    {
+      "route": "users",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 278,
+        "text": 89,
+        "images": 1
+      }
+    },
+    {
+      "route": "users",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 278,
+        "text": 89,
+        "images": 1
+      }
+    },
+    {
+      "route": "templates",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1333,
+      "counts": {
+        "layers": 223,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "templates",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1333,
+      "counts": {
+        "layers": 223,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "templates",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 217,
+        "text": 59,
+        "images": 1
+      }
+    },
+    {
+      "route": "templates",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 217,
+        "text": 59,
+        "images": 1
+      }
+    },
+    {
+      "route": "system",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 131,
+        "text": 30,
+        "images": 1
+      }
+    },
+    {
+      "route": "system",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 131,
+        "text": 30,
+        "images": 1
+      }
+    },
+    {
+      "route": "system",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 125,
+        "text": 29,
+        "images": 1
+      }
+    },
+    {
+      "route": "system",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 125,
+        "text": 29,
+        "images": 1
+      }
+    },
+    {
+      "route": "settings",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 102,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "settings",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 102,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "settings",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 96,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "settings",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 96,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "audit",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 143,
+        "text": 46,
+        "images": 1
+      }
+    },
+    {
+      "route": "audit",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 143,
+        "text": 46,
+        "images": 1
+      }
+    },
+    {
+      "route": "audit",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 193,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "audit",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 193,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "broadcast",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 104,
+        "text": 29,
+        "images": 1
+      }
+    },
+    {
+      "route": "broadcast",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 104,
+        "text": 29,
+        "images": 1
+      }
+    },
+    {
+      "route": "broadcast",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 98,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "broadcast",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 98,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "imports",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 97,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "imports",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 97,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "imports",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 91,
+        "text": 25,
+        "images": 1
+      }
+    },
+    {
+      "route": "imports",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 91,
+        "text": 25,
+        "images": 1
+      }
+    },
+    {
+      "route": "cleanup",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 99,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "cleanup",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 99,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "cleanup",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 93,
+        "text": 25,
+        "images": 1
+      }
+    },
+    {
+      "route": "cleanup",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 93,
+        "text": 25,
+        "images": 1
+      }
+    },
+    {
+      "route": "help",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 126,
+        "text": 31,
+        "images": 1
+      }
+    },
+    {
+      "route": "help",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 126,
+        "text": 31,
+        "images": 1
+      }
+    },
+    {
+      "route": "help",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 120,
+        "text": 30,
+        "images": 1
+      }
+    },
+    {
+      "route": "help",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 120,
+        "text": 30,
+        "images": 1
+      }
+    },
+    {
+      "route": "login",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 79,
+        "text": 20,
+        "images": 2
+      }
+    },
+    {
+      "route": "login",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 79,
+        "text": 20,
+        "images": 2
+      }
+    },
+    {
+      "route": "login",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 66,
+        "text": 19,
+        "images": 2
+      }
+    },
+    {
+      "route": "login",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 66,
+        "text": 19,
+        "images": 2
+      }
+    },
+    {
+      "route": "pending",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 61,
+        "text": 15,
+        "images": 1
+      }
+    },
+    {
+      "route": "pending",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 61,
+        "text": 15,
+        "images": 1
+      }
+    },
+    {
+      "route": "pending",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 55,
+        "text": 14,
+        "images": 1
+      }
+    },
+    {
+      "route": "pending",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 55,
+        "text": 14,
+        "images": 1
+      }
+    },
+    {
+      "route": "design",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 150,
+        "text": 49,
+        "images": 1
+      }
+    },
+    {
+      "route": "design",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 150,
+        "text": 49,
+        "images": 1
+      }
+    },
+    {
+      "route": "design",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 144,
+        "text": 48,
+        "images": 1
+      }
+    },
+    {
+      "route": "design",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 144,
+        "text": 48,
+        "images": 1
+      }
+    },
+    {
+      "route": "resources",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1120,
+      "counts": {
+        "layers": 188,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "resources",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1120,
+      "counts": {
+        "layers": 188,
+        "text": 60,
+        "images": 1
+      }
+    },
+    {
+      "route": "resources",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 182,
+        "text": 59,
+        "images": 1
+      }
+    },
+    {
+      "route": "resources",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 182,
+        "text": 59,
+        "images": 1
+      }
+    },
+    {
+      "route": "condition",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1268,
+      "counts": {
+        "layers": 212,
+        "text": 74,
+        "images": 1
+      }
+    },
+    {
+      "route": "condition",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1268,
+      "counts": {
+        "layers": 212,
+        "text": 74,
+        "images": 1
+      }
+    },
+    {
+      "route": "condition",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 220,
+        "text": 76,
+        "images": 1
+      }
+    },
+    {
+      "route": "condition",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 220,
+        "text": 76,
+        "images": 1
+      }
+    },
+    {
+      "route": "export-requests",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 95,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "export-requests",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 95,
+        "text": 28,
+        "images": 1
+      }
+    },
+    {
+      "route": "export-requests",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 86,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "export-requests",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 86,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "data-import",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 81,
+        "text": 21,
+        "images": 1
+      }
+    },
+    {
+      "route": "data-import",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 81,
+        "text": 21,
+        "images": 1
+      }
+    },
+    {
+      "route": "data-import",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 75,
+        "text": 20,
+        "images": 1
+      }
+    },
+    {
+      "route": "data-import",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 75,
+        "text": 20,
+        "images": 1
+      }
+    },
+    {
+      "route": "notifications",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 94,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "notifications",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 94,
+        "text": 27,
+        "images": 1
+      }
+    },
+    {
+      "route": "notifications",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 88,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "notifications",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 88,
+        "text": 26,
+        "images": 1
+      }
+    },
+    {
+      "route": "about",
+      "device": "Desktop",
+      "theme": "light",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 80,
+        "text": 22,
+        "images": 1
+      }
+    },
+    {
+      "route": "about",
+      "device": "Desktop",
+      "theme": "dark",
+      "width": 1440,
+      "height": 1050,
+      "counts": {
+        "layers": 80,
+        "text": 22,
+        "images": 1
+      }
+    },
+    {
+      "route": "about",
+      "device": "Mobile",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 74,
+        "text": 21,
+        "images": 1
+      }
+    },
+    {
+      "route": "about",
+      "device": "Mobile",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "counts": {
+        "layers": 74,
+        "text": 21,
+        "images": 1
+      }
+    }
+  ],
+  "pending": [
+    "Starter MCP quota prevents import",
+    "Auto Layout and component instances must be reconciled in Figma",
+    "Native glass effects, text bounds, and reactions need visual QA"
+  ]
+}

@@ -1,0 +1,6 @@
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const assets={
+ '/':['index.html','text/html'],'/index.html':['index.html','text/html'],'/glass.css':['glass.css','text/css'],'/catalog.js':['catalog.js','text/javascript'],'/features.js':['features.js','text/javascript'],'/gallery.html':['gallery.html','text/html'],
+ '/revision3/styles.css':['../revision3/styles.css','text/css'],'/revision3/app.js':['../revision3/app.js','text/javascript'],'/frontend/public/labboy-logo.png':['../../../../frontend/public/labboy-logo.png','image/png']
+};
+http.createServer((req,res)=>{let pathname;try{pathname=new URL(req.url,'http://127.0.0.1').pathname;}catch{res.writeHead(400);res.end();return;}if(req.method!=='GET'){res.writeHead(405);res.end();return;}let a=assets[pathname];if(!a&&/^\/output\/playwright\/ux-phase1\/revision4\/[a-z-]+\.png$/.test(pathname))a=['../../../../output/playwright/ux-phase1/revision4/'+pathname.split('/').at(-1),'image/png'];if(!a){res.writeHead(404);res.end();return;}fs.readFile(path.resolve(__dirname,a[0]),(err,data)=>{if(err){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':a[1]+(a[1].startsWith('image')?'':'; charset=utf-8'),'Cache-Control':'no-store'});res.end(data);});}).listen(4194,'127.0.0.1',()=>console.log('UI review 04: http://127.0.0.1:4194/'));

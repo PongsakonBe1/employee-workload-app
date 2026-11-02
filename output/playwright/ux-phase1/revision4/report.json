@@ -1,0 +1,588 @@
+{
+  "date": "2026-11-02",
+  "routeCount": 30,
+  "renderCount": 120,
+  "additionalResponsiveChecks": 120,
+  "interactionCount": 22,
+  "results": [
+    {
+      "name": "render dashboard desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render record desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render dl desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render usage desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render staff desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render profile desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render export desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render admin desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render users desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render templates desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render system desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render settings desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render audit desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render imports desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render help desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render login desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render pending desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render design desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render resources desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render condition desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render export-requests desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render data-import desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render notifications desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render about desktop light",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render record desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dl desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render usage desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render staff desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render profile desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render admin desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render users desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render templates desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render system desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render settings desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render audit desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render imports desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render help desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render login desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render pending desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render design desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render resources desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render condition desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export-requests desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render data-import desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render notifications desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render about desktop dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render record mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render dl mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render usage mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render staff mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render profile mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render export mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render admin mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render users mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render templates mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render system mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render settings mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render audit mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render imports mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render help mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render login mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render pending mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render design mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render resources mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render condition mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render export-requests mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render data-import mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render notifications mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render about mobile light",
+      "status": "passed"
+    },
+    {
+      "name": "render dashboard mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render record mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render worklogs mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render new-log mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render dl mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render classrooms mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render equipment mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render usage mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render staff mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render profile mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render admin mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render users mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render templates mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render system mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render settings mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render audit mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render broadcast mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render imports mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render cleanup mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render help mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render login mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render pending mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render design mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render resources mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render condition mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render export-requests mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render data-import mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render notifications mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "render about mobile dark",
+      "status": "passed"
+    },
+    {
+      "name": "Keyboard navigation exposes all 30 views",
+      "status": "passed"
+    },
+    {
+      "name": "Account 5 and Software 6 selective combos record exactly the selected tasks",
+      "status": "passed"
+    },
+    {
+      "name": "Room open and close derives latest state and requires preview",
+      "status": "passed"
+    },
+    {
+      "name": "Equipment move, add, barcode and deactivation propagate to Quick Log",
+      "status": "passed"
+    },
+    {
+      "name": "Borrow and return preserve damaged condition and return history",
+      "status": "passed"
+    },
+    {
+      "name": "Manual task search derives duty and saves previewed details",
+      "status": "passed"
+    },
+    {
+      "name": "Worklog pagination, sorting, search, edit, delete, undo and calendar drilldown",
+      "status": "passed"
+    },
+    {
+      "name": "Staff fiscal boundaries, search, sort, six-metric and eight-task radars",
+      "status": "passed"
+    },
+    {
+      "name": "DL capacity, overlap, unique proctors, evening, CEM, type and explicit edit times",
+      "status": "passed"
+    },
+    {
+      "name": "Class creation, overlap, semester copy dedupe and bulk activation",
+      "status": "passed"
+    },
+    {
+      "name": "Template edits and custom Combo items update shared Quick Log",
+      "status": "passed"
+    },
+    {
+      "name": "Staff export request, reasoned rejection, approval and own-only CSV",
+      "status": "passed"
+    },
+    {
+      "name": "TSV validates real calendar dates and skips duplicate imports",
+      "status": "passed"
+    },
+    {
+      "name": "DL image import shows sample-only status and skips duplicate rounds",
+      "status": "passed"
+    },
+    {
+      "name": "Broadcast channels, audience count, unavailable Push and result history",
+      "status": "passed"
+    },
+    {
+      "name": "Notification popover reads and dismisses local notifications",
+      "status": "passed"
+    },
+    {
+      "name": "Settings persist between tabs; Dark, solid material and reduced motion work",
+      "status": "passed"
+    },
+    {
+      "name": "Offline blocks writes; empty, loading and error views remain available",
+      "status": "passed"
+    },
+    {
+      "name": "Dialog focus trap and mobile bottom navigation avoid lost controls",
+      "status": "passed"
+    },
+    {
+      "name": "All 30 views fit 375, 760, 768 and 1024 pixel viewports",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile heatmap and segmented controls provide 44 px touch targets",
+      "status": "passed"
+    },
+    {
+      "name": "Staff role hides management navigation and guards restricted views",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "networkOrigins": [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
+  ],
+  "limitations": [
+    "Synthetic prototype, no backend/OCR/auth integration",
+    "Time and semester charts use fixed illustrations",
+    "Edge only; Safari/iOS UAT pending",
+    "Figma import pending: Starter MCP quota"
+  ]
+}
