@@ -1,0 +1,8 @@
+{
+  "date": "2026-11-05",
+  "status": "not_verified",
+  "engine": "Playwright WebKit on Windows",
+  "reason": "The matching WebKit build is not installed. An already-cached older build did not complete with this runtime; its helper was stopped. No browser was downloaded.",
+  "expectedBuild": "webkit-2336",
+  "limitation": "Real Safari/iOS, VoiceOver and device performance still need UAT."
+}

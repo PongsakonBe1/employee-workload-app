@@ -2,6 +2,8 @@
 
 สถานะ: ต้นแบบเพื่อให้ Tech Lead ตรวจรับการออกแบบ ยังไม่ใช่ implementation ของแอป
 
+**ล่าสุด 5 พฤศจิกายน 2569:** [Design Review 06](revision6/README.md) บน branch `codex/macos27-glass-motion-review-06` เพิ่ม optical Glass และ motion ร่วมทั้งเว็บ พร้อมปรับบันทึกงาน ตารางรวม และขั้นตรวจ import มี [ต้นแบบ](http://127.0.0.1:4196/#/record) และ [บอร์ดพร้อมวิดีโอ](http://127.0.0.1:4196/gallery.html) ดู [ขอบเขตและข้อจำกัด](revision6/COVERAGE.md) ยังเป็นข้อมูลสังเคราะห์ ไม่ใช่ production implementation
+
 **ล่าสุด 4 พฤศจิกายน 2569:** [Design Review 05](revision5/README.md) บน branch `codex/hig-design-review-05` ปรับ navigation, wireframe, semantic colors และวัสดุตาม Apple HIG ครบ 30 มุมมอง มี [ต้นแบบ HTTP](http://127.0.0.1:4195/#/record) และ [บอร์ด Desktop/Mobile · Light/Dark](http://127.0.0.1:4195/gallery.html) ดู [ขอบเขตและงานค้าง](revision5/COVERAGE.md) การนำเข้าใช้ข้อมูลตัวอย่าง ยังไม่มี PDF/OCR หรือ production implementation ข้อความรอบก่อนด้านล่างเก็บเป็นประวัติ
 
 > รอบแรกยังไม่ผ่านการยอมรับด้าน UX/UI จากผู้ใช้ ตรวจ [Design review 02](revision2/README.md) และ [ต้นแบบรอบใหม่](revision2/index.html) ซึ่งออกแบบหลังตรวจเว็บจริงและยืนยันว่าทีมใช้มือถือกับคอมพิวเตอร์พอ ๆ กัน รอบใหม่เริ่มจากหน้าบันทึกงานหนึ่งหน้าก่อน ส่วนไฟล์รอบแรกเก็บไว้เป็นประวัติ ไม่ใช่แบบที่อนุมัติแล้ว

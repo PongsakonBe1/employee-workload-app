@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-05",
+  "revision": 6,
+  "scenarios": 16,
+  "results": [
+    {
+      "name": "Optical rim changes rendered pixels, rather than only declaring a filter",
+      "status": "passed"
+    },
+    {
+      "name": "Selection lens moves continuously and reaches the selected control after rapid input",
+      "status": "passed"
+    },
+    {
+      "name": "Page changes animate once while the destination is immediately usable",
+      "status": "passed"
+    },
+    {
+      "name": "Desktop menu grows beside its opener and dismisses without a stale input blocker",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile sheet settles above the safe inset and returns focus to the original tile",
+      "status": "passed"
+    },
+    {
+      "name": "OS Reduce Motion cancels an in-flight transition without closing or disabling the sheet",
+      "status": "passed"
+    },
+    {
+      "name": "App Reduce Motion is respected by controls, routes, dialogs and toast",
+      "status": "passed"
+    },
+    {
+      "name": "Solid material removes optical and backdrop filters while preserving the controls",
+      "status": "passed"
+    },
+    {
+      "name": "Every fiscal month sums to the KPI and zero-series chart coordinates stay finite",
+      "status": "passed"
+    },
+    {
+      "name": "Sunday classes remain visible in both week and agenda and time collisions cross event types",
+      "status": "passed"
+    },
+    {
+      "name": "Chained overlaps use consistent lanes and adjacent events share the full column",
+      "status": "passed"
+    },
+    {
+      "name": "Import row drafts and linked source selection survive navigation without a separate save click",
+      "status": "passed"
+    },
+    {
+      "name": "Imported DL uses the edited date, evening times and matched proctor IDs",
+      "status": "passed"
+    },
+    {
+      "name": "Review flags and six actual seed conflicts must be acknowledged before the valid subset is added",
+      "status": "passed"
+    },
+    {
+      "name": "Damaged and borrowed seed statuses agree between registry, details and quick picker",
+      "status": "passed"
+    },
+    {
+      "name": "Repeated open-close interruption leaves one dialog and a bounded optical cache",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "origins": [
+    "http://127.0.0.1:4196"
+  ],
+  "limitations": [
+    "Edge/Chromium verification; real Safari/iOS UAT pending",
+    "Synthetic import review; no PDF extraction or production writes",
+    "Custom SVG/CSS material, not native Apple rendering or a Glisse package installation"
+  ]
+}
