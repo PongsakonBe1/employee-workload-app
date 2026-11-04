@@ -1,0 +1,145 @@
+{
+  "date": "2026-11-04",
+  "revision": 5,
+  "routeCount": 30,
+  "renderCount": 0,
+  "interactionCount": 31,
+  "results": [
+    {
+      "name": "Desktop sidebar groups tasks and hides authentication/design destinations",
+      "status": "passed"
+    },
+    {
+      "name": "Quick Log actor picker, Account 5 and Software 6 retain selective batch behavior",
+      "status": "passed"
+    },
+    {
+      "name": "Template labels match rooms, account, software, power and USB tasks",
+      "status": "passed"
+    },
+    {
+      "name": "Manual worklog preserves the draft across task picker and preview",
+      "status": "passed"
+    },
+    {
+      "name": "Smart room preview changes current status and supports closing",
+      "status": "passed"
+    },
+    {
+      "name": "Registry move and activation immediately affect the borrow picker",
+      "status": "passed"
+    },
+    {
+      "name": "Damaged returns update condition history and exclude borrowing",
+      "status": "passed"
+    },
+    {
+      "name": "Worklog list uses readable mobile rows, detail, edit, multiselect, delete and undo",
+      "status": "passed"
+    },
+    {
+      "name": "Worklog range rejects reversed dates and calendar navigates months",
+      "status": "passed"
+    },
+    {
+      "name": "Fiscal scope changes the underlying records and preserves Oct/Sep boundaries",
+      "status": "passed"
+    },
+    {
+      "name": "Staff detail has six explainable metrics and Profile keeps eight minor-task axes",
+      "status": "passed"
+    },
+    {
+      "name": "DL mobile defaults to agenda; evening, CEM, type and unique proctors are retained",
+      "status": "passed"
+    },
+    {
+      "name": "Class timetable includes Saturday and proportional time positions through 21:00",
+      "status": "passed"
+    },
+    {
+      "name": "Classroom overlap is rejected and copying semesters skips existing rows",
+      "status": "passed"
+    },
+    {
+      "name": "Schedule import explicitly uses samples and validates its effective period",
+      "status": "passed"
+    },
+    {
+      "name": "Reimport skips identical rows and DL samples do not reinterpret old times",
+      "status": "passed"
+    },
+    {
+      "name": "Template creation updates Quick Log and custom Combo preview",
+      "status": "passed"
+    },
+    {
+      "name": "Export rejection is red with a required reason, approval downloads only own rows",
+      "status": "passed"
+    },
+    {
+      "name": "User role changes show before/after and require confirmation",
+      "status": "passed"
+    },
+    {
+      "name": "Spreadsheet worklog import remains distinct and validates/deduplicates rows",
+      "status": "passed"
+    },
+    {
+      "name": "Broadcast preview follows the draft and displays audience/reach honestly",
+      "status": "passed"
+    },
+    {
+      "name": "Read/dismiss notifications update the badge and local notification center",
+      "status": "passed"
+    },
+    {
+      "name": "Settings mobile uses category drilldown and restores saved local fields",
+      "status": "passed"
+    },
+    {
+      "name": "Dashboard distribution and heatmap respect the same selected person",
+      "status": "passed"
+    },
+    {
+      "name": "Heatmap keeps full-opacity text and mobile controls provide touch targets",
+      "status": "passed"
+    },
+    {
+      "name": "Dialog keeps keyboard focus and content clears mobile navigation after scrolling",
+      "status": "passed"
+    },
+    {
+      "name": "Offline blocks worklog mutations; empty/error/loading and retry remain visible",
+      "status": "passed"
+    },
+    {
+      "name": "Cleanup has explicit impact preview and reversible local result",
+      "status": "passed"
+    },
+    {
+      "name": "Staff sees read-only timetables, own worklogs and personal settings",
+      "status": "passed"
+    },
+    {
+      "name": "Authentication pages use their own shell and never show work navigation",
+      "status": "passed"
+    },
+    {
+      "name": "All thirty views fit 375, 760, 768 and 1024 pixel widths",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "origins": [
+    "http://127.0.0.1:4195",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com"
+  ],
+  "limitations": [
+    "Synthetic local UI prototype; no production writes or authentication",
+    "Import workflow uses explicit samples; no PDF/OCR extraction",
+    "Safari/iOS and screen-reader UAT pending",
+    "CSS materials approximate the design; native Apple rendering is not claimed"
+  ]
+}
