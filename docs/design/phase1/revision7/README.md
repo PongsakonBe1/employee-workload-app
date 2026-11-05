@@ -1,5 +1,7 @@
 # Design Review 07 — Layout, typography และ icon feedback
 
+อัปเดต Review 08 ชุดแรกบน branch `codex/liquid-glass-review-08`: [รายละเอียด การทดสอบ และรายการรอตรวจรับ](REVIEW_08_BATCH_1.md) ใช้ preview server และฐานต้นแบบในโฟลเดอร์นี้ต่อเนื่อง ชุดสี/วัสดุและ Analytics ยังไม่เริ่ม
+
 ต้นแบบสำหรับ Tech Lead ตรวจรับ วันที่ 5 พฤศจิกายน 2569 บน branch `codex/hig-layout-icons-review-07` ฐาน R06 `fd1dd50` ยังไม่ใช่ production implementation
 
 อัปเดตเฟส A: [ผลปรับ typography/touch และหลักฐานตรวจ](PHASE_A.md) บน branch `codex/hig-phase-a-readability` เก็บฐาน R07 เดิมใน Git และภาพ before แยกไว้ เฟส B ยังไม่เริ่ม

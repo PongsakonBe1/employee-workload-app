@@ -1,0 +1,14 @@
+{
+  "completed": true,
+  "flowGroups": 11,
+  "legacyGroups": 11,
+  "accessibilityStates": 300,
+  "accessibilityChecks": 5,
+  "failures": 0,
+  "errors": [],
+  "limitations": [
+    "Chromium touch/viewport emulation only; native iOS date/time, keyboard and focus zoom require device UAT",
+    "Barcode alphabet validation awaits confirmed ID/name requirements",
+    "Prototype only; no production writes"
+  ]
+}

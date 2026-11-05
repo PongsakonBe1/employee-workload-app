@@ -1,0 +1,123 @@
+/* Review 08, batch 1: isolated usability fixes over the existing synthetic model. */
+'use strict';
+const ui8={logDay:null,validationFrame:0};
+
+// Form pickers are dialogs, not global toolbar menus anchored at the screen edge.
+const taskPickerBase8=actions['task-picker'];
+actions['task-picker']=button=>{
+ taskPickerBase8(button);
+ const dialog=$('#sheet');
+ dialog.classList.remove('popover','menu6');
+ dialog.classList.add('task-dialog8');
+ for(const prop of ['top','left','right','bottom','max-height'])dialog.style.removeProperty(prop);
+ $('[name="task-query"]')?.focus({preventScroll:true});
+};
+const sheetBase8=showSheet;
+showSheet=function(...args){
+ $('#sheet').classList.remove('task-dialog8','day-dialog8','room-dialog8');
+ sheetBase8(...args);
+};
+
+// Even legacy whole-set templates require an explicit choice for every submission.
+comboDialog=function(kind){
+ f4.comboKind=kind;
+ const tasks=selectedComboTasks(),template=f4.runningTemplate;
+ showSheet(template?.kind==='combo'?template.name:kind==='software'?'ติดตั้งโปรแกรม':'เปิดใช้บัญชี',
+  'ยังไม่ได้เลือกงาน เลือกเฉพาะรายการที่ทำจริง',
+  `<fieldset class="combo-options8"><legend class="visually-hidden">งานที่ทำจริง</legend><div class="row between">${miniButton('เลือกทั้งหมด','combo-all','check')}${miniButton('ล้างการเลือก','combo-none')}</div>${tasks.map((task,i)=>`<label class="combo-item"><input type="checkbox" class="combo-check" value="${i}"><span><strong>${e5(task)}</strong></span></label>`).join('')}</fieldset><div class="recipient-field8">${field('ผู้รับบริการ *',input('combo-recipient','','text','required aria-describedby="combo-error" placeholder="ระบุผู้รับบริการ"'))}</div><div id="combo-error" class="field-error" role="alert"></div>`,
+  button('ตรวจ 0 รายการ','combo-review','check','primary'));
+};
+
+function focusInvalid8(input,message,error){
+ if(!input)return;
+ input.setAttribute('aria-invalid','true');
+ if(error){error.textContent=message;input.setAttribute('aria-describedby',error.id);}
+ input.focus({preventScroll:true});
+ input.scrollIntoView({block:'center',behavior:'instant'});
+}
+const comboReviewBase8=actions['combo-review'];
+actions['combo-review']=button=>{
+ const selected=$$('.combo-check:checked'),recipient=$('[name="combo-recipient"]'),error=$('#combo-error');
+ if(!selected.length){error.textContent='เลือกอย่างน้อย 1 งาน';focusInvalid8($('.combo-check'),error.textContent,error);return;}
+ if(!recipient.value.trim()){focusInvalid8(recipient,'ระบุผู้รับบริการก่อนตรวจรายการ',error);return;}
+ comboReviewBase8(button);
+};
+
+const commentBase8=commentDialog;
+commentDialog=function(task){
+ commentBase8(task);
+ const template=f4.runningTemplate;
+ const recipient=$('[name="recipient"]'),detail=$('[name="detail"]');
+ recipient.required=template?!!template.requireRecipient:true;
+ detail.required=template?!!template.requireComment:true;
+};
+const commentSaveBase8=actions['comment-save'];
+actions['comment-save']=button=>{
+ const recipient=$('#comment4 [name="recipient"]');
+ if(recipient?.required&&!recipient.value.trim()){
+  let error=$('#recipient-error8');
+  if(!error){error=document.createElement('p');error.id='recipient-error8';error.className='field-error';error.setAttribute('role','alert');recipient.after(error);}
+  focusInvalid8(recipient,'ระบุผู้รับบริการก่อนตรวจรายการ',error);return;
+ }
+ commentSaveBase8(button);
+};
+document.addEventListener('invalid',event=>{
+ const input=event.target;
+ if(input.matches('#content input,#content textarea,#content select,#sheet input,#sheet textarea,#sheet select')){
+  cancelAnimationFrame(ui8.validationFrame);
+  ui8.validationFrame=requestAnimationFrame(()=>{
+   const first=input.form?.querySelector(':invalid')||input;
+   focusInvalid8(first);
+  });
+ }
+},true);
+document.addEventListener('input',event=>{
+ const input=event.target;
+ if(!input.matches('input,textarea,select'))return;
+ if(input.value.trim()){
+  input.removeAttribute('aria-invalid');
+  const errorId=input.getAttribute('aria-describedby');
+  if(['recipient-error8','combo-error'].includes(errorId))document.getElementById(errorId).textContent='';
+ }
+});
+// When a virtual keyboard changes the visual viewport, keep the active field visible.
+window.visualViewport?.addEventListener('resize',()=>{
+ const input=document.activeElement,viewport=window.visualViewport;
+ if(!input?.matches('#content input,#content textarea,#sheet input,#sheet textarea'))return;
+ const rect=input.getBoundingClientRect();
+ if(rect.bottom>viewport.offsetTop+viewport.height-16||rect.top<viewport.offsetTop+16)input.scrollIntoView({block:'center',behavior:'instant'});
+});
+
+function dayLogs8(){return filteredLogs().filter(log=>log.date===ui8.logDay);}
+function showLogDay8(){
+ const rows=dayLogs8();
+ showSheet('งานวันที่ '+thaiDate5(ui8.logDay),`${rows.length} รายการ · ใช้ตัวกรองเดิม`,
+  rows.length?`<div class="day-logs8">${rows.map(log=>`<button class="day-log8" data-action="day-log-detail8" data-id="${e5(log.id)}"><span class="event-time">${e5(log.time)}</span><span class="grow"><strong>${e5(log.task)}</strong><small>${e5(log.person)}${log.recipient?' · '+e5(log.recipient):''}</small><small>${e5(log.detail||'ไม่มีรายละเอียดเพิ่มเติม')}</small></span>${icon('chevron')}</button>`).join('')}</div>`:empty5('ไม่มีงานตรงกับตัวกรองในวันนี้','เลือกวันอื่น หรือปรับตัวกรองจากหน้าปฏิทิน'));
+ $('#sheet').classList.add('day-dialog8');
+}
+actions['log-day5']=button=>{
+ ui8.logDay=button.dataset.date;
+ showLogDay8();
+};
+actions['day-log-detail8']=button=>{
+ ui5.logId=button.dataset.id;
+ showSheet('รายละเอียดงาน',thaiDate5(ui8.logDay),`${button8Back()}${logDetail5(ui5.logId)}`);
+};
+function button8Back(){return button('กลับไปงานในวันนี้','day-log-back8','back','link');}
+actions['day-log-back8']=showLogDay8;
+
+smartRoom=function(floor){
+ f4.roomFloor=floor;
+ showSheet(floor==='3'?'เลือกห้อง ชั้น 3':'เลือกห้อง ชั้น 4',
+  'กดเปิดหรือปิดห้องเพื่อบันทึกทันที แล้วเลิกทำได้จากหน้าบันทึก',
+  `<div class="device-picker room-picker8">${f4.rooms.filter(room=>room.floor===floor).map(room=>`<button class="device-option room-option8" data-action="room-instant7" data-room="${e5(room.id)}" data-expected="${room.inUse}">${icon('door')}<strong>ห้อง ${e5(room.id)}</strong>${tag(room.inUse?'เปิดอยู่':'ปิดอยู่',room.inUse?'blue':'')}<small>${e5(room.os)}</small><span class="room-command8">${room.inUse?'ปิดห้อง':'เปิดห้อง'}${icon('chevron')}</span></button>`).join('')}</div>`);
+ $('#sheet').classList.add('room-dialog8');
+};
+
+const renderBase8=render;
+render=function(...args){
+ renderBase8(...args);
+ document.title=currentRoute()[1]+' · labboy · Review 08 — ชุดแรก';
+ document.documentElement.dataset.usabilityReady='8';
+};
+render();
