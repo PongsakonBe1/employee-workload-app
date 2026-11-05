@@ -1,0 +1,2459 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "light",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "desktop",
+      "theme": "dark",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "light",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "touch",
+      "theme": "dark",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "light",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "mobile",
+      "theme": "dark",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "light",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "small",
+      "theme": "dark",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "light",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "dashboard",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "record",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "worklogs",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "new-log",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "dl",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "classrooms",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "equipment",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "usage",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "staff",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "profile",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "export",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "admin",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "users",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "templates",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "system",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "settings",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "audit",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "broadcast",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "imports",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "cleanup",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "help",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "login",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "pending",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "design",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "resources",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "condition",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "export-requests",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "data-import",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "notifications",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    },
+    {
+      "mode": "tablet",
+      "theme": "dark",
+      "route": "about",
+      "fonts": [],
+      "targets": [],
+      "overflow": false
+    }
+  ],
+  "checks": [
+    {
+      "mode": "desktop",
+      "textEnlargementRoutes": 4,
+      "dialogs": 2,
+      "importReview": true,
+      "stateCombinations": 8,
+      "increasedContrast": true,
+      "hitTesting": false
+    },
+    {
+      "mode": "touch",
+      "textEnlargementRoutes": 4,
+      "dialogs": 2,
+      "importReview": true,
+      "stateCombinations": 8,
+      "increasedContrast": true,
+      "hitTesting": true
+    },
+    {
+      "mode": "mobile",
+      "textEnlargementRoutes": 4,
+      "dialogs": 2,
+      "importReview": true,
+      "stateCombinations": 8,
+      "increasedContrast": true,
+      "hitTesting": true
+    },
+    {
+      "mode": "small",
+      "textEnlargementRoutes": 4,
+      "dialogs": 2,
+      "importReview": true,
+      "stateCombinations": 8,
+      "increasedContrast": true,
+      "hitTesting": true
+    },
+    {
+      "mode": "tablet",
+      "textEnlargementRoutes": 4,
+      "dialogs": 2,
+      "importReview": true,
+      "stateCombinations": 8,
+      "increasedContrast": true,
+      "hitTesting": true
+    }
+  ],
+  "failures": [],
+  "errors": [],
+  "limitations": [
+    "Geometry candidates and label targets, not a WCAG certification",
+    "Real device UAT and native rendered font inspection pending",
+    "Browser zoom is verified separately from text enlargement"
+  ]
+}

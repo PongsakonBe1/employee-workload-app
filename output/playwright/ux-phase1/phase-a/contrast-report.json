@@ -1,0 +1,215 @@
+{
+  "results": [
+    {
+      "theme": "light",
+      "fg": "ink",
+      "bg": "surface",
+      "ratio": 16.1,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "sub",
+      "bg": "surface",
+      "ratio": 6.14,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "muted",
+      "bg": "surface",
+      "ratio": 5.69,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "ink",
+      "bg": "bg",
+      "ratio": 14.79,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "sub",
+      "bg": "bg",
+      "ratio": 5.64,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "muted",
+      "bg": "bg",
+      "ratio": 5.22,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "on-accent",
+      "bg": "accent",
+      "ratio": 6.29,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "blue-ink",
+      "bg": "blue",
+      "ratio": 6.53,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "green-ink",
+      "bg": "green",
+      "ratio": 6.34,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "amber-ink",
+      "bg": "amber",
+      "ratio": 6.31,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "red-ink",
+      "bg": "red",
+      "ratio": 5.94,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "purple-ink",
+      "bg": "purple",
+      "ratio": 5.89,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-class",
+      "bg": "calendar-class-bg",
+      "ratio": 5.45,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-dl",
+      "bg": "calendar-dl-bg",
+      "ratio": 5.83,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-exam",
+      "bg": "calendar-exam-bg",
+      "ratio": 6.53,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "ink",
+      "bg": "surface",
+      "ratio": 14.05,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "sub",
+      "bg": "surface",
+      "ratio": 7.77,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "muted",
+      "bg": "surface",
+      "ratio": 7.2,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "ink",
+      "bg": "bg",
+      "ratio": 15.63,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "sub",
+      "bg": "bg",
+      "ratio": 8.64,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "muted",
+      "bg": "bg",
+      "ratio": 8,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "on-accent",
+      "bg": "accent",
+      "ratio": 7.96,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "blue-ink",
+      "bg": "blue",
+      "ratio": 8.2,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "green-ink",
+      "bg": "green",
+      "ratio": 8.07,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "amber-ink",
+      "bg": "amber",
+      "ratio": 7.91,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "red-ink",
+      "bg": "red",
+      "ratio": 8.24,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "purple-ink",
+      "bg": "purple",
+      "ratio": 8.62,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-class",
+      "bg": "calendar-class-bg",
+      "ratio": 5.45,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-dl",
+      "bg": "calendar-dl-bg",
+      "ratio": 7.76,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-exam",
+      "bg": "calendar-exam-bg",
+      "ratio": 8.2,
+      "passed": true
+    }
+  ],
+  "limitation": "Opaque semantic pairs from current CSS only. Glass compositing, hover/disabled states and real device UAT are not certified."
+}

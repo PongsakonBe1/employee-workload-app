@@ -62,4 +62,5 @@ async function main(){
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,process.argv.includes('--interactions')?'interactions.json':'report.json'),JSON.stringify({results,errors,renderedViews:process.argv.includes('--interactions')?0:120,limitations:['Synthetic prototype only','Native Safari/iPhone/Android UAT pending','Custom web icon vectors; no SF asset distribution']},null,2));
  }catch(e){fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({message:e.stack,results,errors},null,2));await page.screenshot({path:path.join(out,'failure.png'),fullPage:true});throw e;}finally{await browser.close();}
 }
-main().catch(e=>{console.error(e);process.exitCode=1;});
+if(process.argv.includes('--accessibility'))require('./verify-accessibility.cjs');
+else main().catch(e=>{console.error(e);process.exitCode=1;});

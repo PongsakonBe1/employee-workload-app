@@ -2,6 +2,8 @@
 
 ต้นแบบสำหรับ Tech Lead ตรวจรับ วันที่ 5 พฤศจิกายน 2569 บน branch `codex/hig-layout-icons-review-07` ฐาน R06 `fd1dd50` ยังไม่ใช่ production implementation
 
+อัปเดตเฟส A: [ผลปรับ typography/touch และหลักฐานตรวจ](PHASE_A.md) บน branch `codex/hig-phase-a-readability` เก็บฐาน R07 เดิมใน Git และภาพ before แยกไว้ เฟส B ยังไม่เริ่ม
+
 ## เปิดตรวจ
 
 ```powershell
