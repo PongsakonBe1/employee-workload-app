@@ -1,0 +1,71 @@
+{
+  "results": [
+    {
+      "name": "30 views desktop/light",
+      "status": "passed"
+    },
+    {
+      "name": "30 views desktop/dark",
+      "status": "passed"
+    },
+    {
+      "name": "30 views mobile/light",
+      "status": "passed"
+    },
+    {
+      "name": "30 views mobile/dark",
+      "status": "passed"
+    },
+    {
+      "name": "Sidebar disclosure and collapse preserve access to every role-aware destination",
+      "status": "passed"
+    },
+    {
+      "name": "A room tap writes once, immediately closes the sheet, and offers persistent Undo",
+      "status": "passed"
+    },
+    {
+      "name": "An intervening room update prevents Undo from overwriting newer state",
+      "status": "passed"
+    },
+    {
+      "name": "Offline room actions do not write or dismiss the picker",
+      "status": "passed"
+    },
+    {
+      "name": "Manual input and keyboard segmented selection retain their focus",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile has four stable destinations and secondary tools via account/search",
+      "status": "passed"
+    },
+    {
+      "name": "Symbol feedback is finite and Reduce Motion cancels active feedback",
+      "status": "passed"
+    },
+    {
+      "name": "Calendar Today and filters remain available after layout changes",
+      "status": "passed"
+    },
+    {
+      "name": "Combo selection retains required recipient and writes only selected tasks",
+      "status": "passed"
+    },
+    {
+      "name": "Import still blocks unreviewed rows and separates the six real seed conflicts",
+      "status": "passed"
+    },
+    {
+      "name": "Text zoom reflows the main flows at narrow widths",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "renderedViews": 120,
+  "limitations": [
+    "Synthetic prototype only",
+    "Native Safari/iPhone/Android UAT pending",
+    "Custom web icon vectors; no SF asset distribution"
+  ]
+}
