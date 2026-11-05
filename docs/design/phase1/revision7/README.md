@@ -1,5 +1,7 @@
 # Design Review 07 — Layout, typography และ icon feedback
 
+ล่าสุด Review 08 เก็บรายละเอียด: [Quick Log, controls, grouped forms และผลตรวจ](POLISH_C.md) · [เปิดต้นแบบ](http://127.0.0.1:4197/#/record) · [Gallery](http://127.0.0.1:4197/gallery.html)
+
 อัปเดตล่าสุด Review 08 ชุดสองบน branch `codex/liquid-glass-review-08`: [สี วัสดุ ไอคอน ปฏิทิน และผลตรวจ](PHASE_B.md) · [เปิดตารางใหม่](http://127.0.0.1:4197/#/classrooms) · [ภาพและคลิปครบทุกหน้า](http://127.0.0.1:4197/gallery.html)
 
 อัปเดต Review 08 ชุดแรกบน branch `codex/liquid-glass-review-08`: [รายละเอียด การทดสอบ และรายการรอตรวจรับ](REVIEW_08_BATCH_1.md) ใช้ preview server และฐานต้นแบบในโฟลเดอร์นี้ต่อเนื่อง ชุดสี/วัสดุและ Analytics ยังไม่เริ่ม

@@ -1,0 +1,62 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "name": "Both room floors use one desktop row and every state has a distinct symbol, fill and label",
+      "status": "passed"
+    },
+    {
+      "name": "Opening and closing a room updates the badge after reopening; Undo restores the original state",
+      "status": "passed"
+    },
+    {
+      "name": "Borrow and return update the actual device status, stored borrower, command and visual state",
+      "status": "passed"
+    },
+    {
+      "name": "Combo checkboxes start empty, support Space, count chosen work and preserve numeric-ID validation",
+      "status": "passed"
+    },
+    {
+      "name": "Template grouped forms preserve values when adding/removing items and save into Quick Log",
+      "status": "passed"
+    },
+    {
+      "name": "Duplicate-looking names keep Admin labels and full-name search selects the exact ID",
+      "status": "passed"
+    },
+    {
+      "name": "Plain/ambient backgrounds survive theme and route changes without losing manual drafts",
+      "status": "passed"
+    },
+    {
+      "name": "Reduced motion and solid controls keep focus visible and remove decorative transitions",
+      "status": "passed"
+    },
+    {
+      "name": "Both themes keep readable status/input text, checkbox boundaries and keyboard focus indicators",
+      "status": "passed"
+    },
+    {
+      "name": "375px: room, device, Combo and Template dialogs stay inside the screen in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "390px: room, device, Combo and Template dialogs stay inside the screen in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "430px: room, device, Combo and Template dialogs stay inside the screen in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "768px: room, device, Combo and Template dialogs stay inside the screen in both themes",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Edge viewport/touch emulation; physical iPhone/Safari, Android and scanner UAT still required",
+    "Prototype labels only; production identity imports and legacy name-based queries are unchanged"
+  ]
+}
