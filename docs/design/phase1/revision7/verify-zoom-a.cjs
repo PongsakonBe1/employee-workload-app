@@ -1,7 +1,7 @@
 /* Use an isolated browser preference profile, not the user's browser or CSS zoom. */
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]);
-const out=path.resolve(__dirname,'../../../../output/playwright/ux-phase1/phase-a');
+const out=path.resolve(__dirname,'../../../../output/playwright/ux-phase1/'+(process.argv.includes('--batch-b')?'phase-b':'phase-a'));
 async function sample(zoom){
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'labboy-phase-a-zoom-'));
  fs.mkdirSync(path.join(profile,'Default'));

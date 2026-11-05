@@ -7,17 +7,21 @@ async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
  const page=await browser.newPage({viewport:{width:1440,height:1050}});page.setDefaultTimeout(10000);
  page.on('pageerror',e=>errors.push(e.message));
- const visit=async route=>{await page.goto('http://127.0.0.1:4197/#/'+route);await page.waitForFunction(()=>document.documentElement.dataset.reviewReady==='7');await settle();};
+ const visit=async route=>{await page.goto('http://127.0.0.1:4197/#/'+route);await page.waitForFunction(()=>document.documentElement.dataset.reviewReady==='7'&&document.documentElement.dataset.batchBReady==='true'&&document.documentElement.dataset.calendarReady==='true');await settle();};
  const settle=()=>page.waitForFunction(()=>document.documentElement.dataset.motionReady==='true'&&document.getAnimations().every(a=>a.playState!=='running'));
  const act=name=>page.locator(`[data-action="${name}"]:visible`).first();
+ // Windows thumbnail/indexer locks can briefly reject overwriting a PNG. Capture
+ // once, then retry only that artifact write; never retry a failed UI assertion.
+ const capture=async file=>{const bytes=await page.screenshot({fullPage:true});for(let attempt=0;;attempt++){try{fs.writeFileSync(file,bytes);return;}catch(error){if(attempt>=3||!['UNKNOWN','EPERM','EBUSY'].includes(error.code))throw error;await new Promise(resolve=>setTimeout(resolve,150));}}};
  const test=async(name,fn)=>{await fn();results.push({name,status:'passed'});console.log('PASS '+name);};
  try{
   await visit('record');const routes=await page.evaluate(()=>window.designReview.routes);
   if(!process.argv.includes('--interactions'))for(const [device,theme,width,height]of [['desktop','light',1440,1050],['desktop','dark',1440,1050],['mobile','light',390,844],['mobile','dark',390,844]]){
    await page.setViewportSize({width,height});
-   for(const route of routes){await visit(route.id);await page.evaluate(t=>window.designReview.setTheme(t),theme);await settle();assert.ok(await page.locator('h1').count());assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),route.id+' overflow');await page.screenshot({path:path.join(out,`${route.id}-${device}-${theme}.png`),fullPage:true});}
+   for(const route of routes){await visit(route.id);await page.evaluate(t=>window.designReview.setTheme(t),theme);await settle();assert.ok(await page.locator('h1').count());assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),route.id+' overflow');await capture(path.join(out,`${route.id}-${device}-${theme}.png`));}
    results.push({name:`30 views ${device}/${theme}`,status:'passed'});console.log('RENDER '+device+'/'+theme);
   }
+  if(process.argv.includes('--renders-only')){assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'renders.json'),JSON.stringify({results,errors,renderedViews:120},null,2));return;}
   await page.setViewportSize({width:1440,height:1050});await page.goto('about:blank');await visit('record');
   await test('Sidebar disclosure and collapse preserve access to every role-aware destination',async()=>{
    assert.equal(await page.locator('#app-sidebar a[href="#/equipment"]').count(),0);await act('management7').click();assert.ok(await page.locator('#app-sidebar a[href="#/equipment"]').isVisible());await act('sidebar7').click();assert.equal(await page.locator('#app-sidebar').isVisible(),false);await act('sidebar7').click();assert.ok(await page.locator('#app-sidebar').isVisible());
@@ -43,11 +47,11 @@ async function main(){
    await page.setViewportSize({width:390,height:844});await visit('record');assert.equal(await page.locator('#mobile-nav .nav-item').count(),4);await act('account7').click();assert.ok(await page.locator('#sheet a[href="#/worklogs"]').isVisible());await page.keyboard.press('Escape');
    for(const button of await page.locator('#app-header .icon-btn:visible').all()){const r=await button.boundingBox();assert.ok(r.width>=44&&r.height>=44,'header touch target');}
   });
-  await test('Symbol feedback is finite and Reduce Motion cancels active feedback',async()=>{
-   await page.setViewportSize({width:1440,height:1050});await visit('record');await page.locator('.quick-card').first().hover();await page.waitForFunction(()=>document.querySelector('.quick-card .icon').getAnimations().some(a=>a.playState==='running'));await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>window.motionReview.active===0);await act('account7').click();assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length),0);await page.keyboard.press('Escape');await page.emulateMedia({reducedMotion:'no-preference'});
+  await test('Purposeful press feedback is finite and Reduce Motion cancels active feedback',async()=>{
+   await page.setViewportSize({width:1440,height:1050});await visit('record');const card=page.locator('.quick-card').first();await card.hover();const rect=await card.boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();await page.waitForFunction(()=>window.motionReview.active>0);await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>window.motionReview.active===0);await page.mouse.up();if(await page.locator('#sheet').evaluate(e=>e.open))await page.keyboard.press('Escape');await act('account7').click();assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length),0);await page.keyboard.press('Escape');await page.emulateMedia({reducedMotion:'no-preference'});
   });
   await test('Calendar Today and filters remain available after layout changes',async()=>{
-   await visit('classrooms');await act('schedule-today7').click();assert.equal(await page.evaluate(()=>ui6.scheduleDate), '2026-11-05');await page.locator('[name="schedule-kind6"]').selectOption('dl');assert.ok(await page.locator('.week-event').count());
+   await visit('classrooms');await act('schedule-today7').click();assert.equal(await page.evaluate(()=>ui6.scheduleDate),await page.evaluate(()=>CalendarB.todayBangkok()));await act('calendar-filters-b').click();await page.locator('[name="cal-kind-b"]').selectOption('dl');await act('calendar-apply-b').click();assert.equal(await page.evaluate(()=>scheduleRowsB().every(row=>row.kind==='dl')),true);
   });
   await test('Combo selection retains required recipient and writes only selected tasks',async()=>{
    await page.goto('about:blank');await visit('record');const before=await page.evaluate(()=>state.logs.length);await page.locator('[data-action="template-run"][data-id="TPL-3"]').click();await act('combo-none').click();await act('combo-review').click();assert.match(await page.locator('#combo-error').innerText(),/อย่างน้อย/);await page.locator('.combo-check').first().check();await page.locator('[name="combo-recipient"]').fill('ผู้รับบริการตัวอย่าง');await act('combo-review').click();await act('combo-save').click();assert.equal(await page.evaluate(()=>state.logs.length),before+1);

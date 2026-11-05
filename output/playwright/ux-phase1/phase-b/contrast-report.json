@@ -1,0 +1,229 @@
+{
+  "results": [
+    {
+      "theme": "light",
+      "fg": "ink",
+      "bg": "surface",
+      "ratio": 15.86,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "sub",
+      "bg": "surface",
+      "ratio": 6.59,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "muted",
+      "bg": "surface",
+      "ratio": 6.12,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "ink",
+      "bg": "bg",
+      "ratio": 14.43,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "sub",
+      "bg": "bg",
+      "ratio": 6,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "muted",
+      "bg": "bg",
+      "ratio": 5.57,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "on-accent",
+      "bg": "accent",
+      "ratio": 5.99,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "blue-ink",
+      "bg": "blue",
+      "ratio": 6.41,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "green-ink",
+      "bg": "green",
+      "ratio": 6.48,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "amber-ink",
+      "bg": "amber",
+      "ratio": 6.39,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "red-ink",
+      "bg": "red",
+      "ratio": 6.19,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "purple-ink",
+      "bg": "purple",
+      "ratio": 6.82,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-class-text",
+      "bg": "calendar-class-bg",
+      "ratio": 9.3,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-dl-text",
+      "bg": "calendar-dl-bg",
+      "ratio": 7.45,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "calendar-exam-text",
+      "bg": "calendar-exam-bg",
+      "ratio": 7.54,
+      "passed": true
+    },
+    {
+      "theme": "light",
+      "fg": "holiday-ink",
+      "bg": "holiday-bg",
+      "ratio": 6.44,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "ink",
+      "bg": "surface",
+      "ratio": 14.07,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "sub",
+      "bg": "surface",
+      "ratio": 8.56,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "muted",
+      "bg": "surface",
+      "ratio": 8,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "ink",
+      "bg": "bg",
+      "ratio": 16.13,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "sub",
+      "bg": "bg",
+      "ratio": 9.81,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "muted",
+      "bg": "bg",
+      "ratio": 9.17,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "on-accent",
+      "bg": "accent",
+      "ratio": 8.16,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "blue-ink",
+      "bg": "blue",
+      "ratio": 7.14,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "green-ink",
+      "bg": "green",
+      "ratio": 8.43,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "amber-ink",
+      "bg": "amber",
+      "ratio": 8.26,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "red-ink",
+      "bg": "red",
+      "ratio": 7.82,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "purple-ink",
+      "bg": "purple",
+      "ratio": 7.93,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-class-text",
+      "bg": "calendar-class-bg",
+      "ratio": 10.38,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-dl-text",
+      "bg": "calendar-dl-bg",
+      "ratio": 9.65,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "calendar-exam-text",
+      "bg": "calendar-exam-bg",
+      "ratio": 9.53,
+      "passed": true
+    },
+    {
+      "theme": "dark",
+      "fg": "holiday-ink",
+      "bg": "holiday-bg",
+      "ratio": 8.21,
+      "passed": true
+    }
+  ],
+  "limitation": "Opaque semantic pairs from current CSS only. Glass compositing, hover/disabled states and real device UAT are not certified."
+}

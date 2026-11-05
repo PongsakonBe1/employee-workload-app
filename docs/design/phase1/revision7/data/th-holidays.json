@@ -1,0 +1,2274 @@
+{
+  "source": "Google Calendar · ประเทศไทย",
+  "sourceUrl": "https://calendar.google.com/calendar/ical/th.th%23holiday%40group.v.calendar.google.com/public/basic.ics",
+  "fetchedAt": "2026-11-05T16:26:06.845Z",
+  "coverageYears": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026",
+    "2027",
+    "2028",
+    "2029",
+    "2030",
+    "2031"
+  ],
+  "events": [
+    {
+      "id": "20210101_ppor1cbt85veuvte16q15hr07c@google.com",
+      "start": "2021-01-01",
+      "endExclusive": "2021-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20210212_55q5qduvi1683jlkp5um1vcieg@google.com",
+      "start": "2021-02-12",
+      "endExclusive": "2021-02-13",
+      "title": "วันตรุษจีน",
+      "kind": "public"
+    },
+    {
+      "id": "20210213_qruhfds09gdb5pb3p7t3i1lgus@google.com",
+      "start": "2021-02-13",
+      "endExclusive": "2021-02-14",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20210214_ioavlkit9h83i3tsfquea8ejbc@google.com",
+      "start": "2021-02-14",
+      "endExclusive": "2021-02-15",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20210214_o5lb3tmd8q633fq6l43ls65hno@google.com",
+      "start": "2021-02-14",
+      "endExclusive": "2021-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20210226_stkihdsggk8h6kd97etl60k1mo@google.com",
+      "start": "2021-02-26",
+      "endExclusive": "2021-02-27",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20210406_oar2c85uteluftjsuijf8s2u14@google.com",
+      "start": "2021-04-06",
+      "endExclusive": "2021-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20210412_d2oq97cufjc2p6cn74qmmsqh4s@google.com",
+      "start": "2021-04-12",
+      "endExclusive": "2021-04-13",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20210413_gaa55t0l3nebdmiscl8kvijrso@google.com",
+      "start": "2021-04-13",
+      "endExclusive": "2021-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20210414_4hqvhn98sd84d3i7btg5n0slj4@google.com",
+      "start": "2021-04-14",
+      "endExclusive": "2021-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20210415_9vfap13e5r32096182l733su40@google.com",
+      "start": "2021-04-15",
+      "endExclusive": "2021-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20210501_3e8rbhjhe6n236obdv8tn00nf4@google.com",
+      "start": "2021-05-01",
+      "endExclusive": "2021-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20210503_phehkamht0p51tfri7eu9ocqfs@google.com",
+      "start": "2021-05-03",
+      "endExclusive": "2021-05-04",
+      "title": "วันหยุดชดเชยวันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20210504_48ffm79isl38jk3t4o3mq2s5j8@google.com",
+      "start": "2021-05-04",
+      "endExclusive": "2021-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20210510_eii26ugn9chbt1sqnd5rpjmrnc@google.com",
+      "start": "2021-05-10",
+      "endExclusive": "2021-05-11",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20210526_rtuqa0an6qhbl2atocq6lpdes0@google.com",
+      "start": "2021-05-26",
+      "endExclusive": "2021-05-27",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20210603_e94shbnv36cu27v1eb0n4usgoc@google.com",
+      "start": "2021-06-03",
+      "endExclusive": "2021-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20210724_60nbf8p7n3hived29o1uphlfvg@google.com",
+      "start": "2021-07-24",
+      "endExclusive": "2021-07-25",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20210725_bv24i2ad47qgvv58k8qquicqro@google.com",
+      "start": "2021-07-25",
+      "endExclusive": "2021-07-26",
+      "title": "วันเข้าพรรษา",
+      "kind": "public"
+    },
+    {
+      "id": "20210726_ttpi9pujaecsrfvvm6am9h3vto@google.com",
+      "start": "2021-07-26",
+      "endExclusive": "2021-07-27",
+      "title": "วันหยุดชดเชยวันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20210728_am9fr8gaenp56ph0mp9hu12m3s@google.com",
+      "start": "2021-07-28",
+      "endExclusive": "2021-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20210812_v72ekjsvrhn0p724gmf9ssstmo@google.com",
+      "start": "2021-08-12",
+      "endExclusive": "2021-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20210924_6hvi6egbq88hact0u47q8ho9e8@google.com",
+      "start": "2021-09-24",
+      "endExclusive": "2021-09-25",
+      "title": "วันมหิดล",
+      "kind": "public"
+    },
+    {
+      "id": "20211013_ucp39rjq0fr0fdc3erom2qmb4s@google.com",
+      "start": "2021-10-13",
+      "endExclusive": "2021-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20211022_mgect2kkchvq6ih7fklvt2mjc4@google.com",
+      "start": "2021-10-22",
+      "endExclusive": "2021-10-23",
+      "title": "วันหยุดชดเชยวันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20211023_38if1v1l070tkc2ilt6nef3mj4@google.com",
+      "start": "2021-10-23",
+      "endExclusive": "2021-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20211205_03ojsnmc0abenj7i4set9vnbmo@google.com",
+      "start": "2021-12-05",
+      "endExclusive": "2021-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20211206_dmf2i034gegtebd950u9td14ig@google.com",
+      "start": "2021-12-06",
+      "endExclusive": "2021-12-07",
+      "title": "วันหยุดชดเชยวันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20211210_8lds8f1hofkd484k1f38qvoj5c@google.com",
+      "start": "2021-12-10",
+      "endExclusive": "2021-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20211224_32e0amb6h7tunkhee8k3rb9to8@google.com",
+      "start": "2021-12-24",
+      "endExclusive": "2021-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20211225_csomf7prnj17b9u7t6tjnot6hk@google.com",
+      "start": "2021-12-25",
+      "endExclusive": "2021-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20211231_csnsih5mh11ha43r2nch7t8s8g@google.com",
+      "start": "2021-12-31",
+      "endExclusive": "2022-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20220101_gugkmjfivhuqlhmiq1g3acmbj0@google.com",
+      "start": "2022-01-01",
+      "endExclusive": "2022-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20220103_i1va8olshlt0b8rsh9f0bd3f64@google.com",
+      "start": "2022-01-03",
+      "endExclusive": "2022-01-04",
+      "title": "วันหยุดชดเชยวันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20220201_mr9rltl1g2ej6rpb1vm2hbfbvo@google.com",
+      "start": "2022-02-01",
+      "endExclusive": "2022-02-02",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20220202_9tl3m77r1pf1hmbps7tc7fsh6o@google.com",
+      "start": "2022-02-02",
+      "endExclusive": "2022-02-03",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20220203_isavt92dqs33588egtimds005k@google.com",
+      "start": "2022-02-03",
+      "endExclusive": "2022-02-04",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20220214_ufvjhf3g8fdrpk3ef7c8qhpb48@google.com",
+      "start": "2022-02-14",
+      "endExclusive": "2022-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20220216_53v44hgs6kb1se2t56d7s7dsb0@google.com",
+      "start": "2022-02-16",
+      "endExclusive": "2022-02-17",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20220406_i04l17k5l3dv24pebn095m1gi0@google.com",
+      "start": "2022-04-06",
+      "endExclusive": "2022-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20220413_5dc404m891kkaqgv5370r3fcs0@google.com",
+      "start": "2022-04-13",
+      "endExclusive": "2022-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20220414_0mbgmnlra6t1f464af207p2bsc@google.com",
+      "start": "2022-04-14",
+      "endExclusive": "2022-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20220415_8mstl0pbj2oeg4tpi0d06jcri4@google.com",
+      "start": "2022-04-15",
+      "endExclusive": "2022-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20220501_i8fshj419bm3bftam6unj9asrk@google.com",
+      "start": "2022-05-01",
+      "endExclusive": "2022-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20220502_2d5ni8d2stl69faeut26u9k3qc@google.com",
+      "start": "2022-05-02",
+      "endExclusive": "2022-05-03",
+      "title": "วันหยุดชดเชยวันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20220504_tf12g6hk3pbfkpmrkq25sgqs8c@google.com",
+      "start": "2022-05-04",
+      "endExclusive": "2022-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20220513_f6r0g4f7cnc2o9jn8c01q83phs@google.com",
+      "start": "2022-05-13",
+      "endExclusive": "2022-05-14",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20220515_o97ku5jjq3fltnbkpoprt0stbg@google.com",
+      "start": "2022-05-15",
+      "endExclusive": "2022-05-16",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20220516_ot9lp8gkn50m3v8u2ljt50hano@google.com",
+      "start": "2022-05-16",
+      "endExclusive": "2022-05-17",
+      "title": "วันหยุดชดเชยวันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20220603_paoit6p9833g18raurhn2n8atk@google.com",
+      "start": "2022-06-03",
+      "endExclusive": "2022-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20220713_2lav7bl2fjtue52357hhun69t4@google.com",
+      "start": "2022-07-13",
+      "endExclusive": "2022-07-14",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20220714_tp7et5m91tma5lgjaii6d1rqu0@google.com",
+      "start": "2022-07-14",
+      "endExclusive": "2022-07-15",
+      "title": "วันเข้าพรรษา",
+      "kind": "public"
+    },
+    {
+      "id": "20220715_cc64efsfm8ek1g0c1ho5gs84bg@google.com",
+      "start": "2022-07-15",
+      "endExclusive": "2022-07-16",
+      "title": "นักขัตฤกษ์",
+      "kind": "public"
+    },
+    {
+      "id": "20220728_cl7vn6dgq57o8fthl86bl9fh0g@google.com",
+      "start": "2022-07-28",
+      "endExclusive": "2022-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20220729_97e123ddn1984h79vt5ds337p8@google.com",
+      "start": "2022-07-29",
+      "endExclusive": "2022-07-30",
+      "title": "วันหยุดพิเศษ",
+      "kind": "public"
+    },
+    {
+      "id": "20220812_chn599kc71vbjvi6hmifq5ng7s@google.com",
+      "start": "2022-08-12",
+      "endExclusive": "2022-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20221013_c70c33gjv9ecoipoii2vp0pdk4@google.com",
+      "start": "2022-10-13",
+      "endExclusive": "2022-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20221014_vu0sl2h64av8emnu12iml9jlfo@google.com",
+      "start": "2022-10-14",
+      "endExclusive": "2022-10-15",
+      "title": "นักขัตฤกษ์",
+      "kind": "public"
+    },
+    {
+      "id": "20221023_14gk9rgf1ckmdb4a7tvljbrksk@google.com",
+      "start": "2022-10-23",
+      "endExclusive": "2022-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20221024_u7nipgdm8fhngin1591icqd9to@google.com",
+      "start": "2022-10-24",
+      "endExclusive": "2022-10-25",
+      "title": "วันหยุดชดเชยวันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20221205_ba7bse2k8a5ld8mfiteg53s548@google.com",
+      "start": "2022-12-05",
+      "endExclusive": "2022-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20221210_a9chqucd6ufn4ak4j31p8dlf3k@google.com",
+      "start": "2022-12-10",
+      "endExclusive": "2022-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20221212_qtk0ouco734ead3q0fqabuelf0@google.com",
+      "start": "2022-12-12",
+      "endExclusive": "2022-12-13",
+      "title": "ชดเชยวันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20221224_7q34sk655h0f6o6v0l8lbkf9bk@google.com",
+      "start": "2022-12-24",
+      "endExclusive": "2022-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20221225_rl4d68o2sr2nj8v87u16goe110@google.com",
+      "start": "2022-12-25",
+      "endExclusive": "2022-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20221230_421u20ln4m4utsp76piu6m5i10@google.com",
+      "start": "2022-12-30",
+      "endExclusive": "2022-12-31",
+      "title": "วันหยุดราชการธันวาคม",
+      "kind": "public"
+    },
+    {
+      "id": "20221231_jendqn7b3lk7ip48n86kmu6cgc@google.com",
+      "start": "2022-12-31",
+      "endExclusive": "2023-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20230101_4ab856b2grn6dpm2i27iqook0o@google.com",
+      "start": "2023-01-01",
+      "endExclusive": "2023-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20230102_hcbitmrbkndm6dumitebvs75o4@google.com",
+      "start": "2023-01-02",
+      "endExclusive": "2023-01-03",
+      "title": "วันหยุดชดเชยวันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20230122_d1s72upn17dpsb257h48jaubq4@google.com",
+      "start": "2023-01-22",
+      "endExclusive": "2023-01-23",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20230123_enalbc7jkt4svuah28a7udvdkc@google.com",
+      "start": "2023-01-23",
+      "endExclusive": "2023-01-24",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20230124_l9olcgqqqerpg4j3oie9bj6un4@google.com",
+      "start": "2023-01-24",
+      "endExclusive": "2023-01-25",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20230214_7356u8q6s8mgkuamr9cg8vao9k@google.com",
+      "start": "2023-02-14",
+      "endExclusive": "2023-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20230306_7vsf5f6ns4q928cgogq0pea6ls@google.com",
+      "start": "2023-03-06",
+      "endExclusive": "2023-03-07",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20230406_g0gabj1fmcmga6mci27vvgl8ns@google.com",
+      "start": "2023-04-06",
+      "endExclusive": "2023-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20230413_828u8kg7qci0rocd68616n9k8o@google.com",
+      "start": "2023-04-13",
+      "endExclusive": "2023-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20230414_eq1rrqba7mkllob6m1799djlb0@google.com",
+      "start": "2023-04-14",
+      "endExclusive": "2023-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20230501_47eei5cfhhk90foqtsdon4aksg@google.com",
+      "start": "2023-05-01",
+      "endExclusive": "2023-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20230504_3a95bhcln9b16qtugltj8upd5o@google.com",
+      "start": "2023-05-04",
+      "endExclusive": "2023-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20230505_e1mp271kqs39gh05i251e3och8@google.com",
+      "start": "2023-05-05",
+      "endExclusive": "2023-05-06",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20230517_3fir4mdkdmlsl4f9fbgmdgvvi4@google.com",
+      "start": "2023-05-17",
+      "endExclusive": "2023-05-18",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20230603_l8lvqorn28qipspa8mdli7gu7s@google.com",
+      "start": "2023-06-03",
+      "endExclusive": "2023-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20230603_1af59llthu1dccufeqmje8raio@google.com",
+      "start": "2023-06-03",
+      "endExclusive": "2023-06-04",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20230605_3biter2gk416geglp8lj7fvqks@google.com",
+      "start": "2023-06-05",
+      "endExclusive": "2023-06-06",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20230605_31fot8hi4latortdmhpev6n2c0@google.com",
+      "start": "2023-06-05",
+      "endExclusive": "2023-06-06",
+      "title": "วันหยุดชดเชยวันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20230728_eavqnnil7827khemeles7onngk@google.com",
+      "start": "2023-07-28",
+      "endExclusive": "2023-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20230731_u0fkjochil1db38tb3hktnan5g@google.com",
+      "start": "2023-07-31",
+      "endExclusive": "2023-08-01",
+      "title": "นักขัตฤกษ์",
+      "kind": "public"
+    },
+    {
+      "id": "20230801_doqoeldne8h2nrjcpc6hdov2lg@google.com",
+      "start": "2023-08-01",
+      "endExclusive": "2023-08-02",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20230812_b383iqvomkcl1mrjn9uos9mv4k@google.com",
+      "start": "2023-08-12",
+      "endExclusive": "2023-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20230814_rfs664s4h73pg0nemou98qvbuc@google.com",
+      "start": "2023-08-14",
+      "endExclusive": "2023-08-15",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20231013_l05sstu4stelcm4lavrh7584r8@google.com",
+      "start": "2023-10-13",
+      "endExclusive": "2023-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20231023_lb78mg7rg32gnrn2279p843pj8@google.com",
+      "start": "2023-10-23",
+      "endExclusive": "2023-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20231205_hfjhdld2762otddreqv2hrb7g8@google.com",
+      "start": "2023-12-05",
+      "endExclusive": "2023-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20231210_dud2eri9os1mcnt0lva9a860os@google.com",
+      "start": "2023-12-10",
+      "endExclusive": "2023-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20231211_vaua3kjkt27labf9bd4lioiec0@google.com",
+      "start": "2023-12-11",
+      "endExclusive": "2023-12-12",
+      "title": "ชดเชยวันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20231224_rp4i9e4qkt8mt3giu2modoifgk@google.com",
+      "start": "2023-12-24",
+      "endExclusive": "2023-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20231225_2utrqe9cjlrquf1o5mm6m2phuc@google.com",
+      "start": "2023-12-25",
+      "endExclusive": "2023-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20231229_f8afbtg7t3obgckrol9celd2s8@google.com",
+      "start": "2023-12-29",
+      "endExclusive": "2023-12-30",
+      "title": "วันหยุดราชการธันวาคม",
+      "kind": "public"
+    },
+    {
+      "id": "20231231_m2g5iulqe30eoa6spp44l513tg@google.com",
+      "start": "2023-12-31",
+      "endExclusive": "2024-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20240101_5fjgbdo4mdd58egp7r38hiljb8@google.com",
+      "start": "2024-01-01",
+      "endExclusive": "2024-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20240210_sctibdo06vqlcebuusg7ajq2g8@google.com",
+      "start": "2024-02-10",
+      "endExclusive": "2024-02-11",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20240211_09pccu7mtbhagjb5gjo2b7r2h0@google.com",
+      "start": "2024-02-11",
+      "endExclusive": "2024-02-12",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20240212_p5a9n9hk9jahj9o6i5ibh48u1o@google.com",
+      "start": "2024-02-12",
+      "endExclusive": "2024-02-13",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20240214_k8r4dq5baevinuprbq448ujsh0@google.com",
+      "start": "2024-02-14",
+      "endExclusive": "2024-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20240224_0jqdr42jo7q3or359s12oco83c@google.com",
+      "start": "2024-02-24",
+      "endExclusive": "2024-02-25",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20240226_5ta67tvj26r7d3uv89kmfe0tps@google.com",
+      "start": "2024-02-26",
+      "endExclusive": "2024-02-27",
+      "title": "วันหยุดชดเชยวันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20240406_9hqspbjk5friv0et0mh3klff6k@google.com",
+      "start": "2024-04-06",
+      "endExclusive": "2024-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20240408_6vvvkdeleg38hptld3hruquu6g@google.com",
+      "start": "2024-04-08",
+      "endExclusive": "2024-04-09",
+      "title": "วันหยุดชดเชยวันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20240412_vov5q2ibfj5kvi4sfsuliqat9c@google.com",
+      "start": "2024-04-12",
+      "endExclusive": "2024-04-13",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20240413_59d3eigosfkc7l5re70hhgevfk@google.com",
+      "start": "2024-04-13",
+      "endExclusive": "2024-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20240414_hms1dpl9iac9et7medrukih8js@google.com",
+      "start": "2024-04-14",
+      "endExclusive": "2024-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20240415_6e61p1k24j26mib2vg1ettjid8@google.com",
+      "start": "2024-04-15",
+      "endExclusive": "2024-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20240416_n5ok4lkbbp8hm8pkq28q5uo1vo@google.com",
+      "start": "2024-04-16",
+      "endExclusive": "2024-04-17",
+      "title": "วันหยุดชดเชยวันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20240501_ohrd4tllq2u60jp1br226ansc4@google.com",
+      "start": "2024-05-01",
+      "endExclusive": "2024-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20240504_etqmpu1bj8em5tsaq2hhjfjiak@google.com",
+      "start": "2024-05-04",
+      "endExclusive": "2024-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20240506_rk20g2jk2qguqp18agbu2eun2s@google.com",
+      "start": "2024-05-06",
+      "endExclusive": "2024-05-07",
+      "title": "วันหยุดชดเชยวันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20240510_gvorges1pfg9j86hm64g0928fc@google.com",
+      "start": "2024-05-10",
+      "endExclusive": "2024-05-11",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20240522_6eomft2ktu5falvppscefh8r2s@google.com",
+      "start": "2024-05-22",
+      "endExclusive": "2024-05-23",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20240603_8j655ia72f4mo0b6rj67tmhf40@google.com",
+      "start": "2024-06-03",
+      "endExclusive": "2024-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20240720_7rf5dfdijhotbtrq2s973gdpng@google.com",
+      "start": "2024-07-20",
+      "endExclusive": "2024-07-21",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20240722_1eu1jtek91jhhpcdonjnl1e3mk@google.com",
+      "start": "2024-07-22",
+      "endExclusive": "2024-07-23",
+      "title": "วันหยุดชดเชยวันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20240728_l5fdl19fnvlpv66jl2t1vnpo08@google.com",
+      "start": "2024-07-28",
+      "endExclusive": "2024-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20240729_aq1m0fpvo6o27lmp7sdqrnq0mc@google.com",
+      "start": "2024-07-29",
+      "endExclusive": "2024-07-30",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20240812_s9vvji1qnh8pkk0k8omgdfi9ds@google.com",
+      "start": "2024-08-12",
+      "endExclusive": "2024-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20241013_qtpvkk1jv88oqlf3lp2b28p6h0@google.com",
+      "start": "2024-10-13",
+      "endExclusive": "2024-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20241014_suha26mnjo5j3qe48c4qakh85k@google.com",
+      "start": "2024-10-14",
+      "endExclusive": "2024-10-15",
+      "title": "วันหยุดชดเชยวันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20241023_seggrgv5r2dp377trrknadp8do@google.com",
+      "start": "2024-10-23",
+      "endExclusive": "2024-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20241205_90tr3hj42l9h983jkra1thf5ls@google.com",
+      "start": "2024-12-05",
+      "endExclusive": "2024-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20241210_scmfl4ppliot8ocu28vmdb3jmo@google.com",
+      "start": "2024-12-10",
+      "endExclusive": "2024-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20241224_76satcjpohr85fpdvjb4sidi7c@google.com",
+      "start": "2024-12-24",
+      "endExclusive": "2024-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20241225_mdrm3uqk5iphebcl5lv98tbkuo@google.com",
+      "start": "2024-12-25",
+      "endExclusive": "2024-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20241230_v355daauto5l1jooj8apcc7td0@google.com",
+      "start": "2024-12-30",
+      "endExclusive": "2024-12-31",
+      "title": "วันหยุดราชการธันวาคม",
+      "kind": "public"
+    },
+    {
+      "id": "20241231_d23iol88fk6cd78flsv56ibe34@google.com",
+      "start": "2024-12-31",
+      "endExclusive": "2025-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20250101_e97j2elpdm1f0mhf6kpinam0cg@google.com",
+      "start": "2025-01-01",
+      "endExclusive": "2025-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20250129_r3g1t4l9gtvgggniq0cm1r4lgo@google.com",
+      "start": "2025-01-29",
+      "endExclusive": "2025-01-30",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20250130_gnk2k2l13s883l7oq5r5h5rco8@google.com",
+      "start": "2025-01-30",
+      "endExclusive": "2025-01-31",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20250131_al4d93scdvqnae5ukqledlg61c@google.com",
+      "start": "2025-01-31",
+      "endExclusive": "2025-02-01",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20250212_76d8ch96nrfpup3k1pg24sbj1g@google.com",
+      "start": "2025-02-12",
+      "endExclusive": "2025-02-13",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20250214_gror335pd13c3gj2m6fqi0qn5o@google.com",
+      "start": "2025-02-14",
+      "endExclusive": "2025-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20250406_njivlk4jebrp2ari1u3ieq2f50@google.com",
+      "start": "2025-04-06",
+      "endExclusive": "2025-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20250407_4itdvn3k2ebu8bim59ickr3lqs@google.com",
+      "start": "2025-04-07",
+      "endExclusive": "2025-04-08",
+      "title": "วันหยุดชดเชยวันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20250413_c8f9g0fiehhu7bvqg8850eeqp4@google.com",
+      "start": "2025-04-13",
+      "endExclusive": "2025-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20250414_msie5sl9fldc5vq724t3encf44@google.com",
+      "start": "2025-04-14",
+      "endExclusive": "2025-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20250415_pg40t3iupm1lnerrgseagps620@google.com",
+      "start": "2025-04-15",
+      "endExclusive": "2025-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20250416_cmcjs0rvkg97lfe35o4ar3qv80@google.com",
+      "start": "2025-04-16",
+      "endExclusive": "2025-04-17",
+      "title": "วันหยุดชดเชยวันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20250501_rd8g93jgs5prdguku8jk593e80@google.com",
+      "start": "2025-05-01",
+      "endExclusive": "2025-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20250504_p57k4rs6jdekg4ok11f97kboto@google.com",
+      "start": "2025-05-04",
+      "endExclusive": "2025-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20250505_g3l2403blpepabsli6hgfiuv7k@google.com",
+      "start": "2025-05-05",
+      "endExclusive": "2025-05-06",
+      "title": "วันหยุดชดเชยวันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20250509_088kgkl34e7t0q14rsco8p0d5k@google.com",
+      "start": "2025-05-09",
+      "endExclusive": "2025-05-10",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20250511_g4dop6tt8msv99v137u226fn94@google.com",
+      "start": "2025-05-11",
+      "endExclusive": "2025-05-12",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20250512_eehvef6htt1balunnfsh0c6c34@google.com",
+      "start": "2025-05-12",
+      "endExclusive": "2025-05-13",
+      "title": "วันหยุดชดเชยวันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20250602_jublja8oguvja9l7u85k68p034@google.com",
+      "start": "2025-06-02",
+      "endExclusive": "2025-06-03",
+      "title": "นักขัตฤกษ์",
+      "kind": "public"
+    },
+    {
+      "id": "20250603_c1dh5ufk6mcbj7j3mj8rjcf4b4@google.com",
+      "start": "2025-06-03",
+      "endExclusive": "2025-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20250710_b1if1dc6i7sjpkvq2jtllc5o0o@google.com",
+      "start": "2025-07-10",
+      "endExclusive": "2025-07-11",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20250728_anvdtjrahsjpp677gfel62hhf0@google.com",
+      "start": "2025-07-28",
+      "endExclusive": "2025-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20250811_k2a56b5d2pdhnek0rm5sshba88@google.com",
+      "start": "2025-08-11",
+      "endExclusive": "2025-08-12",
+      "title": "นักขัตฤกษ์",
+      "kind": "public"
+    },
+    {
+      "id": "20250812_fn619s8389v92d2srdnocnl1e8@google.com",
+      "start": "2025-08-12",
+      "endExclusive": "2025-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20251013_jroa9cf6vnidmacaek1hobnh14@google.com",
+      "start": "2025-10-13",
+      "endExclusive": "2025-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20251023_6udsvru4cdurec95a7qgls497o@google.com",
+      "start": "2025-10-23",
+      "endExclusive": "2025-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20251205_su3gn7sqkkiur8bl1qd5njklj0@google.com",
+      "start": "2025-12-05",
+      "endExclusive": "2025-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20251210_5tmk679o1ettdgt2hjv2e9o8as@google.com",
+      "start": "2025-12-10",
+      "endExclusive": "2025-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20251224_lpqmice0a175nalnrbg7r7vb8k@google.com",
+      "start": "2025-12-24",
+      "endExclusive": "2025-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20251225_cpifvtn0ms95nrkredpfqe5upk@google.com",
+      "start": "2025-12-25",
+      "endExclusive": "2025-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20251231_g1dfrq8grsp7iacfo9dm9cv7n0@google.com",
+      "start": "2025-12-31",
+      "endExclusive": "2026-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20260101_h7fenij7rm1d7145pk8e8g6dao@google.com",
+      "start": "2026-01-01",
+      "endExclusive": "2026-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20260102_j42vl7k622mtfq7ublvmvbhol4@google.com",
+      "start": "2026-01-02",
+      "endExclusive": "2026-01-03",
+      "title": "วันหยุดราชการธันวาคม",
+      "kind": "public"
+    },
+    {
+      "id": "20260214_o2gk30kitpov1obvlmqo0v69r8@google.com",
+      "start": "2026-02-14",
+      "endExclusive": "2026-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20260217_ah18a0508dcuog73q9d2frp42c@google.com",
+      "start": "2026-02-17",
+      "endExclusive": "2026-02-18",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20260218_ngtdee1e6g6p8l8qemuepia96g@google.com",
+      "start": "2026-02-18",
+      "endExclusive": "2026-02-19",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20260219_u0q4g0fi5goamtlkqn9jon4vg0@google.com",
+      "start": "2026-02-19",
+      "endExclusive": "2026-02-20",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20260303_0b3t9e1b12nduirmfud2ke54eo@google.com",
+      "start": "2026-03-03",
+      "endExclusive": "2026-03-04",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20260406_15utn864ck3u02190h0p5d3g9c@google.com",
+      "start": "2026-04-06",
+      "endExclusive": "2026-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20260413_7bi3bqquoa17bkfurk4d31rkmo@google.com",
+      "start": "2026-04-13",
+      "endExclusive": "2026-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20260414_rmqds3pjuuge4a48m0i38ekcl8@google.com",
+      "start": "2026-04-14",
+      "endExclusive": "2026-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20260415_f4uh1f971o50p6ehubptm0m28k@google.com",
+      "start": "2026-04-15",
+      "endExclusive": "2026-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20260501_fau0mmb34hogmhhmtstjtvvamk@google.com",
+      "start": "2026-05-01",
+      "endExclusive": "2026-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20260504_iu04879oqns2uhjq20im5ssj40@google.com",
+      "start": "2026-05-04",
+      "endExclusive": "2026-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20260513_0qnpcgavcv1250ck8e5k4b0dms@google.com",
+      "start": "2026-05-13",
+      "endExclusive": "2026-05-14",
+      "title": "วันพืชมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20260531_2ipjhettv9cr26n1kjb68drp1k@google.com",
+      "start": "2026-05-31",
+      "endExclusive": "2026-06-01",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20260601_1lci3gch17a0jumc32q5i2q92o@google.com",
+      "start": "2026-06-01",
+      "endExclusive": "2026-06-02",
+      "title": "วันหยุดชดเชยวันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20260603_babq8sd2cb6f5efsbuatg5f7kk@google.com",
+      "start": "2026-06-03",
+      "endExclusive": "2026-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20260728_c3lciv45nmjgtoinoaf4jtvmao@google.com",
+      "start": "2026-07-28",
+      "endExclusive": "2026-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20260729_5676l1kqadqb452ppri1et2s8o@google.com",
+      "start": "2026-07-29",
+      "endExclusive": "2026-07-30",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20260812_tk4b7c2phrl88lbjedfcuo7mb0@google.com",
+      "start": "2026-08-12",
+      "endExclusive": "2026-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20261013_blhfdqcv99a1ifk35gm9j7cuc0@google.com",
+      "start": "2026-10-13",
+      "endExclusive": "2026-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20261023_jft568mb19tdkh2kbce3j8iv64@google.com",
+      "start": "2026-10-23",
+      "endExclusive": "2026-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20261205_5nq8a2vlad7ap51sr6lpi8qc00@google.com",
+      "start": "2026-12-05",
+      "endExclusive": "2026-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20261207_drim314a2o2jmppgqmhv3g54p0@google.com",
+      "start": "2026-12-07",
+      "endExclusive": "2026-12-08",
+      "title": "วันหยุดชดเชยวันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20261210_d0mc3di60djpgrq7h0fe8ui6o0@google.com",
+      "start": "2026-12-10",
+      "endExclusive": "2026-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20261224_rvjdpg5sdjfk28tf68q0h3vegs@google.com",
+      "start": "2026-12-24",
+      "endExclusive": "2026-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20261225_bl7s2pk7eddbtenuag6nphcj98@google.com",
+      "start": "2026-12-25",
+      "endExclusive": "2026-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20261231_uvdfbslnu5f0fll747motbng74@google.com",
+      "start": "2026-12-31",
+      "endExclusive": "2027-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20270101_pvmjtb24v1c1dgfgn044n5f1ck@google.com",
+      "start": "2027-01-01",
+      "endExclusive": "2027-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20270206_1tncd1958cgksvo8qi4606nu5s@google.com",
+      "start": "2027-02-06",
+      "endExclusive": "2027-02-07",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20270207_v6htl5itp2dcfhvmri7q7jcn3k@google.com",
+      "start": "2027-02-07",
+      "endExclusive": "2027-02-08",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20270208_urejp2hsf9pkn1op9u49jvpk10@google.com",
+      "start": "2027-02-08",
+      "endExclusive": "2027-02-09",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20270214_qe5msbf4k0igihgq7h65bsfm2o@google.com",
+      "start": "2027-02-14",
+      "endExclusive": "2027-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20270221_ra27fimcsp46snvfs1k7tfc2vc@google.com",
+      "start": "2027-02-21",
+      "endExclusive": "2027-02-22",
+      "title": "วันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20270222_6scibcup9kp0ufd37m4k84ifuc@google.com",
+      "start": "2027-02-22",
+      "endExclusive": "2027-02-23",
+      "title": "วันหยุดชดเชยวันมาฆบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20270406_2cc2ajvb93amg3m9o6vnf13ql0@google.com",
+      "start": "2027-04-06",
+      "endExclusive": "2027-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20270413_luaqo9c2675bhlq81if3l4jsu0@google.com",
+      "start": "2027-04-13",
+      "endExclusive": "2027-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20270414_5585oh2js8fkn0tfb3q7f00b5k@google.com",
+      "start": "2027-04-14",
+      "endExclusive": "2027-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20270415_s6dp8nlpd6rar4iaie2h71tneo@google.com",
+      "start": "2027-04-15",
+      "endExclusive": "2027-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20270501_i9o1denfngg8rrai4lgsrp5ul8@google.com",
+      "start": "2027-05-01",
+      "endExclusive": "2027-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20270503_gn0h44a0s3mpgrm4ftc6jpmg84@google.com",
+      "start": "2027-05-03",
+      "endExclusive": "2027-05-04",
+      "title": "วันหยุดชดเชยวันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20270504_l9mpub1b2bihnos48e82fjihrk@google.com",
+      "start": "2027-05-04",
+      "endExclusive": "2027-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20270520_n93komrpvtc6tlh9bnsbj5o73c@google.com",
+      "start": "2027-05-20",
+      "endExclusive": "2027-05-21",
+      "title": "วันวิสาขบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20270603_pml0bgmiaait6n30hb0r8okdd0@google.com",
+      "start": "2027-06-03",
+      "endExclusive": "2027-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20270718_ipfj9fudstu8c9kr1vfeised88@google.com",
+      "start": "2027-07-18",
+      "endExclusive": "2027-07-19",
+      "title": "วันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20270719_17gd81lki12v0civdblaslsql8@google.com",
+      "start": "2027-07-19",
+      "endExclusive": "2027-07-20",
+      "title": "วันหยุดชดเชยวันอาสาฬหบูชา",
+      "kind": "public"
+    },
+    {
+      "id": "20270728_dqnkh8u99g4pge13vh219qeqt4@google.com",
+      "start": "2027-07-28",
+      "endExclusive": "2027-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20270812_jv4cq3so19qetbmuuta171224c@google.com",
+      "start": "2027-08-12",
+      "endExclusive": "2027-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20271013_v5qeqr7gn76q0aan98v51m67j8@google.com",
+      "start": "2027-10-13",
+      "endExclusive": "2027-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20271023_i7uk1n9bf0aqf5gmnnaimaa8mg@google.com",
+      "start": "2027-10-23",
+      "endExclusive": "2027-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20271025_bo30fahh3fr4g3akigf73sba1g@google.com",
+      "start": "2027-10-25",
+      "endExclusive": "2027-10-26",
+      "title": "วันหยุดชดเชยวันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20271205_r2nsiuu7kd33sdie93gh09a0bg@google.com",
+      "start": "2027-12-05",
+      "endExclusive": "2027-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20271206_aiai7g1d0kh2teh2pdrmavq3k4@google.com",
+      "start": "2027-12-06",
+      "endExclusive": "2027-12-07",
+      "title": "วันหยุดชดเชยวันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20271210_r18ittg1dvp5tlnplrq83hqcsc@google.com",
+      "start": "2027-12-10",
+      "endExclusive": "2027-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20271224_vkroom903jluhmene91kb7is8s@google.com",
+      "start": "2027-12-24",
+      "endExclusive": "2027-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20271225_ncbcfeu545gr8efn1473jc14a4@google.com",
+      "start": "2027-12-25",
+      "endExclusive": "2027-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20271231_q2tuipb0hsvgjgjufba6cjfles@google.com",
+      "start": "2027-12-31",
+      "endExclusive": "2028-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20280101_qdl4g5qgja2v2bas237d7b6d9o@google.com",
+      "start": "2028-01-01",
+      "endExclusive": "2028-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20280103_r30c4rc152mn9hj497h0d3mdlg@google.com",
+      "start": "2028-01-03",
+      "endExclusive": "2028-01-04",
+      "title": "วันหยุดชดเชยวันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20280126_rvgkrk26g232iccr6jgbqpch6o@google.com",
+      "start": "2028-01-26",
+      "endExclusive": "2028-01-27",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20280127_0oe6bnddd5kh7dfrrlh60kavf4@google.com",
+      "start": "2028-01-27",
+      "endExclusive": "2028-01-28",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20280128_gh3n84ju01sdbfh7qefgmm18r4@google.com",
+      "start": "2028-01-28",
+      "endExclusive": "2028-01-29",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20280214_6jgv7dg1iailiodtos6pllosi0@google.com",
+      "start": "2028-02-14",
+      "endExclusive": "2028-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20280406_beo8igqcj22qnf8janam60j31g@google.com",
+      "start": "2028-04-06",
+      "endExclusive": "2028-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20280413_289ossmr20qkkhqc9a1opar0oo@google.com",
+      "start": "2028-04-13",
+      "endExclusive": "2028-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20280414_drdcukhle656bdra8kpea0a6s8@google.com",
+      "start": "2028-04-14",
+      "endExclusive": "2028-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20280415_qqqits0bhupu27bpb60br74ti8@google.com",
+      "start": "2028-04-15",
+      "endExclusive": "2028-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20280501_qoe28lt1bm5av850rc502hrb1k@google.com",
+      "start": "2028-05-01",
+      "endExclusive": "2028-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20280504_n91rsr0h8o91imqd87cl6m9inc@google.com",
+      "start": "2028-05-04",
+      "endExclusive": "2028-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20280603_3an6vve70hc0c05cs2m7o52ji4@google.com",
+      "start": "2028-06-03",
+      "endExclusive": "2028-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20280605_b2l91ur7jvqo9t0on6qn4kdpfk@google.com",
+      "start": "2028-06-05",
+      "endExclusive": "2028-06-06",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20280728_gdtsdaajcsqsjllbj3cijag9pc@google.com",
+      "start": "2028-07-28",
+      "endExclusive": "2028-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20280811_dqbg8kr5ugkkactuo4e7m6lnq0@google.com",
+      "start": "2028-08-11",
+      "endExclusive": "2028-08-12",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20280812_1ub69t4doc91sj7gitid78uju8@google.com",
+      "start": "2028-08-12",
+      "endExclusive": "2028-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20281013_t81efveefrmjc045modq45hi50@google.com",
+      "start": "2028-10-13",
+      "endExclusive": "2028-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20281023_4neq4u41v8ej864cnl3qkgie8s@google.com",
+      "start": "2028-10-23",
+      "endExclusive": "2028-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20281205_7i7o0hg274lgpm5d77qik0s0bc@google.com",
+      "start": "2028-12-05",
+      "endExclusive": "2028-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20281210_5pmafj75i82v1lm5ji05bf8594@google.com",
+      "start": "2028-12-10",
+      "endExclusive": "2028-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20281211_3sc14ld9lortl34lu341be0noc@google.com",
+      "start": "2028-12-11",
+      "endExclusive": "2028-12-12",
+      "title": "ชดเชยวันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20281224_bmfgp33vvvke1rnaait8isn4qo@google.com",
+      "start": "2028-12-24",
+      "endExclusive": "2028-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20281225_ooq0lqgdjsicopu5id35tp2v50@google.com",
+      "start": "2028-12-25",
+      "endExclusive": "2028-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20281231_1o5513bf6vt877gv7fnqj7m2sg@google.com",
+      "start": "2028-12-31",
+      "endExclusive": "2029-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20290101_ebi7nr7eqg6nt5u9mvqktaptbo@google.com",
+      "start": "2029-01-01",
+      "endExclusive": "2029-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20290213_rm99ekh0l9g1gddiuv34astfak@google.com",
+      "start": "2029-02-13",
+      "endExclusive": "2029-02-14",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20290214_e6sen7fpgorer3l750gii74f0s@google.com",
+      "start": "2029-02-14",
+      "endExclusive": "2029-02-15",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20290214_37ojaou1bo5773rni7grk3mdj8@google.com",
+      "start": "2029-02-14",
+      "endExclusive": "2029-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20290215_ibuhh2rq6tql1a0doc86vr0lcs@google.com",
+      "start": "2029-02-15",
+      "endExclusive": "2029-02-16",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20290406_klllrrm0j2bn0it4q4thupgsq0@google.com",
+      "start": "2029-04-06",
+      "endExclusive": "2029-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20290413_4ks4h6qotgs0g3egi93jq15lrs@google.com",
+      "start": "2029-04-13",
+      "endExclusive": "2029-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20290414_8huueakjflo9kkjvgg159p8cfc@google.com",
+      "start": "2029-04-14",
+      "endExclusive": "2029-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20290415_f4u1aftcg2g6lmqd7ldot5iom0@google.com",
+      "start": "2029-04-15",
+      "endExclusive": "2029-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20290416_k0j2lb8gc8ulva1ta08navoeu8@google.com",
+      "start": "2029-04-16",
+      "endExclusive": "2029-04-17",
+      "title": "วันหยุดชดเชยวันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20290501_r75of5jtknp4gmos30bq9e78ho@google.com",
+      "start": "2029-05-01",
+      "endExclusive": "2029-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20290504_8vf2d9kn2tqiba6rlkqinu3ql0@google.com",
+      "start": "2029-05-04",
+      "endExclusive": "2029-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20290603_vqmbtrvg5vukb1adfdjqmkhu3s@google.com",
+      "start": "2029-06-03",
+      "endExclusive": "2029-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20290604_toqvseijd3p9jf72kdjuuu0fho@google.com",
+      "start": "2029-06-04",
+      "endExclusive": "2029-06-05",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20290728_5g379et0vgei6nqb7v2m7blo3s@google.com",
+      "start": "2029-07-28",
+      "endExclusive": "2029-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20290730_6siebi8m1evpuhoe26ttpr4gg8@google.com",
+      "start": "2029-07-30",
+      "endExclusive": "2029-07-31",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20290812_2i8u7mu0hou0vms9g3tumr1vec@google.com",
+      "start": "2029-08-12",
+      "endExclusive": "2029-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20290813_d36gk6sm7tj8chnhno0mikl6bc@google.com",
+      "start": "2029-08-13",
+      "endExclusive": "2029-08-14",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20291013_onc9mj7vmiqhpir6qk1k6nittc@google.com",
+      "start": "2029-10-13",
+      "endExclusive": "2029-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20291015_lbvgs6521knvr8murmp0ttq5a0@google.com",
+      "start": "2029-10-15",
+      "endExclusive": "2029-10-16",
+      "title": "วันหยุดชดเชยวันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20291023_9q9vsv5ba51k4aer6mpb2o4imk@google.com",
+      "start": "2029-10-23",
+      "endExclusive": "2029-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20291205_7u2dqokfbc446cauflr625fqg0@google.com",
+      "start": "2029-12-05",
+      "endExclusive": "2029-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20291210_51putv9bqsd60b4ugi2be6edbk@google.com",
+      "start": "2029-12-10",
+      "endExclusive": "2029-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20291224_4bi3cfhj5ngp50bq4td314trqs@google.com",
+      "start": "2029-12-24",
+      "endExclusive": "2029-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20291225_0h6uk5j7povdqdiqm2nrb8pc5k@google.com",
+      "start": "2029-12-25",
+      "endExclusive": "2029-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20291231_t3kuuae4jrh9nhrum3bh7bfjq0@google.com",
+      "start": "2029-12-31",
+      "endExclusive": "2030-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20300101_r6am36eerlss111to4pitfe2jc@google.com",
+      "start": "2030-01-01",
+      "endExclusive": "2030-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20300203_h0vrv0d40jegieiaihp7delekk@google.com",
+      "start": "2030-02-03",
+      "endExclusive": "2030-02-04",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20300204_lj2rbdjrrb78jn7vg4bjcbgci0@google.com",
+      "start": "2030-02-04",
+      "endExclusive": "2030-02-05",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20300205_sb0dgg6jnb9kvf7qn1bckk0q5c@google.com",
+      "start": "2030-02-05",
+      "endExclusive": "2030-02-06",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20300214_k2nb3cj1hd46sn81hcbs2g22jc@google.com",
+      "start": "2030-02-14",
+      "endExclusive": "2030-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20300406_p9itpblat7dvris71p5scjqb38@google.com",
+      "start": "2030-04-06",
+      "endExclusive": "2030-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20300408_7dhaddh3baipo3fcoi7id229uk@google.com",
+      "start": "2030-04-08",
+      "endExclusive": "2030-04-09",
+      "title": "วันหยุดชดเชยวันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20300413_4digtmv2552vh22h9hi81i0ol8@google.com",
+      "start": "2030-04-13",
+      "endExclusive": "2030-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20300414_1gobqkfdscf84dok6pdudjonro@google.com",
+      "start": "2030-04-14",
+      "endExclusive": "2030-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20300415_ro6nsjno4eomonut10pm3698bg@google.com",
+      "start": "2030-04-15",
+      "endExclusive": "2030-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20300416_06e2alqre643un37ji24m71sh8@google.com",
+      "start": "2030-04-16",
+      "endExclusive": "2030-04-17",
+      "title": "วันหยุดชดเชยวันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20300501_etef0vpm2nveqkf1idsl98s8m4@google.com",
+      "start": "2030-05-01",
+      "endExclusive": "2030-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20300504_ebj22qggofdcn3lb86r3g99480@google.com",
+      "start": "2030-05-04",
+      "endExclusive": "2030-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20300506_4rdo1cvkvrr9eheiso5c3uaa3c@google.com",
+      "start": "2030-05-06",
+      "endExclusive": "2030-05-07",
+      "title": "วันหยุดชดเชยวันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20300603_dvurguci2kq4ofunj857ss64k8@google.com",
+      "start": "2030-06-03",
+      "endExclusive": "2030-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20300728_gdej83covqp6nu7ggr9l8rc1qg@google.com",
+      "start": "2030-07-28",
+      "endExclusive": "2030-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20300729_h7acnhjqbh1uah4tm24s1ijetc@google.com",
+      "start": "2030-07-29",
+      "endExclusive": "2030-07-30",
+      "title": "วันหยุดชดเชยวันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20300812_iooabobec6ffs42a190gmq5ifc@google.com",
+      "start": "2030-08-12",
+      "endExclusive": "2030-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20301013_5bhe3ou9qgfeh4uippmulfq4jg@google.com",
+      "start": "2030-10-13",
+      "endExclusive": "2030-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20301014_20circji39qe81jch8no24tmds@google.com",
+      "start": "2030-10-14",
+      "endExclusive": "2030-10-15",
+      "title": "วันหยุดชดเชยวันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20301023_4bqlrcnqd5eg23gkov8m04mn2g@google.com",
+      "start": "2030-10-23",
+      "endExclusive": "2030-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20301205_ru9d0egj06h1orl06puvvqm8a4@google.com",
+      "start": "2030-12-05",
+      "endExclusive": "2030-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20301210_9isu8ecqat5nbs0rvonngu37hs@google.com",
+      "start": "2030-12-10",
+      "endExclusive": "2030-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20301224_3o81g8v74s0tqrd1son35hlt3g@google.com",
+      "start": "2030-12-24",
+      "endExclusive": "2030-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20301225_k3ktvredmvkmeii2k14nuh52g4@google.com",
+      "start": "2030-12-25",
+      "endExclusive": "2030-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20301231_eoc07ul1abjv6sgj4iq644vokk@google.com",
+      "start": "2030-12-31",
+      "endExclusive": "2031-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    },
+    {
+      "id": "20310101_hqog6egt745o8nfnhfgvbmheq4@google.com",
+      "start": "2031-01-01",
+      "endExclusive": "2031-01-02",
+      "title": "วันขื้นปีใหม่",
+      "kind": "public"
+    },
+    {
+      "id": "20310123_ctt2rdvi4poslfjjmt288qvof8@google.com",
+      "start": "2031-01-23",
+      "endExclusive": "2031-01-24",
+      "title": "วันตรุษจีน",
+      "kind": "observance"
+    },
+    {
+      "id": "20310124_l5egp17afs2r45em649m71rk6s@google.com",
+      "start": "2031-01-24",
+      "endExclusive": "2031-01-25",
+      "title": "วันตรุษจีน (วันที่ 2)",
+      "kind": "observance"
+    },
+    {
+      "id": "20310125_qr9p5ju6ampckqik7hs00njqeg@google.com",
+      "start": "2031-01-25",
+      "endExclusive": "2031-01-26",
+      "title": "วันตรุษจีน (วันที่ 3)",
+      "kind": "observance"
+    },
+    {
+      "id": "20310214_bhfikij0cslpu8iotpg4qamrsg@google.com",
+      "start": "2031-02-14",
+      "endExclusive": "2031-02-15",
+      "title": "วันวาเลนไทน์",
+      "kind": "observance"
+    },
+    {
+      "id": "20310406_f72eaonu00eqtjd8fvqmt6ftlk@google.com",
+      "start": "2031-04-06",
+      "endExclusive": "2031-04-07",
+      "title": "วันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20310407_klci4cl2e1gve0uec7gco475dc@google.com",
+      "start": "2031-04-07",
+      "endExclusive": "2031-04-08",
+      "title": "วันหยุดชดเชยวันจักรี",
+      "kind": "public"
+    },
+    {
+      "id": "20310413_ei3ffnnllrhluogol54l8m3q1s@google.com",
+      "start": "2031-04-13",
+      "endExclusive": "2031-04-14",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20310414_savs20dbo100oao0174m5l9do8@google.com",
+      "start": "2031-04-14",
+      "endExclusive": "2031-04-15",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20310415_11hgbh71bsoc21612d8o2akq34@google.com",
+      "start": "2031-04-15",
+      "endExclusive": "2031-04-16",
+      "title": "วันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20310416_ar7afcu7bppnsjvjojkkkb0ivk@google.com",
+      "start": "2031-04-16",
+      "endExclusive": "2031-04-17",
+      "title": "วันหยุดชดเชยวันสงกรานต์",
+      "kind": "public"
+    },
+    {
+      "id": "20310501_5ielnm7jg310m3kma1n92j2af8@google.com",
+      "start": "2031-05-01",
+      "endExclusive": "2031-05-02",
+      "title": "วันแรงงานแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20310504_h72763rhljjjflh61nifhlc53k@google.com",
+      "start": "2031-05-04",
+      "endExclusive": "2031-05-05",
+      "title": "วันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20310505_i081oslna77do4mo8fis90g78c@google.com",
+      "start": "2031-05-05",
+      "endExclusive": "2031-05-06",
+      "title": "วันหยุดชดเชยวันฉัตรมงคล",
+      "kind": "public"
+    },
+    {
+      "id": "20310603_b6kil3qv4hq8lel8g30k62l86o@google.com",
+      "start": "2031-06-03",
+      "endExclusive": "2031-06-04",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสุทิดา",
+      "kind": "public"
+    },
+    {
+      "id": "20310728_omefi8khbr245nq1upei92o5b8@google.com",
+      "start": "2031-07-28",
+      "endExclusive": "2031-07-29",
+      "title": "วันเฉลิมพระชนมพรรษา สมเด็จพระเจ้าอยู่หัวมหาวชิราลงกรณ บดินทรเทพยวรางกูร",
+      "kind": "public"
+    },
+    {
+      "id": "20310812_1n218dqpdlaj0jsb2dsackgtdk@google.com",
+      "start": "2031-08-12",
+      "endExclusive": "2031-08-13",
+      "title": "วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง และวันแม่แห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20311013_3r8d9h15jaoa2pbmletvvqmsag@google.com",
+      "start": "2031-10-13",
+      "endExclusive": "2031-10-14",
+      "title": "วันคล้ายวันสวรรคตของพระบาทสมเด็จพระปรมินทรมหาภูมิพลอดุลยเดชบรมนาถบพิตร",
+      "kind": "public"
+    },
+    {
+      "id": "20311023_32n4ghpmdkas3b16dot747ktn4@google.com",
+      "start": "2031-10-23",
+      "endExclusive": "2031-10-24",
+      "title": "วันปิยมหาราช",
+      "kind": "public"
+    },
+    {
+      "id": "20311205_mmu205pnoftcedcmj82qf821kg@google.com",
+      "start": "2031-12-05",
+      "endExclusive": "2031-12-06",
+      "title": "วันคล้ายวันพระบรมราชสมภพ พระบาทสมเด็จพระบรมชนกาธิเบศรมหาภูมิพลอดุลยเดชมหาราช บรมนาถบพิตร และวันพ่อแห่งชาติ",
+      "kind": "public"
+    },
+    {
+      "id": "20311210_i3e1nqsk1cub324jr8ntmmu7rs@google.com",
+      "start": "2031-12-10",
+      "endExclusive": "2031-12-11",
+      "title": "​วันรัฐธรรมนูญ",
+      "kind": "public"
+    },
+    {
+      "id": "20311224_kh97bgbbnbudsl6vaunectm18g@google.com",
+      "start": "2031-12-24",
+      "endExclusive": "2031-12-25",
+      "title": "วันคริสต์มาสอีฟ",
+      "kind": "observance"
+    },
+    {
+      "id": "20311225_21obclum82n0595tg7s9fu4f4o@google.com",
+      "start": "2031-12-25",
+      "endExclusive": "2031-12-26",
+      "title": "วันคริสต์มาส",
+      "kind": "observance"
+    },
+    {
+      "id": "20311231_7ho1psi8rnqsdbcilp7chtj8c0@google.com",
+      "start": "2031-12-31",
+      "endExclusive": "2032-01-01",
+      "title": "วันสิ้นปี",
+      "kind": "public"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "completed": true,
+  "results": [],
+  "errors": [],
+  "contrasts": [],
+  "limitations": [
+    "Headless Edge with touch emulation; physical Safari/iPhone and scanner UAT remain pending",
+    "Web materials/custom vectors, not native Apple framework rendering",
+    "Public holiday snapshot; university closure days are not inferred"
+  ],
+  "screensOnly": true
+}

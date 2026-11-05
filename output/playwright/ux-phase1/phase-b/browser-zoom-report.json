@@ -1,0 +1,91 @@
+{
+  "completed": true,
+  "method": "Isolated Edge persistent profile partition.default_zoom_level; no CSS zoom, pinch zoom or device-metrics override",
+  "baseline": [
+    {
+      "zoom": 1,
+      "route": "record",
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 1,
+      "route": "worklogs",
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 1,
+      "route": "classrooms",
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 1,
+      "route": "imports",
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    }
+  ],
+  "zoomed": [
+    {
+      "zoom": 2,
+      "route": "record",
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 2,
+      "route": "worklogs",
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 2,
+      "route": "classrooms",
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    },
+    {
+      "zoom": 2,
+      "route": "imports",
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "root": "16px",
+      "cssZoom": "1",
+      "overflow": false
+    }
+  ],
+  "limitations": [
+    "Headless Edge only; Safari/iOS and device UAT pending"
+  ]
+}

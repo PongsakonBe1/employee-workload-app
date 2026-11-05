@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "name": "30 views desktop/light",
+      "status": "passed"
+    },
+    {
+      "name": "30 views desktop/dark",
+      "status": "passed"
+    },
+    {
+      "name": "30 views mobile/light",
+      "status": "passed"
+    },
+    {
+      "name": "30 views mobile/dark",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "renderedViews": 120
+}

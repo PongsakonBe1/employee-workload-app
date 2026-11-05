@@ -1,0 +1,103 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "name": "Four calendar views retain anchor, semester, room and activity filters",
+      "status": "passed"
+    },
+    {
+      "name": "Navigation advances a day, week or calendar month without changing the chosen view",
+      "status": "passed"
+    },
+    {
+      "name": "Month occurrences respect valid dates, preserve identity and show the clicked occurrence date",
+      "status": "passed"
+    },
+    {
+      "name": "Public holidays are shared with work history, observances are opt-in and toggles never remove schedules",
+      "status": "passed"
+    },
+    {
+      "name": "Each event kind has readable light/dark text and a dark surface in dark mode",
+      "status": "passed"
+    },
+    {
+      "name": "Staff sees all views and holiday controls without admin edit/import actions",
+      "status": "passed"
+    },
+    {
+      "name": "Solid and increased-contrast settings remove glass; reduced motion cancels feedback",
+      "status": "passed"
+    },
+    {
+      "name": "Unavailable holiday data is explicit, schedules remain usable and retry restores the layer",
+      "status": "passed"
+    },
+    {
+      "name": "375px: calendar controls and every view reflow with touch targets",
+      "status": "passed"
+    },
+    {
+      "name": "390px: calendar controls and every view reflow with touch targets",
+      "status": "passed"
+    },
+    {
+      "name": "430px: calendar controls and every view reflow with touch targets",
+      "status": "passed"
+    },
+    {
+      "name": "768px: calendar controls and every view reflow with touch targets",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "contrasts": [
+    {
+      "theme": "light",
+      "kind": "classroom",
+      "fg": "rgb(76, 35, 127)",
+      "bg": "rgb(238, 229, 251)",
+      "ratio": 9.295870669696399
+    },
+    {
+      "theme": "light",
+      "kind": "dl",
+      "fg": "rgb(18, 77, 129)",
+      "bg": "rgb(224, 239, 252)",
+      "ratio": 7.454130221751557
+    },
+    {
+      "theme": "light",
+      "kind": "exam",
+      "fg": "rgb(116, 64, 13)",
+      "bg": "rgb(255, 240, 216)",
+      "ratio": 7.538008337642871
+    },
+    {
+      "theme": "dark",
+      "kind": "classroom",
+      "fg": "rgb(237, 221, 255)",
+      "bg": "rgb(59, 36, 88)",
+      "ratio": 10.376896585699297
+    },
+    {
+      "theme": "dark",
+      "kind": "dl",
+      "fg": "rgb(210, 237, 255)",
+      "bg": "rgb(23, 59, 85)",
+      "ratio": 9.646481277406547
+    },
+    {
+      "theme": "dark",
+      "kind": "exam",
+      "fg": "rgb(255, 228, 193)",
+      "bg": "rgb(76, 51, 27)",
+      "ratio": 9.528481739250564
+    }
+  ],
+  "limitations": [
+    "Headless Edge with touch emulation; physical Safari/iPhone and scanner UAT remain pending",
+    "Web materials/custom vectors, not native Apple framework rendering",
+    "Public holiday snapshot; university closure days are not inferred"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "completed": true,
+  "calendarGroups": 12,
+  "preservedFlowGroups": 22,
+  "legacyFlowGroups": 11,
+  "renderedViews": 120,
+  "accessibilityStates": 300,
+  "accessibilityChecks": 5,
+  "opaqueColorPairs": 32,
+  "minimumOpaqueContrast": 5.57,
+  "eventContrast": [
+    {
+      "theme": "light",
+      "kind": "classroom",
+      "ratio": 9.295870669696399
+    },
+    {
+      "theme": "light",
+      "kind": "dl",
+      "ratio": 7.454130221751557
+    },
+    {
+      "theme": "light",
+      "kind": "exam",
+      "ratio": 7.538008337642871
+    },
+    {
+      "theme": "dark",
+      "kind": "classroom",
+      "ratio": 10.376896585699297
+    },
+    {
+      "theme": "dark",
+      "kind": "dl",
+      "ratio": 9.646481277406547
+    },
+    {
+      "theme": "dark",
+      "kind": "exam",
+      "ratio": 9.528481739250564
+    }
+  ],
+  "browserZoom200": true,
+  "holidaySnapshot": {
+    "events": 322,
+    "years": [
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025",
+      "2026",
+      "2027",
+      "2028",
+      "2029",
+      "2030",
+      "2031"
+    ],
+    "fetchedAt": "2026-11-05T16:26:06.845Z"
+  },
+  "limitations": [
+    "Headless Edge with touch emulation; physical Safari/iPhone and scanner UAT remain pending",
+    "Web materials/custom vectors, not native Apple framework rendering",
+    "Public holiday snapshot; university closure days are not inferred"
+  ]
+}

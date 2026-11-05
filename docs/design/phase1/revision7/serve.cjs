@@ -7,6 +7,8 @@ const files={
  '/':['index.html','text/html'],'/index.html':['index.html','text/html'],'/gallery.html':['gallery.html','text/html'],
  '/design.css':['design.css','text/css'],'/layout.js':['layout.js','text/javascript'],'/interactions.js':['interactions.js','text/javascript'],
  '/flow-fixes.js':['flow-fixes.js','text/javascript'],'/flow-fixes.css':['flow-fixes.css','text/css'],
+ '/calendar-data.js':['calendar-data.js','text/javascript'],'/calendar-b.js':['calendar-b.js','text/javascript'],'/foundation-b.js':['foundation-b.js','text/javascript'],'/foundation-b.css':['foundation-b.css','text/css'],'/holidays.json':['data/th-holidays.json','application/json'],
+ '/phase-b-month-desktop.png':['../../../../output/playwright/ux-phase1/phase-b/month-desktop-dark.png','image/png'],'/phase-b-month-mobile.png':['../../../../output/playwright/ux-phase1/phase-b/month-mobile-dark.png','image/png'],
  '/revision6/glass.css':['../revision6/glass.css','text/css'],'/revision6/workspace.js':['../revision6/workspace.js','text/javascript'],'/revision6/motion.js':['../revision6/motion.js','text/javascript'],
  '/revision3/styles.css':['../revision3/styles.css','text/css'],'/revision3/app.js':['../revision3/app.js','text/javascript'],
  '/revision4/catalog.js':['../revision4/catalog.js','text/javascript'],'/revision4/features.js':['../revision4/features.js','text/javascript'],

@@ -9,11 +9,11 @@ async function record(browser,mobile){
  const tap=async target=>{await target.scrollIntoViewIfNeeded();const r=await target.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2,{steps:10});await page.mouse.click(r.x+r.width/2,r.y+r.height/2,{delay:85});await pause(650);};
  const nav=id=>tap(page.locator((mobile?'#mobile-nav':'#app-sidebar')+` a[href="#/${id}"]`));
  try{
-  await page.goto('http://127.0.0.1:4197/#/record');await page.waitForFunction(()=>document.documentElement.dataset.reviewReady==='7');await pause(700);
+  await page.goto('http://127.0.0.1:4197/#/record');await page.waitForFunction(()=>document.documentElement.dataset.batchBReady==='true'&&document.documentElement.dataset.calendarReady==='true');await pause(700);
   await page.screenshot({path:path.join(output,`motion-poster-${mobile?'mobile':'desktop'}.png`)});
   await tap(page.locator('[data-group="record-mode"][data-value="manual"]'));await tap(page.locator('[data-group="record-mode"][data-value="quick"]'));
   await tap(page.locator('[data-action="template-run"][data-id="TPL-0"]'));await pause(500);await tap(act('room-instant7'));await tap(act('undo-room7'));
-  await nav('classrooms');await pause(500);await tap(act('schedule-detail6'));await pause(700);await page.keyboard.press('Escape');await pause(450);
+  await nav('classrooms');await pause(500);await tap(page.locator('[data-group="schedule-mode6"][data-value="month"]'));await tap(page.locator('[data-group="schedule-mode6"][data-value="day"]'));await tap(act('schedule-detail-b'));await pause(700);await page.keyboard.press('Escape');await pause(450);
   if(mobile){await tap(act('account7'));await tap(page.locator('#sheet a[href="#/worklogs"]'));}else await nav('worklogs');
   await tap(page.locator(mobile?'.worklog-mobile-list [data-action="open-log5"]':'.worklog-desktop-table [data-action="open-log5"]').first());await pause(700);
   if(mobile){await page.keyboard.press('Escape');await pause(350);}

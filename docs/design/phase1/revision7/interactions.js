@@ -72,6 +72,7 @@ let accessFrameA=0;
 addEventListener('resize',()=>{cancelAnimationFrame(accessFrameA);accessFrameA=requestAnimationFrame(applyAccessA);});
 render=function(options={}){renderBase7(options);enhance7();};
 document.addEventListener('pointerover',event=>{
+ if(document.documentElement.dataset.designBatch==='B')return;
  if(event.pointerType==='touch'||reduceMotion6())return;
  const control=event.target.closest('.quick-card,.room-actions7 button');
  if(!control||control.contains(event.relatedTarget))return;
@@ -79,6 +80,7 @@ document.addEventListener('pointerover',event=>{
  animate6(symbol,[{transform:'translateY(0)'},{transform:'translateY(-2px)',offset:.4},{transform:'translateY(0)'}],{duration:240});
 });
 document.addEventListener('click',event=>{
+ if(document.documentElement.dataset.designBatch==='B')return;
  const b=event.target.closest('[data-action="notifications"]');
  if(b)animate6($('.icon',b),[{transform:'rotate(0)'},{transform:'rotate(-10deg)',offset:.3},{transform:'rotate(7deg)',offset:.65},{transform:'rotate(0)'}],{duration:280});
 });

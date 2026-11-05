@@ -41,7 +41,7 @@
       "status": "passed"
     },
     {
-      "name": "Symbol feedback is finite and Reduce Motion cancels active feedback",
+      "name": "Purposeful press feedback is finite and Reduce Motion cancels active feedback",
       "status": "passed"
     },
     {
