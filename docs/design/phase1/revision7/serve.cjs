@@ -1,5 +1,8 @@
 /* Explicit localhost-only design routes. No production data, document uploads or package downloads. */
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+// Expose only the existing static product suggestions, never history or user data.
+const suggestionData=import(require('node:url').pathToFileURL(path.resolve(__dirname,'../../../../frontend/lib/commentSuggestions.js')).href)
+ .then(module=>JSON.stringify(module.commentSuggestionMap)).catch(()=>null);
 const files={
  '/':['index.html','text/html'],'/index.html':['index.html','text/html'],'/gallery.html':['gallery.html','text/html'],
  '/design.css':['design.css','text/css'],'/layout.js':['layout.js','text/javascript'],'/interactions.js':['interactions.js','text/javascript'],
@@ -13,6 +16,9 @@ const files={
 http.createServer((req,res)=>{
  if(req.method!=='GET'){res.writeHead(405);return res.end();}
  let pathname;try{pathname=new URL(req.url,'http://127.0.0.1').pathname;}catch{res.writeHead(400);return res.end();}
+ if(pathname==='/comment-suggestions.json'){
+  suggestionData.then(data=>{res.writeHead(data?200:503,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(data||'{}');});return;
+ }
  let entry=files[pathname];
  if(!entry&&/^\/output\/playwright\/ux-phase1\/revision7\/[a-z-]+\.(png|webm|mp4)$/.test(pathname)){
   const ext=pathname.split('.').at(-1);entry=['../../../../output/playwright/ux-phase1/revision7/'+pathname.split('/').at(-1),ext==='png'?'image/png':ext==='mp4'?'video/mp4':'video/webm'];

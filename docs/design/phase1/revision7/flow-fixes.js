@@ -1,6 +1,23 @@
 /* Review 08, batch 1: isolated usability fixes over the existing synthetic model. */
 'use strict';
-const ui8={logDay:null,validationFrame:0};
+const ui8={logDay:null,validationFrame:0,commentSuggestions:null,suggestionsError:false};
+
+const manualPanelBase8=manualPanel;
+manualPanel=function(){
+ const choices=ui8.commentSuggestions?.[f4.task]||[],selected=ui5.manualDraft?.['manual-notes']||'';
+ const suggestions=ui8.commentSuggestions?choices.length?`<div class="suggestions" role="group" aria-label="คำแนะนำรายละเอียดตามหัวข้อรอง">${choices.map(text=>button(text,'comment-suggestion','','',`type="button" data-text="${e5(text)}" aria-pressed="${selected===text}"`)).join('')}</div>`:'':`<p class="caption" role="status">${ui8.suggestionsError?'โหลดคำแนะนำเดิมไม่สำเร็จ กรุณาโหลดใหม่':'กำลังโหลดคำแนะนำตามหัวข้อรอง'}</p>`;
+ return manualPanelBase8().replace(/<div class="suggestions">[\s\S]*?<\/div>/,suggestions);
+};
+const suggestionActionBase8=actions['comment-suggestion'];
+actions['comment-suggestion']=button=>{
+ suggestionActionBase8(button);
+ $$('#manual4 .suggestions button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+};
+fetch('/comment-suggestions.json',{cache:'no-store'}).then(response=>{
+ if(!response.ok)throw Error('Suggestions unavailable');return response.json();
+}).then(suggestions=>{ui8.commentSuggestions=suggestions;document.documentElement.dataset.suggestionsReady='true';})
+ .catch(()=>{ui8.suggestionsError=true;})
+ .finally(()=>{if(['record','new-log'].includes(state.route)&&state.recordMode==='manual'&&!$('#sheet').open){stashManual5();render();}});
 
 // Form pickers are dialogs, not global toolbar menus anchored at the screen edge.
 const taskPickerBase8=actions['task-picker'];
@@ -46,6 +63,11 @@ actions['combo-review']=button=>{
 
 // Student IDs remain strings so leading zeroes survive scanning and saving.
 const studentIdPattern8=/^[0-9]{13}$/;
+// Complete synthetic borrowed-device fixtures; never load real student records here.
+state.devices.filter(device=>device.borrowed).forEach((device,index)=>{
+ device.borrower8={studentId:String(index+1).padStart(13,'0'),date:f4.date,time:'09:00'};
+});
+function borrower8(device){return device?.borrower8||null;}
 function studentIdError8(value){
  if(!value)return 'กรอกรหัสนักศึกษา 13 หลัก';
  if(/[^0-9]/.test(value))return 'ใช้เฉพาะตัวเลข 0–9 จำนวน 13 หลัก กรุณาตรวจภาษาแป้นพิมพ์';
@@ -71,19 +93,42 @@ equipmentPicker=function(type,location){
   }
  });
 };
+const selectDeviceBase8=actions['select-device'];
+actions['select-device']=button=>{
+ selectDeviceBase8(button);
+ const device=state.devices.find(item=>item.id===state.selectedDevice),input=$('#device-recipient');
+ const stored=borrower8(device),returning=!!device?.borrowed;
+ input.value=returning?(stored?.studentId||''):'';
+ input.readOnly=returning;input.required=!returning;
+ input.labels[0].textContent=returning?'รหัสผู้ยืม':'รหัสนักศึกษา (ผู้รับบริการ) *';
+ $('#student-id-help8').textContent=returning?(stored?`จากรายการยืม ${thaiDate5(stored.date)} ${stored.time} · ไม่ต้องกรอกซ้ำ`:'ไม่พบข้อมูลผู้ยืม กรุณาตรวจประวัติอุปกรณ์'):'พิมพ์หรือสแกนรหัสนักศึกษา 13 หลัก ใช้ตัวเลข 0–9 เท่านั้น';
+ $('#student-id-error8').textContent='';input.removeAttribute('aria-invalid');input.dataset.rejected8='';
+};
 const confirmDeviceBase8=actions['confirm-device'];
 actions['confirm-device']=button=>{
- const input=$('#device-recipient');
+ const input=$('#device-recipient'),device=state.devices.find(item=>item.id===state.selectedDevice);
+ if(!device)return;
+ if(device.borrowed){
+  const stored=borrower8(device);
+  if(!stored){toast('ไม่พบข้อมูลผู้ยืม กรุณาตรวจประวัติอุปกรณ์');return;}
+  input.value=stored.studentId;confirmDeviceBase8(button);
+  if($('[name="return-condition"]'))$('.sheet-body').insertAdjacentHTML('afterbegin',`<p class="detail-note">ผู้ยืม: <strong>${e5(stored.studentId)}</strong> · ${e5(stored.time)}</p>`);
+  return;
+ }
  if(!input||!studentIdPattern8.test(input.value)){
   if(input){input.dataset.rejected8='true';focusInvalid8(input,studentIdError8(input.value),$('#student-id-error8'));}
   return;
  }
+ const studentId=input.value,count=state.logs.length;
  confirmDeviceBase8(button);
+ if(device.borrowed&&state.logs.length===count+1)device.borrower8={studentId,date:f4.date,time:f4.time};
 };
 const finishReturnBase8=actions['finish-return'];
 actions['finish-return']=button=>{
- if(!studentIdPattern8.test(f4.recipient)){toast('รหัสนักศึกษาไม่ครบ กรุณาเปิดรายการคืนใหม่');return;}
+ const device=state.devices.find(item=>item.id===state.selectedDevice),stored=borrower8(device);
+ if(!device?.borrowed||!stored||f4.recipient!==stored.studentId){toast('ข้อมูลผู้ยืมเปลี่ยนแล้ว กรุณาเปิดรายการคืนใหม่');return;}
  finishReturnBase8(button);
+ if(!device.borrowed)delete device.borrower8;
 };
 
 const commentBase8=commentDialog;
@@ -118,6 +163,7 @@ document.addEventListener('input',event=>{
  const input=event.target;
  if(!input.matches('input,textarea,select'))return;
  if(input.id==='device-recipient')return;
+ if(input.name==='manual-notes')$$('#manual4 .suggestions button').forEach(item=>item.setAttribute('aria-pressed',String(item.dataset.text===input.value)));
  if(input.value.trim()){
   input.removeAttribute('aria-invalid');
   const errorId=input.getAttribute('aria-describedby');

@@ -106,16 +106,52 @@ async function main(){
    const id='0000000000001';await input.fill(id);await act('confirm-device').click();await settle();
    assert.equal(await page.evaluate(()=>state.logs[0].recipient),id);assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
    await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),type);await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
-   await page.locator('#device-recipient').fill('000000000001');await act('confirm-device').click();
-   assert.equal(await page.locator('[name="return-condition"]').count(),0);assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
-   await page.locator('#device-recipient').fill(id);await act('confirm-device').click();
+   assert.equal(await page.locator('#device-recipient').inputValue(),id);
+   assert.equal(await page.locator('#device-recipient').evaluate(e=>e.readOnly),true);
+   await act('confirm-device').click();
    assert.ok(await page.locator('[name="return-condition"]').isVisible());
+   assert.match(await page.locator('#sheet-content').innerText(),new RegExp(id));
    await page.keyboard.press('Escape');await settle();assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
    assert.equal(await page.evaluate(id=>state.devices.find(d=>d.id===id).borrowed,device.id),true);
    await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),type);await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
-   await page.locator('#device-recipient').fill(id);await act('confirm-device').click();await act('finish-return').click();await settle();
+   assert.equal(await page.locator('#device-recipient').inputValue(),id);
+   await act('confirm-device').click();await act('finish-return').click();await settle();
    assert.equal(await page.evaluate(()=>state.logs.length),before.logs+2);assert.equal(await page.evaluate(()=>state.logs[0].recipient),id);
    assert.equal(await page.evaluate(id=>state.devices.find(d=>d.id===id).borrowed,device.id),false);
+  });
+  await test('Already borrowed fixture displays stored borrower without typing, and clears it when another item is chosen',async()=>{
+   await page.goto('about:blank');await visit('record');
+   const device=await page.evaluate(()=>state.devices.find(d=>d.borrowed));
+   await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),device.type);
+   await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
+   assert.equal(await page.locator('#device-recipient').inputValue(),device.borrower8.studentId);
+   assert.equal(await page.locator('#device-recipient').evaluate(e=>e.readOnly),true);
+   await settle();await page.screenshot({path:path.join(out,'borrower-return-desktop.png'),fullPage:true});
+   const other=await page.evaluate(type=>state.devices.find(d=>d.type===type&&!d.borrowed&&d.active&&d.condition==='normal'),device.type);
+   await page.locator(`[data-action="select-device"][data-id="${other.id}"]`).click();
+   assert.equal(await page.locator('#device-recipient').inputValue(),'');assert.equal(await page.locator('#device-recipient').evaluate(e=>e.readOnly),false);
+   await page.keyboard.press('Escape');await settle();
+  });
+  await test('Manual suggestions match all original product mappings and selection updates the saved draft',async()=>{
+   await visit('record');await page.waitForFunction(()=>document.documentElement.dataset.suggestionsReady==='true');
+   await page.locator('[data-group="record-mode"][data-value="manual"]').click();
+   const expected=(await import(require('node:url').pathToFileURL(path.resolve(__dirname,'../../../../frontend/lib/commentSuggestions.js')).href)).commentSuggestionMap;
+   for(const [task,suggestions]of Object.entries(expected)){
+    await page.evaluate(task=>{f4.task=task;render();},task);
+    assert.deepEqual(await page.locator('#manual4 [data-action="comment-suggestion"]').allTextContents(),suggestions);
+   }
+   await act('task-picker').click();await page.locator('[name="task-query"]').fill('ติดตั้ง Software');
+   await page.locator('[data-action="choose-task"]').filter({hasText:'ติดตั้ง Software'}).click();
+   await page.getByRole('button',{name:'MATLAB',exact:true}).click();
+   assert.equal(await page.locator('[name="manual-notes"]').inputValue(),'MATLAB');
+   assert.equal(await page.evaluate(()=>ui5.manualDraft['manual-notes']),'MATLAB');
+   assert.equal(await page.getByRole('button',{name:'MATLAB',exact:true}).getAttribute('aria-pressed'),'true');
+   await page.locator('[name="manual-notes"]').fill('รายละเอียดที่แก้เอง');
+   assert.equal(await page.getByRole('button',{name:'MATLAB',exact:true}).getAttribute('aria-pressed'),'false');
+   await settle();await page.screenshot({path:path.join(out,'manual-suggestions-desktop.png'),fullPage:true});
+   await page.evaluate(()=>{f4.task='ช่วยเหลือการใช้งานคอมพิวเตอร์';render();});
+   assert.equal(await page.locator('#manual4 [data-action="comment-suggestion"]').count(),0);
+   assert.equal(await page.locator('[name="manual-notes"]').inputValue(),'รายละเอียดที่แก้เอง');
   });
   await context.close();
   for(const [name,width,touch]of [['desktop',1440,false],['tablet',768,true],['mobile',390,true],['small',375,true],['large-phone',430,true]]){
@@ -129,6 +165,19 @@ async function main(){
      for(const input of inputs){assert.ok(input.left>=-1&&input.right<=input.width+1&&input.right<=input.parentRight+1,JSON.stringify(input));if(touch)assert.ok(input.font>=16,JSON.stringify(input));}
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
      if(width===390)await page.screenshot({path:path.join(out,`manual-mobile-${theme}.png`),fullPage:true});
+    }
+   });
+   await test(`${name}: original task suggestions reflow and keep draft text`,async()=>{
+    await page.waitForFunction(()=>document.documentElement.dataset.suggestionsReady==='true');
+    await page.locator('[name="manual-notes"]').fill('ร่างสังเคราะห์');
+    for(const task of ['Microsoft Authenticator','ติดตั้ง Software','ยืมหูฟัง']){
+     await page.evaluate(task=>{f4.task=task;render();},task);await settle();
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+     assert.ok(await page.locator('#manual4 [data-action="comment-suggestion"]').count());
+     assert.equal(await page.locator('[name="manual-notes"]').inputValue(),'ร่างสังเคราะห์');
+     if(touch)for(const button of await page.locator('#manual4 [data-action="comment-suggestion"]').all()){
+      const r=await button.boundingBox();assert.ok(r.width>=44&&r.height>=44&&r.x>=0&&r.x+r.width<=width+1,JSON.stringify({box:r,style:await button.evaluate(e=>({height:getComputedStyle(e).height,minHeight:getComputedStyle(e).minHeight,transform:getComputedStyle(e).transform}))}));
+     }
     }
    });
    if(width===390)await test('Mobile student ID uses numeric keyboard hint, keeps scan text visible and requires explicit confirmation',async()=>{

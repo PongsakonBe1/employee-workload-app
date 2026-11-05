@@ -34,7 +34,19 @@
       "status": "passed"
     },
     {
+      "name": "Already borrowed fixture displays stored borrower without typing, and clears it when another item is chosen",
+      "status": "passed"
+    },
+    {
+      "name": "Manual suggestions match all original product mappings and selection updates the saved draft",
+      "status": "passed"
+    },
+    {
       "name": "desktop: both themes keep editable date/time and text fields inside form and viewport",
+      "status": "passed"
+    },
+    {
+      "name": "desktop: original task suggestions reflow and keep draft text",
       "status": "passed"
     },
     {
@@ -42,7 +54,15 @@
       "status": "passed"
     },
     {
+      "name": "tablet: original task suggestions reflow and keep draft text",
+      "status": "passed"
+    },
+    {
       "name": "mobile: both themes keep editable date/time and text fields inside form and viewport",
+      "status": "passed"
+    },
+    {
+      "name": "mobile: original task suggestions reflow and keep draft text",
       "status": "passed"
     },
     {
@@ -58,7 +78,15 @@
       "status": "passed"
     },
     {
+      "name": "small: original task suggestions reflow and keep draft text",
+      "status": "passed"
+    },
+    {
       "name": "large-phone: both themes keep editable date/time and text fields inside form and viewport",
+      "status": "passed"
+    },
+    {
+      "name": "large-phone: original task suggestions reflow and keep draft text",
       "status": "passed"
     }
   ],
