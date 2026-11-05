@@ -22,6 +22,18 @@
       "status": "passed"
     },
     {
+      "name": "headphones: reject invalid 13-digit scans without mutation; preserve zeroes through borrow and return",
+      "status": "passed"
+    },
+    {
+      "name": "plug: reject invalid 13-digit scans without mutation; preserve zeroes through borrow and return",
+      "status": "passed"
+    },
+    {
+      "name": "usb: reject invalid 13-digit scans without mutation; preserve zeroes through borrow and return",
+      "status": "passed"
+    },
+    {
       "name": "desktop: both themes keep editable date/time and text fields inside form and viewport",
       "status": "passed"
     },
@@ -31,6 +43,10 @@
     },
     {
       "name": "mobile: both themes keep editable date/time and text fields inside form and viewport",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile student ID uses numeric keyboard hint, keeps scan text visible and requires explicit confirmation",
       "status": "passed"
     },
     {
@@ -49,7 +65,7 @@
   "errors": [],
   "limitations": [
     "Chromium touch/viewport emulation only; native iOS date/time, keyboard and focus zoom require device UAT",
-    "Barcode alphabet validation awaits confirmed ID/name requirements",
+    "Student ID validation checks format only, not identity or enrollment",
     "Prototype only; no production writes"
   ]
 }

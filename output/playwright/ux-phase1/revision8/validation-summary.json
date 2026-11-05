@@ -1,6 +1,6 @@
 {
   "completed": true,
-  "flowGroups": 11,
+  "flowGroups": 15,
   "legacyGroups": 11,
   "accessibilityStates": 300,
   "accessibilityChecks": 5,
@@ -8,7 +8,8 @@
   "errors": [],
   "limitations": [
     "Chromium touch/viewport emulation only; native iOS date/time, keyboard and focus zoom require device UAT",
-    "Barcode alphabet validation awaits confirmed ID/name requirements",
+    "Student ID validation checks format only, not identity or enrollment",
     "Prototype only; no production writes"
-  ]
+  ],
+  "accessibilityBasis": "b23645e, before student ID validation"
 }

@@ -7,7 +7,7 @@ fs.mkdirSync(out,{recursive:true});
 async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
  let page;
- const report={completed:false,results,errors,limitations:['Chromium touch/viewport emulation only; native iOS date/time, keyboard and focus zoom require device UAT','Barcode alphabet validation awaits confirmed ID/name requirements','Prototype only; no production writes']};
+ const report={completed:false,results,errors,limitations:['Chromium touch/viewport emulation only; native iOS date/time, keyboard and focus zoom require device UAT','Student ID validation checks format only, not identity or enrollment','Prototype only; no production writes']};
  fs.writeFileSync(path.join(out,'flow-report.json'),JSON.stringify(report,null,2));
  const test=async(name,fn)=>{await fn();results.push({name,status:'passed'});console.log('PASS '+name);};
  const settle=()=>page.waitForFunction(()=>document.documentElement.dataset.usabilityReady==='8'&&document.getAnimations().every(a=>a.playState!=='running'));
@@ -85,6 +85,38 @@ async function main(){
     await page.locator('[data-action="undo-room7"]').last().click();assert.equal(await page.evaluate(()=>state.logs.length),before);
    }
   });
+  for(const type of ['headphones','plug','usb'])await test(`${type}: reject invalid 13-digit scans without mutation; preserve zeroes through borrow and return`,async()=>{
+   await page.goto('about:blank');await visit('record');
+   const device=await page.evaluate(type=>state.devices.find(d=>d.type===type&&d.active&&!d.borrowed&&d.condition==='normal'),type);
+   assert.ok(device,'Available synthetic device for '+type);
+   await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),type);await settle();
+   await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
+   const input=page.locator('#device-recipient');
+   assert.equal(await input.getAttribute('type'),'text');assert.equal(await input.getAttribute('inputmode'),'numeric');
+   assert.equal(await input.getAttribute('maxlength'),null);
+   await input.fill('000000000000ก');assert.equal(await input.getAttribute('aria-invalid'),'true');
+   const before=await page.evaluate(id=>({logs:state.logs.length,device:{...state.devices.find(d=>d.id===id)},returns:f4.conditionHistory.length}),device.id);
+   const unchanged=async()=>assert.deepEqual(await page.evaluate(id=>({logs:state.logs.length,device:{...state.devices.find(d=>d.id===id)},returns:f4.conditionHistory.length}),device.id),before);
+   for(const invalid of ['', '000000000001','00000000000001','000000000000A','000000000000ก','๐๐๐๐๐๐๐๐๐๐๐๐๑','1.23456789e12',' 0000000000001']){
+    await input.fill(invalid);await act('confirm-device').click();
+    assert.equal(await input.inputValue(),invalid,'Do not silently change invalid scan');
+    assert.equal(await input.evaluate(e=>document.activeElement===e),true);assert.ok(await page.locator('#student-id-error8').innerText());await unchanged();
+   }
+   if(type==='headphones')await page.screenshot({path:path.join(out,'student-id-error-desktop.png'),fullPage:true});
+   const id='0000000000001';await input.fill(id);await act('confirm-device').click();await settle();
+   assert.equal(await page.evaluate(()=>state.logs[0].recipient),id);assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
+   await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),type);await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
+   await page.locator('#device-recipient').fill('000000000001');await act('confirm-device').click();
+   assert.equal(await page.locator('[name="return-condition"]').count(),0);assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
+   await page.locator('#device-recipient').fill(id);await act('confirm-device').click();
+   assert.ok(await page.locator('[name="return-condition"]').isVisible());
+   await page.keyboard.press('Escape');await settle();assert.equal(await page.evaluate(()=>state.logs.length),before.logs+1);
+   assert.equal(await page.evaluate(id=>state.devices.find(d=>d.id===id).borrowed,device.id),true);
+   await page.evaluate(type=>equipmentPicker(type,'ทั้งหมด'),type);await page.locator(`[data-action="select-device"][data-id="${device.id}"]`).click();
+   await page.locator('#device-recipient').fill(id);await act('confirm-device').click();await act('finish-return').click();await settle();
+   assert.equal(await page.evaluate(()=>state.logs.length),before.logs+2);assert.equal(await page.evaluate(()=>state.logs[0].recipient),id);
+   assert.equal(await page.evaluate(id=>state.devices.find(d=>d.id===id).borrowed,device.id),false);
+  });
   await context.close();
   for(const [name,width,touch]of [['desktop',1440,false],['tablet',768,true],['mobile',390,true],['small',375,true],['large-phone',430,true]]){
    const mobile=await browser.newContext({viewport:{width,height:844},hasTouch:touch,isMobile:width<761});page=await mobile.newPage();page.on('pageerror',e=>errors.push(e.message));
@@ -98,6 +130,21 @@ async function main(){
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
      if(width===390)await page.screenshot({path:path.join(out,`manual-mobile-${theme}.png`),fullPage:true});
     }
+   });
+   if(width===390)await test('Mobile student ID uses numeric keyboard hint, keeps scan text visible and requires explicit confirmation',async()=>{
+    await page.evaluate(()=>equipmentPicker('headphones','ทั้งหมด'));await settle();
+    const input=page.locator('#device-recipient');
+    await input.fill('000000000000ก');await settle();
+    const before=await page.evaluate(()=>state.logs.length);
+    const stats=await input.evaluate(e=>{const r=e.getBoundingClientRect();return{font:parseFloat(getComputedStyle(e).fontSize),left:r.left,right:r.right,width:innerWidth};});
+    assert.ok(stats.font>=16&&stats.left>=0&&stats.right<=stats.width);
+    assert.equal(await input.getAttribute('aria-invalid'),'true');
+    const errorBox=await page.locator('#student-id-error8').boundingBox(),bodyBox=await page.locator('#sheet .sheet-body').boundingBox();
+    assert.ok(errorBox.y+errorBox.height<=bodyBox.y+bodyBox.height+1,'Validation explanation stays above the sticky actions');
+    await page.screenshot({path:path.join(out,'student-id-mobile.png'),fullPage:true});
+    await input.fill('0000000000001');await input.press('Enter');
+    assert.equal(await page.evaluate(()=>state.logs.length),before);assert.equal(await input.getAttribute('aria-invalid'),null);
+    await page.keyboard.press('Escape');await settle();
    });
    if(width===390)await test('Mobile missing Quick Log recipient scrolls and focuses the field; optional recipient remains optional',async()=>{
     await page.evaluate(()=>{f4.runningTemplate={requireRecipient:true,requireComment:true};commentDialog('งานบริการตัวอย่าง');});

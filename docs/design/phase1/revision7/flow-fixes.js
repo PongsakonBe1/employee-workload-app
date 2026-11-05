@@ -34,6 +34,7 @@ function focusInvalid8(input,message,error){
  if(error){error.textContent=message;input.setAttribute('aria-describedby',error.id);}
  input.focus({preventScroll:true});
  input.scrollIntoView({block:'center',behavior:'instant'});
+ if(error)error.scrollIntoView({block:'nearest',behavior:'instant'});
 }
 const comboReviewBase8=actions['combo-review'];
 actions['combo-review']=button=>{
@@ -41,6 +42,48 @@ actions['combo-review']=button=>{
  if(!selected.length){error.textContent='เลือกอย่างน้อย 1 งาน';focusInvalid8($('.combo-check'),error.textContent,error);return;}
  if(!recipient.value.trim()){focusInvalid8(recipient,'ระบุผู้รับบริการก่อนตรวจรายการ',error);return;}
  comboReviewBase8(button);
+};
+
+// Student IDs remain strings so leading zeroes survive scanning and saving.
+const studentIdPattern8=/^[0-9]{13}$/;
+function studentIdError8(value){
+ if(!value)return 'กรอกรหัสนักศึกษา 13 หลัก';
+ if(/[^0-9]/.test(value))return 'ใช้เฉพาะตัวเลข 0–9 จำนวน 13 หลัก กรุณาตรวจภาษาแป้นพิมพ์';
+ return value.length===13?'':`รหัสนักศึกษาต้องมี 13 หลัก (ขณะนี้ ${value.length} หลัก)`;
+}
+const equipmentPickerBase8=equipmentPicker;
+equipmentPicker=function(type,location){
+ equipmentPickerBase8(type,location);
+ const input=$('#device-recipient');
+ input.labels[0].textContent='รหัสนักศึกษา (ผู้รับบริการ) *';
+ Object.assign(input,{type:'text',inputMode:'numeric',pattern:'[0-9]{13}',required:true,autocomplete:'off',spellcheck:false,placeholder:'ตัวเลข 13 หลัก'});
+ input.setAttribute('autocapitalize','off');input.setAttribute('autocorrect','off');
+ input.setAttribute('aria-describedby','student-id-help8 student-id-error8');
+ input.insertAdjacentHTML('afterend','<small id="student-id-help8" class="caption">พิมพ์หรือสแกนรหัสนักศึกษา 13 หลัก ใช้ตัวเลข 0–9 เท่านั้น</small><p id="student-id-error8" class="field-error" role="alert"></p>');
+ // Do not truncate or strip a bad scan into a different, apparently valid ID.
+ input.addEventListener('input',event=>{
+  if(event.isComposing)return;
+  const error=$('#student-id-error8'),message=studentIdError8(input.value);
+  if(studentIdPattern8.test(input.value)){error.textContent='';input.removeAttribute('aria-invalid');input.dataset.rejected8='';}
+  else if(input.dataset.rejected8||/[^0-9]/.test(input.value)){
+   error.textContent=message;input.setAttribute('aria-invalid','true');input.dataset.rejected8='true';
+   if(document.activeElement===input)error.scrollIntoView({block:'nearest',behavior:'instant'});
+  }
+ });
+};
+const confirmDeviceBase8=actions['confirm-device'];
+actions['confirm-device']=button=>{
+ const input=$('#device-recipient');
+ if(!input||!studentIdPattern8.test(input.value)){
+  if(input){input.dataset.rejected8='true';focusInvalid8(input,studentIdError8(input.value),$('#student-id-error8'));}
+  return;
+ }
+ confirmDeviceBase8(button);
+};
+const finishReturnBase8=actions['finish-return'];
+actions['finish-return']=button=>{
+ if(!studentIdPattern8.test(f4.recipient)){toast('รหัสนักศึกษาไม่ครบ กรุณาเปิดรายการคืนใหม่');return;}
+ finishReturnBase8(button);
 };
 
 const commentBase8=commentDialog;
@@ -74,6 +117,7 @@ document.addEventListener('invalid',event=>{
 document.addEventListener('input',event=>{
  const input=event.target;
  if(!input.matches('input,textarea,select'))return;
+ if(input.id==='device-recipient')return;
  if(input.value.trim()){
   input.removeAttribute('aria-invalid');
   const errorId=input.getAttribute('aria-describedby');
