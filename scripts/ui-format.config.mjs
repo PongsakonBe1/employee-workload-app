@@ -1,6 +1,6 @@
 import checks from "./ui-eslint.config.mjs";
 export default [...checks, {
-  files: ["frontend/components/ui/**/*.js", "frontend/components/AppShell.js", "frontend/app/dev/ui/**/*.js", "frontend/app/dev/record/**/*.js", "frontend/app/calendar/page.js", "frontend/app/resources/page.js"],
+  files: ["frontend/components/ui/**/*.js", "frontend/components/AppShell.js", "frontend/app/dev/ui/**/*.js", "frontend/app/dev/record/**/*.js", "frontend/app/dev/calendar/**/*.js", "frontend/app/dev/previewState.js", "frontend/app/calendar/page.js", "frontend/app/resources/page.js"],
   rules: {
     "react/jsx-one-expression-per-line": ["error", { allow: "single-child" }],
     "react/jsx-max-props-per-line": ["error", { maximum: 2, when: "always" }],

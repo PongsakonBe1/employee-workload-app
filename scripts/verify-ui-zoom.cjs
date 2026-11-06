@@ -1,6 +1,6 @@
 /* Native Edge preference zoom; never CSS zoom or a user browser profile. */
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
-const {chromium}=require(process.argv[2]);const route=process.argv[4]||'/dev/ui';if(!['/dev/ui','/dev/record'].includes(route))throw new Error('Only isolated development fixtures are supported');const out=path.resolve(__dirname,route==='/dev/record'?'../output/playwright/record-liquid-glass':'../output/playwright/develop-ui-foundation');
+const {chromium}=require(process.argv[2]);const route=process.argv[4]||'/dev/ui';if(!['/dev/ui','/dev/record','/dev/calendar'].includes(route))throw new Error('Only isolated development fixtures are supported');const out=path.resolve(__dirname,route==='/dev/calendar'?'../output/playwright/calendar-liquid-glass':route==='/dev/record'?'../output/playwright/record-liquid-glass':'../output/playwright/develop-ui-foundation');
 async function sample(zoom){
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'icit-ui-zoom-'));
  fs.mkdirSync(path.join(profile,'Default'));fs.writeFileSync(path.join(profile,'Default/Preferences'),JSON.stringify({partition:{default_zoom_level:{x:Math.log(zoom)/Math.log(1.2)}}}));

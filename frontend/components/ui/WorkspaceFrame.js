@@ -36,7 +36,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   }, []);
   useEffect(() => { setDialog(null); }, [pathname]);
   useEffect(() => {
-    const shortcut = event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault();setSearch("");setDialog("routes"); } };
+    const shortcut = event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault();if (document.querySelector("dialog[open]")) return;setSearch("");setDialog("routes"); } };
     document.addEventListener("keydown", shortcut);return () => document.removeEventListener("keydown", shortcut);
   }, []);
   function navigate(event, href) {

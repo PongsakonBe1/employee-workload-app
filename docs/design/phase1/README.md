@@ -1,5 +1,7 @@
 # เฟส 1: ออกแบบประสบการณ์ใช้งาน labboy Workload
 
+**Implementation preview · 6 พฤศจิกายน 2569:** แบบ Review 09/10 กำลังย้ายเข้า Next development: [หน้าบันทึกงาน + Glass](../../development/record-liquid-glass/README.md) และ [ปฏิทิน/controls + MockFlow reference](../../development/calendar-liquid-glass/README.md) ใช้ข้อมูลตัวอย่างและมีผลตรวจแยกจาก production รายละเอียดรอบออกแบบก่อนหน้านี้เก็บไว้ด้านล่าง
+
 สถานะ: ต้นแบบเพื่อให้ Tech Lead ตรวจรับการออกแบบ ยังไม่ใช่ implementation ของแอป
 
 **ล่าสุด 5 พฤศจิกายน 2569:** [Design Review 07](revision7/README.md) ปรับ layout, system typography, icon feedback, navigation และบันทึกห้องทันทีพร้อม Undo บน branch `codex/hig-layout-icons-review-07` มี [ต้นแบบ](http://127.0.0.1:4197/#/record) และ [บอร์ดพร้อมคลิป](http://127.0.0.1:4197/gallery.html) เก็บ R06 ไว้เทียบและยังไม่แก้ production

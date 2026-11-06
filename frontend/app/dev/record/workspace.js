@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { usePreviewState } from "../previewState";
 import { Bell, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, DoorClosed, DoorOpen, FilePenLine, Headphones, Monitor, Moon, Phone, Plug, ShieldAlert, Undo2, Usb, UserRound, Zap } from "lucide-react";
 import { WorkspaceFrame } from "../../../components/ui/WorkspaceFrame";
 import { Dialog } from "../../../components/ui/Dialog";
@@ -34,17 +36,18 @@ function DailyAgenda({ date }) {
 
 export default function RecordPreview() {
   const { resolved } = useAppearance();
-  const [role, setRole] = useState("staff"), [personId, setPersonId] = useState(people[0].id);
-  const [mode, setMode] = useState("quick"), [glassMode, setGlassMode] = useState("quick"), [quickPage, setQuickPage] = useState(0);
-  const [dateTime, setDateTime] = useState({ date: "2026-11-06", time: "10:55" }), [dateDraft, setDateDraft] = useState(dateTime);
-  const [data, setData] = useState({ rooms: initialRooms, devices: initialDevices, logs: initialLogs });
-  const [undo, setUndo] = useState(null), [status, setStatus] = useState("");
+  const router = useRouter();
+  const [role, setRole] = usePreviewState("record.role", "staff"), [personId, setPersonId] = usePreviewState("record.person", people[0].id);
+  const [mode, setMode] = usePreviewState("record.mode", "quick"), [glassMode, setGlassMode] = useState("quick"), [quickPage, setQuickPage] = useState(0);
+  const [dateTime, setDateTime] = usePreviewState("record.datetime", { date: "2026-11-06", time: "10:55" }), [dateDraft, setDateDraft] = useState(dateTime);
+  const [data, setData] = usePreviewState("record.data", { rooms: initialRooms, devices: initialDevices, logs: initialLogs });
+  const [undo, setUndo] = usePreviewState("record.undo", null), [status, setStatus] = useState("");
   const [dialog, setDialog] = useState(null), [query, setQuery] = useState(""), [deviceId, setDeviceId] = useState(null);
   const [selected, setSelected] = useState([]), [recipient, setRecipient] = useState(""), [notes, setNotes] = useState("");
   const [step, setStep] = useState("edit"), [error, setError] = useState(""), [selectedLog, setSelectedLog] = useState(null);
-  const [manual, setManual] = useState({ taskId: tasks[0].id, recipient: "", notes: "" });
+  const [manual, setManual] = usePreviewState("record.manual", { taskId: tasks[0].id, recipient: "", notes: "" });
   const [manualError, setManualError] = useState("");
-  const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualNotesRef = useRef(null), taskSearchRef = useRef(null), sequence = useRef(0);
+  const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualNotesRef = useRef(null), taskSearchRef = useRef(null), sequence = useRef(Date.now());
   const person = people.find(item => item.id === personId), task = tasks.find(item => item.id === manual.taskId);
   const device = data.devices.find(item => item.id === deviceId), combo = combos[dialog];
   const DeviceIcon = device ? deviceIcons[device.kind] : Headphones;
@@ -100,7 +103,7 @@ export default function RecordPreview() {
   return <WorkspaceFrame
     user={{ uid: person.id, displayName: person.displayName, initial: person.initial, role }} pathname={role === "staff" ? "/worklogs/new" : "/admin/record"}
     glassMode={glassMode}
-    onNavigate={href => { if (["/worklogs", "/profile"].includes(href)) openDialog(href === "/worklogs" ? "history" : "person");else if (href === "/calendar") openDialog("schedule");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10"); }}
+    onNavigate={href => { if (["/worklogs", "/profile"].includes(href)) openDialog(href === "/worklogs" ? "history" : "person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10"); }}
     notificationSlot={<button
       type="button" className="ui-icon-button"
       aria-label="การแจ้งเตือนตัวอย่าง" onClick={() => openDialog("notifications")}
