@@ -1,0 +1,26 @@
+{
+  "branch": "codex/develop-ui-foundation",
+  "base": "dc80fbb",
+  "runtime": "Next.js development; synthetic service configuration",
+  "preview": "http://127.0.0.1:4310/dev/ui",
+  "browserGroups": 11,
+  "newUnitTestsPassed": 7,
+  "fullSuite": {
+    "passed": 224,
+    "failed": 8,
+    "total": 232
+  },
+  "baselineFailuresReproduced": true,
+  "compatibilityBuildPassed": true,
+  "targetedLintPassed": true,
+  "nativeBrowserZoomPercent": 200,
+  "productionDataUsed": false,
+  "deployed": false,
+  "releaseReady": false,
+  "remaining": [
+    "8 unchanged baseline test failures",
+    "Authenticated development/emulator integration",
+    "Feature-page UI migration",
+    "Physical device UAT"
+  ]
+}

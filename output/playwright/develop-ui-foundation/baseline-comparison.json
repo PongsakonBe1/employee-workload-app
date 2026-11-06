@@ -1,0 +1,32 @@
+{
+  "base": "dc80fbb",
+  "copiedFiles": [
+    "frontend/lib/analytics.test.js",
+    "frontend/lib/analytics.js",
+    "frontend/lib/staffMetrics.test.js",
+    "frontend/lib/staffMetrics.js",
+    "frontend/lib/validation.test.js",
+    "frontend/lib/validation.js"
+  ],
+  "baselineFailures": [
+    "analyzeSeasonalPattern should identify outliers correctly",
+    "calculateConsistency should calculate lower consistency for variable daily counts",
+    "calculateRadarMetrics should calculate realistic values",
+    "detectOutliers should detect daily outliers correctly",
+    "getTrendIndicator should return 'up' for > 10% increase",
+    "predictNextPeak academic period fallback should identify next academic period correctly",
+    "predictNextPeak academic period fallback should return exam period for single year data",
+    "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+  ],
+  "currentFailures": [
+    "analyzeSeasonalPattern should identify outliers correctly",
+    "calculateConsistency should calculate lower consistency for variable daily counts",
+    "calculateRadarMetrics should calculate realistic values",
+    "detectOutliers should detect daily outliers correctly",
+    "getTrendIndicator should return 'up' for > 10% increase",
+    "predictNextPeak academic period fallback should identify next academic period correctly",
+    "predictNextPeak academic period fallback should return exam period for single year data",
+    "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+  ],
+  "sameFailures": true
+}

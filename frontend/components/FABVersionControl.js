@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { GitBranch, GitCommit, Calendar, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 
-const VERSION_INFO = {
+const RELEASE_INFO = {
   version: "2.8.0",
   buildDate: "2026-06-20",
   buildTime: "07:50",
@@ -29,6 +29,17 @@ const VERSION_INFO = {
   ]
 };
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+const VERSION_INFO = IS_DEVELOPMENT ? {
+  ...RELEASE_INFO,
+  version: "Development",
+  branch: process.env.NEXT_PUBLIC_UI_BRANCH || "development",
+  gitCommit: "Unreleased",
+  buildDate: "Local development",
+  features: ["Shared appearance, semantic colors and system typography", "Task-first sidebar and four mobile destinations", "Accessible shared dialogs, tooltips and form controls"],
+  changes: ["Development UI Foundation — not a production release"],
+} : RELEASE_INFO;
+
 export default function FABVersionControl() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -37,10 +48,11 @@ export default function FABVersionControl() {
       {/* Floating Action Button - Mobile: above save button (bottom-20), Desktop: bottom-4 */}
       <button
         onClick={() => setIsOpen(true)}
+        aria-label="ข้อมูลเวอร์ชันและสถานะระบบ"
         className="fixed bottom-20 lg:bottom-4 right-4 z-40 flex items-center gap-2 bg-slate-800 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl hover:bg-slate-700 transition-all duration-300"
       >
         <GitBranch className="w-4 h-4" />
-        <span className="text-sm font-medium">v{VERSION_INFO.version}</span>
+        <span className="text-sm font-medium">{IS_DEVELOPMENT ? "Develop" : `v${VERSION_INFO.version}`}</span>
       </button>
 
       {/* Version Modal */}

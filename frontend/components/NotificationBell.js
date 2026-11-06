@@ -420,7 +420,10 @@ export function NotificationBell() {
       <div className="relative z-[999]">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative p-2 rounded-full hover:bg-slate-100 transition"
+          className="ui-icon-button relative"
+          aria-label={`การแจ้งเตือน${unreadCount ? ` ${unreadCount} ยังไม่อ่าน` : ""}`}
+          aria-expanded={isOpen}
+          aria-controls={isOpen ? "workspace-notifications" : undefined}
         >
           <Bell size={20} className="text-slate-600" />
           {unreadCount > 0 && (
@@ -438,7 +441,7 @@ export function NotificationBell() {
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown — fixed on mobile, absolute on desktop */}
-            <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-xs sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
+            <div id="workspace-notifications" className="ui-notification-panel fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-xs sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
                 <div className="flex items-center gap-2">

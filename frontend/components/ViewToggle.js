@@ -10,7 +10,7 @@ export default function ViewToggle({ currentView, onChangeView }) {
   ];
 
   return (
-    <div className="inline-flex bg-slate-100/80 backdrop-blur-sm rounded-xl p-1.5 gap-1 shadow-sm">
+    <div className="ui-segment" role="group" aria-label="มุมมองตาราง">
       {views.map((view) => {
         const Icon = view.icon;
         const isActive = currentView === view.id;
@@ -18,19 +18,14 @@ export default function ViewToggle({ currentView, onChangeView }) {
         return (
           <button
             key={view.id}
+            type="button"
+            aria-label={view.label}
+            aria-pressed={isActive}
             onClick={() => onChangeView(view.id)}
-            className={`
-              flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-              transition-all duration-200 ease-out
-              ${
-                isActive
-                  ? "bg-white text-blue-600 shadow-md scale-105"
-                  : "text-slate-600 hover:bg-slate-200/60 hover:text-slate-800"
-              }
-            `}
+            className="ui-segment-option"
           >
-            <Icon className={`w-4 h-4 ${isActive ? "text-blue-500" : ""}`} />
-            <span className="hidden sm:inline">{view.label}</span>
+            <Icon size={17} aria-hidden="true" />
+            <span>{view.label}</span>
           </button>
         );
       })}

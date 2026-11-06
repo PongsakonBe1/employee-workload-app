@@ -1,8 +1,11 @@
 import { NextIntlClientProvider } from "next-intl";
+import "./ui-foundation.css";
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 import FABVersionControl from "../components/FABVersionControl";
 import thMessages from "../messages/th.json";
+import { AppearanceProvider } from "../components/ui/AppearanceProvider";
+import { appearanceBootstrap } from "../lib/appearance";
 
 export const metadata = {
   title: "labboy Workload Recorder",
@@ -35,18 +38,22 @@ export const viewport = {
   themeColor: "#0f172a",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th">
+    <html lang="th" suppressHydrationWarning>
+      <head><script id="ui-appearance-bootstrap" dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} /></head>
       <body>
-        <NextIntlClientProvider locale="th" messages={thMessages}>
-          <AuthProvider>
-            {children}
-            <FABVersionControl />
-          </AuthProvider>
-        </NextIntlClientProvider>
+        <AppearanceProvider>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <AuthProvider>
+              {children}
+              <FABVersionControl />
+            </AuthProvider>
+          </NextIntlClientProvider>
+        </AppearanceProvider>
       </body>
     </html>
   );

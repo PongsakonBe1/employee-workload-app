@@ -1,0 +1,35 @@
+{
+  "base": "dc80fbb",
+  "files": [
+    {
+      "file": "frontend/lib/analytics.js",
+      "unchanged": true,
+      "baselineSHA256": "7c850781f03beeec1e80b6b8ceb319dc854deff989c8cede73f9312d9c809af9"
+    },
+    {
+      "file": "frontend/lib/analytics.test.js",
+      "unchanged": true,
+      "baselineSHA256": "6986b586b5032b7e92fd6db8cb85788488396883bd32b0522d475ad7d275d2a4"
+    },
+    {
+      "file": "frontend/lib/staffMetrics.js",
+      "unchanged": true,
+      "baselineSHA256": "e955c531d6f0e9903ac51f9cd7d8f05c407f2c461bbbb914a266b9e0ca1032c8"
+    },
+    {
+      "file": "frontend/lib/staffMetrics.test.js",
+      "unchanged": true,
+      "baselineSHA256": "fbdcf80e5affd3568de0cb9cc21afb6df824c632c7e827dcf9f175dfb2877c93"
+    },
+    {
+      "file": "frontend/lib/validation.js",
+      "unchanged": true,
+      "baselineSHA256": "b559ca095740b115c7773337be9b499bbcc1b1614691440a8189822586a3153c"
+    },
+    {
+      "file": "frontend/lib/validation.test.js",
+      "unchanged": true,
+      "baselineSHA256": "b3133442d996d0d2e19fcc2a69b7e3e3ccd8cad0c903f8e313c32cb1d23d0370"
+    }
+  ]
+}
