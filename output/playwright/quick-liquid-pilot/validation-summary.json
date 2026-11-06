@@ -1,0 +1,76 @@
+{
+  "branch": "codex/develop-ui-foundation",
+  "base": "acf09e5",
+  "scope": "Development fixture pilot; toolbar, mobile navigation and selected indicator",
+  "targetedUnit": {
+    "passed": 14,
+    "failed": 0
+  },
+  "fullUnit": {
+    "passed": 231,
+    "failed": 8,
+    "baseline": "dc80fbb",
+    "sameFailures": true,
+    "failures": [
+      "analyzeSeasonalPattern should identify outliers correctly",
+      "calculateConsistency should calculate lower consistency for variable daily counts",
+      "calculateRadarMetrics should calculate realistic values",
+      "detectOutliers should detect daily outliers correctly",
+      "getTrendIndicator should return 'up' for > 10% increase",
+      "predictNextPeak academic period fallback should identify next academic period correctly",
+      "predictNextPeak academic period fallback should return exam period for single year data",
+      "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+    ]
+  },
+  "optics": {
+    "localChecks": 8,
+    "publicChecks": 8,
+    "publicUrl": "https://ste-transaction-palm-quiz.trycloudflare.com/dev/ui",
+    "pixelProbe": {
+      "width": 134,
+      "height": 48,
+      "changedPixels": 1663,
+      "baselineNoise": 0
+    }
+  },
+  "dependencies": {
+    "added": [
+      "node_modules/quick-liquid"
+    ],
+    "otherLockEntriesUnchanged": true
+  },
+  "build": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "zoom": {
+    "completed": true,
+    "method": "Native browser preference 200%, isolated profiles",
+    "normal": {
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 1416
+    },
+    "zoomed": {
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 708
+    }
+  },
+  "limitations": [
+    "Physical Safari/iPhone and Android review remains pending",
+    "Existing eight baseline unit failures remain",
+    "No production rollout or real-data integration"
+  ]
+}

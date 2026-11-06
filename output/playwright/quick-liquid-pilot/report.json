@@ -1,0 +1,111 @@
+{
+  "url": "http://127.0.0.1:4310/dev/ui",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Desktop mounts one decorative SVG surface; hidden mobile surfaces do not allocate maps or contain controls",
+      "status": "passed"
+    },
+    {
+      "name": "A/B switches preserve the draft and release engine/cache resources after repeated toggles",
+      "status": "passed"
+    },
+    {
+      "name": "Light/dark follow the app choice, and solid/forced-colors preferences remove all optical engines",
+      "status": "passed"
+    },
+    {
+      "name": "Rendered pixels change with displacement scale while blur, tint and geometry stay fixed",
+      "status": "passed"
+    },
+    {
+      "name": "A simulated encoding failure falls back without leaving an active SVG filter or breaking menus",
+      "status": "passed"
+    },
+    {
+      "name": "Touch navigation keeps real anchors, a settled spring indicator and working menus in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "An iOS/Safari user agent gets explicit CSS optics, with no SVG displacement filters",
+      "status": "passed"
+    },
+    {
+      "name": "Desktop previews and keyboard dialogs retain layout after the optics experiment",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "metrics": [
+    {
+      "device": "desktop",
+      "engineCount": 1,
+      "uniqueMaps": 1,
+      "cacheHits": 0,
+      "mapsGenerated": 1,
+      "engines": [
+        {
+          "id": "ql1",
+          "size": "134x48",
+          "mapGenMs": 3.2999999821186066,
+          "mapPixelsComputed": 1298,
+          "mapKey": "134|48|134|48|24|20|18|1.5|24",
+          "quality": "medium",
+          "dispTaps": 1,
+          "mapEncodeMs": 30.400000005960464,
+          "mapBytes": 69888,
+          "lightBakes": 2,
+          "filterBuilds": 1,
+          "mapError": null
+        }
+      ]
+    },
+    {
+      "device": "touch-mobile",
+      "engineCount": 2,
+      "uniqueMaps": 2,
+      "cacheHits": 0,
+      "mapsGenerated": 2,
+      "engines": [
+        {
+          "id": "ql1",
+          "size": "140x44",
+          "mapGenMs": 3.699999988079071,
+          "mapPixelsComputed": 1105,
+          "mapKey": "140|44|128|40|22|20|18|1.5|24",
+          "quality": "low",
+          "dispTaps": 1,
+          "mapEncodeMs": 20.900000005960464,
+          "mapBytes": 57792,
+          "lightBakes": 4,
+          "filterBuilds": 1,
+          "mapError": null
+        },
+        {
+          "id": "ql2",
+          "size": "356x65",
+          "mapGenMs": 0.699999988079071,
+          "mapPixelsComputed": 467,
+          "mapKey": "356|65|128|23|25|20|18|1.5|24",
+          "quality": "low",
+          "dispTaps": 1,
+          "mapEncodeMs": 63.60000002384186,
+          "mapBytes": 23944,
+          "lightBakes": 4,
+          "filterBuilds": 1,
+          "mapError": null
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Chromium browser; iOS UA verifies our CSS fallback policy, not actual Safari rendering",
+    "No physical-device battery/FPS claims or production data integration"
+  ],
+  "pixelProbe": {
+    "width": 134,
+    "height": 48,
+    "changedPixels": 1663,
+    "baselineNoise": 0
+  }
+}

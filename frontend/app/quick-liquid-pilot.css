@@ -1,0 +1,21 @@
+/* Optics are decorative siblings, never wrappers around navigation or form controls. */
+.ui-optical-layer { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.ui-optical-layer[data-active=false] { visibility: hidden; }
+.ui-header-actions:has(>.ui-optical-layer[data-active=true]) { isolation: auto; border-radius: 99px; }
+.ui-header:has(.ui-header-actions>.ui-optical-layer[data-active=true]) { isolation: auto; }
+.ui-header-actions:has(>.ui-optical-layer[data-active=true])::before { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.ui-header:has(.ui-header-actions>.ui-optical-layer[data-active=true])::before { background: linear-gradient(180deg,color-mix(in srgb,var(--ui-bg) 85%,transparent),transparent); border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.ui-header-actions:has(>.ui-optical-layer[data-active=true])>.ui-icon-button { position: relative; z-index: 10; }
+.ui-mobile-nav:has(>.ui-optical-layer[data-active=true]) { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.ui-mobile-nav:has(>.ui-optical-layer[data-active=true])>a { position: relative; z-index: 10; }
+.ui-glass-indicator { display: none; position: absolute; left: 0; pointer-events: none; z-index: 7; border-radius: 20px; background: color-mix(in srgb,var(--ui-surface) 90%,transparent); border: 1px solid var(--ui-glass-edge); box-shadow: inset 0 1px 1px #ffffff70,inset 0 -1px 1px #74829920,0 2px 6px #14254714; }
+.ui-glass-indicator[hidden] { display: none !important; }
+[data-glass-pilot=quick] .ui-glass-indicator[data-ready=true] { display: block; }
+[data-glass-pilot=quick] .ui-mobile-nav:has(>.ui-glass-indicator[data-ready=true]:not([hidden]))>a[aria-current=page] { background: transparent; box-shadow: none; }
+.ui-glass-comparison { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--ui-surface); }
+.ui-glass-comparison>.ui-choice { flex: initial; min-height: 40px; font-size: .8125rem; }
+.ui-glass-pilot-note { margin: -10px 0 22px; }
+[data-ui-material=solid] .ui-glass-indicator { display: none !important; }
+@media(max-width:760px) { .ui-glass-comparison { order: 3; flex-basis: 100%; } .ui-glass-comparison>.ui-choice { flex: 1; min-height: 44px; } }
+@media(forced-colors:active) { .ui-optical-layer,.ui-glass-indicator { display: none !important; } }
+@media print { .ui-glass-comparison,.ui-glass-pilot-note { display: none !important; } }

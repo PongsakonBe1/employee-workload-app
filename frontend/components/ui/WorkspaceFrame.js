@@ -8,11 +8,13 @@ import { activeNavigation, getWorkspaceNavigation, mobileNavigation } from "../.
 import { Dialog } from "./Dialog";
 import { Tooltip } from "./Tooltip";
 import { AppearanceSettings } from "./AppearanceSettings";
+import { GlassSurface } from "./GlassSurface";
+import { GlassSelection } from "./GlassSelection";
 
 const icons = { record: FileText, history: ClipboardList, calendar: CalendarDays, resources: Headphones, chart: BarChart2, export: Download, staff: Users, equipment: Package, settings: Settings, templates: Zap, audit: ShieldCheck, admin: LayoutGrid };
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
 
-export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate }) {
+export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, glassMode = "css" }) {
   const groups = getWorkspaceNavigation(user.role), all = groups.flatMap(group => group.items), current = activeNavigation(pathname, groups);
   const [collapsed, setCollapsed] = useState(false), [wide, setWide] = useState(false), [scrolled, setScrolled] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(() => groups.find(group => group.id === "tools")?.items.some(entry => entry.id === current));
@@ -22,6 +24,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   const label = all.find(entry => entry.id === current)?.label || ({ "/profile": "โปรไฟล์", "/help": "คู่มือการใช้งาน" }[pathname] || "พื้นที่ทำงาน");
   const displayName = user.displayName || user.nickname || user.fullName || "ผู้ใช้งาน";
   const initial = Array.from(displayName.trim())[0] || "?";
+  const pilotMode = process.env.NODE_ENV === "development" && glassMode === "quick" ? "quick" : "css";
   useEffect(() => {
     const query = matchMedia("(min-width:1241px)"), update = () => setWide(query.matches);
     update();query.addEventListener("change", update);return () => query.removeEventListener("change", update);
@@ -63,6 +66,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
     className="ui-workspace" data-workspace
     data-compact={compact} data-sidebar-hidden={collapsed}
     data-calendar={calendar}
+    data-glass-pilot={pilotMode}
   >
     <a href="#workspace-content" className="ui-skip-link">ข้ามไปเนื้อหา</a>
     <aside
@@ -146,6 +150,10 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
         <span className="ui-location">{label}</span>
       </div>
       <div className="ui-header-actions">
+        <GlassSurface
+          mode={pilotMode} radius={99}
+          name="toolbar"
+        />
         <button
           type="button" className="ui-icon-button"
           aria-label="ค้นหาหน้าและเครื่องมือ" onClick={() => { setSearch("");setDialog("routes"); }}
@@ -187,6 +195,11 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       </footer>
     </main>
     <nav className="ui-mobile-nav ui-glass" aria-label="เมนูประจำ">
+      <GlassSurface
+        mode={pilotMode} radius={25}
+        name="tabbar"
+      />
+      <GlassSelection mode={pilotMode} selected={current} />
       {mobileNavigation(groups).map(entry => { const Icon = icons[entry.icon];return <Link
         key={entry.id} href={entry.href}
         prefetch={false} aria-current={current === entry.id ? "page" : undefined}

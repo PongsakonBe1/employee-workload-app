@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import "./ui-foundation.css";
 import "./globals.css";
+import "./quick-liquid-pilot.css";
 import { AuthProvider } from "../components/AuthProvider";
 import FABVersionControl from "../components/FABVersionControl";
 import thMessages from "../messages/th.json";

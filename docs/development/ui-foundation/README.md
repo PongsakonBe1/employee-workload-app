@@ -103,7 +103,9 @@ $uiCloudflared = Join-Path $env:LOCALAPPDATA 'Temp\labboy-cloudflare-preview\clo
 
 ## ประเมิน quickLiquid ก่อนพัฒนารอบถัดไป
 
-ผู้ใช้ส่ง [quickLiquid](https://github.com/amarnath3003/quickLiquid) ให้ศึกษา อ่าน README, package metadata, React wrapper และ engine พร้อมเปิด live demo จริงแล้ว npm ณ วันที่ตรวจระบุ `quick-liquid@0.1.2`, MIT, peer React/React DOM >=18 ซึ่งตรงกับ React 19 ที่ใช้ในโครงการ ยังไม่ได้ติดตั้ง package หรือเปลี่ยนเอฟเฟกต์ในแอป
+อัปเดตหลังผู้ใช้ให้ Continue: เริ่ม [QuickLiquid Pilot](../quick-liquid/README.md) ใน development แล้ว พร้อมสวิตช์เทียบของเดิม ผลวิเคราะห์ด้านล่างเป็นข้อมูลจากขั้นประเมินก่อนเริ่มทดลอง
+
+ผู้ใช้ส่ง [quickLiquid](https://github.com/amarnath3003/quickLiquid) ให้ศึกษา อ่าน README, package metadata, React wrapper และ engine พร้อมเปิด live demo จริงแล้ว npm ณ วันที่ตรวจระบุ `quick-liquid@0.1.2`, MIT, peer React/React DOM >=18 ซึ่งตรงกับ React 19 ที่ใช้ในโครงการ ขณะประเมินยังไม่ได้ติดตั้ง จากนั้นจึงเริ่มรอบทดลองตามที่ผู้ใช้ให้ Continue
 
 สิ่งที่มีประโยชน์คือ SVG backdrop refraction, rim lighting, dispersion และ spring motion เพิ่มจาก CSS blur ปัจจุบัน อย่างไรก็ตาม package documentation ระบุว่า full rendered refraction ตรวจใน Chromium เป็นหลัก computed-style probe ไม่สามารถยืนยันการหักเหของภาพจริงได้ จึงต้องทดสอบ Safari/iPhone และเตรียม `refractionMode: 'css'` ไว้ตามผลตรวจ
 

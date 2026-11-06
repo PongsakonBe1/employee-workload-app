@@ -7,16 +7,20 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { MetricCard } from "../../../components/MetricCard";
 import { EmptyState } from "../../../components/EmptyState";
 import ViewToggle from "../../../components/ViewToggle";
+import { useAppearance } from "../../../components/ui/AppearanceProvider";
 
 // This route mounts real shared components with local display fixtures only.
 // It does not supply AuthContext, tokens, API clients or a production identity.
 export default function DevelopmentWorkspace() {
+  const { resolved } = useAppearance();
   const [role, setRole] = useState("staff"), [pathname, setPathname] = useState("/worklogs/new");
   const [view, setView] = useState("week"), [dialog, setDialog] = useState(null), [status, setStatus] = useState("");
+  const [glassMode, setGlassMode] = useState("quick");
   const user = { uid: "UI-FIXTURE-ONLY", displayName: "เจ้าหน้าที่ตัวอย่าง A", role };
   const title = pathname === "/calendar" ? "ตารางและการใช้ห้อง" : pathname === "/resources" ? "ห้องและทรัพยากร" : pathname === "/dashboard" ? "ภาพรวมงาน" : pathname === "/worklogs" ? "ประวัติงาน" : pathname.startsWith("/admin/") && pathname !== "/admin/record" ? "เครื่องมือผู้ดูแล" : "บันทึกงาน";
   return <WorkspaceFrame
     user={user} pathname={pathname}
+    glassMode={glassMode}
     onNavigate={setPathname} onLogout={() => setStatus("ตรวจปุ่มออกจากระบบแล้ว — ไม่มี session จริง")}
     notificationSlot={<button
       type="button" className="ui-icon-button"
@@ -27,6 +31,23 @@ export default function DevelopmentWorkspace() {
   >
     <section className="ui-dev-toolbar" aria-label="ตัวเลือกตรวจ development">
       <span>Development · ตรวจส่วนกลางด้วยข้อมูลสังเคราะห์</span>
+      <div
+        className="ui-glass-comparison" role="group"
+        aria-label="เปรียบเทียบวัสดุกระจก"
+      >
+        <button
+          type="button" className="ui-choice"
+          aria-pressed={glassMode === "css"} onClick={() => setGlassMode("css")}
+        >
+          CSS เดิม
+        </button>
+        <button
+          type="button" className="ui-choice"
+          aria-pressed={glassMode === "quick"} onClick={() => setGlassMode("quick")}
+        >
+          QuickLiquid
+        </button>
+      </div>
       <label>
         บทบาท
         <select
@@ -39,6 +60,7 @@ export default function DevelopmentWorkspace() {
         </select>
       </label>
     </section>
+    <p className="ui-caption ui-glass-pilot-note">{glassMode === "css" ? "วัสดุ CSS เดิม · เปรียบเทียบได้โดยไม่ล้างร่างฟอร์ม" : resolved.solid ? "ใช้พื้นทึบตามการตั้งค่าของคุณ · ปิดลดความโปร่งใสเพื่อเปรียบเทียบกระจก" : resolved.reducedMotion ? "QuickLiquid · ลดการเคลื่อนไหวตามการตั้งค่าของคุณ · Safari ใช้ CSS fallback" : "ทดลองขอบแสงและการหักเหเฉพาะแถบควบคุม · Safari ใช้ CSS fallback · ยังต้องตรวจอุปกรณ์จริง"}</p>
     <div className="ui-page-heading">
       <h1>{title}</h1>
       <p>พื้นที่ตรวจ component จริงก่อนทยอยย้ายรายละเอียดแต่ละหน้า</p>
