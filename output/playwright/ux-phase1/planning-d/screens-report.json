@@ -1,0 +1,11 @@
+{
+  "completed": true,
+  "results": [],
+  "errors": [],
+  "limitations": [
+    "No Firebase connection; query contracts and cache behavior are simulated, not measured cloud reads",
+    "JD weights/mapping are local shared configuration; no production profile is changed",
+    "Physical Safari/iPhone/Android and scanner UAT remain pending"
+  ],
+  "screensOnly": true
+}

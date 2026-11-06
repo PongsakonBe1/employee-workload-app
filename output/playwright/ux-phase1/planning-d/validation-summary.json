@@ -1,0 +1,23 @@
+{
+  "completed": true,
+  "review": "09",
+  "unitGroups": 7,
+  "browserGroups": 73,
+  "groups": {
+    "planning": 15,
+    "calendar": 12,
+    "controls": 13,
+    "originalForms": 22,
+    "legacy": 11
+  },
+  "renderedViews": 120,
+  "accessibilityStates": 300,
+  "additionalAccessibilityChecks": 5,
+  "nativeZoom200Routes": 4,
+  "cloudReadsMeasured": false,
+  "limitations": [
+    "No Firebase connection; query contracts and cache behavior are simulated, not measured cloud reads",
+    "JD weights/mapping are local shared configuration; no production profile is changed",
+    "Physical Safari/iPhone/Android and scanner UAT remain pending"
+  ]
+}

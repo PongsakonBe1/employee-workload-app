@@ -1,0 +1,71 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "name": "Dashboard and Staff start on the current Bangkok week with a bounded 1000-row query contract",
+      "status": "passed"
+    },
+    {
+      "name": "Draft period edits never load data; invalid custom dates stay in the form; Apply changes all charts once",
+      "status": "passed"
+    },
+    {
+      "name": "Day/month/quarter/fiscal/custom use exact bounds and fiscal navigation crosses October correctly",
+      "status": "passed"
+    },
+    {
+      "name": "Trend and category totals reconcile to source activities; clicks show the exact underlying rows",
+      "status": "passed"
+    },
+    {
+      "name": "Partial results stay labeled until Load more; pagination remains bounded and cache avoids duplicate loads",
+      "status": "passed"
+    },
+    {
+      "name": "Ambiguous names remain unresolved, unresolved chart rows drill correctly, staff scope stays on their ID",
+      "status": "passed"
+    },
+    {
+      "name": "Shared JD is versioned by fiscal year, requires 100%, and does not change when a staff filter changes",
+      "status": "passed"
+    },
+    {
+      "name": "Equipment counts borrow events only; current outstanding state stays separate; absent return condition is unknown",
+      "status": "passed"
+    },
+    {
+      "name": "Calendar sidebar preserves view/filters and gives the desktop timeline enough width",
+      "status": "passed"
+    },
+    {
+      "name": "Review and final-save actions have different surfaces, semantic labels and readable primary text in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "375px touch: planning pages and calendar modes fit without losing apply controls or date context",
+      "status": "passed"
+    },
+    {
+      "name": "390px touch: planning pages and calendar modes fit without losing apply controls or date context",
+      "status": "passed"
+    },
+    {
+      "name": "430px touch: planning pages and calendar modes fit without losing apply controls or date context",
+      "status": "passed"
+    },
+    {
+      "name": "768px touch: planning pages and calendar modes fit without losing apply controls or date context",
+      "status": "passed"
+    },
+    {
+      "name": "1440px touch: planning pages and calendar modes fit without losing apply controls or date context",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "No Firebase connection; query contracts and cache behavior are simulated, not measured cloud reads",
+    "JD weights/mapping are local shared configuration; no production profile is changed",
+    "Physical Safari/iPhone/Android and scanner UAT remain pending"
+  ]
+}
