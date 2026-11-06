@@ -3,15 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BarChart2, CalendarDays, ChevronDown, ChevronRight, ClipboardList, Download, FileText, Headphones, HelpCircle, LayoutGrid, LogOut, Menu, Package, PanelLeft, Search, Settings, ShieldCheck, SunMoon, User, Users, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, ClipboardList, HelpCircle, LogOut, Menu, PanelLeft, Search, User } from "lucide-react";
 import { activeNavigation, getWorkspaceNavigation, mobileNavigation } from "../../lib/navigation";
 import { Dialog } from "./Dialog";
 import { Tooltip } from "./Tooltip";
 import { AppearanceSettings } from "./AppearanceSettings";
 import { GlassSurface } from "./GlassSurface";
 import { GlassSelection } from "./GlassSelection";
+import { ReviewSymbol } from "./ReviewSymbol";
+import { SidebarGlassHover } from "./SidebarGlassHover";
 
-const icons = { record: FileText, history: ClipboardList, calendar: CalendarDays, resources: Headphones, chart: BarChart2, export: Download, staff: Users, equipment: Package, settings: Settings, templates: Zap, audit: ShieldCheck, admin: LayoutGrid };
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
 
 export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, glassMode = "css" }) {
@@ -44,14 +45,13 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
     setDialog(null);if (onNavigate) { event.preventDefault();onNavigate(href); }
   }
   function navLink(entry, tooltip = false) {
-    const Icon = icons[entry.icon];
     const link = <Link
       key={entry.id} href={entry.href}
       prefetch={false} className="ui-sidebar-link"
       aria-label={entry.label} aria-current={current === entry.id ? "page" : undefined}
       onClick={event => navigate(event, entry.href)}
     >
-      <span className="ui-nav-symbol" data-tone={entry.tone}><Icon size={20} aria-hidden="true" /></span>
+      <span className="ui-nav-symbol" data-tone={entry.tone}><ReviewSymbol name={entry.icon} size={20} /></span>
       <span className="ui-nav-text">{entry.label}</span>
     </Link>;
     return tooltip ? <Tooltip
@@ -73,6 +73,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       className="ui-sidebar ui-glass" aria-label="พื้นที่ทำงาน"
       id="workspace-sidebar" hidden={collapsed}
     >
+      <SidebarGlassHover mode={pilotMode} />
       <Link
         href={all[0]?.href || "/dashboard"} prefetch={false}
         onClick={event => navigate(event, all[0]?.href || "/dashboard")} className="ui-brand"
@@ -113,7 +114,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
             type="button" className="ui-sidebar-link"
             aria-label="รูปแบบการแสดงผล" onClick={() => setDialog("appearance")}
           >
-            <span className="ui-nav-symbol" data-tone="blue"><SunMoon size={19} aria-hidden="true" /></span>
+            <span className="ui-nav-symbol" data-tone="blue"><ReviewSymbol name="settings" size={20} /></span>
             <span className="ui-nav-text">รูปแบบการแสดงผล</span>
           </button>
         </Tooltip>
@@ -200,12 +201,12 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
         name="tabbar"
       />
       <GlassSelection mode={pilotMode} selected={current} />
-      {mobileNavigation(groups).map(entry => { const Icon = icons[entry.icon];return <Link
+      {mobileNavigation(groups).map(entry => { return <Link
         key={entry.id} href={entry.href}
         prefetch={false} aria-current={current === entry.id ? "page" : undefined}
         onClick={event => navigate(event, entry.href)}
       >
-        <Icon size={21} aria-hidden="true" />
+        <ReviewSymbol name={entry.icon} size={21} />
         <span>{entry.id === "record" ? "งาน" : entry.label}</span>
       </Link>; })}
     </nav>
@@ -247,7 +248,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           หน้าและเครื่องมือทั้งหมด
         </button>
         <button type="button" onClick={() => setDialog("appearance")}>
-          <SunMoon size={20} aria-hidden="true" />
+          <ReviewSymbol name="settings" size={20} />
           รูปแบบการแสดงผล
         </button>
         <Link href="/help" onClick={event => navigate(event, "/help")}>

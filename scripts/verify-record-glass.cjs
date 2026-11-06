@@ -64,7 +64,7 @@ async function main() {
       assert.equal(await dialog(page).locator('.record-review-list li').count(), 1);await shot(page, 'combo-review-desktop');
       await dialog(page).getByRole('button', { name: 'แก้ไขรายการ', exact: true }).click();assert.equal(await dialog(page).locator('input:checked').count(), 1);
       await dialog(page).getByRole('button', { name: 'ตรวจ 1 รายการ', exact: true }).click();await dialog(page).getByRole('button', { name: 'บันทึก 1 รายการ', exact: true }).click();
-      assert.ok((await page.locator('.record-recent').textContent()).includes('เปิดใช้ ICIT Account'));
+      assert.ok((await page.locator('.record-recent').textContent()).includes('เปิดใช้ Microsoft Authenticator'));
       await quick(page, /เปิดใช้บัญชี/).click();assert.equal(await dialog(page).locator('input:checked').count(), 0);await close(page);
       await page.getByRole('region', { name: 'เลิกทำรายการล่าสุด' }).getByRole('button', { name: 'เลิกทำ', exact: true }).click();
     });
@@ -86,12 +86,12 @@ async function main() {
       const notes = page.locator('[name="record-manual-notes"]');await notes.fill('ร่างทดสอบ');await page.locator('.record-task-picker').click();
       const box = await dialog(page).boundingBox();assert.ok(Math.abs(box.x + box.width / 2 - 720) < 3);
       await page.waitForFunction(() => document.activeElement?.type === 'search');await dialog(page).getByRole('searchbox').fill('Digital');await dialog(page).locator('.record-task-results button').click();
-      assert.equal(await notes.inputValue(), 'ร่างทดสอบ');await page.getByRole('group', { name: 'ข้อความแนะนำ' }).getByRole('button', { name: 'คุมสอบ DL', exact: true }).click();assert.equal(await notes.inputValue(), 'ร่างทดสอบ\nคุมสอบ DL');
+      assert.equal(await notes.inputValue(), 'ร่างทดสอบ');await page.getByRole('group', { name: 'ข้อความแนะนำ' }).getByRole('button', { name: 'เช้า', exact: true }).click();assert.equal(await notes.inputValue(), 'เช้า');
       await page.getByRole('button', { name: 'เปลี่ยนวันที่และเวลา' }).click();await dialog(page).locator('input[type=time]').fill('17:00');await dialog(page).getByRole('button', { name: 'ใช้วันที่และเวลานี้', exact: true }).click();
-      await page.locator('.record-inspector summary').click();await page.getByRole('button', { name: 'CSS เดิม', exact: true }).click();await engineCount(page, 0);assert.equal(await notes.inputValue(), 'ร่างทดสอบ\nคุมสอบ DL');
+      await page.locator('.record-inspector summary').click();await page.getByRole('button', { name: 'CSS เดิม', exact: true }).click();await engineCount(page, 0);assert.equal(await notes.inputValue(), 'เช้า');
       await page.getByRole('button', { name: 'QuickLiquid', exact: true }).click();await page.waitForSelector('.record-form .ui-optical-layer[data-active=true]');
       await page.waitForSelector('.record-form [data-glass-surface="button"][data-glass-phase="svg"]');assert.equal(await page.locator('.record-form [data-glass-surface="button"]').evaluate(element => element.tagName), 'SPAN');
-      await shot(page, 'manual-desktop-light');await page.locator('form[aria-label="กรอกบันทึกงาน"]').getByRole('button', { name: 'บันทึกงาน', exact: true }).click();
+      await shot(page, 'manual-desktop-light');await page.locator('form[aria-label="กรอกบันทึกงาน"]').getByRole('button', { name: 'ตรวจรายการก่อนบันทึก', exact: true }).click();await dialog(page).getByRole('button', { name: 'ยืนยันบันทึก', exact: true }).click();
       assert.ok((await page.locator('.record-recent').textContent()).includes('17:00'));await page.locator('.record-mode').getByRole('button', { name: 'บันทึกด่วน', exact: true }).click();await page.locator('.record-inspector summary').click();
     });
     await test('Second Quick Log page keeps plug/USB inventory and phone entry usable without changing the layout', async () => {
@@ -100,7 +100,7 @@ async function main() {
         await quick(page, name).click();assert.equal(await dialog(page).locator('.record-resource-tile').count(), 1);await dialog(page).locator('.record-resource-tile').click();assert.equal(await page.locator('[name="record-student"]').getAttribute('inputmode'), 'numeric');await close(page);
       }
       await page.getByRole('button', { name: 'ก่อนหน้า', exact: true }).click();await quick(page, /รับสายโทรศัพท์/).click();await dialog(page).getByRole('button', { name: 'บันทึกงาน', exact: true }).click();
-      await page.waitForFunction(() => document.activeElement?.tagName === 'TEXTAREA');await dialog(page).getByRole('textbox').fill('แนะนำการใช้งานตัวอย่าง');await dialog(page).getByRole('button', { name: 'บันทึกงาน', exact: true }).click();assert.ok((await page.locator('.record-recent').textContent()).includes('รับสายโทรศัพท์'));
+      await page.waitForFunction(() => document.activeElement?.name === 'record-phone-recipient');await page.locator('[name=record-phone-recipient]').fill('หน่วยงานตัวอย่าง');await page.locator('[name=record-phone-notes]').fill('แนะนำการใช้งานตัวอย่าง');await dialog(page).getByRole('button', { name: 'บันทึกงาน', exact: true }).click();assert.ok((await page.locator('.record-recent').textContent()).includes('รับแจ้งและแก้ปัญหาทางโทรศัพท์'));
     });
     await test('Selected date filters both daily counts and agenda instead of repeating the previous date', async () => {
       await page.getByRole('button', { name: 'เปลี่ยนวันที่และเวลา' }).click();await dialog(page).locator('input[type=date]').fill('2026-11-07');await dialog(page).getByRole('button', { name: 'ใช้วันที่และเวลานี้', exact: true }).click();

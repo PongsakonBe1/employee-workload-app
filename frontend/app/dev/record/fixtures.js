@@ -1,4 +1,5 @@
 // Synthetic display fixtures only. No production identity, student ID or API client.
+import { recordTasks } from "../../../lib/recordPreview";
 export const people = [
   { id: "fixture-a", displayName: "เจ้าหน้าที่ A (เอ)", fullName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A" },
   { id: "fixture-b", displayName: "เจ้าหน้าที่ B (บี)", fullName: "เจ้าหน้าที่ตัวอย่าง B", initial: "B" },
@@ -14,14 +15,11 @@ export const initialDevices = [
   { id: "demo-p1", name: "ปลั๊กไฟตัวอย่าง 01", kind: "plug", location: "Finn Space", student: null, available: true },
   { id: "demo-u1", name: "USB ตัวอย่าง 01", kind: "usb", location: "ชั้น 3", student: null, available: true },
 ];
-export const tasks = [
-  { id: "support", major: "บริการเทคโนโลยีสารสนเทศ", label: "ช่วยเหลือการใช้งานคอมพิวเตอร์", suggestions: ["แนะนำการใช้งานระบบ", "ตรวจสอบการเชื่อมต่อ", "แก้ไขปัญหาการเข้าใช้งาน"] },
-  { id: "room", major: "บริการห้องปฏิบัติการ", label: "เปิด–ปิดห้องบริการ", suggestions: ["เปิดห้องให้บริการ", "ตรวจความเรียบร้อยและปิดห้อง"] },
-  { id: "exam", major: "บริการทดสอบสมรรถนะดิจิทัล", label: "คุมสอบ Digital Literacy", suggestions: ["เตรียมห้องสอบ", "คุมสอบ DL", "ตรวจอุปกรณ์หลังสอบ"] },
-];
+export const tasks = recordTasks;
 export const combos = {
-  account: { title: "เปิดใช้บัญชี", tasks: ["เปิดใช้ ICIT Account", "ตั้งค่า Microsoft 365", "ตั้งค่า Microsoft Authenticator", "ตั้งค่าอีเมล", "แนะนำการเข้าใช้งาน"] },
-  software: { title: "ติดตั้งโปรแกรม", tasks: ["ติดตั้งโปรแกรมสำนักงาน", "ติดตั้งโปรแกรมการเรียน", "อัปเดตโปรแกรม", "ตั้งค่าโปรแกรม", "ทดสอบการใช้งาน", "แนะนำการใช้งาน"] },
+  // Approved Review 10 labels; live globalTemplates verification remains separate.
+  account: { title: "เปิดใช้บัญชี", tasks: ["เปิดใช้ Microsoft Authenticator", "เปิดใช้ Google Account", "เปิดใช้ KMUTNB SSO", "เปิดใช้ 2SV Google", "เปิดใช้ ICIT account"] },
+  software: { title: "ติดตั้งโปรแกรม", tasks: ["ติดตั้ง SolidWork", "ติดตั้ง MatLab", "ติดตั้ง Microsoft365", "ติดตั้ง Visio", "ติดตั้ง Adobe", "ติดตั้ง ESET"] },
 };
 export const initialLogs = [
   { id: "sample-1", title: "ยืมหูฟัง", detail: "หูฟังตัวอย่าง 02 · Finn Space", person: "เจ้าหน้าที่ A (เอ)", date: "2026-11-06", time: "10:55" },

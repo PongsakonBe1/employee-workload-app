@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-07",
+  "branch": "codex/record-contract-review-fixes",
+  "base": "e7cd0dc",
+  "previewOrigin": "https://mustang-sons-microwave-pixels.trycloudflare.com",
+  "scope": "Approved UI and source-catalog corrections; live template verification pending",
+  "tests": {
+    "uiGroups": {
+      "contractLocal": 6,
+      "contractPublic": 6,
+      "record": 11,
+      "calendar": 11,
+      "foundation": 11,
+      "optics": 8
+    },
+    "targetedUnit": {
+      "passed": 27,
+      "failed": 0
+    },
+    "fullUnit": {
+      "passed": 245,
+      "failed": 8,
+      "total": 253,
+      "sameBaselineFailures": true,
+      "failures": [
+        "analyzeSeasonalPattern should identify outliers correctly",
+        "calculateConsistency should calculate lower consistency for variable daily counts",
+        "calculateRadarMetrics should calculate realistic values",
+        "detectOutliers should detect daily outliers correctly",
+        "getTrendIndicator should return 'up' for > 10% increase",
+        "predictNextPeak academic period fallback should identify next academic period correctly",
+        "predictNextPeak academic period fallback should return exam period for single year data",
+        "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+      ]
+    },
+    "lint": "passed targeted ESLint with jsx-no-undef",
+    "build": "passed isolated compatibility build",
+    "zoom": "passed native browser zoom 200%"
+  },
+  "protectedFiles": [
+    "frontend/lib/analytics.test.js",
+    "frontend/lib/analytics.js",
+    "frontend/lib/staffMetrics.test.js",
+    "frontend/lib/staffMetrics.js",
+    "frontend/lib/validation.test.js",
+    "frontend/lib/validation.js",
+    "frontend/lib/commentSuggestions.js",
+    "frontend/lib/worklogUtils.js",
+    "frontend/components/QuickLogButtons.js",
+    "frontend/app/admin/record/page.js",
+    "frontend/app/worklogs/new/page.js",
+    "package.json",
+    "package-lock.json",
+    "docs/design/phase1/revision7/layout.js",
+    "docs/design/phase1/revision7/foundation-b.js"
+  ],
+  "templateProvenance": {
+    "manual": "Existing MINOR_TASKS, commentSuggestionMap and duty mapping",
+    "combos": "Independently rendered approved Review 10; not live database",
+    "phoneRecipient": "Required by user-confirmed requirement",
+    "liveDatabaseRead": false,
+    "pendingApproval": "Read only globalTemplates in labboy-workload-app through Firebase Console; no users/worklogs or writes",
+    "blockedBy": "Automatic approval review rejected private Firebase Console access without explicit destination/scope authorization"
+  },
+  "productionDataUsed": false,
+  "installedDependencies": false,
+  "pushed": false,
+  "deployed": false,
+  "limitations": [
+    "Physical Safari/iPhone/Android and scanner UAT pending",
+    "Synthetic transactions in memory; no real persistence/transaction integration test",
+    "Live template content and requirements still need verification after read approval"
+  ]
+}

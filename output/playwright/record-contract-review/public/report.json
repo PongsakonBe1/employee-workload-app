@@ -1,0 +1,86 @@
+{
+  "origin": "https://mustang-sons-microwave-pixels.trycloudflare.com",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Manual form order and review action are checked against the independently rendered approved Review 10",
+      "status": "passed"
+    },
+    {
+      "name": "Phone requires and focuses recipient then detail; saves both with the existing minorTask and supports Undo",
+      "status": "passed"
+    },
+    {
+      "name": "All 30 source tasks are searchable; original suggestions replace detail, review preserves draft and confirms exactly once",
+      "status": "passed"
+    },
+    {
+      "name": "Review SVG layers are retained and sidebar has one moving optical hover surface with native links intact",
+      "status": "passed"
+    },
+    {
+      "name": "Dark, solid and reduced motion keep forms readable, draft intact and hover non-animated when requested",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile forms and validation fit 375/390/430/768px, use 16px inputs and retain the review step",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Live globalTemplates not verified by this isolated test",
+    "Chromium touch/iOS UA is not physical device UAT"
+  ],
+  "referenceCombos": {
+    "เปิดใช้บัญชี": [
+      "เปิดใช้ Microsoft Authenticator",
+      "เปิดใช้ Google Account",
+      "เปิดใช้ KMUTNB SSO",
+      "เปิดใช้ 2SV Google",
+      "เปิดใช้ ICIT account"
+    ],
+    "ติดตั้งโปรแกรม": [
+      "ติดตั้ง SolidWork",
+      "ติดตั้ง MatLab",
+      "ติดตั้ง Microsoft365",
+      "ติดตั้ง Visio",
+      "ติดตั้ง Adobe",
+      "ติดตั้ง ESET"
+    ]
+  },
+  "reference": {
+    "approvedFields": [
+      "manual-date",
+      "manual-time",
+      "manual-main",
+      "manual-group",
+      "manual-recipient",
+      "manual-notes"
+    ],
+    "labels": [
+      "วันที่ จำเป็น",
+      "เวลา จำเป็น",
+      "งานหลัก",
+      "กลุ่มงาน",
+      "ผู้รับบริการ ถ้ามี",
+      "รายละเอียด"
+    ]
+  },
+  "hoverTrace": [
+    181.5,
+    193.57325744628906,
+    204.63841247558594,
+    215.6865997314453,
+    225.9357147216797,
+    234.75132751464844,
+    242.01353454589844,
+    247.8633270263672,
+    252.3992156982422,
+    256.197998046875,
+    259.2292175292969,
+    261.7607116699219,
+    263.81817626953125,
+    265.59429931640625
+  ]
+}
