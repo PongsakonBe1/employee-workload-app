@@ -172,7 +172,7 @@ export default function CalendarPreview() {
       <aside className="cal-sidebar" aria-label="ปฏิทินและตัวกรอง">
         <GlassSurface
           mode={glassMode} radius={22}
-          name="calendar-sidebar"
+          name="calendar-sidebar" interactive={false}
         />
         <div className="cal-sidebar-content">
           <div className="cal-mini-heading">

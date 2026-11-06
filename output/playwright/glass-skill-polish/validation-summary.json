@@ -1,0 +1,85 @@
+{
+  "date": "2026-11-07",
+  "branch": "codex/review10-glass-interaction-polish",
+  "base": "8da6b31",
+  "previewOrigin": "https://income-translator-census-dude.trycloudflare.com",
+  "tests": {
+    "fullUnit": {
+      "passed": 241,
+      "failed": 8,
+      "total": 249,
+      "sameBaselineFailures": true,
+      "failedNames": [
+        "analyzeSeasonalPattern should identify outliers correctly",
+        "calculateConsistency should calculate lower consistency for variable daily counts",
+        "calculateRadarMetrics should calculate realistic values",
+        "detectOutliers should detect daily outliers correctly",
+        "getTrendIndicator should return 'up' for > 10% increase",
+        "predictNextPeak academic period fallback should identify next academic period correctly",
+        "predictNextPeak academic period fallback should return exam period for single year data",
+        "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+      ]
+    },
+    "targetedUnit": {
+      "passed": 15,
+      "failed": 0
+    },
+    "skillPolishLocal": 6,
+    "skillPolishPublic": 6,
+    "recordRegression": 11,
+    "calendarRegression": 11,
+    "foundationRegression": 11,
+    "opticsRegression": 8,
+    "esLint": "passed (targeted)",
+    "build": "passed isolated compatibility build",
+    "nativeZoom200": "passed /dev/record"
+  },
+  "protectedFiles": [
+    {
+      "file": "frontend/lib/analytics.test.js",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/lib/analytics.js",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/lib/staffMetrics.test.js",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/lib/staffMetrics.js",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/lib/validation.test.js",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/lib/validation.js",
+      "unchanged": true
+    },
+    {
+      "file": "package.json",
+      "unchanged": true
+    },
+    {
+      "file": "package-lock.json",
+      "unchanged": true
+    },
+    {
+      "file": "frontend/components/RoomUsageCalendar.js",
+      "unchanged": true
+    }
+  ],
+  "installedDependencies": false,
+  "pushed": false,
+  "deployed": false,
+  "productionDataUsed": false,
+  "limitations": [
+    "Physical Safari/iPhone and Android UAT pending; Chromium touch/iOS UA is policy emulation",
+    "iOS/Safari intentionally uses CSS optics fallback",
+    "Review10 contract checks cover sampled geometry, typography and icon ramp; not full pixel/native API certification",
+    "Full unit suite retains 8 existing baseline failures"
+  ]
+}

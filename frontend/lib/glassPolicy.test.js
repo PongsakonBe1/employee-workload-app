@@ -34,4 +34,9 @@ describe("development glass experiment boundaries", () => {
     expect(glassConfiguration(glassPolicy(usable), "light", 24).appearance).toBe("light");
     expect(glassConfiguration(glassPolicy(usable), "dark", 24).appearance).toBe("dark");
   });
+  it("keeps a passive panel free of pointer feedback without disabling its optical material", () => {
+    const config = glassConfiguration(glassPolicy({ ...usable, chromium: true }), "light", 22, false);
+    expect(config.refractionMode).toBe("svg");expect(config.cursorTracking).toBe(false);expect(config.hoverLighting).toBe(false);
+    expect(glassConfiguration(glassPolicy(usable), "light", 24).hoverLighting).toBe(true);
+  });
 });

@@ -1,0 +1,48 @@
+[
+  {
+    "mobile": false,
+    "card": {
+      "height": 149,
+      "minHeight": "149px",
+      "padding": "18px",
+      "radius": "17px"
+    },
+    "title": {
+      "fontSize": "13px",
+      "lineHeight": "20.15px"
+    },
+    "icon": {
+      "width": 50,
+      "height": 50,
+      "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+    },
+    "h1": "29px",
+    "caption": {
+      "fontSize": "13px",
+      "lineHeight": "19.5px"
+    }
+  },
+  {
+    "mobile": true,
+    "card": {
+      "height": 155,
+      "minHeight": "155px",
+      "padding": "17px 15px",
+      "radius": "19px"
+    },
+    "title": {
+      "fontSize": "15px",
+      "lineHeight": "21.75px"
+    },
+    "icon": {
+      "width": 46,
+      "height": 46,
+      "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+    },
+    "h1": "30px",
+    "caption": {
+      "fontSize": "12px",
+      "lineHeight": "18px"
+    }
+  }
+]

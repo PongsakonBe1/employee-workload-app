@@ -19,14 +19,14 @@ export function useGlassEnvironment(enabled) {
   return environment;
 }
 
-export function GlassSurface({ mode, radius, name, as: Element = "div" }) {
+export function GlassSurface({ mode, radius, name, as: Element = "div", interactive = true }) {
   const { resolved } = useAppearance(), environment = useGlassEnvironment(process.env.NODE_ENV === "development" && mode === "quick");
   const host = useRef(null), engine = useRef(null);
   const failedMap = useRef(false);
   const [phase, setPhase] = useState("loading");
   const policy = glassPolicy({ ...environment, mode, development: process.env.NODE_ENV === "development", solid: resolved.solid, reducedMotion: resolved.reducedMotion });
   const { refractionMode, quality, motion } = policy;
-  const config = useMemo(() => glassConfiguration({ refractionMode, quality, motion }, resolved.resolvedTheme, radius), [refractionMode, quality, motion, resolved.resolvedTheme, radius]);
+  const config = useMemo(() => glassConfiguration({ refractionMode, quality, motion }, resolved.resolvedTheme, radius, interactive), [refractionMode, quality, motion, resolved.resolvedTheme, radius, interactive]);
   const latestConfig = useRef(config);latestConfig.current = config;
 
   useEffect(() => {
@@ -56,8 +56,8 @@ export function GlassSurface({ mode, radius, name, as: Element = "div" }) {
         // remain outside the engine's clipped content and retain their own pointer events.
         const parent = element.parentElement;
         const move = event => { if (event.target === element || event.pointerType === "touch" || (!latestConfig.current.cursorTracking && !latestConfig.current.hoverLighting)) return;element.dispatchEvent(new PointerEvent("pointermove", { clientX: event.clientX, clientY: event.clientY, pointerType: event.pointerType })); };
-        const enter = () => element.dispatchEvent(new MouseEvent("mouseenter"));
-        const leave = () => element.dispatchEvent(new MouseEvent("mouseleave"));
+        const enter = () => { if (latestConfig.current.hoverLighting) element.dispatchEvent(new MouseEvent("mouseenter")); };
+        const leave = () => { if (latestConfig.current.hoverLighting) element.dispatchEvent(new MouseEvent("mouseleave")); };
         parent.addEventListener("pointermove", move, { passive: true });parent.addEventListener("mouseenter", enter);parent.addEventListener("mouseleave", leave);
         releasePointer = () => { parent.removeEventListener("pointermove", move);parent.removeEventListener("mouseenter", enter);parent.removeEventListener("mouseleave", leave); };
         if (latestConfig.current.refractionMode === "svg") checkMap();else setPhase("css");

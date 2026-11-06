@@ -1,5 +1,7 @@
 # Development UI Foundation — ย้ายส่วนกลางเข้า Next.js
 
+อัปเดตล่าสุด: [ปรับรายละเอียด Review 10 ตาม Liquid Glass skill](../glass-skill-polish/README.md) คืนขนาด/ไอคอนตามแบบ และเพิ่ม selection motion ใน controls ที่มีอยู่ โดยคงโหมด development
+
 อัปเดตถัดไป: [ปฏิทินและ controls ตาม Apple HIG + MockFlow reference](../calendar-liquid-glass/README.md) เปิดที่ `/dev/calendar` และเชื่อมกับหน้าบันทึกงานแล้ว ยังใช้ข้อมูลตัวอย่างใน development
 
 อัปเดตหน้าตรวจแบบ: [หน้าบันทึกงานตาม Review 10 + Liquid Glass](../record-liquid-glass/README.md) อยู่ที่ `/dev/record`; `/dev/ui` ยังคงเป็นห้องทดสอบส่วนกลาง ยังไม่ได้ย้ายรายละเอียดทุกหน้าของเว็บ

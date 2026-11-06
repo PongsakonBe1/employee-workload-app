@@ -1,0 +1,82 @@
+[
+  {
+    "approved": true,
+    "mobile": false,
+    "card": {
+      "height": 149,
+      "minHeight": "149px",
+      "padding": "18px",
+      "radius": "17px"
+    },
+    "title": {
+      "fontSize": "13px",
+      "lineHeight": "20.15px"
+    },
+    "icon": {
+      "width": 50,
+      "height": 50,
+      "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+    },
+    "h1": "29px"
+  },
+  {
+    "approved": false,
+    "mobile": false,
+    "card": {
+      "height": 174,
+      "minHeight": "174px",
+      "padding": "18px",
+      "radius": "17px"
+    },
+    "title": {
+      "fontSize": "13px",
+      "lineHeight": "20.8px"
+    },
+    "icon": {
+      "width": 50,
+      "height": 50,
+      "backgroundImage": "linear-gradient(145deg, rgba(255, 255, 255, 0.208), rgba(255, 255, 255, 0) 60%)"
+    },
+    "h1": "29px"
+  },
+  {
+    "approved": true,
+    "mobile": true,
+    "card": {
+      "height": 155,
+      "minHeight": "155px",
+      "padding": "17px 15px",
+      "radius": "19px"
+    },
+    "title": {
+      "fontSize": "15px",
+      "lineHeight": "21.75px"
+    },
+    "icon": {
+      "width": 46,
+      "height": 46,
+      "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+    },
+    "h1": "30px"
+  },
+  {
+    "approved": false,
+    "mobile": true,
+    "card": {
+      "height": 164,
+      "minHeight": "164px",
+      "padding": "16px",
+      "radius": "17px"
+    },
+    "title": {
+      "fontSize": "13px",
+      "lineHeight": "20.8px"
+    },
+    "icon": {
+      "width": 46,
+      "height": 46,
+      "backgroundImage": "linear-gradient(145deg, rgba(255, 255, 255, 0.208), rgba(255, 255, 255, 0) 60%)"
+    },
+    "h1": "28px"
+  }
+]

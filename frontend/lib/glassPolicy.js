@@ -9,14 +9,14 @@ export function glassPolicy({ mode = "css", development = false, ready = false, 
   return { active: reason === null, reason, refractionMode: chromium ? "svg" : "css", quality: coarse ? "low" : "medium", motion: !reducedMotion };
 }
 
-export function glassConfiguration(policy, theme, radius) {
+export function glassConfiguration(policy, theme, radius, interactive = true) {
   return {
     material: "thin", appearance: theme === "dark" ? "dark" : "light",
     refractionMode: policy.refractionMode, quality: policy.quality, borderRadius: radius,
     blur: 6, refractionStrength: policy.quality === "low" ? 10 : 16, bezelWidth: 20,
     tintOpacity: theme === "dark" ? .16 : .12,
     chromaticAberration: .12, specularStrength: .32, edgeHighlight: .9,
-    cursorTracking: policy.motion, hoverLighting: policy.motion, dynamicLighting: false,
+    cursorTracking: policy.motion && interactive, hoverLighting: policy.motion && interactive, dynamicLighting: false,
     parallax: false, respectPreferences: true,
   };
 }

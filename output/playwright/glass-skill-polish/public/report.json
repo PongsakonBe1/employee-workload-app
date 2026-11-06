@@ -1,0 +1,90 @@
+{
+  "completed": true,
+  "origin": "https://income-translator-census-dude.trycloudflare.com",
+  "checks": [
+    {
+      "name": "Desktop and mobile Quick Log geometry, typography and icon color ramp match the approved Review 10",
+      "status": "passed"
+    },
+    {
+      "name": "A single group surface animates between native controls without remounting its engine",
+      "status": "passed"
+    },
+    {
+      "name": "Rapid calendar changes and resizing keep one selection aligned to the chosen native button",
+      "status": "passed"
+    },
+    {
+      "name": "Passive sidebar keeps optics but receives no synthetic pointer feedback; interactive toolbar still does",
+      "status": "passed"
+    },
+    {
+      "name": "Reduced motion snaps selection, solid/CSS modes restore selected fills, and changing material preserves draft",
+      "status": "passed"
+    },
+    {
+      "name": "Touch controls retain hit targets and an explicit iOS CSS fallback without adding SVG filters",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "geometry": [
+    {
+      "mobile": false,
+      "card": {
+        "height": 149,
+        "minHeight": "149px",
+        "padding": "18px",
+        "radius": "17px"
+      },
+      "title": {
+        "fontSize": "13px",
+        "lineHeight": "20.15px"
+      },
+      "icon": {
+        "width": 50,
+        "height": 50,
+        "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+      },
+      "h1": "29px",
+      "caption": {
+        "fontSize": "13px",
+        "lineHeight": "19.5px"
+      }
+    },
+    {
+      "mobile": true,
+      "card": {
+        "height": 155,
+        "minHeight": "155px",
+        "padding": "17px 15px",
+        "radius": "19px"
+      },
+      "title": {
+        "fontSize": "15px",
+        "lineHeight": "21.75px"
+      },
+      "icon": {
+        "width": 46,
+        "height": 46,
+        "backgroundImage": "linear-gradient(145deg, color(srgb 0.804392 0.727686 0.917176), rgb(238, 229, 255) 65%)"
+      },
+      "h1": "30px",
+      "caption": {
+        "fontSize": "12px",
+        "lineHeight": "18px"
+      }
+    }
+  ],
+  "motion": [
+    {
+      "surface": "record-mode",
+      "sampledFrames": 95,
+      "distinctPositions": 60
+    }
+  ],
+  "limitations": [
+    "Chromium touch/iOS UA emulation is not physical Safari UAT",
+    "Sampled visual contracts and motion traces are not a native API/FPS certification"
+  ]
+}

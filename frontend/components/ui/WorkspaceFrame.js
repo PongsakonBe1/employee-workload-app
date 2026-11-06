@@ -51,7 +51,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       aria-label={entry.label} aria-current={current === entry.id ? "page" : undefined}
       onClick={event => navigate(event, entry.href)}
     >
-      <span className="ui-nav-symbol" data-tone={entry.tone}><Icon size={19} aria-hidden="true" /></span>
+      <span className="ui-nav-symbol" data-tone={entry.tone}><Icon size={20} aria-hidden="true" /></span>
       <span className="ui-nav-text">{entry.label}</span>
     </Link>;
     return tooltip ? <Tooltip

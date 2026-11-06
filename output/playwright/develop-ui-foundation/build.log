@@ -2,7 +2,7 @@
    - Environments: .env.local, .env.production
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 9.5s
+ ✓ Compiled successfully in 17.3s
    Checking validity of types ...
    Collecting page data ...
    Generating static pages (0/33) ...
@@ -26,17 +26,17 @@ Route (app)                                 Size  First Load JS
 ├ ○ /admin/dl-exam-schedules               339 B         275 kB
 ├ ○ /admin/equipment-health              5.58 kB         274 kB
 ├ ○ /admin/equipment-items               5.24 kB         274 kB
-├ ○ /admin/record                        4.76 kB         313 kB
+├ ○ /admin/record                        4.76 kB         314 kB
 ├ ○ /admin/settings                      5.66 kB         274 kB
-├ ○ /admin/staff-analytics               6.28 kB         365 kB
+├ ○ /admin/staff-analytics               6.28 kB         366 kB
 ├ ○ /admin/system                        10.2 kB         303 kB
 ├ ○ /admin/templates                       300 B         277 kB
 ├ ○ /admin/users                         5.88 kB         275 kB
 ├ ○ /apple-icon.png                          0 B            0 B
-├ ○ /calendar                              482 B         274 kB
-├ ○ /dashboard                           8.91 kB         282 kB
-├ ○ /dev/calendar                        16.2 kB         139 kB
-├ ○ /dev/record                          9.76 kB         132 kB
+├ ○ /calendar                              481 B         274 kB
+├ ○ /dashboard                            8.9 kB         282 kB
+├ ○ /dev/calendar                        16.4 kB         139 kB
+├ ○ /dev/record                          9.92 kB         133 kB
 ├ ○ /dev/ui                              3.33 kB         126 kB
 ├ ○ /export                               4.4 kB         273 kB
 ├ ○ /help                                6.21 kB         275 kB
