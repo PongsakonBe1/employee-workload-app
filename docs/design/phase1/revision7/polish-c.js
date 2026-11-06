@@ -1,16 +1,16 @@
 /* Review 08 polish: synthetic UI only; existing production names and records stay intact. */
 'use strict';
-const uiC={background:'ambient'};
+const uiC={background:'classic'};
 const personLabelC=person=>person.displayName||person.name||person.nickname||person.fullName||'ไม่ระบุชื่อ';
 const personDetailC=person=>{
  const meta=f4.userMeta?.find(user=>user.id===person.id);
  return person.fullName||meta?.fullName||'เจ้าหน้าที่ตัวอย่าง '+person.initial;
 };
-function backgroundOptionsC(){return `<fieldset class="background-options-c"><legend>พื้นหลังพื้นที่ทำงาน</legend><div class="background-choices-c">${[['plain','เรียบ','พื้นที่เรียบ อ่านข้อมูลได้เต็มที่'],['ambient','สีละมุน','ฟ้า–ม่วงอ่อน ช่วยแยกชั้นควบคุม']].map(([value,label,detail])=>`<button type="button" data-action="background-c" data-value="${value}" aria-pressed="${uiC.background===value}"><span class="background-sample-c ${value}" aria-hidden="true"></span><strong>${label}</strong><small>${detail}</small>${uiC.background===value?icon('check'):''}</button>`).join('')}</div></fieldset>`;}
+function backgroundOptionsC(){return `<fieldset class="background-options-c"><legend>พื้นหลังพื้นที่ทำงาน</legend><div class="background-choices-c">${[['classic','ฟ้า–เขียวเดิม','ชุดสีจากแอปเดิม ปรับตาม Light / Dark'],['ambient','สีละมุน','ฟ้า–ม่วงอ่อน ช่วยแยกชั้นควบคุม'],['plain','เรียบ','พื้นที่เรียบ อ่านข้อมูลได้เต็มที่']].map(([value,label,detail])=>`<button type="button" data-action="background-c" data-value="${value}" aria-pressed="${uiC.background===value}"><span class="background-sample-c ${value}" aria-hidden="true"></span><strong>${label}</strong><small>${detail}</small>${uiC.background===value?icon('check'):''}</button>`).join('')}</div><p class="caption">ตัวเลือกนี้ใช้ในรอบตรวจแบบปัจจุบัน ยังไม่บันทึกเป็นค่าบัญชีผู้ใช้</p></fieldset>`;}
 function applyBackgroundC(){document.documentElement.dataset.background=uiC.background;}
 actions['background-c']=button=>{
  uiC.background=button.dataset.value;applyBackgroundC();
- const group=button.closest('.background-options-c');if(group)group.outerHTML=backgroundOptionsC();
+ const group=button.closest('.background-options-c');if(group){const parent=group.parentElement;group.outerHTML=backgroundOptionsC();parent.querySelector(`[data-action="background-c"][data-value="${uiC.background}"]`)?.focus({preventScroll:true});}
 };
 const appearanceBeforeC=appearanceSheet;
 appearanceSheet=function(){appearanceBeforeC();$('.sheet-body').insertAdjacentHTML('beforeend',backgroundOptionsC());};

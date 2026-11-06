@@ -1,0 +1,42 @@
+{
+  "completed": true,
+  "results": [
+    {
+      "name": "Mobile preserves classic and ambient gradients in both themes; plain remains an explicit option",
+      "status": "passed"
+    },
+    {
+      "name": "Overview totals reconcile, the team keeps roster order after counts change, and missing records do not become a ranking",
+      "status": "passed"
+    },
+    {
+      "name": "All task categories and team entries still drill into source records without another data load",
+      "status": "passed"
+    },
+    {
+      "name": "An empty scoped period remains explicit, and zero-count staff still open an empty source view",
+      "status": "passed"
+    },
+    {
+      "name": "Compact navigation labels are unclipped tooltips with keyboard focus, Escape dismissal and no native-title duplicate",
+      "status": "passed"
+    },
+    {
+      "name": "Short desktop rail scrolls expanded tools without horizontal overflow or inaccessible last links",
+      "status": "passed"
+    },
+    {
+      "name": "Tooltip transition respects reduced motion and never appears in an expanded sidebar",
+      "status": "passed"
+    },
+    {
+      "name": "Overview and calendar remain within real viewport widths; the primary chart is compact on desktop",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Synthetic prototype only; no production data or cloud-read measurement",
+    "Physical Safari/iPhone/Android and team comprehension UAT are pending"
+  ]
+}

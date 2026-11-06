@@ -1,5 +1,7 @@
 # Design Review 07 — Layout, typography และ icon feedback
 
+ล่าสุด Review 10: [พื้นหลังมือถือ Tooltip การเลื่อน และภาพรวมที่อ่านง่ายขึ้น](REVIEW_10.md) · [เปิดต้นแบบ](http://127.0.0.1:4197/#/dashboard) · [Gallery](http://127.0.0.1:4197/gallery.html)
+
 ล่าสุด Review 09: [วางแผนงาน ปฏิทิน ปุ่ม และผลตรวจ](REVIEW_09.md) · [เปิดภาพรวมรายสัปดาห์](http://127.0.0.1:4197/#/dashboard) · [Gallery](http://127.0.0.1:4197/gallery.html)
 
 ล่าสุด Review 08 เก็บรายละเอียด: [Quick Log, controls, grouped forms และผลตรวจ](POLISH_C.md) · [เปิดต้นแบบ](http://127.0.0.1:4197/#/record) · [Gallery](http://127.0.0.1:4197/gallery.html)

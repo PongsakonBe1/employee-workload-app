@@ -1,0 +1,40 @@
+{
+  "review": 10,
+  "behaviorGroups": 81,
+  "checks": [
+    {
+      "file": "refinements-e/report.json",
+      "passed": 8
+    },
+    {
+      "file": "planning-d/report.json",
+      "passed": 15
+    },
+    {
+      "file": "polish-c/report.json",
+      "passed": 13
+    },
+    {
+      "file": "revision8/flow-report.json",
+      "passed": 22
+    },
+    {
+      "file": "phase-b/report.json",
+      "passed": 12
+    },
+    {
+      "file": "revision7/interactions.json",
+      "passed": 11
+    }
+  ],
+  "logicTests": 7,
+  "renderedViews": 120,
+  "accessibilityStates": 300,
+  "accessibilityFailures": 0,
+  "nativeBrowserZoomPercent": 200,
+  "publicPreviewHttpStatus": 200,
+  "productionChanged": false,
+  "cloudReadsMeasured": false,
+  "teamUATCompleted": false,
+  "physicalDeviceUATCompleted": false
+}

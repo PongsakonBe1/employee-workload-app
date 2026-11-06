@@ -9,6 +9,7 @@ const files={
  '/flow-fixes.js':['flow-fixes.js','text/javascript'],'/flow-fixes.css':['flow-fixes.css','text/css'],
  '/polish-c.js':['polish-c.js','text/javascript'],'/polish-c.css':['polish-c.css','text/css'],
  '/planning-model-d.js':['planning-model-d.js','text/javascript'],'/planning-d.js':['planning-d.js','text/javascript'],'/planning-d.css':['planning-d.css','text/css'],
+ '/refinements-e.js':['refinements-e.js','text/javascript'],'/refinements-e.css':['refinements-e.css','text/css'],
  '/planning-dashboard.png':['../../../../output/playwright/ux-phase1/planning-d/dashboard-desktop-light-preview.png','image/png'],'/planning-calendar-mobile.png':['../../../../output/playwright/ux-phase1/planning-d/classrooms-mobile-light-preview.png','image/png'],
  '/planning-equipment.png':['../../../../output/playwright/ux-phase1/planning-d/usage-desktop-dark-preview.png','image/png'],'/planning-jd.png':['../../../../output/playwright/ux-phase1/planning-d/jd-shared-preview.png','image/png'],
  '/polish-c-rooms.png':['../../../../output/playwright/ux-phase1/polish-c/rooms-3-desktop-dark.png','image/png'],'/polish-c-template.png':['../../../../output/playwright/ux-phase1/polish-c/template-mobile-dark.png','image/png'],
