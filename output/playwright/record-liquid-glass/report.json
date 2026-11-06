@@ -1,0 +1,126 @@
+{
+  "url": "http://127.0.0.1:4310/dev/record",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Review 10 content hierarchy, six Quick Logs and opt-in decorative controls",
+      "status": "passed"
+    },
+    {
+      "name": "Both room floors use four desktop columns, distinct state labels, immediate save and persistent Undo",
+      "status": "passed"
+    },
+    {
+      "name": "Combo starts empty, supports Space, focuses missing recipient, preserves review choices and saves only selected tasks",
+      "status": "passed"
+    },
+    {
+      "name": "Borrow validates exactly 13 ASCII digits without truncation; return retains borrower and Undo restores status",
+      "status": "passed"
+    },
+    {
+      "name": "Manual draft survives centered task selection, suggestions, date changes and CSS/QuickLiquid switching",
+      "status": "passed"
+    },
+    {
+      "name": "Second Quick Log page keeps plug/USB inventory and phone entry usable without changing the layout",
+      "status": "passed"
+    },
+    {
+      "name": "Selected date filters both daily counts and agenda instead of repeating the previous date",
+      "status": "passed"
+    },
+    {
+      "name": "Sampled semantic status and primary tint colors maintain text contrast in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "Explicit app dark theme, reduced motion, solid surfaces and forced colors remain functional",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile layouts 375/390/430/768 keep controls, date inputs and room sheets inside the viewport",
+      "status": "passed"
+    },
+    {
+      "name": "Keyboard Escape restores focus, selected person uses ID and original display label",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "blockedOrigins": [],
+  "limitations": [
+    "Synthetic in-memory transactions only",
+    "Chromium touch emulation is not physical Safari/iPhone or Android UAT"
+  ],
+  "contrast": [
+    {
+      "theme": "สว่าง",
+      "foreground": "blue-ink",
+      "background": "blue",
+      "ratio": 6.410060777258192
+    },
+    {
+      "theme": "สว่าง",
+      "foreground": "green-ink",
+      "background": "green",
+      "ratio": 6.4792501360708705
+    },
+    {
+      "theme": "สว่าง",
+      "foreground": "amber-ink",
+      "background": "amber",
+      "ratio": 6.393865988290942
+    },
+    {
+      "theme": "สว่าง",
+      "foreground": "sub",
+      "background": "soft",
+      "ratio": 5.682012130751607
+    },
+    {
+      "theme": "สว่าง",
+      "primaryOver": "black",
+      "ratio": 7.212230621257484
+    },
+    {
+      "theme": "สว่าง",
+      "primaryOver": "white",
+      "ratio": 4.754565955462959
+    },
+    {
+      "theme": "มืด",
+      "foreground": "blue-ink",
+      "background": "blue",
+      "ratio": 7.1438424491611165
+    },
+    {
+      "theme": "มืด",
+      "foreground": "green-ink",
+      "background": "green",
+      "ratio": 8.431768678239116
+    },
+    {
+      "theme": "มืด",
+      "foreground": "amber-ink",
+      "background": "amber",
+      "ratio": 8.262874006557862
+    },
+    {
+      "theme": "มืด",
+      "foreground": "sub",
+      "background": "soft",
+      "ratio": 6.955669017728067
+    },
+    {
+      "theme": "มืด",
+      "primaryOver": "black",
+      "ratio": 6.310310407305754
+    },
+    {
+      "theme": "มืด",
+      "primaryOver": "white",
+      "ratio": 8.795566735628064
+    }
+  ]
+}

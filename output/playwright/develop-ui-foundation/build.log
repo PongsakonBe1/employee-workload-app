@@ -2,16 +2,16 @@
    - Environments: .env.local, .env.production
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 9.5s
+ ✓ Compiled successfully in 7.0s
    Checking validity of types ...
    Collecting page data ...
-   Generating static pages (0/31) ...
+   Generating static pages (0/32) ...
 [Firebase] Auth persistence set to LOCAL
 [Firebase] Auth persistence set to LOCAL
-   Generating static pages (7/31)
-   Generating static pages (15/31)
-   Generating static pages (23/31)
- ✓ Generating static pages (31/31)
+   Generating static pages (8/32)
+   Generating static pages (16/32)
+   Generating static pages (24/32)
+ ✓ Generating static pages (32/32)
    Finalizing page optimization ...
    Collecting build traces ...
    Exporting (0/2) ...
@@ -23,19 +23,20 @@ Route (app)                                 Size  First Load JS
 ├ ○ /admin/audit-logs                    2.96 kB         272 kB
 ├ ○ /admin/classroom-schedules             338 B         274 kB
 ├ ○ /admin/cleanup                        2.2 kB         230 kB
-├ ○ /admin/dl-exam-schedules               339 B         274 kB
+├ ○ /admin/dl-exam-schedules               339 B         275 kB
 ├ ○ /admin/equipment-health              5.58 kB         274 kB
 ├ ○ /admin/equipment-items               5.25 kB         274 kB
-├ ○ /admin/record                        4.76 kB         314 kB
+├ ○ /admin/record                        4.76 kB         313 kB
 ├ ○ /admin/settings                      5.66 kB         274 kB
 ├ ○ /admin/staff-analytics               6.28 kB         365 kB
 ├ ○ /admin/system                        10.2 kB         303 kB
 ├ ○ /admin/templates                       300 B         277 kB
 ├ ○ /admin/users                         5.88 kB         274 kB
 ├ ○ /apple-icon.png                          0 B            0 B
-├ ○ /calendar                              481 B         274 kB
-├ ○ /dashboard                            8.9 kB         282 kB
-├ ○ /dev/ui                              3.26 kB         126 kB
+├ ○ /calendar                              482 B         274 kB
+├ ○ /dashboard                           8.91 kB         282 kB
+├ ○ /dev/record                          9.46 kB         132 kB
+├ ○ /dev/ui                              3.31 kB         126 kB
 ├ ○ /export                               4.4 kB         273 kB
 ├ ○ /help                                6.21 kB         275 kB
 ├ ○ /icon.png                                0 B            0 B
@@ -49,7 +50,7 @@ Route (app)                                 Size  First Load JS
 + First Load JS shared by all             103 kB
   ├ chunks/3131-4150bfed8305ab02.js      46.6 kB
   ├ chunks/c7879cf7-fabe25011515220e.js  54.2 kB
-  └ other shared chunks (total)          2.25 kB
+  └ other shared chunks (total)          2.26 kB
 
 
 ○  (Static)  prerendered as static content

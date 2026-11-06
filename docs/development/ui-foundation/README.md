@@ -1,5 +1,7 @@
 # Development UI Foundation — ย้ายส่วนกลางเข้า Next.js
 
+อัปเดตหน้าตรวจแบบ: [หน้าบันทึกงานตาม Review 10 + Liquid Glass](../record-liquid-glass/README.md) อยู่ที่ `/dev/record`; `/dev/ui` ยังคงเป็นห้องทดสอบส่วนกลาง ยังไม่ได้ย้ายรายละเอียดทุกหน้าของเว็บ
+
 6 พฤศจิกายน 2569 · branch `codex/develop-ui-foundation` · ฐานแบบที่ตรวจรับ `dc80fbb` (Review 10)
 
 ผู้ใช้อนุมัติให้เริ่มย้ายส่วนกลางเข้าสู่แอปจริง โดยแยก branch และคงโหมด development งานนี้ยังไม่ใช่การย้ายรายละเอียดทุกหน้าหรือ release ใหม่

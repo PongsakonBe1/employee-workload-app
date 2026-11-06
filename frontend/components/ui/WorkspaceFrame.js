@@ -23,7 +23,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   const compact = calendar && wide && !collapsed;
   const label = all.find(entry => entry.id === current)?.label || ({ "/profile": "โปรไฟล์", "/help": "คู่มือการใช้งาน" }[pathname] || "พื้นที่ทำงาน");
   const displayName = user.displayName || user.nickname || user.fullName || "ผู้ใช้งาน";
-  const initial = Array.from(displayName.trim())[0] || "?";
+  const initial = user.initial || Array.from(displayName.trim())[0] || "?";
   const pilotMode = process.env.NODE_ENV === "development" && glassMode === "quick" ? "quick" : "css";
   useEffect(() => {
     const query = matchMedia("(min-width:1241px)"), update = () => setWide(query.matches);

@@ -1,0 +1,168 @@
+/* Review 10 geometry with a functional glass layer; data and forms stay readable. */
+.record-heading { margin-bottom: 32px; }
+.record-preview-badge { display: inline-block; margin-top: 9px; color: var(--ui-sub); font-size: .6875rem; }
+.record-layout { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(260px,.8fr); gap: 40px; }
+.record-column { min-width: 0; display: grid; align-content: start; gap: 30px; }
+.record-panel-title,.record-section-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.record-panel-title { margin-bottom: 20px; }
+.record-panel-title h2 { font-size: 1.125rem; font-weight: 650; }
+.record-panel-title p { font-size: .75rem; margin-top: 5px; color: var(--ui-sub); }
+.record-person { display: inline-flex; gap: 9px; align-items: center; background: var(--ui-surface); border-radius: 12px; min-height: 52px; padding: 7px 10px; text-align: start; }
+.record-person small,.record-person strong { display: block; font-size: .75rem; line-height: 1.6; }
+.record-person small { color: var(--ui-sub); }
+.record-person strong { font-weight: 600; }
+.record-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 17px; }
+.record-time { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 7px 4px; color: var(--ui-sub); font-size: .8125rem; white-space: nowrap; border-radius: 9px; }
+.record-quick-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.record-quick-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: start; min-width: 0; min-height: 174px; padding: 18px; border-radius: 17px; background: var(--ui-surface); box-shadow: 0 1px 2px #18243904; transition: box-shadow 150ms ease,transform 140ms ease; }
+.record-quick-card:hover { box-shadow: 0 5px 16px #18243912; }
+.record-quick-card:active { transform: scale(.98); }
+.record-quick-card strong { font-size: .8125rem; font-weight: 600; line-height: 1.6; margin-top: 16px; }
+.record-quick-card small { color: var(--ui-sub); font-size: .75rem; line-height: 1.6; margin-top: 4px; }
+.record-tile.ui-nav-symbol { width: 50px; height: 50px; border-radius: 15px; border: 1px solid color-mix(in srgb,currentColor 16%,transparent); background-image: linear-gradient(145deg,#ffffff35,#ffffff00 60%); box-shadow: inset 0 1px 0 #ffffff60,inset 0 -2px 3px #0000000b,0 3px 7px #152c4a0b; }
+.record-quick-count { position: absolute; top: 18px; inset-inline-end: 14px; padding: 4px 7px; background: var(--ui-soft); color: var(--ui-sub); border-radius: 8px; font-size: .75rem; }
+.record-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: .75rem; color: var(--ui-sub); }
+.record-pagination button { display: inline-flex; gap: 5px; align-items: center; min-height: 44px; padding: 6px; border-radius: 9px; }
+.record-pagination button:disabled { opacity: .45; }
+.record-inline-schedule { margin-top: 22px; border-block: 1px solid var(--ui-line); padding-block: 8px; font-size: .8125rem; }
+.record-inline-schedule summary { display: flex; align-items: center; gap: 9px; min-height: 44px; cursor: pointer; list-style: none; }
+.record-inline-schedule summary::-webkit-details-marker { display: none; }
+.record-inline-schedule summary::after { content: "+"; font-size: 1.125rem; color: var(--ui-sub); }
+.record-inline-schedule[open] summary::after { content: "−"; }
+.record-inline-schedule summary small { margin-inline-start: auto; color: var(--ui-sub); font-size: .75rem; }
+.record-inline-schedule p { padding: 10px 0; }
+.record-inline-schedule>small { display: block; padding-bottom: 12px; color: var(--ui-sub); }
+.record-section-head h2 { font-size: .9375rem; font-weight: 650; }
+.record-link { color: var(--ui-blue-ink); display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; border-radius: 8px; padding: 6px; font-size: .8125rem; }
+.record-log-row { width: 100%; display: flex; gap: 13px; align-items: center; min-height: 78px; padding: 16px 0; text-align: start; border-bottom: 1px solid var(--ui-line); }
+.record-log-row>svg:first-child { color: var(--ui-green-ink); }
+.record-log-row>svg:last-child { color: var(--ui-sub); }
+.record-log-row>span { flex: 1; min-width: 0; }
+.record-log-row strong { font-size: .8125rem; font-weight: 600; display: block; }
+.record-log-row small { display: block; font-size: .75rem; color: var(--ui-sub); line-height: 1.7; margin-top: 4px; overflow-wrap: anywhere; }
+.record-context { display: grid; align-content: start; gap: 20px; min-width: 0; }
+.record-context section { background: var(--ui-surface); border-radius: 17px; padding: 22px; }
+.record-context-date { margin-top: 10px; font-size: .75rem; color: var(--ui-sub); }
+.record-context-count { display: flex; align-items: center; gap: 15px; margin-top: 22px; font-size: .8125rem; }
+.record-context-count>strong { font-size: 2.75rem; font-weight: 650; line-height: 1; }
+.record-context-count small { display: block; margin-top: 5px; font-size: .75rem; color: var(--ui-sub); }
+.record-agenda { display: grid; grid-template-columns: 43px minmax(0,1fr); gap: 9px; font-size: .75rem; padding-block: 18px; }
+.record-agenda>span { color: var(--ui-sub); font-variant-numeric: tabular-nums; }
+.record-agenda>div { border-inline-start: 3px solid var(--ui-purple-ink); padding-inline-start: 12px; }
+.record-agenda strong { font-weight: 600; line-height: 1.7; }
+.record-agenda p { margin-top: 4px; line-height: 1.6; color: var(--ui-sub); }
+.record-preview-note { font-size: .75rem; color: var(--ui-sub); line-height: 1.8; padding-inline: 8px; }
+.record-undo { border: 1px solid var(--ui-green-ink); border-radius: 15px; background: var(--ui-green); color: var(--ui-green-ink); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.record-undo>span { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; }
+.record-form { background: var(--ui-surface); border-radius: 17px; padding: 22px; }
+.record-form[hidden] { display: none; }
+.record-form fieldset { min-width: 0; padding-bottom: 8px; }
+.record-form fieldset+fieldset { border-top: 1px solid var(--ui-line); padding-top: 18px; }
+.record-form legend { font-size: .875rem; font-weight: 650; padding-block: 0 16px; }
+.record-form fieldset+fieldset legend { padding-top: 20px; }
+.record-form .ui-field small { color: var(--ui-sub); font-size: .75rem; margin-inline-start: 4px; }
+.record-task-picker { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 46px; border: 1px solid var(--ui-control-edge); border-radius: 11px; padding: 11px 13px; text-align: start; font-size: .875rem; background: var(--ui-bg); }
+.record-task-picker span { min-width: 0; }
+.record-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -4px; margin-bottom: 12px; }
+.record-suggestions>span { width: 100%; font-size: .75rem; color: var(--ui-sub); }
+.record-suggestions>button { min-height: 38px; border-radius: 10px; background: var(--ui-soft); padding: 7px 10px; font-size: .75rem; color: var(--ui-blue-ink); }
+.record-form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.record-form-actions>.ui-caption { margin-inline-end: auto; }
+.record-error { color: var(--ui-red-ink); font-size: .8125rem; line-height: 1.7; margin-top: 10px; }
+.record-error:empty { margin: 0; }
+.record-form :is(input,textarea),.record-dialog :is(input,textarea) { min-width: 0; width: 100%; max-width: 100%; }
+.record-form [aria-invalid=true],.record-dialog [aria-invalid=true] { border-color: var(--ui-red-ink); }
+.record-dialog { background: var(--ui-surface); }
+.record-dialog .ui-dialog-header { background: color-mix(in srgb,var(--ui-glass) 65%,var(--ui-surface)); }
+.record-dialog .ui-dialog-body { padding-top: 14px; }
+.record-room-dialog { width: min(920px,calc(100% - 32px)); }
+.record-room-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.record-device-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.record-resource-tile { display: flex; align-items: center; flex-direction: column; text-align: center; gap: 13px; padding: 20px 12px; min-height: 205px; min-width: 0; background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 17px; transition: background-color 150ms ease,transform 130ms ease; }
+.record-resource-tile[data-state=open] { background: color-mix(in srgb,var(--ui-green) 48%,var(--ui-surface)); border-color: color-mix(in srgb,var(--ui-green-ink) 36%,var(--ui-line)); }
+.record-resource-tile[data-state=borrowed] { background: color-mix(in srgb,var(--ui-blue) 48%,var(--ui-surface)); }
+.record-resource-tile:hover:not(:disabled) { border-color: var(--ui-accent); }
+.record-resource-tile:active:not(:disabled) { transform: scale(.98); }
+.record-resource-tile:disabled { cursor: not-allowed; }
+.record-resource-tile strong { font-size: .875rem; font-weight: 600; }
+.record-resource-tile small { color: var(--ui-sub); font-size: .75rem; }
+.record-badge { border-radius: 8px; background: var(--ui-soft); color: var(--ui-sub); display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 7px; font-size: .75rem; }
+.record-badge[data-tone=green] { background: var(--ui-green); color: var(--ui-green-ink); }
+.record-badge[data-tone=blue] { background: var(--ui-blue); color: var(--ui-blue-ink); }
+.record-badge[data-tone=amber] { background: var(--ui-amber); color: var(--ui-amber-ink); }
+.record-resource-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: var(--ui-blue-ink); font-size: .8125rem; margin-top: auto; }
+.record-resource-tile:disabled .record-resource-action { color: var(--ui-sub); }
+.record-back { margin: -8px 0 12px -5px; }
+.record-device-summary { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.record-device-summary strong { font-size: .9375rem; font-weight: 600; }
+.record-device-summary p { margin-top: 5px; font-size: .8125rem; color: var(--ui-sub); }
+.record-student { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.record-choice-actions { display: flex; justify-content: space-between; gap: 10px; margin-block: 8px; }
+.record-combo { display: grid; gap: 5px; }
+.record-check-row { display: flex; align-items: center; gap: 12px; min-height: 54px; border-radius: 11px; padding: 11px 13px; font-size: .875rem; cursor: pointer; }
+.record-check-row[data-selected=true] { background: var(--ui-blue); }
+.record-check-row>input[type=checkbox] { appearance: none; width: 21px; height: 21px; min-width: 21px; border: 1px solid var(--ui-control-edge); border-radius: 6px; position: relative; background: var(--ui-surface); margin: 0; transition: background-color 120ms ease; }
+.record-check-row>input[type=checkbox]:checked { background: var(--ui-accent); border-color: var(--ui-accent); }
+.record-check-row>input[type=checkbox]:checked::after { content: ""; position: absolute; width: 6px; height: 11px; left: 6px; top: 2px; border: solid var(--ui-accent-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.record-recipient { margin-top: 20px; }
+.record-review-count { font-size: 2.5rem; font-weight: 650; }
+.record-review-count span { font-size: .875rem; color: var(--ui-sub); font-weight: 400; }
+.record-review-list { display: grid; gap: 13px; margin-block: 24px; font-size: .875rem; }
+.record-review-list li { display: flex; gap: 9px; align-items: center; }
+.record-review-list svg { color: var(--ui-green-ink); }
+.record-task-results { display: grid; gap: 4px; }
+.record-task-results>button,.record-person-option { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px; text-align: start; border-radius: 11px; min-height: 68px; }
+.record-task-results>button[aria-pressed=true],.record-person-option[aria-pressed=true] { background: var(--ui-blue); }
+.record-task-results>button>span,.record-person-option>span:nth-child(2) { flex: 1; min-width: 0; }
+.record-task-results strong,.record-person-option strong { display: block; font-size: .875rem; font-weight: 600; }
+.record-task-results small,.record-person-option small { display: block; font-size: .75rem; color: var(--ui-sub); margin-top: 6px; }
+.record-date-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; }
+.record-log-detail { display: grid; gap: 20px; margin-bottom: 20px; font-size: .875rem; }
+.record-log-detail dt { font-size: .75rem; color: var(--ui-sub); margin-bottom: 5px; }
+.record-log-detail dd { overflow-wrap: anywhere; }
+.record-schedule-list { display: grid; gap: 18px; font-size: .875rem; }
+.record-inspector { font-size: .75rem; color: var(--ui-sub); border-top: 1px solid var(--ui-line); margin-top: 30px; padding-top: 15px; }
+.record-inspector summary { min-height: 44px; cursor: pointer; }
+.record-inspector-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; margin-block: 10px; }
+.record-inspector-controls label { display: flex; gap: 12px; align-items: center; }
+.record-inspector-controls select { width: 150px; }
+.record-inspector a { color: var(--ui-blue-ink); min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; }
+.record-sr-only,.record-live-status:empty { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.record-live-status { color: var(--ui-sub); font-size: .8125rem; margin-top: 12px; }
+@media(min-width:1100px) { .record-room-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media(max-width:1150px) { .record-layout { grid-template-columns: minmax(0,1fr); } .record-context { display: none; } }
+@media(max-width:760px) {
+  .record-heading h1 { font-size: 1.75rem; }
+  .record-heading p { font-size: .8125rem; }
+  .record-layout { gap: 0; }
+  .record-panel-title { gap: 10px; }
+  .record-panel-title h2 { font-size: 1rem; }
+  .record-person { gap: 6px; max-width: 51%; }
+  .record-person .ui-avatar { display: none; }
+  .record-person strong { overflow-wrap: anywhere; }
+  .record-quick-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .record-quick-card { min-height: 164px; padding: 16px; }
+  .record-tile.ui-nav-symbol { width: 46px; height: 46px; border-radius: 14px; }
+  .record-tile svg { width: 27px; height: 27px; }
+  .record-mode { flex: 1; min-width: 0; }
+  .record-mode>button { flex: 1; padding-inline: 7px; }
+  .record-time { padding-inline: 3px; gap: 5px; }
+  .record-time>svg:last-child { display: none; }
+  .record-meta { gap: 8px; }
+  .record-form { padding: 18px; }
+  .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea { font-size: max(1rem,16px); }
+  .record-form input[type=date],.record-form input[type=time],.record-dialog input[type=date],.record-dialog input[type=time] { display: block; min-height: 46px; -webkit-appearance: none; }
+  .record-dialog input::-webkit-date-and-time-value { text-align: start; }
+  .record-suggestions>button { min-height: 44px; }
+  .record-form-actions>.ui-caption { flex-basis: 100%; }
+  .record-inline-schedule summary { gap: 7px; font-size: .75rem; }
+  .record-inline-schedule summary small { max-width: 47%; text-align: end; }
+  .record-room-dialog { width: calc(100% - 16px); }
+  .record-resource-tile { padding: 18px 8px; min-height: 190px; }
+  .record-resource-tile strong { font-size: .8125rem; }
+  .record-undo { padding: 10px 12px; }
+  .record-undo .ui-glass-button { padding-inline: 12px; }
+  .record-inspector-controls { align-items: stretch; }
+}
+@media(forced-colors:active) { .record-quick-card,.record-resource-tile,.record-tile,.record-form { border: 1px solid CanvasText; } .record-badge { border: 1px solid CanvasText; background: Canvas; color: CanvasText; } .record-check-row>input[type=checkbox] { appearance: auto; } .record-check-row>input[type=checkbox]::after { display: none; } .record-check-row[data-selected=true] { outline: 1px solid Highlight; } }
+@media(any-pointer:coarse) { .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea { font-size: max(1rem,16px); } }

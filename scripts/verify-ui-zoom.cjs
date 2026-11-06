@@ -1,6 +1,6 @@
 /* Native Edge preference zoom; never CSS zoom or a user browser profile. */
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
-const {chromium}=require(process.argv[2]);const out=path.resolve(__dirname,'../output/playwright/develop-ui-foundation');
+const {chromium}=require(process.argv[2]);const route=process.argv[4]||'/dev/ui';if(!['/dev/ui','/dev/record'].includes(route))throw new Error('Only isolated development fixtures are supported');const out=path.resolve(__dirname,route==='/dev/record'?'../output/playwright/record-liquid-glass':'../output/playwright/develop-ui-foundation');
 async function sample(zoom){
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'icit-ui-zoom-'));
  fs.mkdirSync(path.join(profile,'Default'));fs.writeFileSync(path.join(profile,'Default/Preferences'),JSON.stringify({partition:{default_zoom_level:{x:Math.log(zoom)/Math.log(1.2)}}}));
@@ -8,7 +8,7 @@ async function sample(zoom){
  try{
   context=await chromium.launchPersistentContext(profile,{headless:true,executablePath:process.argv[3],viewport:null,serviceWorkers:'block',args:['--window-size=1440,1050']});
   await context.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:4310'?route.continue():route.abort());
-  const page=await context.newPage();await page.goto('http://127.0.0.1:4310/dev/ui',{timeout:90000});await page.locator('[data-workspace]').waitFor();await page.waitForFunction(()=>document.documentElement.dataset.uiReady==='true');
+  const page=await context.newPage();await page.goto('http://127.0.0.1:4310'+route,{timeout:90000});await page.locator('[data-workspace]').waitFor();await page.waitForFunction(()=>document.documentElement.dataset.uiReady==='true');
   const stats=await page.evaluate(()=>({innerWidth,outerWidth,dpr:devicePixelRatio,rootFont:getComputedStyle(document.documentElement).fontSize,cssZoom:getComputedStyle(document.documentElement).zoom,scrollWidth:document.documentElement.scrollWidth}));
   assert.ok(stats.scrollWidth<=stats.innerWidth);
   await page.locator('.ui-header button[aria-label="บัญชีและเครื่องมือ"]').focus();await page.keyboard.press('Enter');await page.locator('dialog[open]').getByRole('button',{name:'รูปแบบการแสดงผล',exact:true}).focus();await page.keyboard.press('Enter');const box=await page.locator('dialog[open]').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=stats.innerWidth+1);await page.keyboard.press('Escape');

@@ -19,7 +19,7 @@ export function useGlassEnvironment(enabled) {
   return environment;
 }
 
-export function GlassSurface({ mode, radius, name }) {
+export function GlassSurface({ mode, radius, name, as: Element = "div" }) {
   const { resolved } = useAppearance(), environment = useGlassEnvironment(process.env.NODE_ENV === "development" && mode === "quick");
   const host = useRef(null), engine = useRef(null);
   const failedMap = useRef(false);
@@ -70,7 +70,7 @@ export function GlassSurface({ mode, radius, name }) {
 
   useEffect(() => { if (engine.current) { engine.current.setConfig(failedMap.current ? { ...config, refractionMode: "css" } : config);if (failedMap.current || config.refractionMode === "css") setPhase("css"); } }, [config]);
   const active = policy.active && ["svg", "css"].includes(phase);
-  return <div
+  return <Element
     ref={host} className="ui-optical-layer"
     aria-hidden="true" data-glass-surface={name}
     data-active={active} data-glass-phase={policy.active ? phase : policy.reason}

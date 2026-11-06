@@ -1,9 +1,11 @@
 // Local UI runtime: override public service endpoints with synthetic values.
 // Never read/copy .env files and never invoke build:prod or deployment scripts.
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+let uiBranch = "development";
+try { uiBranch = execFileSync("git", ["branch", "--show-current"], { cwd: root, encoding: "utf8", windowsHide: true }).trim() || uiBranch; } catch { /* A source archive can still run without Git. */ }
 export const uiDevelopmentEnvironment = {
   NODE_ENV: "development", NEXT_TELEMETRY_DISABLED: "1",
   NEXT_PUBLIC_FIREBASE_API_KEY: "development-ui-placeholder-key",
@@ -14,7 +16,7 @@ export const uiDevelopmentEnvironment = {
   NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:0000000000000000",
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: "",
   NEXT_PUBLIC_API_URL: "http://127.0.0.1:4310/__ui-test-api",
-  NEXT_PUBLIC_UI_BRANCH: "codex/develop-ui-foundation",
+  NEXT_PUBLIC_UI_BRANCH: uiBranch,
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   console.log("Development UI preview: http://127.0.0.1:4310/dev/ui — synthetic configuration, no production sign-in");
