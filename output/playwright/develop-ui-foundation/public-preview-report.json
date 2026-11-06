@@ -1,0 +1,23 @@
+{
+  "url": "https://ste-transaction-palm-quiz.trycloudflare.com/dev/ui",
+  "development": true,
+  "syntheticData": true,
+  "completed": true,
+  "results": [
+    {
+      "device": "desktop",
+      "status": 200,
+      "interactive": true,
+      "themeSwitch": true,
+      "overflow": false
+    },
+    {
+      "device": "mobile",
+      "status": 200,
+      "interactive": true,
+      "themeSwitch": true,
+      "overflow": false
+    }
+  ],
+  "errors": []
+}

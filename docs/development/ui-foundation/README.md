@@ -84,3 +84,42 @@ Browser scripts รับ argument 1 เป็น path ของ Playwright pack
 - ยังไม่ push, merge หรือ deploy ไม่เปลี่ยน Firebase project/rules/schema/backend หรือ dependency lockfile
 
 ให้ลองสลับ Light/Dark/พื้นหลัง เปลี่ยนเมนูใน desktop/mobile เปิดเครื่องมือรองและใช้ keyboard แล้วตรวจ diff ของ `AppShell` เทียบฐาน ก่อนอนุมัติย้ายหน้าบันทึกงานและปฏิทินต่อ
+
+## แชร์ development ผ่าน Cloudflare
+
+ผู้ใช้ขอให้เปิดจากโทรศัพท์และคอมเครื่องอื่น ใช้ Cloudflare Quick Tunnel ชั่วคราวไปที่ development พอร์ต 4310 ซึ่งเปิดด้วย `scripts/dev-ui.mjs` อยู่แล้ว ไม่ใช่การ deploy
+
+ใช้ `cloudflared` portable เดิม รุ่น 2026.10.7 ตรวจ SHA256 ตรงกับ asset ทางการ: `2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343` ไม่มีการติดตั้ง package/service ใหม่ และไม่อ่าน account credentials ของ Cloudflare
+
+```powershell
+# Keep the development UI runtime running in another terminal.
+$uiCloudflared = Join-Path $env:LOCALAPPDATA 'Temp\labboy-cloudflare-preview\cloudflared.exe'
+& $uiCloudflared tunnel --config output/playwright/develop-ui-foundation/cloudflare-preview.yml --no-autoupdate --url http://127.0.0.1:4310 --protocol http2
+```
+
+เปิด URL ที่ Cloudflare แสดงแล้วเติม `/dev/ui` ใช้ไฟล์ config เฉพาะ preview ที่มีเพียง log level ไม่ใช้ Cloudflare account/config เดิม ตรวจลิงก์จริงด้วย Edge ทั้ง desktop และ touch/mobile: HTTP 200, hydration, สลับ Light/Dark และ viewport ไม่ล้น ผ่าน ไม่มี page error หลักฐานอยู่ใน `public-preview-report.json` และภาพ `public-*.png`
+
+ลิงก์เป็นแบบชั่วคราว ใช้ได้ขณะที่เครื่อง, Next development และ tunnel ยังทำงาน เมื่อเริ่ม tunnel ใหม่ hostname จะเปลี่ยน หยุดด้วย Ctrl+C ใน terminal ที่รัน `cloudflared` รายละเอียดตาม [Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)
+
+## ประเมิน quickLiquid ก่อนพัฒนารอบถัดไป
+
+ผู้ใช้ส่ง [quickLiquid](https://github.com/amarnath3003/quickLiquid) ให้ศึกษา อ่าน README, package metadata, React wrapper และ engine พร้อมเปิด live demo จริงแล้ว npm ณ วันที่ตรวจระบุ `quick-liquid@0.1.2`, MIT, peer React/React DOM >=18 ซึ่งตรงกับ React 19 ที่ใช้ในโครงการ ยังไม่ได้ติดตั้ง package หรือเปลี่ยนเอฟเฟกต์ในแอป
+
+สิ่งที่มีประโยชน์คือ SVG backdrop refraction, rim lighting, dispersion และ spring motion เพิ่มจาก CSS blur ปัจจุบัน อย่างไรก็ตาม package documentation ระบุว่า full rendered refraction ตรวจใน Chromium เป็นหลัก computed-style probe ไม่สามารถยืนยันการหักเหของภาพจริงได้ จึงต้องทดสอบ Safari/iPhone และเตรียม `refractionMode: 'css'` ไว้ตามผลตรวจ
+
+ประเด็นที่ตรวจพบจาก source สำหรับโครงการเรา:
+
+- React wrapper เริ่ม engine ใน `useEffect` และ cleanup ด้วย `destroy()` แต่ยังต้องตรวจ import/build ของ package ที่เผยแพร่จริงเมื่อทำ PoC
+- engine ใช้ `.ql-content` และ `overflow: hidden` การครอบ sidebar/toolbar เดิมตรง ๆ อาจเปลี่ยน flex layout และตัด notification popover ต้องออกแบบ optical layer แยกจาก semantic controls หรือใช้ portal
+- refraction มีข้อจำกัดเกี่ยวกับ `isolation`, filters และ stacking ในโค้ดเรามีชั้นเหล่านี้เพื่อจัดกระจก/พื้นหลังอยู่แล้ว ต้องตรวจการวาดภาพจริง ไม่ลบออกทุกจุดโดยไม่ทดสอบ
+- `appearance: 'auto'` อิง OS จึงต้องส่ง resolved theme ของ `AppearanceProvider` เข้า library เอง และผูกตัวเลือกลดความโปร่งใส/เคลื่อนไหวในแอปด้วย ไม่อาศัยเฉพาะ media query ของ OS
+- metrics ของ engine ไม่ใช่ FPS ของทั้งหน้า ต้องวัดการเลื่อน/กดจริงบนอุปกรณ์ตัวแทนก่อนสรุป performance หรือ battery impact
+
+แผนทดลองที่เสนอเพื่อขออนุมัติเฟสแยก:
+
+1. เพิ่ม dependency แบบตรึงเวอร์ชัน แล้วทดลองเฉพาะ toolbar, mobile tab bar และ selected indicator พร้อมสวิตช์เทียบของเดิมใน development
+2. ใช้ optical effects กับชั้นควบคุม รักษาหน้าตาและ semantic colors ที่ตรวจรับ รวมถึงพื้นอ่านข้อมูลที่นิ่ง
+3. เก็บ CSS fallback/ทางย้อนกลับ ไม่ทำกระจกซ้อนทุก input/แถวตาราง ตรวจ clipping, draft และ focus เมื่อเปลี่ยน theme/material
+4. ตรวจ Chrome/Edge และ Safari จริง, Light/Dark, Reduce Motion/Transparency, keyboard, touch, SSR/export และ performance ก่อนขยายส่วนอื่น
+
+อ้างอิง: [package README](https://github.com/amarnath3003/quickLiquid/blob/master/packages/quick-liquid/README.md), [React wrapper](https://github.com/amarnath3003/quickLiquid/blob/master/packages/quick-liquid/src/react/LiquidGlass.tsx), [engine](https://github.com/amarnath3003/quickLiquid/blob/master/packages/quick-liquid/src/core/engine.ts), [package metadata](https://github.com/amarnath3003/quickLiquid/blob/master/packages/quick-liquid/package.json), [live demo](https://quickliquid.vercel.app)
