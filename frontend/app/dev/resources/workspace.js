@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CalendarDays, Check, Plus, Search, Undo2 } from "lucide-react";
 import { WorkspaceFrame } from "../../../components/ui/WorkspaceFrame";
@@ -13,6 +13,7 @@ import { people } from "../record/fixtures";
 import { ResourceDialog } from "./ResourceDialog";
 import { equipmentList, equipmentRange, equipmentState, equipmentSummary, EQUIPMENT_KINDS, EQUIPMENT_CONDITIONS, canManageEquipment, canUndoPreview } from "../../../lib/equipmentPreview";
 import { previewDestination } from "../../../lib/previewNavigation";
+import { roomState } from "../../../lib/resourceWorklog";
 import { calendarLabel, calendarToday, validCalendarDate } from "../../../lib/calendarView";
 const emptyDevice = () => ({
   name: "",
@@ -46,6 +47,16 @@ function TypeOptions() {
 export default function ResourcesWorkspace({
   mode
 }) {
+  const formId = useId();
+  const [advancedOpen, setAdvancedOpen] = useState(false),
+    [filtersOpen, setFiltersOpen] = useState(false);
+  useEffect(() => {
+    const viewport = matchMedia("(min-width:761px)");
+    const update = () => setFiltersOpen(viewport.matches);
+    update();
+    viewport.addEventListener("change", update);
+    return () => viewport.removeEventListener("change", update);
+  }, []);
   const router = useRouter(),
     {
       data,
@@ -125,6 +136,7 @@ export default function ResourcesWorkspace({
     } : emptyDevice());
     setError("");
     setErrorField(null);
+    setAdvancedOpen(false);
     setOperation({
       kind: item ? "device-update" : "device-create",
       ids: item ? [item.id] : [],
@@ -147,11 +159,14 @@ export default function ResourcesWorkspace({
     } catch (failure) {
       setError(failure.message);
       setErrorField(failure.field);
-      const field = formRef.current?.elements.namedItem(failure.field);
-      field?.focus();
-      field?.scrollIntoView({
-        block: "center",
-        behavior: "instant"
+      if (["barcode", "order"].includes(failure.field)) setAdvancedOpen(true);
+      requestAnimationFrame(() => {
+        const field = formRef.current?.elements.namedItem(failure.field);
+        field?.focus();
+        field?.scrollIntoView({
+          block: "center",
+          behavior: "instant"
+        });
       });
     }
   }
@@ -203,7 +218,7 @@ export default function ResourcesWorkspace({
       start: "1900-01-01",
       end: "9999-12-31"
     }).ranking.find(item => item.id === registryItem.id)?.borrows || 0;
-    return <><h2>รายละเอียดอุปกรณ์</h2><div className="equipment-inspector-title"><span className="ui-nav-symbol" data-tone="green"><ReviewSymbol name={symbols[registryItem.kind]} size={22} /></span><div><strong>{registryItem.name}</strong><small>{registryItem.assetCode}</small></div></div><Badge item={registryItem} /><dl><dt>สังกัดปัจจุบัน</dt><dd>{registryItem.location}</dd><dt>ประเภท</dt><dd>{EQUIPMENT_KINDS[registryItem.kind]}</dd><dt>สภาพล่าสุดที่ทราบ</dt><dd>{EQUIPMENT_CONDITIONS[registryItem.condition]}</dd><dt>บาร์โค้ด</dt><dd>{registryItem.barcode || "ไม่ได้ระบุ"}</dd><dt>ลำดับแสดงผล</dt><dd>{registryItem.order}</dd><dt>ครั้งยืมที่มีบันทึกทั้งหมด</dt><dd>{count}</dd><dt>แสดงในบันทึกด่วน</dt><dd>{registryItem.active ? "แสดง" : "หยุดใช้งาน"}</dd></dl><div className="equipment-inspector-actions"><GlassButton mode="quick" onClick={() => editDevice(registryItem)}>แก้ไขทะเบียน</GlassButton><GlassButton mode="quick" onClick={() => {
+    return <><h2>รายละเอียดอุปกรณ์</h2><div className="equipment-inspector-title"><span className="ui-nav-symbol" data-tone="green"><ReviewSymbol name={symbols[registryItem.kind]} size={22} /></span><div><strong>{registryItem.name}</strong><small>{registryItem.assetCode}</small></div></div><Badge item={registryItem} /><dl><dt>สังกัดปัจจุบัน</dt><dd>{registryItem.location}</dd><dt>ประเภท</dt><dd>{EQUIPMENT_KINDS[registryItem.kind]}</dd><dt>สภาพล่าสุดที่ทราบ</dt><dd>{EQUIPMENT_CONDITIONS[registryItem.condition]}</dd><dt>บาร์โค้ด</dt><dd>{registryItem.barcode || "ไม่ได้ระบุ"}</dd><dt>ลำดับแสดงผล</dt><dd>{registryItem.order}</dd><dt>ครั้งยืมที่มีบันทึกทั้งหมด</dt><dd>{count}</dd></dl><div className="equipment-visibility"><label className="equipment-active"><input type="checkbox" className="ui-checkbox" aria-label={`แสดงในบันทึกด่วน ${registryItem.assetCode}`} checked={registryItem.active} onChange={() => toggle(registryItem)} /><span>แสดงในบันทึกด่วน</span></label><p className="ui-caption">{registryItem.active ? "เปิดให้เลือกจากรายการบันทึกด่วน" : "ซ่อนจากรายการยืมใหม่ โดยคงประวัติและรายการคืนที่ค้างอยู่"}</p></div><div className="equipment-inspector-actions"><GlassButton mode="quick" onClick={() => editDevice(registryItem)}>แก้ไขทะเบียน</GlassButton><GlassButton mode="quick" onClick={() => {
           setSelectedAsset(registryItem.id);
           setDialog("asset");
         }}>ประวัติในช่วงที่เลือก</GlassButton></div><p className="ui-caption resource-note">การย้ายสังกัดเปลี่ยนรายการปัจจุบัน โดยคงข้อความในประวัติเดิม</p></>;
@@ -229,7 +244,7 @@ export default function ResourcesWorkspace({
           }
         }}><Undo2 size={16} aria-hidden="true" />เลิกทำ</GlassButton></div>}
       {mode === "resources" && <GlassControlGroup mode="quick" label="ประเภททรัพยากร">{[["rooms", "ห้องบริการ"], ["devices", "อุปกรณ์"]].map(([key, label]) => <button key={key} type="button" aria-pressed={tab === key} onClick={() => setTab(key)}>{label}</button>)}</GlassControlGroup>}
-      {(mode !== "resources" || tab === "devices") && <section className="resource-toolbar" aria-label="ตัวกรองอุปกรณ์">
+      {(mode === "equipment" || mode === "resources" && tab === "devices") && <section className="resource-toolbar" aria-label="ตัวกรองอุปกรณ์">
         {mode !== "usage" && <label className="resource-search"><Search size={17} aria-hidden="true" /><input aria-label="ค้นหาอุปกรณ์ รหัส หรือบาร์โค้ด" type="search" value={filters.search} placeholder="ค้นหาอุปกรณ์ รหัส หรือบาร์โค้ด" onChange={event => setFilters({
             ...filters,
             search: event.target.value
@@ -244,10 +259,10 @@ export default function ResourcesWorkspace({
           })}>{[["all", "ทุกสถานะ"], ["ready", "พร้อมยืม"], ["borrowed", "กำลังยืม"], ["unavailable", "ต้องดูแล"], ...(mode === "equipment" ? [["inactive", "หยุดใช้งาน"]] : [])].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
       </section>}
       {mode === "resources" && <div className="equipment-master-detail resource-master-detail"><div>
-      {mode === "resources" && tab === "rooms" && <div className="resource-floors">{["3", "4"].map(floor => <section key={floor}><h2>ห้องบริการ ชั้น {floor}</h2><div className="resource-room-grid">{data.rooms.filter(room => room.floor === floor).map(room => <button type="button" className="resource-card" key={room.id} data-room={room.id} onClick={() => openAction("room", room.id)}><span className="ui-nav-symbol resource-symbol" data-tone={room.open ? "green" : "purple"}><ReviewSymbol name="door" size={27} /></span><strong>ห้อง {room.id}</strong><span className="record-badge" data-tone={room.open ? "green" : "neutral"}>{room.open ? "เปิดอยู่" : "ปิดอยู่"}</span><small>{room.detail}</small><span className="resource-intent">{room.open ? "ปิดห้อง" : "เปิดห้อง"}<ArrowRight size={15} aria-hidden="true" /></span></button>)}</div></section>)}</div>}
+      {mode === "resources" && tab === "rooms" && <div className="resource-floors">{["3", "4"].map(floor => <section key={floor}><h2>ห้องบริการ ชั้น {floor}</h2><div className="resource-room-grid">{data.rooms.filter(room => room.floor === floor).map(room => <button type="button" className="resource-card" key={room.id} data-room={room.id} onClick={() => openAction("room", room.id)}><span className="ui-nav-symbol resource-symbol" data-tone={room.open ? "green" : "purple"}><ReviewSymbol name="door" size={27} /></span><strong>ห้อง {room.id}</strong><span className="record-badge" data-tone={roomState(room).tone}>{roomState(room).label}</span><small>{room.detail}</small><span className="resource-intent">{room.open ? "ปิดห้อง" : "เปิดห้อง"}<ArrowRight size={15} aria-hidden="true" /></span></button>)}</div></section>)}</div>}
       {mode === "resources" && tab === "devices" && <><p className="resource-result-count">{items.length} อุปกรณ์ · รายการที่หยุดใช้และยังยืมอยู่แสดงเพื่อให้คืนได้</p><div className="resource-device-grid">{items.map(item => <button type="button" className="resource-card" key={item.id} data-asset={item.id} onClick={() => openAction("device", item.id)}><span className="ui-nav-symbol resource-symbol" data-tone={item.kind === "plug" ? "amber" : "green"}><ReviewSymbol name={symbols[item.kind]} size={27} /></span><strong>{item.name}</strong><small>{item.assetCode} · {item.location}</small><Badge item={item} /><span className="resource-intent">{item.student ? "คืนรายการนี้" : item.available ? "ยืมรายการนี้" : "ดูรายละเอียด"}<ArrowRight size={15} aria-hidden="true" /></span></button>)}</div>{!items.length && <p className="resource-empty">ไม่พบอุปกรณ์ตามตัวกรอง</p>}</>}
-      </div><aside className="equipment-inspector" aria-label="รายละเอียดทรัพยากร"><h2>รายละเอียดทรัพยากร</h2>{resourceItem ? <><div className="equipment-inspector-title"><span className="ui-nav-symbol" data-tone={tab === "rooms" ? "purple" : "green"}><ReviewSymbol name={tab === "rooms" ? "door" : symbols[resourceItem.kind]} size={24} /></span><div><strong>{tab === "rooms" ? `ห้อง ${resourceItem.id}` : resourceItem.name}</strong><small>{tab === "rooms" ? `ชั้น ${resourceItem.floor}` : resourceItem.assetCode}</small></div></div>{tab === "rooms" ? <><span className="record-badge" data-tone={resourceItem.open ? "blue" : "green"}>{resourceItem.open ? "เปิดอยู่" : "ปิดอยู่"}</span><dl><dt>รายละเอียด</dt><dd>{resourceItem.detail}</dd><dt>สังกัด</dt><dd>ชั้น {resourceItem.floor}</dd></dl></> : <><Badge item={resourceItem} /><dl><dt>สังกัดปัจจุบัน</dt><dd>{resourceItem.location}</dd><dt>สภาพล่าสุด</dt><dd>{EQUIPMENT_CONDITIONS[resourceItem.condition]}</dd></dl></>}<GlassButton mode="quick" onClick={() => openAction(tab === "rooms" ? "room" : "device", resourceItem.id)}>{tab === "rooms" ? resourceItem.open ? "ปิดห้อง" : "เปิดห้อง" : resourceItem.student ? "คืนรายการนี้" : "ดูอุปกรณ์ / ยืม"}</GlassButton></> : <p className="ui-caption">ไม่มีรายการตามตัวกรอง</p>}</aside></div>}
-      {mode === "equipment" && <><p className="resource-result-count">{items.length} รายการ · เลือกอุปกรณ์เพื่อดูรายละเอียด สถานะยืมคงผูกกับ ID เดิม</p><div className="equipment-master-detail"><div><div className="equipment-list" role="list" aria-label="ทะเบียนอุปกรณ์">{items.map(item => <div className="equipment-row" role="listitem" key={item.id} data-asset={item.id} data-selected={registryItem?.id === item.id}><button type="button" className="equipment-row-name" aria-pressed={registryItem?.id === item.id} onClick={() => chooseRegistry(item)}><span className="ui-nav-symbol" data-tone="green"><ReviewSymbol name={symbols[item.kind]} size={20} /></span><span><strong>{item.name}</strong><small>{item.assetCode} · {item.location}</small></span><Badge item={item} /><ArrowRight size={16} aria-hidden="true" /></button><label className="equipment-active"><input type="checkbox" className="ui-checkbox" aria-label={`ใช้งาน ${item.assetCode}`} checked={item.active} onChange={() => toggle(item)} /><span>ใช้งาน</span></label></div>)}</div>{!items.length && <p className="resource-empty">ไม่พบอุปกรณ์ตามตัวกรอง</p>}</div><aside className="equipment-inspector" aria-label="รายละเอียดอุปกรณ์">{registryDetails()}</aside></div><p className="ui-caption resource-note">หยุดใช้งานจะคงประวัติไว้ หากยังมีผู้ยืม รายการยังแสดงในหน้าคืนจนกว่าจะปิดการยืม</p></>}
+      </div><aside className="equipment-inspector" aria-label="รายละเอียดทรัพยากร"><h2>รายละเอียดทรัพยากร</h2>{resourceItem ? <><div className="equipment-inspector-title"><span className="ui-nav-symbol" data-tone={tab === "rooms" ? "purple" : "green"}><ReviewSymbol name={tab === "rooms" ? "door" : symbols[resourceItem.kind]} size={24} /></span><div><strong>{tab === "rooms" ? `ห้อง ${resourceItem.id}` : resourceItem.name}</strong><small>{tab === "rooms" ? `ชั้น ${resourceItem.floor}` : resourceItem.assetCode}</small></div></div>{tab === "rooms" ? <><span className="record-badge" data-tone={roomState(resourceItem).tone}>{roomState(resourceItem).label}</span><dl><dt>รายละเอียด</dt><dd>{resourceItem.detail}</dd><dt>สังกัด</dt><dd>ชั้น {resourceItem.floor}</dd></dl></> : <><Badge item={resourceItem} /><dl><dt>สังกัดปัจจุบัน</dt><dd>{resourceItem.location}</dd><dt>สภาพล่าสุด</dt><dd>{EQUIPMENT_CONDITIONS[resourceItem.condition]}</dd></dl></>}<GlassButton mode="quick" onClick={() => openAction(tab === "rooms" ? "room" : "device", resourceItem.id)}>{tab === "rooms" ? resourceItem.open ? "ปิดห้อง" : "เปิดห้อง" : resourceItem.student ? "คืนรายการนี้" : "ดูอุปกรณ์ / ยืม"}</GlassButton></> : <p className="ui-caption">ไม่มีรายการตามตัวกรอง</p>}</aside></div>}
+      {mode === "equipment" && <><p className="resource-result-count">{items.length} รายการ · เลือกอุปกรณ์เพื่อดูรายละเอียด สถานะยืมคงผูกกับ ID เดิม</p><div className="equipment-master-detail"><div><div className="equipment-list" role="list" aria-label="ทะเบียนอุปกรณ์">{items.map(item => <div className="equipment-row" role="listitem" key={item.id} data-asset={item.id} data-selected={registryItem?.id === item.id}><button type="button" className="equipment-row-name" aria-pressed={registryItem?.id === item.id} onClick={() => chooseRegistry(item)}><span className="ui-nav-symbol" data-tone="green"><ReviewSymbol name={symbols[item.kind]} size={20} /></span><span><strong>{item.name}</strong><small>{item.assetCode} · {item.location}</small></span><Badge item={item} /><ArrowRight size={16} aria-hidden="true" /></button></div>)}</div>{!items.length && <p className="resource-empty">ไม่พบอุปกรณ์ตามตัวกรอง</p>}</div><aside className="equipment-inspector" aria-label="รายละเอียดอุปกรณ์">{registryDetails()}</aside></div><p className="ui-caption resource-note">หยุดใช้งานจะคงประวัติไว้ หากยังมีผู้ยืม รายการยังแสดงในหน้าคืนจนกว่าจะปิดการยืม</p></>}
       {mode === "usage" && <>
         <div className="resource-analysis-controls"><GlassControlGroup mode="quick" label="ข้อมูลอุปกรณ์">{[["usage", "การใช้งาน"], ["condition", "สภาพตอนคืน"]].map(([key, label]) => <button type="button" key={key} aria-pressed={analysisTab === key} onClick={() => setAnalysisTab(key)}>{label}</button>)}</GlassControlGroup><select aria-label="ช่วงข้อมูลอุปกรณ์" className="apple-input" value={period} onChange={event => {
             if (event.target.value === "custom") {
@@ -263,10 +278,13 @@ export default function ResourcesWorkspace({
             setError("");
             setDialog("range");
           }}><CalendarDays size={16} aria-hidden="true" />ช่วงวันที่</GlassButton></div>
-        <label className="resource-filter resource-person-filter"><span>ผู้ปฏิบัติงาน</span><select aria-label="ผู้ปฏิบัติงานในข้อมูลอุปกรณ์" value={filters.person || "all"} onChange={event => setFilters({
-            ...filters,
-            person: event.target.value
-          })}><option value="all">ทุกคน</option>{people.map(item => <option key={item.id} value={item.id}>{item.displayName}</option>)}</select></label>
+        <details className="resource-more-filters" open={filtersOpen} onToggle={event => setFiltersOpen(event.currentTarget.open)}><summary>ตัวกรอง{[filters.kind && filters.kind !== "all", filters.location && filters.location !== "all", filters.person && filters.person !== "all"].filter(Boolean).length > 0 && <span className="record-badge">{[filters.kind && filters.kind !== "all", filters.location && filters.location !== "all", filters.person && filters.person !== "all"].filter(Boolean).length}</span>}</summary><div className="resource-secondary-filters"><label className="resource-filter"><span>ประเภท</span><select aria-label="ประเภทอุปกรณ์" value={filters.kind} onChange={event => setFilters({
+                ...filters,
+                kind: event.target.value
+              })}><option value="all">ทุกประเภท</option><TypeOptions /></select></label>{locationFilter()}<label className="resource-filter resource-person-filter"><span>ผู้ปฏิบัติงาน</span><select aria-label="ผู้ปฏิบัติงานในข้อมูลอุปกรณ์" value={filters.person || "all"} onChange={event => setFilters({
+                ...filters,
+                person: event.target.value
+              })}><option value="all">ทุกคน</option>{people.map(item => <option key={item.id} value={item.id}>{item.displayName}</option>)}</select></label></div></details>
         <p className="resource-result-count">{calendarLabel(range.start)} – {calendarLabel(range.end)}</p>
         {analysisTab === "usage" ? <>
           <div className="equipment-metrics">{[["ครั้งยืมที่บันทึก", analytics.borrows, "เหตุการณ์ในช่วงที่เลือก"], ["ครั้งคืนที่บันทึก", analytics.returns, "ไม่หักจากจำนวนครั้งยืม"], ["กำลังยืมตอนนี้", analytics.outstanding, "สถานะปัจจุบัน ไม่จำกัดวันที่หรือผู้ปฏิบัติงาน"], ["จับคู่ทะเบียนไม่ได้", analytics.unmatched, "ไม่เดาจากชื่อหรือข้อความ"]].map(([label, value, note]) => <article key={label}><span>{label}</span><strong data-metric={label}>{value}</strong><small>{note}</small></article>)}</div>
@@ -301,18 +319,22 @@ export default function ResourcesWorkspace({
       range: "ช่วงวันที่",
       asset: data.devices.find(item => item.id === selectedAsset)?.name || "ประวัติอุปกรณ์",
       unmatched: "รายการที่จับคู่ทะเบียนไม่ได้"
-    }[dialog] || ""} className="resource-dialog" description="Development · ข้อมูลตัวอย่าง ไม่เขียน production">
+    }[dialog] || ""} className={`resource-dialog ${dialog === "device" ? "equipment-editor-dialog" : ""}`} footer={dialog === "device" && <div className="equipment-editor-footer"><p id="equipment-form-error" role="alert" className="resource-error">{error}</p><div className="equipment-editor-actions"><GlassButton mode="quick" onClick={() => setDialog(null)}>ยกเลิก</GlassButton><GlassButton mode="quick" variant="prominent" type="submit" form={formId}><Check size={16} aria-hidden="true" />{editing ? "บันทึกการแก้ไข" : "เพิ่มอุปกรณ์"}</GlassButton></div></div>} description="Development · ข้อมูลตัวอย่าง ไม่เขียน production">
       {dialog === "deviceDetail" && <div className="equipment-inspector-content">{registryDetails()}</div>}
-      {dialog === "device" && <form ref={formRef} onSubmit={submitDevice} noValidate><div className="equipment-form-grid">{field("name", "ชื่ออุปกรณ์")}{field("assetCode", "รหัสอุปกรณ์")}{field("barcode", "บาร์โค้ด (ถ้ามี)")}{field("location", "สังกัดปัจจุบัน")}<label className="ui-field"><span>ประเภทอุปกรณ์</span><select name="kind" aria-label="ประเภทอุปกรณ์ในทะเบียน" className="apple-input" value={draft.kind} disabled={Boolean(editing && data.logs.some(row => row.resource?.id === editing.id))} onChange={event => setDraft({
-              ...draft,
-              kind: event.target.value
-            })}><TypeOptions /></select></label><label className="ui-field"><span>สภาพล่าสุดที่ทราบ</span><select name="condition" aria-label="สภาพล่าสุดที่ทราบ" className="apple-input" value={draft.condition} onChange={event => setDraft({
-              ...draft,
-              condition: event.target.value
-            })}>{Object.entries(EQUIPMENT_CONDITIONS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{field("order", "ลำดับแสดงผล", "number")}<label className="equipment-active"><input name="active" type="checkbox" className="ui-checkbox" checked={draft.active} onChange={event => setDraft({
+      {dialog === "device" && <form id={formId} ref={formRef} className="equipment-editor" onSubmit={submitDevice} noValidate>
+        <fieldset className="ui-form-group"><legend>ข้อมูลอุปกรณ์</legend><div className="equipment-form-grid">{field("name", "ชื่ออุปกรณ์")}{field("assetCode", "รหัสอุปกรณ์")}<label className="ui-field"><span>ประเภทอุปกรณ์</span><select name="kind" aria-label="ประเภทอุปกรณ์ในทะเบียน" className="apple-input" value={draft.kind} disabled={Boolean(editing && data.logs.some(row => row.resource?.id === editing.id))} onChange={event => setDraft({
+                ...draft,
+                kind: event.target.value
+              })}><TypeOptions /></select></label></div></fieldset>
+        <fieldset className="ui-form-group"><legend>พื้นที่และสถานะ</legend><div className="equipment-form-grid">{field("location", "สังกัดปัจจุบัน")}<label className="ui-field"><span>สภาพล่าสุดที่ทราบ</span><select name="condition" aria-label="สภาพล่าสุดที่ทราบ" className="apple-input" value={draft.condition} onChange={event => setDraft({
+                ...draft,
+                condition: event.target.value
+              })}>{Object.entries(EQUIPMENT_CONDITIONS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></div><label className="equipment-active"><input name="active" type="checkbox" className="ui-checkbox" checked={draft.active} onChange={event => setDraft({
               ...draft,
               active: event.target.checked
-            })} /><span>ใช้งานในบันทึกด่วน</span></label></div><p className="ui-caption">สภาพยังไม่ระบุหรือชำรุด/สูญหายจะไม่พร้อมให้ยืม ประวัติเดิมคงผูกกับอุปกรณ์แม้ย้ายสังกัด</p><p id="equipment-form-error" role="alert" className="resource-error">{error}</p><div className="record-form-actions"><GlassButton mode="quick" onClick={() => setDialog(null)}>ยกเลิก</GlassButton><GlassButton mode="quick" variant="prominent" type="submit"><Check size={16} aria-hidden="true" />{editing ? "บันทึกการแก้ไข" : "เพิ่มอุปกรณ์"}</GlassButton></div></form>}
+            })} /><span>แสดงในบันทึกด่วน</span></label><p className="ui-caption">สภาพยังไม่ระบุ ชำรุด หรือสูญหายจะไม่พร้อมให้ยืม การซ่อนรายการยังคงประวัติและรายการคืนที่ค้างอยู่</p></fieldset>
+        <details className="equipment-advanced" open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)}><summary>ข้อมูลเพิ่มเติม</summary><div className="equipment-form-grid">{field("barcode", "บาร์โค้ด (ถ้ามี)")}{field("order", "ลำดับแสดงผล", "number")}</div></details>
+      </form>}
       {dialog === "range" && <form noValidate onSubmit={event => {
         event.preventDefault();
         try {

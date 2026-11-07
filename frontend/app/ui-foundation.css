@@ -119,6 +119,7 @@
 .ui-dialog-header p { color: var(--ui-sub); font-size: .8125rem; line-height: 1.6; margin-top: 6px; }
 .ui-dialog-header .ui-icon-button { background: var(--ui-soft); }
 .ui-dialog-body { padding: 4px 24px 24px; overflow-y: auto; overscroll-behavior-y: contain; min-height: 0; }
+.ui-dialog-footer { display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;padding:14px 24px max(14px,env(safe-area-inset-bottom,0px));border-top:1px solid var(--ui-line);background:var(--ui-surface); }
 .ui-form-group { border: 0; padding: 0; margin: 0 0 24px; min-width: 0; }
 .ui-form-group legend { margin-bottom: 12px; font-weight: 600; font-size: .875rem; }
 .ui-choice-row { display: flex; flex-wrap: wrap; gap: 8px; }

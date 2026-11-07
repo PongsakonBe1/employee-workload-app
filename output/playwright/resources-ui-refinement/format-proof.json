@@ -1,0 +1,12 @@
+[
+  {
+    "file": "frontend/app/dev/resources/workspace.js",
+    "astEquivalent": true,
+    "sha256": "58360c8cf4b7edf9af9ea0f69429f3616c2b259fe53646f8e2dc339c9795e9ac"
+  },
+  {
+    "file": "frontend/app/dev/resources/ResourceDialog.js",
+    "astEquivalent": true,
+    "sha256": "51c40780466b5b6554b6f2eae89da0a3a4ae62fdcb0edcf1175cddd3d274892e"
+  }
+]

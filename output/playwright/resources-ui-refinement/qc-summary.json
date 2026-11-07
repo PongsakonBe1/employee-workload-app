@@ -1,0 +1,180 @@
+{
+  "date": "2026-11-08",
+  "branch": "codex/resources-ui-refinement",
+  "base": "75859a5",
+  "syntheticOnly": true,
+  "productionDataUsed": false,
+  "deployed": false,
+  "allPagesReady": false,
+  "browsers": {
+    "edge": {
+      "mainScenarios": 13,
+      "finalFormScenarios": 1,
+      "browserVersion": "156.0.4314.58",
+      "origin": "http://127.0.0.1:4310",
+      "mobileMetricsTop": 480.1875,
+      "selectedColorToSurfaceContrast": [
+        {
+          "theme": "light",
+          "opticsActive": "false",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "light",
+          "opticsActive": "true",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "false",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "true",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        }
+      ]
+    },
+    "chrome": {
+      "mainScenarios": 13,
+      "finalFormScenarios": 1,
+      "browserVersion": "156.0.8078.81",
+      "origin": "http://127.0.0.1:4310",
+      "mobileMetricsTop": 480.1875,
+      "selectedColorToSurfaceContrast": [
+        {
+          "theme": "light",
+          "opticsActive": "false",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "light",
+          "opticsActive": "true",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "false",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "true",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        }
+      ]
+    },
+    "public": {
+      "mainScenarios": 13,
+      "finalFormScenarios": 1,
+      "browserVersion": "156.0.4314.58",
+      "origin": "https://northwest-revised-domains-varies.trycloudflare.com",
+      "mobileMetricsTop": 480.1875,
+      "selectedColorToSurfaceContrast": [
+        {
+          "theme": "light",
+          "opticsActive": "false",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "light",
+          "opticsActive": "true",
+          "ratio": 7.427975110156648,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "false",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        },
+        {
+          "theme": "dark",
+          "opticsActive": "true",
+          "ratio": 9.691465469540637,
+          "labelZ": 10,
+          "lensZ": 7
+        }
+      ]
+    }
+  },
+  "unit": {
+    "targetedPassed": 42,
+    "total": 291,
+    "passed": 283,
+    "failed": 8,
+    "sameFailuresAsBaseline": true,
+    "failures": [
+      "analyzeSeasonalPattern should identify outliers correctly",
+      "calculateConsistency should calculate lower consistency for variable daily counts",
+      "calculateRadarMetrics should calculate realistic values",
+      "detectOutliers should detect daily outliers correctly",
+      "getTrendIndicator should return 'up' for > 10% increase",
+      "predictNextPeak academic period fallback should identify next academic period correctly",
+      "predictNextPeak academic period fallback should return exam period for single year data",
+      "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+    ]
+  },
+  "regression": {
+    "foundation": 11,
+    "record": 11
+  },
+  "lint": "passed",
+  "syntax": "passed",
+  "compatibilityBuild": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "nativeZoom": {
+    "completed": true,
+    "method": "Native browser preference 200%, isolated profiles",
+    "normal": {
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 1416
+    },
+    "zoomed": {
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 708
+    }
+  },
+  "scope": "Six UI review issues; form-only reports verify the final error/footer placement after the full matrix",
+  "limitations": [
+    "Not human UAT or a full HIG/WCAG certification",
+    "No physical iOS/Safari, Android or scanner testing",
+    "No Firebase/Auth/backend SIT"
+  ]
+}

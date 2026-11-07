@@ -1,5 +1,7 @@
 # ห้อง ทะเบียน และการใช้งานอุปกรณ์ — Development
 
+UI รอบเก็บรายละเอียด 8 พฤศจิกายน 2569: [รายงานล่าสุด](../resources-ui-refinement/README.md)
+
 7 พฤศจิกายน 2569 · branch `codex/resources-equipment-review` · ฐาน `e651c9e`
 
 เฟสนี้เป็นการย้าย UI ตาม Review 10 และทดสอบด้วยข้อมูลสังเคราะห์ใน repo **ยังไม่เชื่อม Firebase/Auth/backend จริง และยังไม่พร้อม release ทั้งระบบ** ข้อมูลเปลี่ยนใน memory ของแท็บและเริ่มใหม่เมื่อ refresh

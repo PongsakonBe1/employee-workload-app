@@ -1,0 +1,112 @@
+{
+  "completed": true,
+  "origin": "http://127.0.0.1:4310",
+  "checks": [
+    {
+      "name": "Staff registry is restricted; Admin can add and validation focuses duplicate asset code",
+      "status": "passed"
+    },
+    {
+      "name": "New equipment appears immediately in Quick Log; resources shares ASCII13 validation and borrower",
+      "status": "passed"
+    },
+    {
+      "name": "Rename/move keeps borrower and historical location; inactive loans can still return through Quick Log",
+      "status": "passed"
+    },
+    {
+      "name": "Usage reconciles counts, keeps current location distinct from event location and links exact asset history",
+      "status": "passed"
+    },
+    {
+      "name": "Date presets and invalid custom ranges preserve the current range",
+      "status": "passed"
+    },
+    {
+      "name": "Registry Undo restores metadata and active state without changing past event data",
+      "status": "passed"
+    },
+    {
+      "name": "Room action creates shared worklog and Undo restores the status",
+      "status": "passed"
+    },
+    {
+      "name": "All three views and condition tab fit 375/390/430/768px in light/dark and 16px form inputs",
+      "status": "passed"
+    },
+    {
+      "name": "Reduced motion, solid materials and forced colors remain operable",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile selection labels stay above the lens in loading and active phases with sufficient selected contrast",
+      "status": "passed"
+    },
+    {
+      "name": "Room list, inspector, resource dialog and Quick Log share one status meaning",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile filters collapse without resetting choices; first metrics appear before 500px",
+      "status": "passed"
+    },
+    {
+      "name": "Grouped form footer remains visible while body scrolls, validates advanced fields and preserves cancellation",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "limitations": [
+    "Synthetic adapter integration only, not Firebase/Auth/backend SIT",
+    "Automated acceptance checks are not human UAT or physical Safari/iPhone/scanner testing"
+  ],
+  "browserVersion": "156.0.4314.58",
+  "selectionContrast": [
+    {
+      "color": "rgb(7, 82, 174)",
+      "opacity": "1",
+      "labelZ": 10,
+      "lensZ": 7,
+      "surface": "#fff",
+      "label": "ทรัพยากร",
+      "active": "false",
+      "contrast": 7.427975110156648,
+      "colorScheme": "light"
+    },
+    {
+      "color": "rgb(7, 82, 174)",
+      "opacity": "1",
+      "labelZ": 10,
+      "lensZ": 7,
+      "surface": "#fff",
+      "label": "ทรัพยากร",
+      "active": "true",
+      "contrast": 7.427975110156648,
+      "colorScheme": "light"
+    },
+    {
+      "color": "rgb(169, 213, 255)",
+      "opacity": "1",
+      "labelZ": 10,
+      "lensZ": 7,
+      "surface": "#25272e",
+      "label": "ทรัพยากร",
+      "active": "false",
+      "contrast": 9.691465469540637,
+      "colorScheme": "dark"
+    },
+    {
+      "color": "rgb(169, 213, 255)",
+      "opacity": "1",
+      "labelZ": 10,
+      "lensZ": 7,
+      "surface": "#25272e",
+      "label": "ทรัพยากร",
+      "active": "true",
+      "contrast": 9.691465469540637,
+      "colorScheme": "dark"
+    }
+  ],
+  "mobileMetricsTop": 480.1875
+}

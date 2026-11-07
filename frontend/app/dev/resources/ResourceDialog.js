@@ -5,7 +5,7 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { GlassButton } from "../../../components/ui/GlassControls";
 import { LoanFields } from "./LoanFields";
 import { recordLedger, useRecordLedger } from "../record/store";
-import { deviceWorklog, roomWorklog } from "../../../lib/resourceWorklog";
+import { deviceWorklog, roomWorklog, roomState } from "../../../lib/resourceWorklog";
 import { canBorrowEquipment, canReturnEquipment, equipmentState, EQUIPMENT_CONDITIONS } from "../../../lib/equipmentPreview";
 export function ResourceDialog({
   action,
@@ -54,7 +54,7 @@ export function ResourceDialog({
   }
   return <Dialog open={Boolean(action && item)} onClose={onClose} title={action?.type === "room" ? `ห้อง ${item?.id}` : item?.name || "อุปกรณ์"} className="record-dialog" description="Development · ใช้ข้อมูลชุดเดียวกับบันทึกงานและประวัติ">
     {item && <form onSubmit={submit} noValidate>
-      {action.type === "room" ? <><p className="resource-dialog-status">{item.open ? "เปิดอยู่" : "ปิดอยู่"} · {item.detail}</p><p className="record-error" role="alert">{error}</p><GlassButton mode="quick" variant="prominent" type="submit">{item.open ? "ปิดห้อง" : "เปิดห้อง"}</GlassButton></> : <>
+      {action.type === "room" ? <><p className="resource-dialog-status"><span className="record-badge" data-tone={roomState(item).tone}>{roomState(item).label}</span> · {item.detail}</p><p className="record-error" role="alert">{error}</p><GlassButton mode="quick" variant="prominent" type="submit">{item.open ? "ปิดห้อง" : "เปิดห้อง"}</GlassButton></> : <>
         <p className="resource-dialog-status">{equipmentState(item).label} · {item.assetCode} · {item.location}</p>
         <p className="ui-caption">สภาพล่าสุดที่ทราบ: {EQUIPMENT_CONDITIONS[item.condition]}</p>
         {canBorrowEquipment(item) || canReturnEquipment(item) ? <><LoanFields device={item} recipient={recipient} condition={condition} inputRef={input} error={error} onCondition={setCondition} onRecipient={value => {

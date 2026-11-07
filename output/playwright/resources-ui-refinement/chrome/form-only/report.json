@@ -1,0 +1,17 @@
+{
+  "completed": true,
+  "origin": "http://127.0.0.1:4310",
+  "checks": [
+    {
+      "name": "Grouped form footer remains visible while body scrolls, validates advanced fields and preserves cancellation",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "limitations": [
+    "Synthetic adapter integration only, not Firebase/Auth/backend SIT",
+    "Automated acceptance checks are not human UAT or physical Safari/iPhone/scanner testing"
+  ],
+  "browserVersion": "156.0.8078.81"
+}

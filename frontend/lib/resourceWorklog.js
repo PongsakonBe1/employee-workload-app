@@ -1,5 +1,6 @@
 import { manualRecordEntry } from "./recordPreview";
 import { canBorrowEquipment, EQUIPMENT_CONDITIONS } from "./equipmentPreview";
+export const roomState = room => ({ label: room.open ? "เปิดอยู่" : "ปิดอยู่", tone: room.open ? "green" : "neutral" });
 export function roomWorklog(room, dateTime) {
   const taskId = room.floor === "3" ? `${room.open ? "ปิด" : "เช็คอิน"}ห้องแลกเปลี่ยนความรู้` : `${room.open ? "ปิด" : "เปิด"}ห้องเรียนชั้น 4`;
   const result = manualRecordEntry({

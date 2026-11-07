@@ -14,7 +14,7 @@ import { combos, people, schedule, tasks } from "./fixtures";
 import { recordLedger, useRecordLedger } from "./store";
 import { canViewPreviewLog } from "../../../lib/previewLedger";
 import { canBorrowEquipment, canReturnEquipment, canUndoPreview, equipmentState } from "../../../lib/equipmentPreview";
-import { roomWorklog, deviceWorklog } from "../../../lib/resourceWorklog";
+import { roomWorklog, deviceWorklog, roomState } from "../../../lib/resourceWorklog";
 import { previewDestination } from "../../../lib/previewNavigation";
 import { LoanFields } from "../resources/LoanFields";
 
@@ -405,9 +405,9 @@ export default function RecordPreview() {
           <strong>
             {`ห้อง ${room.id}`}
           </strong>
-          <span className="record-badge" data-tone={room.open ? "green" : "neutral"}>
+          <span className="record-badge" data-tone={roomState(room).tone}>
             {room.open ? <Check size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
-            {room.open ? "เปิดอยู่" : "ปิดอยู่"}
+            {roomState(room).label}
           </span>
           <small>{room.detail}</small>
           <span className="record-resource-action">

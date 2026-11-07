@@ -1,0 +1,55 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "Next mounts the actual shared shell in development and keeps the four role-aware mobile destinations",
+      "status": "passed"
+    },
+    {
+      "name": "Theme and backgrounds persist across navigation and reload; switching appearance preserves a form draft",
+      "status": "passed"
+    },
+    {
+      "name": "System theme changes update appearance; forced solid and reduced motion override decoration",
+      "status": "passed"
+    },
+    {
+      "name": "Compact sidebar tooltips work on hover and focus without clipping; expanded tools remain scrollable",
+      "status": "passed"
+    },
+    {
+      "name": "Native dialogs trap keyboard focus, Escape restores focus, and route search remains usable",
+      "status": "passed"
+    },
+    {
+      "name": "Native checkbox and segmented controls keep keyboard behavior and do not submit the surrounding form",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile date/time fields fit; all backgrounds and shared dialogs work at 375, 390, 430 and tablet widths",
+      "status": "passed"
+    },
+    {
+      "name": "Shared text and controls have readable contrast in both themes; screenshots cover phone and desktop",
+      "status": "passed"
+    },
+    {
+      "name": "Preference changes still work when browser storage refuses writes",
+      "status": "passed"
+    },
+    {
+      "name": "A touch/mobile context can navigate, open appearance, change options and dismiss the native sheet",
+      "status": "passed"
+    },
+    {
+      "name": "Actual AppShell still redirects anonymous users to login without a fake authenticated session",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "blockedOrigins": [],
+  "limitations": [
+    "Synthetic UI route; no successful authenticated backend/Firestore integration test",
+    "Physical iOS/Safari/Android testing and full feature-page migration remain pending"
+  ]
+}

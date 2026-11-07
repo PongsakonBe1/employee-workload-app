@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 
-export function Dialog({ open, onClose, title, description, children, className = "" }) {
+export function Dialog({ open, onClose, title, description, children, footer, className = "" }) {
   const ref = useRef(null), closeRef = useRef(onClose), titleId = useId(), descriptionId = useId();
   closeRef.current = onClose;
   useEffect(() => {
@@ -31,5 +31,6 @@ export function Dialog({ open, onClose, title, description, children, className 
       </button>
     </div>
     <div className="ui-dialog-body">{children}</div>
+    {footer && <div className="ui-dialog-footer">{footer}</div>}
   </dialog>;
 }
