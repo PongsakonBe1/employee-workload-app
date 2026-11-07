@@ -22,6 +22,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   const [dialog, setDialog] = useState(null), [search, setSearch] = useState("");
   const calendar = ["/calendar", "/admin/classroom-schedules", "/admin/dl-exam-schedules"].includes(pathname);
   const compact = calendar && wide && !collapsed;
+  const mobileArea = ["record", "worklogs", "templates"].includes(current) ? "record" : ["calendar", "classes", "dl"].includes(current) ? "calendar" : ["resources", "equipment", "condition"].includes(current) ? "resources" : ["dashboard", "staff"].includes(current) ? "dashboard" : current;
   const label = all.find(entry => entry.id === current)?.label || ({ "/profile": "โปรไฟล์", "/help": "คู่มือการใช้งาน" }[pathname] || "พื้นที่ทำงาน");
   const displayName = user.displayName || user.nickname || user.fullName || "ผู้ใช้งาน";
   const initial = user.initial || Array.from(displayName.trim())[0] || "?";
@@ -200,10 +201,10 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
         mode={pilotMode} radius={25}
         name="tabbar"
       />
-      <GlassSelection mode={pilotMode} selected={current} />
+      <GlassSelection mode={pilotMode} selected={mobileArea} targetSelector="a[aria-current]" />
       {mobileNavigation(groups).map(entry => { return <Link
         key={entry.id} href={entry.href}
-        prefetch={false} aria-current={current === entry.id ? "page" : undefined}
+        prefetch={false} aria-current={mobileArea === entry.id ? current === entry.id ? "page" : "location" : undefined}
         onClick={event => navigate(event, entry.href)}
       >
         <ReviewSymbol name={entry.icon} size={21} />

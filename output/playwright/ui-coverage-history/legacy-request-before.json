@@ -1,0 +1,11 @@
+{
+  "route": "/worklogs/new",
+  "error": {
+    "message": "Request failed",
+    "stack": "Error: Request failed\n    at apiFetch (webpack-internal:///(app-pages-browser)/./lib/api.js:48:19)"
+  },
+  "requestPaths": [
+    "/__ui-test-api/categories"
+  ],
+  "synthetic": true
+}

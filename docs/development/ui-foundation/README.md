@@ -1,5 +1,7 @@
 # Development UI Foundation — ย้ายส่วนกลางเข้า Next.js
 
+สถานะรายหน้าล่าสุด: [QC ทุกหน้าและ flow บันทึกงาน–ประวัติ](../ui-coverage-history/README.md) — ยังไม่ครบทั้งระบบ แยกผล render ของต้นแบบออกจาก feature preview, integration และ UAT
+
 แก้รายละเอียดล่าสุด: [บันทึกงานตาม Review และ catalog เดิม](../record-contract-review/README.md) — โทรศัพท์/ฟอร์มกรอกเอง/ไอคอน/Glass hover; ผู้ใช้เลือกให้อ้างอิง repo เท่านั้น ยังไม่เปิด Firebase
 
 อัปเดตล่าสุด: [ปรับรายละเอียด Review 10 ตาม Liquid Glass skill](../glass-skill-polish/README.md) คืนขนาด/ไอคอนตามแบบ และเพิ่ม selection motion ใน controls ที่มีอยู่ โดยคงโหมด development

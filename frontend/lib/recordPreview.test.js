@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recordTasks, manualRecordEntry, phoneRecordEntry } from "./recordPreview";
+import { recordTasks, manualRecordEntry, phoneRecordEntry, assignedRecordEntry } from "./recordPreview";
 import { MINOR_TASKS, getCommentSuggestions, getMainDutyFromMinorTask } from "./commentSuggestions";
 
 const dateTime = { date: "2026-11-07", time: "17:00" };
@@ -29,5 +29,9 @@ describe("record development domain contract", () => {
     expect(phoneRecordEntry(" ", "", dateTime).field).toBe("recipient");
     expect(phoneRecordEntry("หน่วยงานตัวอย่าง", " ", dateTime).field).toBe("notes");
     expect(phoneRecordEntry("หน่วยงานตัวอย่าง", "ให้คำแนะนำ", dateTime).entry).toMatchObject({ minorTask: "รับแจ้งและแก้ปัญหาทางโทรศัพท์", recipient: "หน่วยงานตัวอย่าง", comment: "ให้คำแนะนำ" });
+  });
+  it("requires assigned-work detail while keeping its recipient optional", () => {
+    expect(assignedRecordEntry("", " ", dateTime).field).toBe("notes");
+    expect(assignedRecordEntry("", "งานตัวอย่าง", dateTime).entry).toMatchObject({ minorTask: "ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย", recipient: "", comment: "งานตัวอย่าง", requireComment: true });
   });
 });

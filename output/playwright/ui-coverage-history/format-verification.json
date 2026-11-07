@@ -1,0 +1,45 @@
+{
+  "formatter": "Existing Next bundled Babel, no plugins/presets or package installation",
+  "files": [
+    {
+      "file": "frontend/lib/previewLedger.js",
+      "semanticASTUnchanged": true,
+      "sha256": "85591545e1abf8f181e060562566da2be5fec54e71f63387a84af8194a7ee76b"
+    },
+    {
+      "file": "frontend/lib/previewLedger.test.js",
+      "semanticASTUnchanged": true,
+      "sha256": "7f8c40be51341ac3e1a8f1a933a89b815ed6e311f024fe6f97dd3fabcab3e78e"
+    },
+    {
+      "file": "frontend/lib/historyPreview.js",
+      "semanticASTUnchanged": true,
+      "sha256": "e3ee192e604a06fefde976dbdcce555f1e3aa5995d6ad6c73bed494faa143a7d"
+    },
+    {
+      "file": "frontend/app/dev/record/store.js",
+      "semanticASTUnchanged": true,
+      "sha256": "333719b8b205f963b59a05837f2ed7f820da93dabd937d259a2c968b7747d5af"
+    },
+    {
+      "file": "frontend/app/dev/history/workspace.js",
+      "semanticASTUnchanged": true,
+      "sha256": "1087dc0e1edf8048632de624bd5d51114c0a156d6cbfce2ba5a862e5c800aee3"
+    },
+    {
+      "file": "frontend/app/dev/history/page.js",
+      "semanticASTUnchanged": true,
+      "sha256": "407d185022bb12f8e84050ad972b89181b3809138b4d96023b271596ff2502eb"
+    },
+    {
+      "file": "scripts/audit-ui-coverage.cjs",
+      "semanticASTUnchanged": true,
+      "sha256": "9e16dc05c08e96ec67c3a216649b418b79d8194055a0b7eae6619c73b1333caf"
+    },
+    {
+      "file": "scripts/verify-record-history.cjs",
+      "semanticASTUnchanged": true,
+      "sha256": "0a95178c1a7b9ac72c1646103f3f152957e8ce55f900cd72c37f375237a14d7b"
+    }
+  ]
+}

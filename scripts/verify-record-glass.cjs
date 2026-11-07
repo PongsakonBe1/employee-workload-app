@@ -95,7 +95,7 @@ async function main() {
       assert.ok((await page.locator('.record-recent').textContent()).includes('17:00'));await page.locator('.record-mode').getByRole('button', { name: 'บันทึกด่วน', exact: true }).click();await page.locator('.record-inspector summary').click();
     });
     await test('Second Quick Log page keeps plug/USB inventory and phone entry usable without changing the layout', async () => {
-      await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();assert.equal(await page.locator('.record-quick-card').count(), 2);
+      await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();assert.equal(await page.locator('.record-quick-card').count(), 3);
       for (const name of [/ยืม \/ คืนปลั๊กไฟ/, /ยืม \/ คืน USB/]) {
         await quick(page, name).click();assert.equal(await dialog(page).locator('.record-resource-tile').count(), 1);await dialog(page).locator('.record-resource-tile').click();assert.equal(await page.locator('[name="record-student"]').getAttribute('inputmode'), 'numeric');await close(page);
       }

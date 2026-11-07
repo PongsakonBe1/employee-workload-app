@@ -18,8 +18,8 @@ export const initialDevices = [
 export const tasks = recordTasks;
 export const combos = {
   // User-selected repository-only scope: approved Review 10 labels, not live data.
-  account: { title: "เปิดใช้บัญชี", tasks: ["เปิดใช้ Microsoft Authenticator", "เปิดใช้ Google Account", "เปิดใช้ KMUTNB SSO", "เปิดใช้ 2SV Google", "เปิดใช้ ICIT account"] },
-  software: { title: "ติดตั้งโปรแกรม", tasks: ["ติดตั้ง SolidWork", "ติดตั้ง MatLab", "ติดตั้ง Microsoft365", "ติดตั้ง Visio", "ติดตั้ง Adobe", "ติดตั้ง ESET"] },
+  account: { title: "เปิดใช้บัญชี", tasks: ["เปิดใช้ Microsoft Authenticator", "เปิดใช้ Google Account", "เปิดใช้ KMUTNB SSO", "เปิดใช้ 2SV Google", "เปิดใช้ ICIT account"], minorTasks: ["Microsoft Authenticator", "ICIT account", "ICIT account", "Gmail", "ICIT account"] },
+  software: { title: "ติดตั้งโปรแกรม", tasks: ["ติดตั้ง SolidWork", "ติดตั้ง MatLab", "ติดตั้ง Microsoft365", "ติดตั้ง Visio", "ติดตั้ง Adobe", "ติดตั้ง ESET"], minorTasks: Array(6).fill("ติดตั้ง Software") },
 };
 export const initialLogs = [
   { id: "sample-1", title: "ยืมหูฟัง", detail: "หูฟังตัวอย่าง 02 · Finn Space", person: "เจ้าหน้าที่ A (เอ)", date: "2026-11-06", time: "10:55" },

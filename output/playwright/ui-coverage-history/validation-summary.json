@@ -1,0 +1,122 @@
+{
+  "date": "2026-11-07",
+  "branch": "codex/ui-coverage-record-history",
+  "base": "89a1ca1",
+  "allPagesReady": false,
+  "coverage": {
+    "before": {
+      "nextRoutes": 27,
+      "developmentRoutes": 3,
+      "featurePreviews": 2,
+      "approvedViews": 30,
+      "referenceStates": 120,
+      "referenceOverflowStates": 0,
+      "navigationDestinations": 18,
+      "fullPreviewDestinations": 2
+    },
+    "after": {
+      "nextRoutes": 28,
+      "developmentRoutes": 4,
+      "featurePreviews": 3,
+      "approvedViews": 30,
+      "referenceStates": 120,
+      "referenceOverflowStates": 0,
+      "navigationDestinations": 18,
+      "fullPreviewDestinations": 3
+    },
+    "anonymousRedirects": 21,
+    "authenticatedLegacyFunctionalityTested": false
+  },
+  "tests": {
+    "unit": {
+      "passed": 260,
+      "failed": 8,
+      "total": 268,
+      "sameBaselineFailures": true,
+      "failures": [
+        "analyzeSeasonalPattern should identify outliers correctly",
+        "calculateConsistency should calculate lower consistency for variable daily counts",
+        "calculateRadarMetrics should calculate realistic values",
+        "detectOutliers should detect daily outliers correctly",
+        "getTrendIndicator should return 'up' for > 10% increase",
+        "predictNextPeak academic period fallback should identify next academic period correctly",
+        "predictNextPeak academic period fallback should return exam period for single year data",
+        "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+      ]
+    },
+    "targetedUnitAndSyntheticSIT": {
+      "passed": 42,
+      "failed": 0,
+      "realServiceSIT": false
+    },
+    "e2e": {
+      "e2e": {
+        "groups": 9,
+        "browser": "156.0.4314.58",
+        "executable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+        "externalRequestsBlocked": 2
+      },
+      "chrome": {
+        "groups": 9,
+        "browser": "156.0.8078.81",
+        "executable": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "externalRequestsBlocked": 2
+      },
+      "public": {
+        "groups": 9,
+        "browser": "156.0.4314.58",
+        "executable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+        "externalRequestsBlocked": 2
+      }
+    },
+    "regressions": {
+      "record-liquid-glass": 11,
+      "calendar-liquid-glass": 11,
+      "develop-ui-foundation": 11,
+      "quick-liquid-pilot": 8
+    },
+    "lint": "passed targeted ESLint",
+    "build": "passed isolated compatibility export including history dev guard",
+    "nativeZoom200": "passed /dev/history",
+    "humanUAT": "pending; checklist supplied",
+    "physicalDevices": "pending",
+    "assignedWorkFinalLabelSmoke": "passed; label container and required-field semantics verified"
+  },
+  "protectedFiles": [
+    "frontend/lib/analytics.test.js",
+    "frontend/lib/analytics.js",
+    "frontend/lib/staffMetrics.test.js",
+    "frontend/lib/staffMetrics.js",
+    "frontend/lib/validation.test.js",
+    "frontend/lib/validation.js",
+    "frontend/components/AuthProvider.js",
+    "frontend/components/AppShell.js",
+    "frontend/components/ProfileStats.js",
+    "frontend/components/StaffRadarChart.js",
+    "frontend/lib/commentSuggestions.js",
+    "frontend/lib/worklogUtils.js",
+    "package.json",
+    "package-lock.json"
+  ],
+  "legacyFix": {
+    "file": "frontend/app/worklogs/new/page.js",
+    "change": "Remove unused categories request/state/import only",
+    "before": "legacy-request-before.json",
+    "after": "legacy-request-after.json"
+  },
+  "sourcePolicy": "Repository only; no Firebase Console, credentials, production data or real service writes",
+  "developmentStorage": "Tab-local immutable adapter; reset on full reload",
+  "browserPreview": "https://northwest-revised-domains-varies.trycloudflare.com/dev/history",
+  "pushed": false,
+  "deployed": false,
+  "installedPackages": false,
+  "formatting": "Eight new files formatted with existing Next bundled Babel; AST equivalence verified",
+  "remaining": [
+    "Other feature pages are not migrated; see COVERAGE.md",
+    "History edit of date/time/minorTask, bulk edit, real lock/audit flows incomplete",
+    "Calendar and record agenda business data still separate fixtures",
+    "PDF/image parsing and production import not implemented",
+    "8 original unit failures remain",
+    "Real service SIT and human/physical-device UAT not performed"
+  ]
+}

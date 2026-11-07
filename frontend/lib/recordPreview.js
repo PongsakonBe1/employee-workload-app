@@ -20,5 +20,22 @@ export function manualRecordEntry(draft, dateTime) {
 export function phoneRecordEntry(recipient, notes, dateTime) {
   if (!recipient.trim()) return { field: "recipient", message: "ระบุผู้รับบริการก่อนบันทึก" };
   if (!notes.trim()) return { field: "notes", message: "ระบุรายละเอียดการให้บริการ" };
-  return manualRecordEntry({ taskId: "รับแจ้งและแก้ปัญหาทางโทรศัพท์", recipient, notes }, dateTime);
+  const result = manualRecordEntry({ taskId: "รับแจ้งและแก้ปัญหาทางโทรศัพท์", recipient, notes }, dateTime);
+  return result.entry ? { entry: { ...result.entry, requireRecipient: true, requireComment: true } } : result;
+}
+
+export function assignedRecordEntry(recipient, notes, dateTime) {
+  if (!notes.trim()) return { field: "notes", message: "ระบุรายละเอียดของงานที่ได้รับมอบหมาย" };
+  const result = manualRecordEntry({ taskId: "ปฏิบัติงานตามที่ผู้บังคับบัญชามอบหมาย", recipient, notes }, dateTime);
+  return result.entry ? { entry: { ...result.entry, requireComment: true } } : result;
+}
+
+export function comboRecordEntries(combo, selected, recipient, dateTime) {
+  if (!recipient.trim() || !selected.length || new Set(selected).size !== selected.length) throw Error("เลือกงานและระบุผู้รับบริการ");
+  return selected.map(index => {
+    if (!Number.isInteger(index) || !combo.tasks[index]) throw Error("รายการ Combo ไม่ถูกต้อง");
+    const result = manualRecordEntry({ taskId: combo.minorTasks[index], recipient, notes: combo.tasks[index] }, dateTime);
+    if (!result.entry) throw Error(result.message);
+    return { ...result.entry, title: combo.tasks[index], requireRecipient: true };
+  });
 }

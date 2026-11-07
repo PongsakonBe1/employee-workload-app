@@ -1,0 +1,1624 @@
+{
+  "phase": "before",
+  "completed": true,
+  "productionDataUsed": false,
+  "errors": [],
+  "nextRoutes": [
+    {
+      "route": "/admin/audit-logs",
+      "lines": 231,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/classroom-schedules",
+      "lines": 15,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/ScheduleManager"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/cleanup",
+      "lines": 37,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AuthProvider",
+        "../../../components/TemplateCleanup"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/dl-exam-schedules",
+      "lines": 15,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/DLExamManager"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/equipment-health",
+      "lines": 433,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/equipment-items",
+      "lines": 473,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin",
+      "lines": 196,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/record",
+      "lines": 675,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider",
+        "../../../components/MinorTaskSelector",
+        "../../../components/CommentSuggestions",
+        "../../../components/QuickLogButtons",
+        "../../../components/RoomEquipmentStatus",
+        "../../../components/RoomUsageCalendar",
+        "../../../components/iCloudCalendarStrip",
+        "../../../components/AddMissingTemplates",
+        "../../../components/SmartTemplatesSeeder",
+        "../../../components/ScheduleAlertBanner",
+        "../../../components/Toast"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/settings",
+      "lines": 770,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/staff-analytics",
+      "lines": 603,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider",
+        "../../../components/StaffRadarChart"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/system",
+      "lines": 1575,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AuthProvider",
+        "../../../components/AppShell",
+        "../../../components/TemplateManager",
+        "../../../components/DLExamManager",
+        "../../../components/ScheduleManager",
+        "../../../components/RoomUsageCalendar",
+        "../../../components/NotificationBell"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/templates",
+      "lines": 13,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/TemplateManager"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/admin/users",
+      "lines": 873,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/AppShell",
+        "../../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/calendar",
+      "lines": 15,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/RoomUsageCalendar"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/dashboard",
+      "lines": 1090,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/MetricCard",
+        "../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/dev/calendar",
+      "lines": 10,
+      "developmentOnly": true,
+      "imports": [
+        "./workspace"
+      ],
+      "featureMigrated": true,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/dev/record",
+      "lines": 11,
+      "developmentOnly": true,
+      "imports": [
+        "./workspace"
+      ],
+      "featureMigrated": true,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/dev/ui",
+      "lines": 10,
+      "developmentOnly": true,
+      "imports": [
+        "./workspace"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/export",
+      "lines": 515,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/help",
+      "lines": 409,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/login",
+      "lines": 122,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/",
+      "lines": 37,
+      "developmentOnly": false,
+      "imports": [
+        "../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/pending",
+      "lines": 78,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AuthProvider"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/profile",
+      "lines": 153,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/AuthProvider",
+        "../../components/ProfileStats"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/resources",
+      "lines": 15,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/RoomEquipmentStatus"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/worklogs/new",
+      "lines": 446,
+      "developmentOnly": false,
+      "imports": [
+        "../../../components/Toast",
+        "../../../components/AppShell",
+        "../../../components/AuthProvider",
+        "../../../components/MinorTaskSelector",
+        "../../../components/CommentSuggestions",
+        "../../../components/QuickLogButtons",
+        "../../../components/QuickColorLog",
+        "../../../components/RoomEquipmentStatus",
+        "../../../components/RoomUsageCalendar",
+        "../../../components/iCloudCalendarStrip",
+        "../../../components/TodayRoomSchedule",
+        "../../../components/AddMissingTemplates",
+        "../../../components/SmartTemplatesSeeder",
+        "../../../components/ScheduleAlertBanner"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    },
+    {
+      "route": "/worklogs",
+      "lines": 1625,
+      "developmentOnly": false,
+      "imports": [
+        "../../components/AppShell",
+        "../../components/EmptyState",
+        "../../components/AuthProvider",
+        "../../components/MinorTaskSelector",
+        "../../components/CommentSuggestions",
+        "../../components/LoadingSkeleton"
+      ],
+      "featureMigrated": false,
+      "authenticatedFunctionalityVerified": false
+    }
+  ],
+  "referenceViews": [
+    {
+      "id": "dashboard",
+      "title": "ภาพรวม",
+      "source": "/dashboard"
+    },
+    {
+      "id": "record",
+      "title": "บันทึกงาน",
+      "source": "/admin/record"
+    },
+    {
+      "id": "worklogs",
+      "title": "รายการงาน",
+      "source": "/worklogs"
+    },
+    {
+      "id": "new-log",
+      "title": "กรอกบันทึกงาน",
+      "source": "/worklogs/new"
+    },
+    {
+      "id": "dl",
+      "title": "ตารางสอบ DL",
+      "source": "/admin/dl-exam-schedules"
+    },
+    {
+      "id": "classrooms",
+      "title": "ตารางเรียน",
+      "source": "/admin/classroom-schedules"
+    },
+    {
+      "id": "equipment",
+      "title": "จัดการอุปกรณ์",
+      "source": "/admin/equipment-items"
+    },
+    {
+      "id": "usage",
+      "title": "การใช้งานอุปกรณ์",
+      "source": "/admin/equipment-health"
+    },
+    {
+      "id": "staff",
+      "title": "Staff Analytics",
+      "source": "/admin/staff-analytics"
+    },
+    {
+      "id": "profile",
+      "title": "โปรไฟล์ของฉัน",
+      "source": "/profile"
+    },
+    {
+      "id": "export",
+      "title": "ส่งออกข้อมูล",
+      "source": "/export"
+    },
+    {
+      "id": "admin",
+      "title": "ศูนย์ผู้ดูแล",
+      "source": "/admin"
+    },
+    {
+      "id": "users",
+      "title": "จัดการผู้ใช้",
+      "source": "/admin/users"
+    },
+    {
+      "id": "templates",
+      "title": "บันทึกด่วนและ Combo",
+      "source": "/admin/templates"
+    },
+    {
+      "id": "system",
+      "title": "จัดการระบบ",
+      "source": "/admin/system"
+    },
+    {
+      "id": "settings",
+      "title": "ตั้งค่า",
+      "source": "/admin/settings"
+    },
+    {
+      "id": "audit",
+      "title": "ประวัติระบบ",
+      "source": "/admin/audit-logs"
+    },
+    {
+      "id": "broadcast",
+      "title": "ประกาศและแจ้งเตือน",
+      "source": "/admin/system#broadcast"
+    },
+    {
+      "id": "imports",
+      "title": "นำเข้าข้อมูล",
+      "source": "/admin/system#import"
+    },
+    {
+      "id": "cleanup",
+      "title": "ตรวจข้อมูลซ้ำ",
+      "source": "/admin/cleanup"
+    },
+    {
+      "id": "help",
+      "title": "คู่มือการใช้งาน",
+      "source": "/help"
+    },
+    {
+      "id": "login",
+      "title": "เข้าสู่ระบบ",
+      "source": "/login"
+    },
+    {
+      "id": "pending",
+      "title": "รออนุมัติ",
+      "source": "/pending"
+    },
+    {
+      "id": "design",
+      "title": "ชุด UI และสถานะ",
+      "source": "design-only"
+    },
+    {
+      "id": "resources",
+      "title": "ห้องและทรัพยากร",
+      "source": "RoomEquipmentStatus"
+    },
+    {
+      "id": "condition",
+      "title": "สภาพและประวัติคืน",
+      "source": "/admin/equipment-health"
+    },
+    {
+      "id": "export-requests",
+      "title": "คำขอส่งออก",
+      "source": "/admin/system#exports"
+    },
+    {
+      "id": "data-import",
+      "title": "นำเข้าข้อมูลงาน",
+      "source": "/admin/system#import"
+    },
+    {
+      "id": "notifications",
+      "title": "การแจ้งเตือน",
+      "source": "NotificationBell"
+    },
+    {
+      "id": "about",
+      "title": "เกี่ยวกับแอป",
+      "source": "Version Control"
+    }
+  ],
+  "referenceLayout": [
+    {
+      "route": "dashboard",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1561,
+      "heading": "ภาพรวมงาน",
+      "overflow": false
+    },
+    {
+      "route": "record",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1148,
+      "heading": "บันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "worklogs",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1570,
+      "heading": "ประวัติงาน",
+      "overflow": false
+    },
+    {
+      "route": "new-log",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1003,
+      "heading": "เพิ่มบันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "dl",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 674,
+      "heading": "ตารางสอบ DL",
+      "overflow": false
+    },
+    {
+      "route": "classrooms",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 834,
+      "heading": "ประเภทกิจกรรม",
+      "overflow": false
+    },
+    {
+      "route": "equipment",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 612,
+      "heading": "ทะเบียนอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "usage",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1818,
+      "heading": "การใช้งานอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "staff",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1257,
+      "heading": "การกระจายงานของทีม",
+      "overflow": false
+    },
+    {
+      "route": "profile",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 896,
+      "heading": "โปรไฟล์ของฉัน",
+      "overflow": false
+    },
+    {
+      "route": "export",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 395,
+      "heading": "ส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "admin",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 725,
+      "heading": "งานรอจัดการ",
+      "overflow": false
+    },
+    {
+      "route": "users",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 564,
+      "heading": "ผู้ใช้และสิทธิ์",
+      "overflow": false
+    },
+    {
+      "route": "templates",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 731,
+      "heading": "เทมเพลตและ Combo",
+      "overflow": false
+    },
+    {
+      "route": "system",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 245,
+      "heading": "เครื่องมือข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 529,
+      "heading": "ตั้งค่า",
+      "overflow": false
+    },
+    {
+      "route": "audit",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 662,
+      "heading": "ประวัติระบบ",
+      "overflow": false
+    },
+    {
+      "route": "broadcast",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 410,
+      "heading": "ประกาศและแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "imports",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 505,
+      "heading": "นำเข้าตารางเรียนและสอบ",
+      "overflow": false
+    },
+    {
+      "route": "cleanup",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 498,
+      "heading": "ตรวจข้อมูลซ้ำ",
+      "overflow": false
+    },
+    {
+      "route": "help",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 367,
+      "heading": "คู่มือและความช่วยเหลือ",
+      "overflow": false
+    },
+    {
+      "route": "login",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 334,
+      "heading": "ทุกงานของทีมเชื่อมกันในที่เดียว",
+      "overflow": false
+    },
+    {
+      "route": "pending",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 178,
+      "heading": "",
+      "overflow": false
+    },
+    {
+      "route": "design",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 603,
+      "heading": "Glass และการเคลื่อนไหว",
+      "overflow": false
+    },
+    {
+      "route": "resources",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 435,
+      "heading": "ห้องและทรัพยากร",
+      "overflow": false
+    },
+    {
+      "route": "condition",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 1405,
+      "heading": "สภาพและประวัติคืน",
+      "overflow": false
+    },
+    {
+      "route": "export-requests",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 265,
+      "heading": "คำขอส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "data-import",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 286,
+      "heading": "นำเข้าข้อมูลงาน",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 222,
+      "heading": "การแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "about",
+      "width": 1440,
+      "theme": "light",
+      "textLength": 392,
+      "heading": "เกี่ยวกับ labboy Workload",
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1561,
+      "heading": "ภาพรวมงาน",
+      "overflow": false
+    },
+    {
+      "route": "record",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1148,
+      "heading": "บันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "worklogs",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1570,
+      "heading": "ประวัติงาน",
+      "overflow": false
+    },
+    {
+      "route": "new-log",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1003,
+      "heading": "เพิ่มบันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "dl",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 674,
+      "heading": "ตารางสอบ DL",
+      "overflow": false
+    },
+    {
+      "route": "classrooms",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 834,
+      "heading": "ประเภทกิจกรรม",
+      "overflow": false
+    },
+    {
+      "route": "equipment",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 612,
+      "heading": "ทะเบียนอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "usage",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1818,
+      "heading": "การใช้งานอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "staff",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1257,
+      "heading": "การกระจายงานของทีม",
+      "overflow": false
+    },
+    {
+      "route": "profile",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 896,
+      "heading": "โปรไฟล์ของฉัน",
+      "overflow": false
+    },
+    {
+      "route": "export",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 395,
+      "heading": "ส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "admin",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 725,
+      "heading": "งานรอจัดการ",
+      "overflow": false
+    },
+    {
+      "route": "users",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 564,
+      "heading": "ผู้ใช้และสิทธิ์",
+      "overflow": false
+    },
+    {
+      "route": "templates",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 731,
+      "heading": "เทมเพลตและ Combo",
+      "overflow": false
+    },
+    {
+      "route": "system",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 245,
+      "heading": "เครื่องมือข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 529,
+      "heading": "ตั้งค่า",
+      "overflow": false
+    },
+    {
+      "route": "audit",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 662,
+      "heading": "ประวัติระบบ",
+      "overflow": false
+    },
+    {
+      "route": "broadcast",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 410,
+      "heading": "ประกาศและแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "imports",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 505,
+      "heading": "นำเข้าตารางเรียนและสอบ",
+      "overflow": false
+    },
+    {
+      "route": "cleanup",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 498,
+      "heading": "ตรวจข้อมูลซ้ำ",
+      "overflow": false
+    },
+    {
+      "route": "help",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 367,
+      "heading": "คู่มือและความช่วยเหลือ",
+      "overflow": false
+    },
+    {
+      "route": "login",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 334,
+      "heading": "ทุกงานของทีมเชื่อมกันในที่เดียว",
+      "overflow": false
+    },
+    {
+      "route": "pending",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 178,
+      "heading": "",
+      "overflow": false
+    },
+    {
+      "route": "design",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 603,
+      "heading": "Glass และการเคลื่อนไหว",
+      "overflow": false
+    },
+    {
+      "route": "resources",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 435,
+      "heading": "ห้องและทรัพยากร",
+      "overflow": false
+    },
+    {
+      "route": "condition",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 1405,
+      "heading": "สภาพและประวัติคืน",
+      "overflow": false
+    },
+    {
+      "route": "export-requests",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 265,
+      "heading": "คำขอส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "data-import",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 286,
+      "heading": "นำเข้าข้อมูลงาน",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 222,
+      "heading": "การแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "about",
+      "width": 1440,
+      "theme": "dark",
+      "textLength": 392,
+      "heading": "เกี่ยวกับ labboy Workload",
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1561,
+      "heading": "ภาพรวมงาน",
+      "overflow": false
+    },
+    {
+      "route": "record",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1148,
+      "heading": "บันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "worklogs",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1570,
+      "heading": "ประวัติงาน",
+      "overflow": false
+    },
+    {
+      "route": "new-log",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1003,
+      "heading": "เพิ่มบันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "dl",
+      "width": 390,
+      "theme": "light",
+      "textLength": 2335,
+      "heading": "ตารางสอบ DL",
+      "overflow": false
+    },
+    {
+      "route": "classrooms",
+      "width": 390,
+      "theme": "light",
+      "textLength": 604,
+      "heading": "ประเภทกิจกรรม",
+      "overflow": false
+    },
+    {
+      "route": "equipment",
+      "width": 390,
+      "theme": "light",
+      "textLength": 612,
+      "heading": "ทะเบียนอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "usage",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1818,
+      "heading": "การใช้งานอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "staff",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1257,
+      "heading": "การกระจายงานของทีม",
+      "overflow": false
+    },
+    {
+      "route": "profile",
+      "width": 390,
+      "theme": "light",
+      "textLength": 896,
+      "heading": "โปรไฟล์ของฉัน",
+      "overflow": false
+    },
+    {
+      "route": "export",
+      "width": 390,
+      "theme": "light",
+      "textLength": 395,
+      "heading": "ส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "admin",
+      "width": 390,
+      "theme": "light",
+      "textLength": 725,
+      "heading": "งานรอจัดการ",
+      "overflow": false
+    },
+    {
+      "route": "users",
+      "width": 390,
+      "theme": "light",
+      "textLength": 564,
+      "heading": "ผู้ใช้และสิทธิ์",
+      "overflow": false
+    },
+    {
+      "route": "templates",
+      "width": 390,
+      "theme": "light",
+      "textLength": 731,
+      "heading": "เทมเพลตและ Combo",
+      "overflow": false
+    },
+    {
+      "route": "system",
+      "width": 390,
+      "theme": "light",
+      "textLength": 245,
+      "heading": "เครื่องมือข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 390,
+      "theme": "light",
+      "textLength": 438,
+      "heading": "ตั้งค่า",
+      "overflow": false
+    },
+    {
+      "route": "audit",
+      "width": 390,
+      "theme": "light",
+      "textLength": 662,
+      "heading": "ประวัติระบบ",
+      "overflow": false
+    },
+    {
+      "route": "broadcast",
+      "width": 390,
+      "theme": "light",
+      "textLength": 410,
+      "heading": "ประกาศและแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "imports",
+      "width": 390,
+      "theme": "light",
+      "textLength": 505,
+      "heading": "นำเข้าตารางเรียนและสอบ",
+      "overflow": false
+    },
+    {
+      "route": "cleanup",
+      "width": 390,
+      "theme": "light",
+      "textLength": 498,
+      "heading": "ตรวจข้อมูลซ้ำ",
+      "overflow": false
+    },
+    {
+      "route": "help",
+      "width": 390,
+      "theme": "light",
+      "textLength": 367,
+      "heading": "คู่มือและความช่วยเหลือ",
+      "overflow": false
+    },
+    {
+      "route": "login",
+      "width": 390,
+      "theme": "light",
+      "textLength": 334,
+      "heading": "ทุกงานของทีมเชื่อมกันในที่เดียว",
+      "overflow": false
+    },
+    {
+      "route": "pending",
+      "width": 390,
+      "theme": "light",
+      "textLength": 178,
+      "heading": "",
+      "overflow": false
+    },
+    {
+      "route": "design",
+      "width": 390,
+      "theme": "light",
+      "textLength": 603,
+      "heading": "Glass และการเคลื่อนไหว",
+      "overflow": false
+    },
+    {
+      "route": "resources",
+      "width": 390,
+      "theme": "light",
+      "textLength": 435,
+      "heading": "ห้องและทรัพยากร",
+      "overflow": false
+    },
+    {
+      "route": "condition",
+      "width": 390,
+      "theme": "light",
+      "textLength": 1405,
+      "heading": "สภาพและประวัติคืน",
+      "overflow": false
+    },
+    {
+      "route": "export-requests",
+      "width": 390,
+      "theme": "light",
+      "textLength": 265,
+      "heading": "คำขอส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "data-import",
+      "width": 390,
+      "theme": "light",
+      "textLength": 286,
+      "heading": "นำเข้าข้อมูลงาน",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 390,
+      "theme": "light",
+      "textLength": 222,
+      "heading": "การแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "about",
+      "width": 390,
+      "theme": "light",
+      "textLength": 392,
+      "heading": "เกี่ยวกับ labboy Workload",
+      "overflow": false
+    },
+    {
+      "route": "dashboard",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1561,
+      "heading": "ภาพรวมงาน",
+      "overflow": false
+    },
+    {
+      "route": "record",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1148,
+      "heading": "บันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "worklogs",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1570,
+      "heading": "ประวัติงาน",
+      "overflow": false
+    },
+    {
+      "route": "new-log",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1003,
+      "heading": "เพิ่มบันทึกงาน",
+      "overflow": false
+    },
+    {
+      "route": "dl",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 2335,
+      "heading": "ตารางสอบ DL",
+      "overflow": false
+    },
+    {
+      "route": "classrooms",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 604,
+      "heading": "ประเภทกิจกรรม",
+      "overflow": false
+    },
+    {
+      "route": "equipment",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 612,
+      "heading": "ทะเบียนอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "usage",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1818,
+      "heading": "การใช้งานอุปกรณ์",
+      "overflow": false
+    },
+    {
+      "route": "staff",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1257,
+      "heading": "การกระจายงานของทีม",
+      "overflow": false
+    },
+    {
+      "route": "profile",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 896,
+      "heading": "โปรไฟล์ของฉัน",
+      "overflow": false
+    },
+    {
+      "route": "export",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 395,
+      "heading": "ส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "admin",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 725,
+      "heading": "งานรอจัดการ",
+      "overflow": false
+    },
+    {
+      "route": "users",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 564,
+      "heading": "ผู้ใช้และสิทธิ์",
+      "overflow": false
+    },
+    {
+      "route": "templates",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 731,
+      "heading": "เทมเพลตและ Combo",
+      "overflow": false
+    },
+    {
+      "route": "system",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 245,
+      "heading": "เครื่องมือข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 438,
+      "heading": "ตั้งค่า",
+      "overflow": false
+    },
+    {
+      "route": "audit",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 662,
+      "heading": "ประวัติระบบ",
+      "overflow": false
+    },
+    {
+      "route": "broadcast",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 410,
+      "heading": "ประกาศและแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "imports",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 505,
+      "heading": "นำเข้าตารางเรียนและสอบ",
+      "overflow": false
+    },
+    {
+      "route": "cleanup",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 498,
+      "heading": "ตรวจข้อมูลซ้ำ",
+      "overflow": false
+    },
+    {
+      "route": "help",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 367,
+      "heading": "คู่มือและความช่วยเหลือ",
+      "overflow": false
+    },
+    {
+      "route": "login",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 334,
+      "heading": "ทุกงานของทีมเชื่อมกันในที่เดียว",
+      "overflow": false
+    },
+    {
+      "route": "pending",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 178,
+      "heading": "",
+      "overflow": false
+    },
+    {
+      "route": "design",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 603,
+      "heading": "Glass และการเคลื่อนไหว",
+      "overflow": false
+    },
+    {
+      "route": "resources",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 435,
+      "heading": "ห้องและทรัพยากร",
+      "overflow": false
+    },
+    {
+      "route": "condition",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 1405,
+      "heading": "สภาพและประวัติคืน",
+      "overflow": false
+    },
+    {
+      "route": "export-requests",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 265,
+      "heading": "คำขอส่งออกข้อมูล",
+      "overflow": false
+    },
+    {
+      "route": "data-import",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 286,
+      "heading": "นำเข้าข้อมูลงาน",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 222,
+      "heading": "การแจ้งเตือน",
+      "overflow": false
+    },
+    {
+      "route": "about",
+      "width": 390,
+      "theme": "dark",
+      "textLength": 392,
+      "heading": "เกี่ยวกับ labboy Workload",
+      "overflow": false
+    }
+  ],
+  "navigation": [
+    {
+      "href": "/admin/record",
+      "label": "บันทึกงาน",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "",
+      "pageImplemented": true
+    },
+    {
+      "href": "/worklogs",
+      "label": "ประวัติงาน",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "ประวัติงานตัวอย่าง",
+      "status": "",
+      "pageImplemented": false
+    },
+    {
+      "href": "/calendar",
+      "label": "ตาราง",
+      "path": "/dev/calendar",
+      "heading": "ตารางและการใช้ห้อง",
+      "modal": "",
+      "status": "",
+      "pageImplemented": true
+    },
+    {
+      "href": "/resources",
+      "label": "ทรัพยากร",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/dashboard",
+      "label": "ภาพรวม",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/export",
+      "label": "ส่งออกข้อมูล",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin",
+      "label": "ศูนย์ควบคุม",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/staff-analytics",
+      "label": "วิเคราะห์บุคลากร",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/equipment-items",
+      "label": "ทะเบียนอุปกรณ์",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/equipment-health",
+      "label": "การใช้งานและสภาพอุปกรณ์",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/classroom-schedules",
+      "label": "จัดตารางเรียน",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/dl-exam-schedules",
+      "label": "จัดตารางสอบ DL",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/templates",
+      "label": "บันทึกด่วนและ Combo",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/users",
+      "label": "จัดการผู้ใช้",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/system",
+      "label": "เครื่องมือระบบ",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/settings",
+      "label": "ตั้งค่าระบบ",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/audit-logs",
+      "label": "ประวัติระบบ",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    },
+    {
+      "href": "/admin/cleanup",
+      "label": "ตรวจข้อมูลซ้ำ",
+      "path": "/dev/record",
+      "heading": "บันทึกงาน",
+      "modal": "",
+      "status": "หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10",
+      "pageImplemented": false
+    }
+  ],
+  "limitations": [
+    "Reference render checks are not functional acceptance",
+    "No Firebase/authenticated production SIT or physical-device/user UAT"
+  ],
+  "summary": {
+    "nextRoutes": 27,
+    "developmentRoutes": 3,
+    "featurePreviews": 2,
+    "approvedViews": 30,
+    "referenceStates": 120,
+    "referenceOverflowStates": 0,
+    "navigationDestinations": 18,
+    "fullPreviewDestinations": 2
+  }
+}

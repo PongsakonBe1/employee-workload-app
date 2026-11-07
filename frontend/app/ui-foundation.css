@@ -209,7 +209,7 @@
   .ui-page-heading h1 { font-size: 1.75rem; }
   .ui-mobile-nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); position: fixed; z-index: 50; left: 16px; right: 16px; bottom: max(12px,env(safe-area-inset-bottom,0px)); padding: 5px; border-radius: 25px; }
   .ui-mobile-nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 55px; border-radius: 20px; color: var(--ui-sub); font-size: .75rem; }
-  .ui-mobile-nav a[aria-current=page] { color: var(--ui-blue-ink); background: var(--ui-surface); box-shadow: 0 1px 5px #162b4810; }
+  .ui-mobile-nav a[aria-current] { color: var(--ui-blue-ink); background: var(--ui-surface); box-shadow: 0 1px 5px #162b4810; }
   .ui-profile-alert { flex-wrap: wrap; }
   .ui-dialog { margin: auto 8px max(8px,env(safe-area-inset-bottom,0px)); width: calc(100% - 16px); max-width: calc(100dvw - 16px); max-height: 90dvh; border-radius: 24px; }
   .ui-dialog-header { padding: 19px 18px 16px; }
@@ -230,7 +230,7 @@
   * { scrollbar-color: auto; }
   .ui-glass, .ui-header::before, .ui-header-actions::before { background: Canvas; backdrop-filter: none; box-shadow: none; }
   .ui-nav-symbol, .ui-tooltip, .ui-dialog { border: 1px solid CanvasText; box-shadow: none; }
-  .ui-sidebar-link[aria-current=page], .ui-mobile-nav a[aria-current=page] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .ui-sidebar-link[aria-current=page], .ui-mobile-nav a[aria-current] { outline: 2px solid Highlight; outline-offset: -2px; }
 }
 @media print {
   .ui-sidebar, .ui-header, .ui-mobile-nav, .ui-footer, .ui-dialog, .ui-tooltip, .ui-skip-link { display: none !important; }

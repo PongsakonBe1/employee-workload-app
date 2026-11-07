@@ -9,8 +9,10 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassControls";
 import { useAppearance } from "../../../components/ui/AppearanceProvider";
 import { ReviewSymbol } from "../../../components/ui/ReviewSymbol";
-import { manualRecordEntry, phoneRecordEntry } from "../../../lib/recordPreview";
-import { combos, initialDevices, initialLogs, initialRooms, people, schedule, tasks } from "./fixtures";
+import { manualRecordEntry, phoneRecordEntry, assignedRecordEntry, comboRecordEntries } from "../../../lib/recordPreview";
+import { combos, people, schedule, tasks } from "./fixtures";
+import { recordLedger, useRecordLedger } from "./store";
+import { canViewPreviewLog } from "../../../lib/previewLedger";
 
 const deviceIcons = { headphones: Headphones, plug: Plug, usb: Usb };
 const quickItems = [
@@ -22,6 +24,7 @@ const quickItems = [
   { id: "phone", title: "รับสายโทรศัพท์", hint: "ระบุผู้รับบริการและรายละเอียด", tone: "amber" },
   { id: "plug", title: "ยืม / คืนปลั๊กไฟ", hint: "เลือกอุปกรณ์เพื่อยืม / คืน", Icon: Plug, tone: "green" },
   { id: "usb", title: "ยืม / คืน USB", hint: "เลือกอุปกรณ์เพื่อยืม / คืน", Icon: Usb, tone: "blue" },
+  { id: "assigned", title: "งานที่ได้รับมอบหมาย", hint: "ระบุงานที่ดำเนินการ", tone: "amber" },
 ];
 const thaiDate = value => value && Number.isFinite(Date.parse(`${value}T12:00:00+07:00`)) ? new Intl.DateTimeFormat("th-TH", { dateStyle: "long", timeZone: "Asia/Bangkok" }).format(new Date(`${value}T12:00:00+07:00`)) : "ยังไม่ระบุวันที่";
 
@@ -40,23 +43,25 @@ export default function RecordPreview() {
   const { resolved } = useAppearance();
   const router = useRouter();
   const [role, setRole] = usePreviewState("record.role", "staff"), [personId, setPersonId] = usePreviewState("record.person", people[0].id);
-  const [mode, setMode] = usePreviewState("record.mode", "quick"), [glassMode, setGlassMode] = useState("quick"), [quickPage, setQuickPage] = useState(0);
+  const [mode, setMode] = usePreviewState("record.mode", "quick"), [glassMode, setGlassMode] = useState("quick"), [quickPage, setQuickPage] = usePreviewState("record.quickPage", 0);
   const [dateTime, setDateTime] = usePreviewState("record.datetime", { date: "2026-11-06", time: "10:55" }), [dateDraft, setDateDraft] = useState(dateTime);
-  const [data, setData] = usePreviewState("record.data", { rooms: initialRooms, devices: initialDevices, logs: initialLogs });
-  const [undo, setUndo] = usePreviewState("record.undo", null), [status, setStatus] = useState("");
+  const { data, undo, revision } = useRecordLedger();
+  const [status, setStatus] = useState("");
   const [dialog, setDialog] = useState(null), [query, setQuery] = useState(""), [deviceId, setDeviceId] = useState(null);
   const [selected, setSelected] = useState([]), [recipient, setRecipient] = useState(""), [notes, setNotes] = useState("");
   const [step, setStep] = useState("edit"), [error, setError] = useState(""), [selectedLog, setSelectedLog] = useState(null);
   const [manual, setManual] = usePreviewState("record.manual", { taskId: tasks[0].id, recipient: "", notes: "" });
   const [manualError, setManualError] = useState("");
   const [manualField, setManualField] = useState(null), [manualReview, setManualReview] = useState(null);
-  const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualDateRef = useRef(null), manualTimeRef = useRef(null), taskSearchRef = useRef(null), sequence = useRef(Date.now());
+  const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualDateRef = useRef(null), manualTimeRef = useRef(null), taskSearchRef = useRef(null), requestId = useRef(null), expectedRevision = useRef(revision);
   const person = people.find(item => item.id === personId), task = tasks.find(item => item.id === manual.taskId) || tasks[0];
   const device = data.devices.find(item => item.id === deviceId), combo = combos[dialog];
   const DeviceIcon = device ? deviceIcons[device.kind] : Headphones;
   const floor = dialog === "rooms3" ? "3" : "4";
   const deviceDialog = ["headphones", "plug", "usb"].includes(dialog);
-  const todayLogs = data.logs.filter(log => log.date === dateTime.date && log.person === person.displayName);
+  const actor = { id: person.id, role };
+  const visibleLogs = data.logs.filter(log => canViewPreviewLog(log, actor));
+  const todayLogs = visibleLogs.filter(log => log.date === dateTime.date && log.employeeId === person.id);
 
   useEffect(() => {
     if (dialog === "task") taskSearchRef.current?.focus();
@@ -69,17 +74,21 @@ export default function RecordPreview() {
     requestAnimationFrame(() => { ref.current?.focus({ preventScroll: true });ref.current?.scrollIntoView({ block: "center", behavior: "instant" }); });
   }
   function openDialog(value) {
+    requestId.current = crypto.randomUUID();expectedRevision.current = revision;
     setError("");setQuery("");setSelected([]);setRecipient("");setNotes("");setStep("edit");setDeviceId(null);setDialog(value);
     if (value === "datetime") setDateDraft(dateTime);
   }
-  function commit(entries, update = current => current) {
-    // One in-memory transaction; Undo restores only this latest preview transaction.
-    const logs = entries.map(entry => ({ ...entry, ...dateTime, person: person.displayName, id: `preview-${++sequence.current}` }));
-    const next = update({ ...data, logs: [...logs, ...data.logs] });
-    setUndo({ before: data, count: entries.length });setData(next);setDialog(null);setStatus(`บันทึกตัวอย่าง ${entries.length} รายการแล้ว`);
+  function commit(entries) {
+    try {
+      const result = recordLedger.transact({ actor, requestId: requestId.current, expectedRevision: expectedRevision.current, entries: entries.map(entry => ({ ...entry, ...dateTime, employeeId: person.id, person: person.displayName, minorTask: entry.minorTask || entry.title, recipient: entry.recipient || "", comment: entry.comment || entry.detail || "" })) });
+      setDialog(null);setStatus(`บันทึกตัวอย่าง ${result.count} รายการแล้ว`);return true;
+    } catch (failure) { setError(failure.message);setStatus(failure.message);return false; }
   }
   function toggleRoom(room) {
-    commit([{ title: `${room.open ? "ปิด" : "เปิด"}ห้อง ${room.id}`, detail: room.detail }], current => ({ ...current, rooms: current.rooms.map(item => item.id === room.id ? { ...item, open: !item.open } : item) }));
+    const minorTask = room.floor === "3" ? `${room.open ? "ปิด" : "เช็คอิน"}ห้องแลกเปลี่ยนความรู้` : `${room.open ? "ปิด" : "เปิด"}ห้องเรียนชั้น 4`;
+    const result = manualRecordEntry({ taskId: minorTask, recipient: "", notes: room.id }, dateTime);
+    if (!result.entry) { setError(result.message);return; }
+    commit([{ ...result.entry, title: `${room.open ? "ปิด" : "เปิด"}ห้อง ${room.id}`, detail: room.detail, resource: { kind: "room", id: room.id, open: !room.open } }]);
   }
   function reviewCombo(event) {
     event.preventDefault();
@@ -92,21 +101,25 @@ export default function RecordPreview() {
     if (!device?.available) return;
     if (!device.student && !/^[0-9]{13}$/.test(recipient)) { setError("ใช้รหัสตัวเลข 0–9 จำนวน 13 หลักเท่านั้น");focusField(recipientRef);return; }
     const student = device.student || recipient;
-    commit([{ title: `${device.student ? "คืน" : "ยืม"}${device.name}`, detail: `${device.location} · รหัสตัวอย่าง ${student}` }], current => ({ ...current, devices: current.devices.map(item => item.id === device.id ? { ...item, student: item.student ? null : student } : item) }));
+    const minorTask = `${device.student ? "คืน" : "ยืม"}${({ headphones: "หูฟัง", plug: "ปลั๊กไฟ", usb: " USB" })[device.kind]}`;
+    const result = manualRecordEntry({ taskId: minorTask, recipient: student, notes: device.name }, dateTime);
+    if (!result.entry) { setError(result.message);return; }
+    commit([{ ...result.entry, title: `${device.student ? "คืน" : "ยืม"}${device.name}`, requireRecipient: true, detail: `${device.location} · รหัสตัวอย่าง ${student}`, resource: { kind: "device", id: device.id, student: device.student ? null : student } }]);
   }
   function submitManual(event) {
     event.preventDefault();
     const result = manualRecordEntry({ ...manual, taskId: task.id }, dateTime);
     if (!result.entry) { setManualError(result.message);setManualField(result.field);focusField(result.field === "date" ? manualDateRef : manualTimeRef);return; }
+    requestId.current = crypto.randomUUID();expectedRevision.current = revision;setError("");
     setManualError("");setManualField(null);setManualReview(result.entry);setDialog("manualReview");
   }
-  const dialogTitle = dialog?.startsWith("rooms") ? `เลือกห้อง ชั้น ${floor}` : deviceDialog ? device ? `${device.student ? "คืน" : "ยืม"}${device.name}` : quickItems.find(item => item.id === dialog).title : combo?.title || ({ datetime: "วันที่และเวลา", task: "เลือกหัวข้อรอง", person: "ผู้ปฏิบัติงาน", phone: "รับสายโทรศัพท์", manualReview: "ตรวจรายการก่อนบันทึก", history: "ประวัติงานตัวอย่าง", log: selectedLog?.title, schedule: "ตารางวันที่เลือก", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const dialogTitle = dialog?.startsWith("rooms") ? `เลือกห้อง ชั้น ${floor}` : deviceDialog ? device ? `${device.student ? "คืน" : "ยืม"}${device.name}` : quickItems.find(item => item.id === dialog).title : combo?.title || ({ datetime: "วันที่และเวลา", task: "เลือกหัวข้อรอง", person: "ผู้ปฏิบัติงาน", phone: "รับสายโทรศัพท์", assigned: "งานที่ได้รับมอบหมาย", manualReview: "ตรวจรายการก่อนบันทึก", history: "ประวัติงานตัวอย่าง", log: selectedLog?.title, schedule: "ตารางวันที่เลือก", notifications: "การแจ้งเตือน" }[dialog] || "");
   const visibleTasks = tasks.filter(item => `${item.label} ${item.major} ${item.label === "คุมสอบ DL" ? "Digital Literacy" : ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
   return <WorkspaceFrame
     user={{ uid: person.id, displayName: person.displayName, initial: person.initial, role }} pathname={role === "staff" ? "/worklogs/new" : "/admin/record"}
     glassMode={glassMode}
-    onNavigate={href => { if (["/worklogs", "/profile"].includes(href)) openDialog(href === "/worklogs" ? "history" : "person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังอยู่ในส่วนกลางเดิม — รอบนี้ตรวจหน้าบันทึกงานตามแบบ Review 10"); }}
+    onNavigate={href => { if (href === "/worklogs") router.push("/dev/history");else if (href === "/profile") openDialog("person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
     notificationSlot={<button
       type="button" className="ui-icon-button"
       aria-label="การแจ้งเตือนตัวอย่าง" onClick={() => openDialog("notifications")}
@@ -172,7 +185,7 @@ export default function RecordPreview() {
                 key={id} type="button"
                 className="record-quick-card" onClick={() => openDialog(id)}
               >
-                <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={id.startsWith("rooms") ? "door" : id === "headphones" ? "resources" : id} size={29} /></span>
+                <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={id.startsWith("rooms") ? "door" : id === "headphones" ? "resources" : id === "assigned" ? "history" : id} size={29} /></span>
                 {count && <span className="record-quick-count">
                   {count}
                   {' '}
@@ -242,7 +255,7 @@ export default function RecordPreview() {
             <small>ตารางตัวอย่างสำหรับตรวจแบบ ไม่ใช่ตารางจริง</small>
           </details>
         </section>
-        {undo && <div
+        {undo && (role !== "staff" || undo.actorId === person.id) && <div
           className="record-undo" role="region"
           aria-label="เลิกทำรายการล่าสุด"
         >
@@ -254,7 +267,7 @@ export default function RecordPreview() {
             {' '}
             รายการแล้ว
           </span>
-          <GlassButton mode={glassMode} onClick={() => { setData(undo.before);setUndo(null);setStatus("เลิกทำรายการล่าสุดแล้ว"); }}>
+          <GlassButton mode={glassMode} onClick={() => { try { recordLedger.undo(actor, undo.id);setStatus("เลิกทำรายการล่าสุดแล้ว"); } catch (failure) { setStatus(failure.message); } }}>
             <Undo2 size={16} aria-hidden="true" />
             เลิกทำ
           </GlassButton>
@@ -264,13 +277,13 @@ export default function RecordPreview() {
             <h2 id="record-recent-title">บันทึกล่าสุด</h2>
             <button
               type="button" className="record-link"
-              onClick={() => openDialog("history")}
+              onClick={() => router.push("/dev/history")}
             >
               ดูประวัติ
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
-          {data.logs.slice(0, 3).map(log => <button
+          {visibleLogs.slice(0, 3).map(log => <button
             type="button" className="record-log-row"
             key={log.id} onClick={() => { setSelectedLog(log);setDialog("log"); }}
           >
@@ -366,6 +379,7 @@ export default function RecordPreview() {
         · ทุกธุรกรรมอยู่ในหน่วยความจำ เมื่อ refresh จะเริ่มใหม่
       </p>
       <p className="ui-caption">ใช้ข้อมูลใน repo ตามขอบเขตที่เลือก: Combo อ้างอิงแบบ Review 10 ส่วนหัวข้อรองและข้อความแนะนำใช้ catalog เดิมในโค้ด ไม่ได้อ่านฐานข้อมูลสด</p>
+      <button type="button" className="ui-choice" onClick={() => { recordLedger.failNext();setStatus("ตั้งให้การบันทึกครั้งถัดไปล้มเหลวในข้อมูลจำลองแล้ว"); }}>จำลองบันทึกไม่สำเร็จครั้งถัดไป</button>
     </details>
     <p
       className="record-live-status" role="status"
@@ -378,6 +392,7 @@ export default function RecordPreview() {
       title={dialogTitle} className={`record-dialog ${dialog?.startsWith("rooms") ? "record-room-dialog" : ""}`}
       description={dialog?.startsWith("rooms") ? "กดเปิดหรือปิดห้องเพื่อบันทึกทันที แล้วเลิกทำได้จากหน้าบันทึก" : "ข้อมูลสังเคราะห์สำหรับตรวจแบบ — ไม่มีการบันทึกไปยังระบบจริง"}
     >
+      {error && (!["phone", "assigned", "account", "software", "headphones", "plug", "usb"].includes(dialog) || (combo && step === "review")) && <p className="record-error" role="alert">{error}</p>}
       {dialog?.startsWith("rooms") && <div className="record-room-grid">
         {data.rooms.filter(room => room.floor === floor).map(room => { const Icon = room.open ? DoorOpen : DoorClosed;return <button
           key={room.id} type="button"
@@ -544,7 +559,7 @@ export default function RecordPreview() {
           </GlassButton>
           <GlassButton
             mode={glassMode} variant="prominent"
-            onClick={() => commit(selected.map(i => ({ title: combo.tasks[i], detail: recipient.trim() })))}
+            onClick={() => { try { commit(comboRecordEntries(combo, selected, recipient, dateTime)); } catch (failure) { setError(failure.message); } }}
           >
             {`บันทึก ${selected.length} รายการ`}
           </GlassButton>
@@ -627,23 +642,23 @@ export default function RecordPreview() {
         </dl>
         <div className="record-form-actions">
           <GlassButton mode={glassMode} onClick={() => setDialog(null)}>แก้ไขรายการ</GlassButton>
-          <GlassButton mode={glassMode} variant="prominent" onClick={() => { commit([manualReview]);setManual(current => ({ ...current, notes: "", recipient: "" }));setManualReview(null); }}>ยืนยันบันทึก</GlassButton>
+          <GlassButton mode={glassMode} variant="prominent" onClick={() => { if (commit([manualReview])) { setManual(current => ({ ...current, notes: "", recipient: "" }));setManualReview(null); } }}>ยืนยันบันทึก</GlassButton>
         </div>
       </div>}
-      {dialog === "phone" && <form noValidate onSubmit={event => { event.preventDefault();const result = phoneRecordEntry(recipient, notes, dateTime);if (!result.entry) { setError(result.message);focusField(result.field === "recipient" ? recipientRef : notesRef);return; }commit([result.entry]); }}>
+      {["phone", "assigned"].includes(dialog) && <form noValidate onSubmit={event => { event.preventDefault();const result = (dialog === "phone" ? phoneRecordEntry : assignedRecordEntry)(recipient, notes, dateTime);if (!result.entry) { setError(result.message);focusField(result.field === "recipient" ? recipientRef : notesRef);return; }commit([result.entry]); }}>
         <label className="ui-field record-recipient">
-          <span>ผู้รับบริการ <small>จำเป็น</small></span>
-          <input className="apple-input" name="record-phone-recipient" ref={recipientRef} value={recipient} aria-required="true" aria-invalid={Boolean(error) && !recipient.trim()} aria-describedby="record-phone-error" onChange={event => { setRecipient(event.target.value);setError(""); }} />
+          <span>ผู้รับบริการ <small>{dialog === "phone" ? "จำเป็น" : "ถ้ามี"}</small></span>
+          <input className="apple-input" name="record-phone-recipient" ref={recipientRef} value={recipient} aria-required={dialog === "phone"} aria-invalid={dialog === "phone" && Boolean(error) && !recipient.trim()} aria-describedby="record-phone-error" onChange={event => { setRecipient(event.target.value);setError(""); }} />
         </label>
         <label className="ui-field">
           <span>
-            รายละเอียดการให้บริการ
+            {dialog === "assigned" ? "รายละเอียดของงาน" : "รายละเอียดการให้บริการ"}
             <small>จำเป็น</small>
           </span>
           <textarea
             className="apple-input" rows={4}
             ref={notesRef} value={notes}
-            name="record-phone-notes" aria-required="true" aria-invalid={Boolean(error) && Boolean(recipient.trim()) && !notes.trim()} aria-describedby="record-phone-error"
+            name="record-phone-notes" aria-required="true" aria-invalid={Boolean(error) && (dialog === "assigned" || Boolean(recipient.trim())) && !notes.trim()} aria-describedby="record-phone-error"
             onChange={event => { setNotes(event.target.value);setError(""); }}
           />
         </label>
@@ -663,29 +678,6 @@ export default function RecordPreview() {
           </GlassButton>
         </div>
       </form>}
-      {dialog === "history" && <div>
-        {data.logs.map(log => <button
-          className="record-log-row" type="button"
-          key={log.id} onClick={() => { setSelectedLog(log);setDialog("log"); }}
-        >
-          <Check size={16} aria-hidden="true" />
-          <span>
-            <strong>{log.title}</strong>
-            <small>
-              {thaiDate(log.date)}
-              {' '}
-              ·
-              {' '}
-              {log.person}
-              {' '}
-              ·
-              {' '}
-              {log.time}
-            </small>
-          </span>
-          <ChevronRight size={16} aria-hidden="true" />
-        </button>)}
-      </div>}
       {dialog === "log" && selectedLog && <div>
         <dl className="record-log-detail">
           <div>
@@ -707,7 +699,7 @@ export default function RecordPreview() {
             <dd>{selectedLog.detail}</dd>
           </div>
         </dl>
-        <GlassButton mode={glassMode} onClick={() => setDialog("history")}>
+        <GlassButton mode={glassMode} onClick={() => router.push("/dev/history")}>
           <ChevronLeft size={16} aria-hidden="true" />
           กลับไปประวัติ
         </GlassButton>
@@ -715,7 +707,7 @@ export default function RecordPreview() {
       {dialog === "schedule" && <div className="record-schedule-list">
         <p>{thaiDate(dateTime.date)}</p>
         <DailyAgenda date={dateTime.date} />
-        <p className="ui-caption">หน้า calendar เต็มจะย้ายตามแบบในเฟสถัดไป</p>
+        <GlassButton mode={glassMode} onClick={() => router.push("/dev/calendar")}>เปิดปฏิทิน</GlassButton>
       </div>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>

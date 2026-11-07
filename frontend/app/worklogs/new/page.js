@@ -7,7 +7,6 @@ import { CheckCircle2, Clock, Zap, X } from "lucide-react";
 import { Toast } from "../../../components/Toast";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
-import { apiFetch } from "../../../lib/api";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
@@ -37,7 +36,6 @@ export default function NewWorkLogPage() {
   const t = useTranslations("worklog");
   const router = useRouter();
   const { user } = useAuth();
-  const [categories, setCategories] = useState(null);
   const [form, setForm] = useState({
     date: today(),
     time: nowTime(),
@@ -124,13 +122,6 @@ export default function NewWorkLogPage() {
     localStorage.removeItem("worklogDraft");
     setLastSaved(null);
   };
-
-  // Fetch categories on mount
-  useEffect(() => {
-    apiFetch("/categories").then((data) => {
-      setCategories(data);
-    });
-  }, []);
 
   // Auto-update mainDuty and dutyGroup when minorTask changes
   const handleMinorTaskChange = useCallback((minorTask) => {
