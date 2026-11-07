@@ -365,7 +365,7 @@ export default function RecordPreview() {
         {' '}
         · ทุกธุรกรรมอยู่ในหน่วยความจำ เมื่อ refresh จะเริ่มใหม่
       </p>
-      <p className="ui-caption">รายการ Combo อ้างอิงแบบ Review 10 — ยังรอยืนยันกับ globalTemplates จริง ส่วนหัวข้อรองและข้อความแนะนำใช้ catalog เดิมในโค้ด</p>
+      <p className="ui-caption">ใช้ข้อมูลใน repo ตามขอบเขตที่เลือก: Combo อ้างอิงแบบ Review 10 ส่วนหัวข้อรองและข้อความแนะนำใช้ catalog เดิมในโค้ด ไม่ได้อ่านฐานข้อมูลสด</p>
     </details>
     <p
       className="record-live-status" role="status"

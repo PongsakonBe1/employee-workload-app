@@ -1,6 +1,6 @@
 # Development UI Foundation — ย้ายส่วนกลางเข้า Next.js
 
-แก้รายละเอียดล่าสุด: [บันทึกงานตาม Review และ catalog เดิม](../record-contract-review/README.md) — โทรศัพท์/ฟอร์มกรอกเอง/ไอคอน/Glass hover; รายการ Combo ในฐานข้อมูลยังรอยืนยันสิทธิ์อ่าน
+แก้รายละเอียดล่าสุด: [บันทึกงานตาม Review และ catalog เดิม](../record-contract-review/README.md) — โทรศัพท์/ฟอร์มกรอกเอง/ไอคอน/Glass hover; ผู้ใช้เลือกให้อ้างอิง repo เท่านั้น ยังไม่เปิด Firebase
 
 อัปเดตล่าสุด: [ปรับรายละเอียด Review 10 ตาม Liquid Glass skill](../glass-skill-polish/README.md) คืนขนาด/ไอคอนตามแบบ และเพิ่ม selection motion ใน controls ที่มีอยู่ โดยคงโหมด development
 

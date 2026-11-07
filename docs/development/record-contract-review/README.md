@@ -2,7 +2,7 @@
 
 7 พฤศจิกายน 2569 · branch `codex/record-contract-review-fixes` · ฐาน `e7cd0dc`
 
-ผู้ใช้ให้แก้ Quick Log โทรศัพท์, เนื้อหา Combo, ฟอร์มกรอกเอง, ไอคอนและ hover เมนูซ้าย โดยคงแบบที่อนุมัติ รอบนี้ทำส่วนที่ตรวจได้จาก repo และ Review 10 แล้ว ส่วนรายการในฐานข้อมูลจริงยังรอสิทธิ์อ่านเฉพาะ `globalTemplates`
+ผู้ใช้ให้แก้ Quick Log โทรศัพท์, เนื้อหา Combo, ฟอร์มกรอกเอง, ไอคอนและ hover เมนูซ้าย โดยคงแบบที่อนุมัติ และยืนยันภายหลังว่า **ใช้ข้อมูลใน repo ก่อน ยังไม่เปิด Firebase** รอบนี้จึงอ้างอิงโค้ดและ Review 10 โดยไม่รอสิทธิ์อ่านฐานข้อมูลและไม่อ้างว่าตรงกับค่าปัจจุบันในฐานข้อมูลสด
 
 ## สิ่งที่แก้
 
@@ -33,9 +33,9 @@
 
 ## งานค้างและเฟสถัดไป
 
-Automatic approval review ปฏิเสธการเปิด Firebase Console เพราะ scope การเข้าถึง private project ผ่าน session ที่ลงชื่อเข้าใช้ยังไม่ชัดเจน ได้ถามสิทธิ์อ่านเฉพาะ collection `globalTemplates` ของ `labboy-workload-app` โดยไม่เปิด `users`/`worklogs` และไม่แก้ข้อมูลแล้ว ยังไม่ได้รับคำตอบ จึงไม่ได้อ่านฐานข้อมูลผ่านทางอื่นหรืออ้างว่ารายการ Combo ตรง live
+ก่อนหน้านี้ automatic approval review ปฏิเสธการเปิด Firebase Console จึงถามสิทธิ์อ่านเฉพาะ `globalTemplates` ผู้ใช้เลือก **ใช้ข้อมูลใน repo ก่อน ยังไม่เปิด Firebase** แล้ว ไม่ได้เปิดฐานข้อมูลผ่านทางอื่นและไม่มีคำขอสิทธิ์ที่รอคำตอบสำหรับรอบนี้
 
-หลังได้สิทธิ์ จึงตรวจ `name`, `comboItems`, `minorTask`, `mainDuty`, `dutyGroup`, `requireRecipient`, `requireComment`, `requireCheckbox` ของ template ที่เกี่ยวข้อง และแก้เนื้อหา/เงื่อนไขให้ตรงจริงก่อนปิดประเด็น Combo
+ที่ตรวจได้จาก repo: `TemplateManager.js`, `QuickLogButtons.js` และ `quickLogTemplates.js` กำหนด contract ของ `comboItems`, `minorTask`, `mainDuty`, `dutyGroup` และ flags ของ template โดยโหลดค่าที่ Admin ตั้งไว้ตอน runtime ส่วนรายการ 5/6 งานที่ใช้ตรวจ UI อยู่ใน Review 10 ของ repo จึงใช้รายการนั้นเป็นฐานของ development ต่อไป ไม่ใช้ค่า default ของ editor แทน template จริง และไม่อ้างว่าได้ตรวจค่าปัจจุบันที่ Admin ตั้งในฐานข้อมูลแล้ว
 
 หลัง Tech Lead ตรวจรับรอบนี้ เสนอเชื่อม UI ที่ตรวจรับกับ data adapter เดิมในสภาพแวดล้อมทดสอบ: ใช้ template ID และ field contracts เดิม, ตรวจ payload แยกจากข้อความที่แสดง, สิทธิ์ผู้บันทึก, write failure/duplicate submission, atomic Combo และ Undo ที่สอดคล้องกับธุรกรรมจริง ก่อนขยายหน้าถัดไป ไม่ได้เริ่มเขียนข้อมูลจริงในรอบนี้
 

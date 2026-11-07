@@ -3,7 +3,7 @@
   "branch": "codex/record-contract-review-fixes",
   "base": "e7cd0dc",
   "previewOrigin": "https://mustang-sons-microwave-pixels.trycloudflare.com",
-  "scope": "Approved UI and source-catalog corrections; live template verification pending",
+  "scope": "Approved UI and source-catalog corrections; user selected repository-only data",
   "tests": {
     "uiGroups": {
       "contractLocal": 6,
@@ -59,8 +59,12 @@
     "combos": "Independently rendered approved Review 10; not live database",
     "phoneRecipient": "Required by user-confirmed requirement",
     "liveDatabaseRead": false,
-    "pendingApproval": "Read only globalTemplates in labboy-workload-app through Firebase Console; no users/worklogs or writes",
-    "blockedBy": "Automatic approval review rejected private Firebase Console access without explicit destination/scope authorization"
+    "sourcePolicy": "Repository only by explicit user choice; do not open Firebase Console",
+    "contractSources": [
+      "frontend/components/TemplateManager.js",
+      "frontend/components/QuickLogButtons.js",
+      "frontend/lib/quickLogTemplates.js"
+    ]
   },
   "productionDataUsed": false,
   "installedDependencies": false,
@@ -69,6 +73,7 @@
   "limitations": [
     "Physical Safari/iPhone/Android and scanner UAT pending",
     "Synthetic transactions in memory; no real persistence/transaction integration test",
-    "Live template content and requirements still need verification after read approval"
-  ]
+    "Live template values are outside the user-selected repository-only scope"
+  ],
+  "validationUpdate": "Source annotations and development inspector copy updated after user scope choice; no form behavior changed; prior behavioral results retained"
 }

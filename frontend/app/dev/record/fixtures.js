@@ -17,7 +17,7 @@ export const initialDevices = [
 ];
 export const tasks = recordTasks;
 export const combos = {
-  // Approved Review 10 labels; live globalTemplates verification remains separate.
+  // User-selected repository-only scope: approved Review 10 labels, not live data.
   account: { title: "เปิดใช้บัญชี", tasks: ["เปิดใช้ Microsoft Authenticator", "เปิดใช้ Google Account", "เปิดใช้ KMUTNB SSO", "เปิดใช้ 2SV Google", "เปิดใช้ ICIT account"] },
   software: { title: "ติดตั้งโปรแกรม", tasks: ["ติดตั้ง SolidWork", "ติดตั้ง MatLab", "ติดตั้ง Microsoft365", "ติดตั้ง Visio", "ติดตั้ง Adobe", "ติดตั้ง ESET"] },
 };
