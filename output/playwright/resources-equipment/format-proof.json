@@ -1,0 +1,42 @@
+[
+  {
+    "file": "frontend/app/dev/resources/workspace.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/app/dev/resources/ResourceDialog.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/app/dev/resources/LoanFields.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/app/dev/resources/page.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/app/dev/equipment/page.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/app/dev/equipment/usage/page.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/lib/equipmentPreview.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/lib/resourceWorklog.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/lib/previewNavigation.js",
+    "astEquivalent": true
+  },
+  {
+    "file": "frontend/lib/previewLedger.js",
+    "astEquivalent": true
+  }
+]

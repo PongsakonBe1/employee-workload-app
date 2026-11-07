@@ -7,7 +7,8 @@ const {
   } = require(process.argv[2]),
   phase = process.argv[4] || 'before';
 if (!['before', 'after'].includes(phase)) throw Error('Expected before/after phase');
-const out = path.resolve(__dirname, '../output/playwright/ui-coverage-history');
+const resourcePhase = process.argv[5] === 'resources-equipment';
+const out = path.resolve(__dirname, '../output/playwright/' + (resourcePhase ? 'resources-equipment' : 'ui-coverage-history'));
 fs.mkdirSync(out, {
   recursive: true
 });
@@ -35,7 +36,7 @@ report.nextRoutes = pages(path.resolve(__dirname, '../frontend/app')).map(file =
     lines: source.split('\n').length,
     developmentOnly: /NODE_ENV.*development/.test(source),
     imports: [...source.matchAll(/from\s+["']([^"']+)["']/g)].map(m => m[1]).filter(name => name.includes('components/') || name.includes('workspace')),
-    featureMigrated: /^\/dev\/(record|calendar|history)$/.test(route),
+    featureMigrated: /^\/dev\/(record|calendar|history|resources|equipment(?:\/usage)?)$/.test(route),
     authenticatedFunctionalityVerified: false
   };
 });
@@ -69,7 +70,7 @@ async function main() {
         height: width === 390 ? 844 : 1000
       });
       await page.evaluate(theme => window.designReview.setTheme(theme), theme);
-      for (const view of report.referenceViews) {
+      for (const view of report.referenceViews.filter(view => !resourcePhase || ['resources','equipment','usage','condition'].includes(view.id))) {
         await page.goto('http://127.0.0.1:4197/#/' + view.id);
         await page.waitForFunction(id => window.designReview.getSummary().route === id, view.id);
         await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().filter(a => a.playState === 'running' && a.effect?.getComputedTiming().iterations !== Infinity && a.effect?.getComputedTiming().duration <= 800).map(a => a.finished.catch(() => {}))), new Promise(resolve => setTimeout(resolve, 2000))]));
@@ -84,8 +85,8 @@ async function main() {
           theme,
           ...state
         });
-        if (view.id === 'worklogs') await page.screenshot({
-          path: path.join(out, `reference-history-${width}-${theme}.png`),
+        if (resourcePhase || view.id === 'worklogs') await page.screenshot({
+          path: path.join(out, `reference-${view.id}-${width}-${theme}.png`),
           fullPage: true
         });
       }
@@ -111,7 +112,8 @@ async function main() {
       await page.locator('.record-inspector select').selectOption('superadmin');
       await page.locator('.ui-tools-disclosure').click();
       await page.locator(`.ui-sidebar a.ui-sidebar-link[href="${link.href}"]`).click();
-      if (link.href === '/calendar' || phase === 'after' && link.href === '/worklogs') await page.waitForURL('**/dev/' + (link.href === '/calendar' ? 'calendar' : 'history'));
+      const destinations = { '/admin/record': '/dev/record', '/calendar': '/dev/calendar', '/worklogs': '/dev/history', ...(resourcePhase ? { '/resources':'/dev/resources', '/admin/equipment-items':'/dev/equipment', '/admin/equipment-health':'/dev/equipment/usage' } : {}) };
+      if (destinations[link.href]) await page.waitForURL('**' + destinations[link.href]);
       const result = await page.evaluate(() => ({
         path: location.pathname,
         heading: document.querySelector('main h1')?.textContent || '',
@@ -121,10 +123,10 @@ async function main() {
       report.navigation.push({
         ...link,
         ...result,
-        pageImplemented: ['/admin/record', '/calendar', ...(phase === 'after' ? ['/worklogs'] : [])].includes(link.href)
+        pageImplemented: Boolean(destinations[link.href])
       });
     }
-    if (phase === 'after') {
+    if (phase === 'after' && !resourcePhase) {
       report.anonymousGuards = [];
       for (const route of report.nextRoutes.filter(row => !row.developmentOnly && !['/login', '/pending', '/'].includes(row.route))) {
         await page.goto('http://127.0.0.1:4310' + route.route, {
@@ -148,6 +150,7 @@ async function main() {
       }
     }
     report.summary = {
+      allPagesReady: false,
       nextRoutes: report.nextRoutes.length,
       developmentRoutes: report.nextRoutes.filter(r => r.developmentOnly).length,
       featurePreviews: report.nextRoutes.filter(r => r.featureMigrated).length,

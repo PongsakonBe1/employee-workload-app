@@ -1,4 +1,5 @@
 "use client";
+import { previewDestination } from "../../../lib/previewNavigation";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -143,7 +144,7 @@ export default function CalendarPreview() {
     >
       <Bell size={20} aria-hidden="true" />
     </button>}
-    glassMode={glassMode} onNavigate={href => { if (["/worklogs/new", "/admin/record"].includes(href)) router.push("/dev/record");else if (href === "/worklogs") router.push("/dev/history");else if (href !== "/calendar") setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
+    glassMode={glassMode} onNavigate={href => { if (previewDestination(href) && previewDestination(href) !== "/dev/calendar") router.push(previewDestination(href));else if (href === "/worklogs") router.push("/dev/history");else if (href !== "/calendar") setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
   >
     <div className="cal-page-heading ui-page-heading">
       <div>

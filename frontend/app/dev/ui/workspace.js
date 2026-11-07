@@ -33,6 +33,9 @@ export default function DevelopmentWorkspace() {
       <span>Development · ตรวจส่วนกลางด้วยข้อมูลสังเคราะห์</span>
       <a href="/dev/record" className="ui-choice">เปิดหน้าบันทึกงาน · Review 10 + Glass</a>
       <a href="/dev/calendar" className="ui-choice">เปิดหน้าปฏิทิน · Liquid Glass</a>
+      <a href="/dev/resources" className="ui-choice">เปิดห้องและทรัพยากร</a>
+      <a href="/dev/equipment" className="ui-choice">เปิดทะเบียนอุปกรณ์</a>
+      <a href="/dev/equipment/usage" className="ui-choice">เปิดการใช้งานและสภาพอุปกรณ์</a>
       <div
         className="ui-glass-comparison" role="group"
         aria-label="เปรียบเทียบวัสดุกระจก"

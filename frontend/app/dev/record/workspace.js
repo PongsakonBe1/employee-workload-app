@@ -13,6 +13,10 @@ import { manualRecordEntry, phoneRecordEntry, assignedRecordEntry, comboRecordEn
 import { combos, people, schedule, tasks } from "./fixtures";
 import { recordLedger, useRecordLedger } from "./store";
 import { canViewPreviewLog } from "../../../lib/previewLedger";
+import { canBorrowEquipment, canReturnEquipment, canUndoPreview, equipmentState } from "../../../lib/equipmentPreview";
+import { roomWorklog, deviceWorklog } from "../../../lib/resourceWorklog";
+import { previewDestination } from "../../../lib/previewNavigation";
+import { LoanFields } from "../resources/LoanFields";
 
 const deviceIcons = { headphones: Headphones, plug: Plug, usb: Usb };
 const quickItems = [
@@ -51,6 +55,7 @@ export default function RecordPreview() {
   const [selected, setSelected] = useState([]), [recipient, setRecipient] = useState(""), [notes, setNotes] = useState("");
   const [step, setStep] = useState("edit"), [error, setError] = useState(""), [selectedLog, setSelectedLog] = useState(null);
   const [manual, setManual] = usePreviewState("record.manual", { taskId: tasks[0].id, recipient: "", notes: "" });
+  const [returnCondition, setReturnCondition] = useState("unknown");
   const [manualError, setManualError] = useState("");
   const [manualField, setManualField] = useState(null), [manualReview, setManualReview] = useState(null);
   const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualDateRef = useRef(null), manualTimeRef = useRef(null), taskSearchRef = useRef(null), requestId = useRef(null), expectedRevision = useRef(revision);
@@ -75,7 +80,7 @@ export default function RecordPreview() {
   }
   function openDialog(value) {
     requestId.current = crypto.randomUUID();expectedRevision.current = revision;
-    setError("");setQuery("");setSelected([]);setRecipient("");setNotes("");setStep("edit");setDeviceId(null);setDialog(value);
+    setError("");setQuery("");setSelected([]);setRecipient("");setNotes("");setStep("edit");setDeviceId(null);setReturnCondition("unknown");setDialog(value);
     if (value === "datetime") setDateDraft(dateTime);
   }
   function commit(entries) {
@@ -85,11 +90,11 @@ export default function RecordPreview() {
     } catch (failure) { setError(failure.message);setStatus(failure.message);return false; }
   }
   function toggleRoom(room) {
-    const minorTask = room.floor === "3" ? `${room.open ? "ปิด" : "เช็คอิน"}ห้องแลกเปลี่ยนความรู้` : `${room.open ? "ปิด" : "เปิด"}ห้องเรียนชั้น 4`;
-    const result = manualRecordEntry({ taskId: minorTask, recipient: "", notes: room.id }, dateTime);
+    const result = roomWorklog(room, dateTime);
     if (!result.entry) { setError(result.message);return; }
-    commit([{ ...result.entry, title: `${room.open ? "ปิด" : "เปิด"}ห้อง ${room.id}`, detail: room.detail, resource: { kind: "room", id: room.id, open: !room.open } }]);
+    commit([result.entry]);
   }
+
   function reviewCombo(event) {
     event.preventDefault();
     if (!selected.length) { setError("เลือกอย่างน้อย 1 งานที่ทำจริง");focusField(firstChoiceRef);return; }
@@ -98,14 +103,11 @@ export default function RecordPreview() {
   }
   function submitDevice(event) {
     event.preventDefault();
-    if (!device?.available) return;
-    if (!device.student && !/^[0-9]{13}$/.test(recipient)) { setError("ใช้รหัสตัวเลข 0–9 จำนวน 13 หลักเท่านั้น");focusField(recipientRef);return; }
-    const student = device.student || recipient;
-    const minorTask = `${device.student ? "คืน" : "ยืม"}${({ headphones: "หูฟัง", plug: "ปลั๊กไฟ", usb: " USB" })[device.kind]}`;
-    const result = manualRecordEntry({ taskId: minorTask, recipient: student, notes: device.name }, dateTime);
-    if (!result.entry) { setError(result.message);return; }
-    commit([{ ...result.entry, title: `${device.student ? "คืน" : "ยืม"}${device.name}`, requireRecipient: true, detail: `${device.location} · รหัสตัวอย่าง ${student}`, resource: { kind: "device", id: device.id, student: device.student ? null : student } }]);
+    const result = deviceWorklog(device, recipient, returnCondition, dateTime);
+    if (!result.entry) { setError(result.message);focusField(recipientRef);return; }
+    commit([result.entry]);
   }
+
   function submitManual(event) {
     event.preventDefault();
     const result = manualRecordEntry({ ...manual, taskId: task.id }, dateTime);
@@ -119,7 +121,7 @@ export default function RecordPreview() {
   return <WorkspaceFrame
     user={{ uid: person.id, displayName: person.displayName, initial: person.initial, role }} pathname={role === "staff" ? "/worklogs/new" : "/admin/record"}
     glassMode={glassMode}
-    onNavigate={href => { if (href === "/worklogs") router.push("/dev/history");else if (href === "/profile") openDialog("person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
+    onNavigate={href => { if (previewDestination(href) && previewDestination(href) !== "/dev/record") router.push(previewDestination(href));else if (href === "/profile") openDialog("person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
     notificationSlot={<button
       type="button" className="ui-icon-button"
       aria-label="การแจ้งเตือนตัวอย่าง" onClick={() => openDialog("notifications")}
@@ -255,7 +257,7 @@ export default function RecordPreview() {
             <small>ตารางตัวอย่างสำหรับตรวจแบบ ไม่ใช่ตารางจริง</small>
           </details>
         </section>
-        {undo && (role !== "staff" || undo.actorId === person.id) && <div
+        {canUndoPreview(undo, actor) && <div
           className="record-undo" role="region"
           aria-label="เลิกทำรายการล่าสุด"
         >
@@ -415,19 +417,19 @@ export default function RecordPreview() {
         </button>; })}
       </div>}
       {deviceDialog && !device && <div className="record-device-grid">
-        {data.devices.filter(item => item.kind === dialog).map(item => { const Icon = deviceIcons[item.kind], StateIcon = !item.available ? ShieldAlert : item.student ? Clock3 : Check;return <button
+        {data.devices.filter(item => item.kind === dialog && (item.active !== false || item.student)).sort((a,b) => a.order - b.order || a.assetCode.localeCompare(b.assetCode)).map(item => { const Icon = deviceIcons[item.kind], state = equipmentState(item), StateIcon = item.student ? Clock3 : !canBorrowEquipment(item) ? ShieldAlert : Check;return <button
           type="button" className="record-resource-tile"
-          key={item.id} disabled={!item.available}
-          data-state={item.student ? "borrowed" : "ready"} onClick={() => { setDeviceId(item.id);setError(""); }}
+          key={item.id} disabled={!canBorrowEquipment(item) && !canReturnEquipment(item)}
+          data-state={state.id} onClick={() => { setDeviceId(item.id);setReturnCondition("unknown");setError(""); }}
         >
           <Icon size={30} aria-hidden="true" />
           <strong>{item.name}</strong>
-          <span className="record-badge" data-tone={!item.available ? "amber" : item.student ? "blue" : "green"}>
+          <span className="record-badge" data-tone={state.tone}>
             <StateIcon size={14} aria-hidden="true" />
-            {!item.available ? "ไม่พร้อมใช้" : item.student ? "กำลังยืม" : "พร้อมยืม"}
+            {state.id === "unavailable" ? "ไม่พร้อมใช้" : state.label}
           </span>
           <small>{item.location}</small>
-          <span className="record-resource-action">{!item.available ? "ตรวจสภาพก่อนใช้" : item.student ? "คืนรายการนี้" : "ยืมรายการนี้"}</span>
+          <span className="record-resource-action">{item.student ? "คืนรายการนี้" : !canBorrowEquipment(item) ? "ตรวจสภาพก่อนใช้" : "ยืมรายการนี้"}</span>
         </button>; })}
       </div>}
       {deviceDialog && device && <form onSubmit={submitDevice} noValidate>
@@ -445,25 +447,7 @@ export default function RecordPreview() {
             <p>{device.location}</p>
           </div>
         </div>
-        <label className="ui-field">
-          <span>{device.student ? "รหัสผู้ยืมเดิม" : "รหัสนักศึกษา 13 หลัก"}</span>
-          <input
-            className="apple-input record-student" name="record-student"
-            ref={recipientRef} type="text"
-            inputMode="numeric" autoComplete="off"
-            spellCheck={false} pattern="[0-9]{13}"
-            readOnly={Boolean(device.student)} value={device.student || recipient}
-            aria-required={!device.student} aria-invalid={Boolean(error)}
-            aria-describedby="record-student-hint record-dialog-error" onChange={event => { const value = event.target.value;if (/^[0-9]*$/.test(value)) { setRecipient(value);setError(""); } else { setRecipient("");setError("ช่องนี้รับเฉพาะตัวเลข 0–9 กรุณาตรวจภาษาแป้นพิมพ์"); } }}
-          />
-        </label>
-        <p className="ui-caption" id="record-student-hint">{device.student ? "คืนให้ผู้ยืมเดิมโดยไม่ต้องสแกนซ้ำ" : "รับเฉพาะตัวเลข 0–9 ไม่รับตัวอักษรหรือเลขไทย"}</p>
-        <p
-          className="record-error" id="record-dialog-error"
-          role="alert"
-        >
-          {error}
-        </p>
+        <LoanFields device={device} recipient={recipient} inputRef={recipientRef} condition={returnCondition} onCondition={setReturnCondition} error={error} onRecipient={value => { if (/^[0-9]*$/.test(value)) { setRecipient(value);setError(""); } else { setRecipient("");setError("ช่องนี้รับเฉพาะตัวเลข 0–9 กรุณาตรวจภาษาแป้นพิมพ์"); } }} />
         <div className="record-form-actions">
           <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
           <GlassButton

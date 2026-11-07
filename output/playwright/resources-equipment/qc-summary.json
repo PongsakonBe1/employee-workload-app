@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-07",
+  "branch": "codex/resources-equipment-review",
+  "base": "e651c9e",
+  "syntheticOnly": true,
+  "productionDataUsed": false,
+  "deployed": false,
+  "allPagesReady": false,
+  "browsers": {
+    "edge": {
+      "passed": 9,
+      "browserVersion": "156.0.4314.58",
+      "origin": "http://127.0.0.1:4310"
+    },
+    "chrome": {
+      "passed": 9,
+      "browserVersion": "156.0.8078.81",
+      "origin": "http://127.0.0.1:4310"
+    },
+    "public": {
+      "passed": 9,
+      "browserVersion": "156.0.4314.58",
+      "origin": "https://northwest-revised-domains-varies.trycloudflare.com"
+    }
+  },
+  "unit": {
+    "total": 291,
+    "passed": 283,
+    "failed": 8,
+    "sameFailuresAsBaseline": true,
+    "newEquipmentTestsPassed": 23,
+    "targetedEquipmentLedgerRecordTestsPassed": 42
+  },
+  "regression": {
+    "record": 11,
+    "history": 9,
+    "calendar": 11
+  },
+  "lint": "passed",
+  "compatibilityBuild": "passed; development fixtures excluded",
+  "nativeZoom": "passed at 200%",
+  "coverage": {
+    "allPagesReady": false,
+    "nextRoutes": 31,
+    "developmentRoutes": 7,
+    "featurePreviews": 6,
+    "approvedViews": 30,
+    "referenceStates": 16,
+    "referenceOverflowStates": 0,
+    "navigationDestinations": 18,
+    "fullPreviewDestinations": 6
+  },
+  "unverified": [
+    "Firebase/Auth/backend SIT",
+    "Physical Safari/iPhone, Android and scanner UAT",
+    "Full 30-view functionality"
+  ]
+}

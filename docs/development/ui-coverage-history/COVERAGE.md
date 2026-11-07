@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+อัปเดตเฟสห้อง/อุปกรณ์: Next 31 routes / dev 7 / feature previews 6; เมนู 6/18 ปลายทาง ดู [รายงานปัจจุบัน](../resources-equipment/README.md) ส่วนผลก่อนหน้าด้านล่างเป็น snapshot ของเฟสประวัติ
+
 7 พฤศจิกายน 2569 · ใช้ข้อมูลใน repo เท่านั้น · **all-pages-ready = false**
 
 ก่อนทำ: Next 27 routes / 3 development routes / 2 feature previews; เมนู 2/18 ปลายทางเปิด feature preview
@@ -16,8 +18,8 @@
 | กรอกบันทึกงาน (new-log) | /worklogs/new | /dev/record → กรอกเอง | Partial — catalog เดิมและ validation ผ่าน | persistent draft/server integration |
 | ตารางสอบ DL (dl) | /admin/dl-exam-schedules | /dev/calendar | Partial — CRUD ตัวอย่าง/75 คน/รอบเย็น/ห้องชนผ่าน | dedicated manager/import และข้อมูลจริง |
 | ตารางเรียน (classrooms) | /admin/classroom-schedules | /dev/calendar | Partial — recurrence/filter/cancel ผ่าน | dedicated manager/PDF import และข้อมูลจริง |
-| จัดการอุปกรณ์ (equipment) | /admin/equipment-items | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
-| การใช้งานอุปกรณ์ (usage) | /admin/equipment-health | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
+| จัดการอุปกรณ์ (equipment) | /admin/equipment-items | /dev/equipment | Partial — เพิ่ม/แก้/หยุดใช้/Undo และ Quick Log ร่วมผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
+| การใช้งานอุปกรณ์ (usage) | /admin/equipment-health | /dev/equipment/usage | Partial — ครั้งยืม/คืน/current outstanding/ID/date/person filters ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | Staff Analytics (staff) | /admin/staff-analytics | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | โปรไฟล์ของฉัน (profile) | /profile | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ส่งออกข้อมูล (export) | /export | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
@@ -34,8 +36,8 @@
 | เข้าสู่ระบบ (login) | /login | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | รออนุมัติ (pending) | /pending | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ชุด UI และสถานะ (design) | design-only | /dev/ui | components lab ผ่าน regression | ไม่ใช่ feature page |
-| ห้องและทรัพยากร (resources) | RoomEquipmentStatus | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
-| สภาพและประวัติคืน (condition) | /admin/equipment-health | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
+| ห้องและทรัพยากร (resources) | RoomEquipmentStatus | /dev/resources | Partial — รายการ/detail/room action/ยืมคืน/Undo ผ่าน | export สถานะ/ตารางร่วม/บริการจริง |
+| สภาพและประวัติคืน (condition) | /admin/equipment-health | /dev/equipment/usage → สภาพตอนคืน | Partial — normal/damaged/lost/unknown events ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | คำขอส่งออก (export-requests) | /admin/system#exports | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | นำเข้าข้อมูลงาน (data-import) | /admin/system#import | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | การแจ้งเตือน (notifications) | NotificationBell | ตัวอย่างใน record/calendar | ยังเป็นข้อความตัวอย่าง | read/unread/broadcast/FCM จริงยังไม่ย้าย |

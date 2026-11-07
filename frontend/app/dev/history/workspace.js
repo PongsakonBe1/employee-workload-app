@@ -1,4 +1,5 @@
 "use client";
+import { previewDestination } from "../../../lib/previewNavigation";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,7 @@ import { ReviewSymbol } from "../../../components/ui/ReviewSymbol";
 import { usePreviewState } from "../previewState";
 import { recordLedger, useRecordLedger } from "../record/store";
 import { people } from "../record/fixtures";
+import { canUndoPreview } from "../../../lib/equipmentPreview";
 import { canManagePreviewLog, canViewPreviewLog } from "../../../lib/previewLedger";
 import { historyRows, historyInitialRange, historyCSV } from "../../../lib/historyPreview";
 import { calendarLabel, monthCalendarDates, addCalendarMonths, calendarRange, validCalendarDate, calendarToday } from "../../../lib/calendarView";
@@ -82,6 +84,18 @@ export default function HistoryPreview() {
     setSelectedIds([]);
     setPage(1);
   }, [revision, role, personId, filters]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const assetId = params.get("asset"), start = params.get("from"), end = params.get("to");
+    if (!assetId) return;
+    if (!validCalendarDate(start) || !validCalendarDate(end) || end < start) {
+      setStatus("ลิงก์อุปกรณ์มีช่วงวันที่ไม่ถูกต้อง กรุณาเลือกช่วงใหม่");
+      return;
+    }
+    setFilters({ assetId, start, end, search: "", person: "all" });
+    setSelectedId(null);
+    setView("list");
+  }, [setFilters, setSelectedId, setView]);
   function changeFilters(value) {
     setFilters(value);
     setSelectedId(null);
@@ -150,7 +164,7 @@ export default function HistoryPreview() {
     initial: person.initial,
     role
   }} pathname="/worklogs" glassMode="quick" onNavigate={href => {
-    if (["/worklogs/new", "/admin/record"].includes(href)) router.push("/dev/record");else if (href === "/calendar") router.push("/dev/calendar");else if (href !== "/worklogs") setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC");
+    if (previewDestination(href) && previewDestination(href) !== "/dev/history") router.push(previewDestination(href));else if (href === "/calendar") router.push("/dev/calendar");else if (href !== "/worklogs") setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC");
   }}>
     <div className="ui-page-heading history-heading"><div><h1>ประวัติงาน</h1><p>ค้นหา ตรวจรายละเอียด และจัดการรายการงาน</p><small className="ui-caption">Development · ข้อมูลตัวอย่างร่วมกับหน้าบันทึกงาน</small></div><GlassButton mode="quick" variant="prominent" onClick={() => router.push("/dev/record")}><Plus size={18} aria-hidden="true" />เพิ่มบันทึก</GlassButton></div>
     <section className="history-toolbar" aria-label="มุมมองและตัวกรองประวัติ">
@@ -165,12 +179,12 @@ export default function HistoryPreview() {
         setSelectedIds([]);
       }}>เลือกหลายรายการ</button>
     </section>
-    <div className="history-summary"><span>{calendarLabel(filters.start)} – {calendarLabel(filters.end)} · {rows.length} รายการ</span><button type="button" className="history-link" onClick={() => changeFilters({
+    <div className="history-summary">{filters.assetId && <span data-testid="history-asset-filter">อุปกรณ์: {data.devices.find(item => item.id === filters.assetId)?.assetCode || filters.assetId}</span>}<span>{calendarLabel(filters.start)} – {calendarLabel(filters.end)} · {rows.length} รายการ</span><button type="button" className="history-link" onClick={() => changeFilters({
         ...historyInitialRange(referenceDate),
         search: "",
         person: "all"
       })}>ล้างตัวกรอง</button><button type="button" className="history-link" onClick={exportRows} disabled={!rows.length}><Download size={15} aria-hidden="true" />CSV</button></div>
-    {undo && (role !== "staff" || undo.actorId === personId) && <div className="history-undo" role="region" aria-label="เลิกทำรายการล่าสุด"><span>เปลี่ยนข้อมูลตัวอย่าง {undo.count} รายการ</span><GlassButton mode="quick" onClick={() => {
+    {canUndoPreview(undo, actor) && <div className="history-undo" role="region" aria-label="เลิกทำรายการล่าสุด"><span>เปลี่ยนข้อมูลตัวอย่าง {undo.count} รายการ</span><GlassButton mode="quick" onClick={() => {
         try {
           recordLedger.undo(actor, undo.id);
           setStatus("เลิกทำรายการล่าสุดแล้ว");

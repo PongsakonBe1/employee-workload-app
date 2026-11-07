@@ -1,0 +1,53 @@
+{
+  "browserExecutable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "origin": "http://127.0.0.1:4310",
+  "completed": true,
+  "checks": [
+    {
+      "name": "A simulated write failure retains draft; retry commits once and real navigation opens the shared history page",
+      "status": "passed"
+    },
+    {
+      "name": "Calendar day to detail to back keeps calendar mode; holidays stay visible without becoming worklogs",
+      "status": "passed"
+    },
+    {
+      "name": "Date filter validation, cancel, account scope and CSV operate on the same filtered snapshot",
+      "status": "passed"
+    },
+    {
+      "name": "Admin detail edits are shared, Undo restores original fields, and Staff cannot edit locked fixture history",
+      "status": "passed"
+    },
+    {
+      "name": "Selected Combo entries have canonical tasks, bulk delete is confirmed, and Undo restores the complete batch",
+      "status": "passed"
+    },
+    {
+      "name": "Deleting a new device event updates the shared equipment projection; cross-page Undo restores its borrower",
+      "status": "passed"
+    },
+    {
+      "name": "All nine reference Quick Logs are present; assigned work requires detail and appears in history",
+      "status": "passed"
+    },
+    {
+      "name": "History in dark/solid/reduced motion retains records and filters; calendar navigation preserves the record draft",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile list/calendar/detail preserve mode at 375/390/430/768px in both themes with iOS policy and keyboard close",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [
+    "https://apis.google.com",
+    "https://apis.google.com"
+  ],
+  "limitations": [
+    "Synthetic adapter only; no Firebase/Auth/backend SIT",
+    "Automated acceptance scenarios are not user UAT or physical iOS/Safari/scanner verification"
+  ],
+  "browserVersion": "156.0.4314.58"
+}

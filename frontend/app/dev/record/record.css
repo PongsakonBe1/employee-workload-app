@@ -1,4 +1,5 @@
 /* Review 10 geometry with a functional glass layer; data and forms stay readable. */
+.record-badge[data-tone=red] { background:var(--ui-red);color:var(--ui-red-ink); }
 .record-heading { margin-bottom: 32px; }
 .record-preview-badge { display: inline-block; margin-top: 9px; color: var(--ui-sub); font-size: .6875rem; }
 .record-layout { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(260px,.8fr); gap: 40px; }
@@ -167,7 +168,7 @@
   .record-time>svg:last-child { display: none; }
   .record-meta { gap: 8px; }
   .record-form { padding: 0; }
-  .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea { font-size: max(1rem,16px); }
+  .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea,.record-dialog select { font-size: max(1rem,16px); }
   .record-form input[type=date],.record-form input[type=time],.record-dialog input[type=date],.record-dialog input[type=time] { display: block; min-height: 46px; -webkit-appearance: none; }
   .record-dialog input::-webkit-date-and-time-value { text-align: start; }
   .record-suggestions>button { min-height: 44px; }
@@ -182,4 +183,4 @@
   .record-inspector-controls { align-items: stretch; }
 }
 @media(forced-colors:active) { .record-quick-card,.record-resource-tile,.record-tile,.record-form { border: 1px solid CanvasText; } .record-badge { border: 1px solid CanvasText; background: Canvas; color: CanvasText; } .record-check-row>input[type=checkbox] { appearance: auto; } .record-check-row>input[type=checkbox]::after { display: none; } .record-check-row[data-selected=true] { outline: 1px solid Highlight; } }
-@media(any-pointer:coarse) { .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea { font-size: max(1rem,16px); } }
+@media(any-pointer:coarse) { .record-form input,.record-form textarea,.record-task-picker,.record-dialog input,.record-dialog textarea,.record-dialog select { font-size: max(1rem,16px); } }
