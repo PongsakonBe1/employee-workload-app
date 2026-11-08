@@ -6,7 +6,7 @@ const {
     chromium
   } = require(process.argv[2]),
   origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, '../output/playwright/ui-coverage-history', origin.startsWith('http://127.0.0.1') ? /Google[\\/]Chrome/i.test(process.argv[3]) ? 'chrome' : 'e2e' : 'public');
+const out = path.resolve(__dirname, '../output/playwright/'+(process.argv[5]==='glass-button-roles'?'glass-button-roles/regression-history':'ui-coverage-history'), origin.startsWith('http://127.0.0.1') ? /Google[\\/]Chrome/i.test(process.argv[3]) ? 'chrome' : 'e2e' : 'public');
 fs.mkdirSync(out, {
   recursive: true
 });

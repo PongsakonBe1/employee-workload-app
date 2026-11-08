@@ -27,7 +27,7 @@ function Details({
   return <div className="history-details" data-testid="history-details">
     <h3>{row.title}</h3>
     <dl><dt>วันที่ / เวลา</dt><dd>{calendarLabel(row.date)} · {row.time}</dd><dt>ผู้ปฏิบัติงาน</dt><dd>{row.person}</dd><dt>หัวข้อรอง</dt><dd>{row.minorTask}</dd><dt>งานหลัก / กลุ่มงาน</dt><dd>{[row.mainDuty, row.dutyGroup].filter(Boolean).join(" · ") || "ไม่มีข้อมูลในรายการตัวอย่างเดิม"}</dd><dt>ผู้รับบริการ</dt><dd>{row.recipient || "ไม่ได้ระบุ"}</dd><dt>รายละเอียด</dt><dd>{row.comment || row.detail || "ไม่ได้ระบุ"}</dd></dl>
-    <div className="history-detail-actions"><GlassButton mode="quick" disabled={!editable} onClick={onEdit}><Pencil size={16} aria-hidden="true" />แก้ไขรายละเอียด</GlassButton><GlassButton mode="quick" disabled={!editable} onClick={onDelete}><Trash2 size={16} aria-hidden="true" />ลบรายการ</GlassButton></div>
+    <div className="history-detail-actions"><GlassButton mode="quick" disabled={!editable} onClick={onEdit}><Pencil size={16} aria-hidden="true" />แก้ไขรายละเอียด</GlassButton><GlassButton mode="quick" variant="destructive" disabled={!editable} onClick={onDelete}><Trash2 size={16} aria-hidden="true" />ลบรายการ</GlassButton></div>
     {!editable && <p className="ui-caption">รายการถูกล็อกหรืออยู่นอกสิทธิ์แก้ไขของบัญชีตัวอย่างนี้</p>}
   </div>;
 }
@@ -192,7 +192,7 @@ export default function HistoryPreview() {
           setStatus(failure.message);
         }
       }}><Undo2 size={16} aria-hidden="true" />เลิกทำ</GlassButton></div>}
-    {selecting && <div className="history-selection"><span>เลือก {selectedIds.length} รายการ</span><button type="button" className="ui-choice" onClick={() => setSelectedIds(shown.filter(row => canManagePreviewLog(row, actor)).map(row => row.id))}>เลือกทั้งหน้า</button><button type="button" className="ui-choice" disabled={!selectedIds.length} onClick={() => begin("delete", selectedIds)}>ลบรายการที่เลือก</button></div>}
+    {selecting && <div className="history-selection"><span>เลือก {selectedIds.length} รายการ</span><button type="button" className="ui-choice" onClick={() => setSelectedIds(shown.filter(row => canManagePreviewLog(row, actor)).map(row => row.id))}>เลือกทั้งหน้า</button><GlassButton mode="quick" variant="destructive" disabled={!selectedIds.length} onClick={() => begin("delete", selectedIds)}>ลบรายการที่เลือก</GlassButton></div>}
     <div className="history-layout">
       <div className="history-content">
         {view === "list" ? <section className="history-list" aria-label="รายการงาน">
@@ -284,7 +284,7 @@ export default function HistoryPreview() {
             ...edit,
             comment: event.target.value
           })} /></label><GlassButton mode="quick" variant="prominent" type="submit">บันทึกการแก้ไข</GlassButton></form>}
-      {dialog === "delete" && <form onSubmit={applyOperation}><p>ลบข้อมูลตัวอย่าง {operation.ids.length} รายการ หลังยืนยันสามารถเลิกทำรายการล่าสุดได้</p><GlassButton mode="quick" type="submit">ยืนยันลบ</GlassButton></form>}
+      {dialog === "delete" && <form onSubmit={applyOperation}><p>ลบข้อมูลตัวอย่าง {operation.ids.length} รายการ หลังยืนยันสามารถเลิกทำรายการล่าสุดได้</p><div className="history-detail-actions"><GlassButton mode="quick" onClick={() => setDialog(null)}>ยกเลิก</GlassButton><GlassButton mode="quick" variant="destructive" type="submit">ยืนยันลบ</GlassButton></div></form>}
     </Dialog>
   </WorkspaceFrame>;
 }

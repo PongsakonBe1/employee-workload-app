@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, CalendarDays, FileText, Headphones } from "lucide-react";
+import { Bell, CalendarDays, FileText, Headphones, Check, Trash2, X } from "lucide-react";
 import { WorkspaceFrame } from "../../../components/ui/WorkspaceFrame";
 import { Dialog } from "../../../components/ui/Dialog";
 import { MetricCard } from "../../../components/MetricCard";
 import { EmptyState } from "../../../components/EmptyState";
 import ViewToggle from "../../../components/ViewToggle";
 import { useAppearance } from "../../../components/ui/AppearanceProvider";
+import { GlassButton } from "../../../components/ui/GlassControls";
 
 // This route mounts real shared components with local display fixtures only.
 // It does not supply AuthContext, tokens, API clients or a production identity.
@@ -16,6 +17,7 @@ export default function DevelopmentWorkspace() {
   const [role, setRole] = useState("staff"), [pathname, setPathname] = useState("/worklogs/new");
   const [view, setView] = useState("week"), [dialog, setDialog] = useState(null), [status, setStatus] = useState("");
   const [glassMode, setGlassMode] = useState("quick");
+  const [demoActive, setDemoActive] = useState(true);
   const user = { uid: "UI-FIXTURE-ONLY", displayName: "เจ้าหน้าที่ตัวอย่าง A", role };
   const title = pathname === "/calendar" ? "ตารางและการใช้ห้อง" : pathname === "/resources" ? "ห้องและทรัพยากร" : pathname === "/dashboard" ? "ภาพรวมงาน" : pathname === "/worklogs" ? "ประวัติงาน" : pathname.startsWith("/admin/") && pathname !== "/admin/record" ? "เครื่องมือผู้ดูแล" : "บันทึกงาน";
   return <WorkspaceFrame
@@ -70,6 +72,17 @@ export default function DevelopmentWorkspace() {
       <h1>{title}</h1>
       <p>พื้นที่ตรวจ component จริงก่อนทยอยย้ายรายละเอียดแต่ละหน้า</p>
     </div>
+    <section className="apple-panel ui-dev-form ui-button-demo" aria-label="สีและบทบาทของปุ่ม">
+      <h2 className="ui-section-title">สีและบทบาทของปุ่ม</h2>
+      <p className="ui-caption">ตัวอย่าง controls กลาง · ไม่ลบข้อมูลหรือปฏิเสธคำขอจริง · สลับธีมและวัสดุเพื่อตรวจได้</p>
+      <div className="ui-button-demo-grid">
+        <div><h3>การกระทำหลัก</h3><GlassButton mode={glassMode} variant="prominent" onClick={() => setStatus("ตรวจปุ่มหลักแล้ว ไม่มีการบันทึกจริง")}><Check size={17} aria-hidden="true" />บันทึกตัวอย่าง</GlassButton></div>
+        <div><h3>ยกเลิก / กลับ</h3><GlassButton mode={glassMode} onClick={() => setStatus("ตรวจปุ่มยกเลิกแล้ว")}><X size={17} aria-hidden="true" />ยกเลิกตัวอย่าง</GlassButton></div>
+        <div><h3>การลบ / ปฏิเสธที่มีผลสำคัญ</h3><GlassButton mode={glassMode} variant="destructive" onClick={() => setStatus("ตรวจสีคำสั่งลบแล้ว ไม่มีการลบข้อมูล")}><Trash2 size={17} aria-hidden="true" />ลบตัวอย่าง</GlassButton><GlassButton mode={glassMode} variant="destructive" onClick={() => setStatus("ตรวจสีคำสั่งปฏิเสธแล้ว ไม่มีคำขอจริง")}><X size={17} aria-hidden="true" />ปฏิเสธตัวอย่าง</GlassButton></div>
+        <div><h3>หยุดใช้ชั่วคราว / เปิดกลับ</h3><span className="ui-button-demo-status" data-active={demoActive}>{demoActive ? "เปิดใช้อยู่" : "หยุดใช้อยู่"}</span><GlassButton mode={glassMode} onClick={() => setDemoActive(value => !value)}>{demoActive ? "หยุดใช้ตัวอย่าง" : "เปิดใช้ตัวอย่าง"}</GlassButton></div>
+        <div><h3>ยังใช้คำสั่งไม่ได้</h3><GlassButton mode={glassMode} variant="destructive" disabled><Trash2 size={17} aria-hidden="true" />ลบไม่ได้</GlassButton></div>
+      </div>
+    </section>
     <div className="ui-dev-grid">
       <section>
         <h2 className="ui-section-title">บันทึกด่วน</h2>
@@ -129,8 +142,8 @@ export default function DevelopmentWorkspace() {
             <input type="checkbox" name="ui-extra" />
           </label>
           <div className="ui-dev-actions">
-            <button type="reset" className="apple-button-secondary">ล้างตัวอย่าง</button>
-            <button type="submit" className="apple-button">ตรวจฟอร์ม</button>
+            <GlassButton mode={glassMode} type="reset">ล้างตัวอย่าง</GlassButton>
+            <GlassButton mode={glassMode} type="submit" variant="prominent">ตรวจฟอร์ม</GlassButton>
           </div>
         </form>
       </section>
@@ -171,12 +184,12 @@ export default function DevelopmentWorkspace() {
     >
       <p>หน้าต่างนี้ใช้ component เดียวกับเมนูบัญชีและการตั้งค่ารูปแบบการแสดงผล</p>
       <div className="ui-dev-actions">
-        <button
-          type="button" className="apple-button"
+        <GlassButton mode={glassMode} variant="prominent"
+          type="button"
           onClick={() => setDialog(null)}
         >
           เสร็จสิ้น
-        </button>
+        </GlassButton>
       </div>
     </Dialog>
   </WorkspaceFrame>;

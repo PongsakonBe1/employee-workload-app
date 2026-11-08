@@ -450,12 +450,12 @@ export default function CalendarPreview() {
           </div>}
         </dl>
         {canEdit && <div className="cal-dialog-actions">
-          <button
+          <GlassButton mode={glassMode} variant="destructive"
             type="button" className="cal-delete-action"
             onClick={() => setDialog("delete")}
           >
             ลบตาราง…
-          </button>
+          </GlassButton>
           <GlassButton mode={glassMode} onClick={() => startEntry(selected.kind, selected)}>แก้ไขตาราง</GlassButton>
         </div>}
       </div>}
@@ -463,12 +463,12 @@ export default function CalendarPreview() {
         <p className="cal-form-note">{selected.recurring ? "ลบตารางรายสัปดาห์นี้ทุกครั้งในช่วงที่กำหนด หลังลบยังเลิกทำได้" : "ลบรายการนี้จากข้อมูลตัวอย่าง หลังลบยังเลิกทำได้"}</p>
         <div className="cal-dialog-actions">
           <GlassButton mode={glassMode} onClick={() => setDialog("detail")}>ยกเลิก</GlassButton>
-          <button
+          <GlassButton mode={glassMode} variant="destructive"
             type="button" className="cal-delete-action"
             onClick={() => { if (canEdit) commit({ rules: data.rules.filter(row => row.id !== selected.sourceId), events: data.events.filter(row => row.id !== selected.sourceId) }, "ลบตารางแล้ว"); }}
           >
             ลบตารางตัวอย่าง
-          </button>
+          </GlassButton>
         </div>
       </div>}
       {dialog === "holiday" && selectedHoliday && <div>

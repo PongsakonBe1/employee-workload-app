@@ -134,7 +134,7 @@
 .cal-detail-facts { display: grid; gap: 19px; margin-bottom: 22px; }
 .cal-detail-facts dt { font-size: .75rem; color: var(--ui-sub); margin-bottom: 5px; }
 .cal-detail-facts dd { font-size: .875rem; line-height: 1.7; overflow-wrap: anywhere; }
-.cal-delete-action { min-height: 44px; color: var(--ui-red-ink); padding: 10px; border-radius: 9px; font-size: .875rem; margin-inline-end: auto; }
+.cal-delete-action { margin-inline-end: auto; }
 .cal-source-detail { margin-top: 16px; }
 .cal-import-sample { text-align: center; border: 1px dashed var(--ui-control-edge); border-radius: 16px; padding: 30px 18px; }
 .cal-import-sample>svg { margin: auto auto 15px; color: var(--ui-blue-ink); }

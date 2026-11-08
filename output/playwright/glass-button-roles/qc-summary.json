@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-09",
+  "branch": "codex/glass-button-roles",
+  "base": "52dfd61",
+  "completedWithinSyntheticScope": true,
+  "unit": {
+    "passed": 342,
+    "total": 342,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browserAcceptance": {
+    "edge": {
+      "passed": 7,
+      "total": 7,
+      "minimumContrast": 4.690295641335624,
+      "contrastSamples": 96,
+      "sampledRoutes": [
+        "/dev/record",
+        "/dev/history",
+        "/dev/calendar",
+        "/dev/resources",
+        "/dev/equipment",
+        "/dev/equipment/usage",
+        "/dev/dashboard",
+        "/dev/staff",
+        "/dev/templates"
+      ],
+      "evidence": "edge/report.json",
+      "browserVersion": "156.0.4314.58"
+    },
+    "chrome": {
+      "passed": 7,
+      "total": 7,
+      "minimumContrast": 4.690295641335624,
+      "contrastSamples": 96,
+      "sampledRoutes": [
+        "/dev/record",
+        "/dev/history",
+        "/dev/calendar",
+        "/dev/templates"
+      ],
+      "evidence": "chrome/report.json",
+      "browserVersion": "156.0.8078.81"
+    },
+    "public": {
+      "passed": 7,
+      "total": 7,
+      "minimumContrast": 4.690295641335624,
+      "contrastSamples": 96,
+      "sampledRoutes": [
+        "/dev/record",
+        "/dev/history",
+        "/dev/calendar",
+        "/dev/templates"
+      ],
+      "evidence": "public/report.json",
+      "browserVersion": "156.0.4314.58"
+    }
+  },
+  "regression": {
+    "record": {
+      "passed": 11,
+      "total": 11,
+      "evidence": "regression-record/report.json"
+    },
+    "history": {
+      "passed": 9,
+      "total": 9,
+      "evidence": "regression-history/chrome/report.json"
+    },
+    "calendar": {
+      "passed": 11,
+      "total": 11,
+      "evidence": "regression-calendar/report.json"
+    },
+    "templates": {
+      "passed": 7,
+      "total": 7,
+      "evidence": "regression-templates/edge/report.json"
+    }
+  },
+  "nativeZoom200": true,
+  "compatibilityExport": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "staticChecks": [
+    {
+      "command": "node node_modules/eslint/bin/eslint.js --config scripts/ui-eslint.config.mjs frontend/components/ui/GlassControls.js frontend/app/dev/ui/workspace.js frontend/app/dev/calendar/workspace.js frontend/app/dev/history/workspace.js frontend/app/dev/templates/TemplateEditor.js",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-button-roles.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-record-glass.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-record-history.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-calendar-glass.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-templates-combo.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-ui-zoom.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/check-ui-build.mjs",
+      "passed": true
+    }
+  ],
+  "sourceHashes": {
+    "frontend/app/quick-liquid-pilot.css": "d1ff3b641e4bf506f33f1e3253d9e2c31f2fbbd4b37a086c03c69ec72b1552bb",
+    "frontend/components/ui/GlassControls.js": "5900fa5bd00e9bcec997453c95acae474f0504a1e9fdbb9799a2f158e7a607e0",
+    "frontend/app/dev/ui/workspace.js": "dee8c92ac18a320b5823764a24d836e3c4f1a02f4838b43624d3081e620339d4",
+    "frontend/app/dev/calendar/workspace.js": "efd625fd5285e27b8fdc6b8ac2abcd6dbb33744967800edc6a667adca873a12a",
+    "frontend/app/dev/calendar/calendar.css": "826e633530b2db44f65f20ed6f928990e15f3318abed00a9bbf372ce832d74d2",
+    "frontend/app/dev/history/workspace.js": "0df5e640b4e51ebba3829b56aee0c78ae0d52a00b66cc143649f023fb3ea8540",
+    "frontend/app/dev/templates/TemplateEditor.js": "12496516762bde91dab864d12bd0d967270efb611ce3c86a012019600646a5dc"
+  },
+  "preview": "https://northwest-revised-domains-varies.trycloudflare.com/dev/ui",
+  "firstPublicAttempt": "A script chunk returned HTTP 502; the complete rerun passed. No retry suppression was added to the browser tests.",
+  "coverage": {
+    "featurePreviews": 9,
+    "newFeatureRoutes": 0,
+    "allPagesReady": false
+  },
+  "productionDataUsed": false,
+  "realFirebaseAuthSIT": false,
+  "humanUAT": false,
+  "realDeviceUAT": false,
+  "installedDependencies": false,
+  "pushed": false,
+  "deployed": false,
+  "limitations": [
+    "Web implementation using project-owned controls; no claim of native Apple certification",
+    "Rejection is a style example in the lab; its real business flow is not migrated",
+    "Physical Safari/iPhone/Android UAT remains pending",
+    "Contrast evidence bounds the selected CSS tint composition, not every refracted pixel",
+    "Cloudflare is a temporary development tunnel and had an intermittent 502"
+  ]
+}

@@ -1,0 +1,622 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "label": "Primary/destructive glass labels meet 4.5:1 at idle, hover and pressed over black/white; CSS and QuickLiquid in both themes",
+      "passed": true
+    },
+    {
+      "label": "Touch layouts retain labels and 44px targets; active status is separate from the neutral stop/reactivate command",
+      "passed": true
+    },
+    {
+      "label": "Keyboard activation, visible focus and disabled semantics remain native; color is accompanied by labels and icons",
+      "passed": true
+    },
+    {
+      "label": "Reduce Transparency, reduced motion and forced colors keep actions readable without the optical engine",
+      "passed": true
+    },
+    {
+      "label": "Template deactivation is neutral and reversible; removing a draft Combo item is destructive and Cancel preserves the catalog",
+      "passed": true
+    },
+    {
+      "label": "History delete and confirmation are destructive; Cancel is neutral, deletion changes the ledger once and Undo restores it",
+      "passed": true
+    },
+    {
+      "label": "Sampled migrated pages retain responsive light/dark layouts with the shared action palette",
+      "passed": true
+    }
+  ],
+  "contrast": [
+    {
+      "label": "light/css/idle",
+      "alpha": 0.84,
+      "background": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.84,
+      "background": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.92,
+      "background": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.92,
+      "background": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.86,
+      "background": 0,
+      "ratio": 8.410510791126296
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.86,
+      "background": 255,
+      "ratio": 5.172463995405257
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 7.486591402256397
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 6.099053820672198
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 7.273084874636346
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 6.346828404381406
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 6.866049222602978
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 6.866049222602978
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.9,
+      "background": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.9,
+      "background": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/css/idle",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 6.291474366038039
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 7.191474639850652
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.98,
+      "background": 0,
+      "ratio": 6.881370471020003
+    },
+    {
+      "label": "light/css/hover",
+      "alpha": 0.98,
+      "background": 255,
+      "ratio": 7.189547726786532
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 7.188584421204316
+    },
+    {
+      "label": "light/css/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 7.188584421204316
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.84,
+      "background": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.84,
+      "background": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.92,
+      "background": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.92,
+      "background": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.86,
+      "background": 0,
+      "ratio": 8.410510791126296
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.86,
+      "background": 255,
+      "ratio": 5.172463995405257
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 7.486591402256397
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 6.099053820672198
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 7.273084874636346
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 6.346828404381406
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 6.866049222602978
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 6.866049222602978
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.9,
+      "background": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.9,
+      "background": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/idle",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 6.291474366038039
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 7.191474639850652
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.98,
+      "background": 0,
+      "ratio": 6.881370471020003
+    },
+    {
+      "label": "light/quick/hover",
+      "alpha": 0.98,
+      "background": 255,
+      "ratio": 7.189547726786532
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 7.188584421204316
+    },
+    {
+      "label": "light/quick/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 7.188584421204316
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.84,
+      "background": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.84,
+      "background": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.92,
+      "background": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.92,
+      "background": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.86,
+      "background": 0,
+      "ratio": 7.88690372980165
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.86,
+      "background": 255,
+      "ratio": 4.881595746125084
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 6.9830580185639475
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 5.705167039516337
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.775480139406333
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 5.924018932269644
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 6.381090719789489
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 6.381090719789489
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.9,
+      "background": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.9,
+      "background": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/css/idle",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 9.206103615124492
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 7.442249428305106
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.98,
+      "background": 0,
+      "ratio": 9.020363331909865
+    },
+    {
+      "label": "dark/css/hover",
+      "alpha": 0.98,
+      "background": 255,
+      "ratio": 8.423112227970533
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 8.927414489628799
+    },
+    {
+      "label": "dark/css/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 8.927414489628799
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.84,
+      "background": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.84,
+      "background": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.92,
+      "background": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.92,
+      "background": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.86,
+      "background": 0,
+      "ratio": 7.88690372980165
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.86,
+      "background": 255,
+      "ratio": 4.881595746125084
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 6.9830580185639475
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 5.705167039516337
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 6.775480139406333
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 5.924018932269644
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 6.381090719789489
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 6.381090719789489
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.9,
+      "background": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.9,
+      "background": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/idle",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.94,
+      "background": 0,
+      "ratio": 9.206103615124492
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.94,
+      "background": 255,
+      "ratio": 7.442249428305106
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.98,
+      "background": 0,
+      "ratio": 9.020363331909865
+    },
+    {
+      "label": "dark/quick/hover",
+      "alpha": 0.98,
+      "background": 255,
+      "ratio": 8.423112227970533
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 0.96,
+      "background": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 0.96,
+      "background": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 1,
+      "background": 0,
+      "ratio": 8.927414489628799
+    },
+    {
+      "label": "dark/quick/pressed",
+      "alpha": 1,
+      "background": 255,
+      "ratio": 8.927414489628799
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "productionDataUsed": false,
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.4314.58",
+  "sampledRoutes": [
+    "/dev/record",
+    "/dev/history",
+    "/dev/calendar",
+    "/dev/templates"
+  ]
+}

@@ -5,6 +5,8 @@ import { GlassSelection } from "./GlassSelection";
 import { Children, isValidElement } from "react";
 
 // The optical layer is decorative; the native button owns focus, form and pointer behavior.
+// Variants: regular, prominent (safe primary action), destructive (loss/rejection).
+// The variant is a visual intent, not a nonstandard ARIA role or an authorization check.
 export function GlassButton({ children, mode = "css", variant = "regular", className = "", type = "button", ...props }) {
   return <button
     {...props} type={type}

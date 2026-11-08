@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, process.argv[5]==='templates-combo'?'../output/playwright/templates-combo/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
+const out = path.resolve(__dirname, ['templates-combo','glass-button-roles'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
 fs.mkdirSync(out, { recursive: true });
 const report = { url: origin + '/dev/record', completed: false, checks: [], errors: [], blockedOrigins: [], limitations: ['Synthetic in-memory transactions only', 'Chromium touch emulation is not physical Safari/iPhone or Android UAT'] };
 async function main() {
@@ -111,12 +111,12 @@ async function main() {
       report.contrast = [];
       for (const theme of ['สว่าง', 'มืด']) {
         await appearance(page);await page.locator('dialog[open]').getByRole('button', { name: theme, exact: true }).click();await close(page);
-        const colors = await page.evaluate(() => { const css = getComputedStyle(document.documentElement);return Object.fromEntries(['accent', 'accent-ink', 'blue', 'blue-ink', 'green', 'green-ink', 'amber', 'amber-ink', 'sub', 'soft'].map(key => [key, css.getPropertyValue('--ui-' + key)])); });
+        const colors = await page.evaluate(() => { const css = getComputedStyle(document.documentElement);return Object.fromEntries(['action-blue', 'action-blue-ink', 'blue', 'blue-ink', 'green', 'green-ink', 'amber', 'amber-ink', 'sub', 'soft'].map(key => [key, css.getPropertyValue('--ui-' + key)])); });
         for (const [foreground, background] of [['blue-ink', 'blue'], ['green-ink', 'green'], ['amber-ink', 'amber'], ['sub', 'soft']]) {
           const ratio = contrast(rgb(colors[foreground]), rgb(colors[background]));assert.ok(ratio >= 4.5, theme + ' ' + foreground + ' contrast=' + ratio);report.contrast.push({ theme, foreground, background, ratio });
         }
         for (const backdrop of [0, 255]) {
-          const tinted = rgb(colors.accent).map(channel => channel * .88 + backdrop * .12), ratio = contrast(rgb(colors['accent-ink']), tinted);assert.ok(ratio >= 4.5, 'Primary text must survive the minimum tint over black and white');report.contrast.push({ theme, primaryOver: backdrop === 0 ? 'black' : 'white', ratio });
+          const tinted = rgb(colors['action-blue']).map(channel => channel * .84 + backdrop * .16), ratio = contrast(rgb(colors['action-blue-ink']), tinted);assert.ok(ratio >= 4.5, 'Primary text must survive the minimum tint over black and white');report.contrast.push({ theme, primaryOver: backdrop === 0 ? 'black' : 'white', ratio });
         }
       }
     });

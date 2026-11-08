@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [สีและบทบาทของปุ่ม Liquid Glass](../glass-button-roles/README.md) — ปรับ shared controls/คำสั่งลบ; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false
+
 9 พฤศจิกายน 2569: [เทมเพลตและ Combo ร่วมกับ Quick Log](../templates-combo/README.md) — Next 34 routes / dev 10 / feature previews 9; เมนู 9/18 ปลายทาง · all-pages-ready = false
 
 8 พฤศจิกายน 2569: [ทุกหัวข้อ/สรุปแบบประเมิน/Staff Analytics และแก้ legacy failures](../assessment-summary/README.md) · ไม่มี route ใหม่ · all-pages-ready = false
