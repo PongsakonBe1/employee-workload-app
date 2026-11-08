@@ -1,0 +1,51 @@
+/* Selection, focus and hover acceptance on real UI components. No production I/O. */
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
+const out=path.resolve(__dirname,'../output/playwright/resource-selection',origin.startsWith('http://127.0.0.1')?/Google[\\/]Chrome/i.test(process.argv[3])?'chrome':'edge':'public');fs.mkdirSync(out,{recursive:true});
+const report={completed:false,origin,checks:[],errors:[],externalRequests:[],states:[],limitations:['Synthetic data only','Automated Chromium/touch emulation is not physical Safari/iPhone or user UAT']};
+const color=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
+const lum=rgb=>rgb.map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);
+const contrast=(a,b)=>{const x=lum(color(a)),y=lum(color(b));return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+async function main(){
+ const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});report.browserVersion=browser.version();let activePage;
+ const context=async options=>{const ctx=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block',...options});await ctx.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin===origin||['data:','blob:'].includes(u.protocol))return r.continue();report.externalRequests.push(u.origin);return r.abort();});return ctx;};
+ const open=async(p,route='/dev/resources')=>{activePage=p;p.on('pageerror',e=>report.errors.push(e.message));assert.equal((await p.goto(origin+route,{timeout:90000})).status(),200);await p.waitForFunction(()=>document.documentElement.dataset.uiReady==='true');};
+ const settle=async row=>row.evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).filter(a=>a.effect?.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})));});
+ const sample=async row=>{await settle(row);return row.evaluate(el=>{const p=getComputedStyle(el,'::before'),s=getComputedStyle(el);return{selected:el.getAttribute('aria-pressed'),focused:el.matches(':focus'),focusVisible:el.matches(':focus-visible'),background:s.backgroundColor,fill:p.backgroundColor,radius:p.borderRadius,inset:[p.top,p.right,p.bottom,p.left],outline:p.outlineStyle,outlineWidth:p.outlineWidth,transition:p.transitionDuration,ink:s.color,sub:getComputedStyle(el.querySelector('small')).color,badge:el.querySelector('.record-badge').textContent,badgeFill:getComputedStyle(el.querySelector('.record-badge')).backgroundColor,badgeInk:getComputedStyle(el.querySelector('.record-badge')).color};});};
+ const shot=async(p,name)=>fs.writeFileSync(path.join(out,name+'.png'),await p.screenshot({fullPage:!(await p.locator('dialog[open]').count())}));
+ const bounds=async p=>{const result=await p.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));assert.ok(result.scroll<=result.width+1,JSON.stringify(result));};
+ const test=async(name,fn)=>{await fn();report.checks.push({name,status:'passed'});console.log('PASS '+name);};
+ try{
+  await test('Resource rows use inset rounded selection, distinct hover and readable focused labels in both themes',async()=>{
+   for(const colorScheme of ['light','dark']){
+    const ctx=await context({colorScheme}),p=await ctx.newPage();await open(p);const row=p.locator('[data-room="304"]'),other=p.locator('[data-room="303"]');const initial=await sample(row);
+    await row.click();const focused=await sample(row);assert.equal(focused.selected,'true');assert.equal(focused.focused,true);assert.equal(focused.focusVisible,false);assert.equal(focused.background,'rgba(0, 0, 0, 0)');assert.ok(parseFloat(focused.radius)>=10);assert.ok(focused.inset.every(value=>parseFloat(value)>=4));assert.ok(contrast(focused.ink,focused.fill)>=4.5);assert.ok(contrast(focused.sub,focused.fill)>=4.5);assert.equal(focused.badge,initial.badge);assert.equal(focused.badgeFill,initial.badgeFill);assert.equal(focused.badgeInk,initial.badgeInk);assert.equal(await p.locator('dialog[open]').count(),0);assert.equal(await p.getByRole('region',{name:'เลิกทำรายการล่าสุด'}).count(),0);await shot(p,'resource-focused-'+colorScheme);
+    await other.hover();const hover=await sample(other);assert.equal(hover.selected,'false');assert.notEqual(hover.fill,'rgba(0, 0, 0, 0)');assert.notEqual(hover.fill,focused.fill);assert.equal(await row.getAttribute('aria-pressed'),'true');await shot(p,'resource-hover-'+colorScheme);
+    await p.getByRole('searchbox',{name:'ค้นหาห้อง รหัส หรือสังกัด'}).click();const inactive=await sample(row);assert.equal(inactive.selected,'true');assert.equal(inactive.focused,false);assert.notEqual(inactive.fill,focused.fill);assert.ok(contrast(inactive.ink,inactive.fill)>=4.5);assert.ok(contrast(inactive.sub,inactive.fill)>=4.5);await shot(p,'resource-inactive-'+colorScheme);report.states.push({colorScheme,focused,inactive,hover});await bounds(p);await ctx.close();
+   }
+  });
+  await test('Keyboard focus is visible before selection; Enter selects without a write and moving to details restores inactive selection',async()=>{
+   for(const colorScheme of ['light','dark']){
+    const ctx=await context({colorScheme}),p=await ctx.newPage();await open(p);await p.locator('[data-room="304"]').click();await p.mouse.move(20,20);await p.getByRole('searchbox',{name:'ค้นหาห้อง รหัส หรือสังกัด'}).focus();await p.keyboard.press('Tab');const first=p.locator('[data-room="303"]');await p.waitForFunction(()=>document.activeElement?.getAttribute('data-room')==='303');let state=await sample(first);assert.equal(state.focusVisible,true);assert.equal(state.outline,'solid');assert.ok(parseFloat(state.outlineWidth)>=2);assert.equal(await p.locator('[data-room="304"]').getAttribute('aria-pressed'),'true');await p.keyboard.press('Enter');state=await sample(first);assert.equal(state.selected,'true');assert.equal(state.focusVisible,true);assert.equal(await p.locator('dialog[open]').count(),0);assert.equal(await p.getByRole('region',{name:'เลิกทำรายการล่าสุด'}).count(),0);await shot(p,'resource-keyboard-'+colorScheme);
+    await p.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).getByRole('button',{name:'ดูประวัติ',exact:true}).focus();const inactive=await sample(first);assert.equal(inactive.focused,false);assert.notEqual(inactive.fill,state.fill);assert.equal(inactive.selected,'true');await ctx.close();
+   }
+  });
+  await test('Equipment registry follows the same focus/inactive model without changing availability or borrower state',async()=>{
+   for(const colorScheme of ['light','dark']){
+    const ctx=await context({colorScheme}),p=await ctx.newPage();await open(p,'/dev/equipment');await p.locator('.resource-test-controls summary').click();await p.getByLabel('บทบาทตัวอย่าง',{exact:true}).selectOption('admin');const row=p.locator('[data-asset="demo-h2"] .equipment-row-name');await row.click();const focused=await sample(row);assert.equal(focused.focused,true);assert.equal(focused.selected,'true');assert.match(focused.badge,/กำลังยืม/);assert.equal(await p.locator('[data-asset="demo-h2"]').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)');assert.ok(contrast(focused.sub,focused.fill)>=4.5);await shot(p,'registry-focused-'+colorScheme);
+    await p.getByRole('complementary',{name:'รายละเอียดอุปกรณ์'}).getByRole('button',{name:'ประวัติ',exact:true}).focus();const inactive=await sample(row);assert.equal(inactive.selected,'true');assert.equal(inactive.focused,false);assert.notEqual(inactive.fill,focused.fill);assert.equal(inactive.badge,focused.badge);assert.equal(await p.getByRole('region',{name:'เลิกทำรายการล่าสุด'}).count(),0);await shot(p,'registry-inactive-'+colorScheme);await bounds(p);await ctx.close();
+   }
+  });
+  await test('Touch selection opens the same detail sheet and search focus does not leave a focused-blue row or sticky hover',async()=>{
+   for(const colorScheme of ['light','dark'])for(const width of [375,390,430,768,900]){
+    const ctx=await context({viewport:{width,height:844},isMobile:true,hasTouch:true,colorScheme}),p=await ctx.newPage();await open(p);const row=p.locator('[data-room="304"]');await row.tap();assert.equal(await p.locator('dialog[open]').count(),1);assert.match(await p.locator('dialog[open]').innerText(),/รายละเอียดทรัพยากร/);assert.equal((await sample(row)).focused,false);await p.locator('dialog[open]').getByRole('button',{name:'ปิดหน้าต่าง',exact:true}).tap();await p.getByRole('searchbox',{name:'ค้นหาห้อง รหัส หรือสังกัด'}).tap();const inactive=await sample(row);assert.equal(inactive.selected,'true');assert.equal(inactive.focused,false);assert.equal(await p.evaluate(()=>matchMedia('(hover:hover) and (pointer:fine)').matches),false);assert.equal(await p.getByRole('region',{name:'เลิกทำรายการล่าสุด'}).count(),0);await bounds(p);if(width===390)await shot(p,'touch-inactive-'+colorScheme);await ctx.close();
+   }
+  });
+  await test('Reduced motion and forced colors keep selection and keyboard focus distinguishable',async()=>{
+   const reduced=await context({reducedMotion:'reduce'}),p=await reduced.newPage();await open(p);await p.locator('[data-room="304"]').click();const state=await sample(p.locator('[data-room="304"]'));assert.ok(state.transition.split(',').every(value=>parseFloat(value)===0));await reduced.close();
+   const forced=await context({forcedColors:'active'}),q=await forced.newPage();await open(q);await q.getByRole('searchbox',{name:'ค้นหาห้อง รหัส หรือสังกัด'}).focus();await q.keyboard.press('Tab');await q.keyboard.press('Enter');const active=await sample(q.locator('[data-room="303"]'));assert.equal(active.focusVisible,true);assert.equal(active.outline,'solid');assert.ok(contrast(active.ink,active.fill)>=4.5);assert.equal(active.badge,'ปิดอยู่');await shot(q,'selection-forced-colors');await forced.close();
+  });
+  assert.deepEqual(report.errors,[]);assert.deepEqual(report.externalRequests,[]);report.completed=true;
+ }catch(error){report.failure=error.stack;if(activePage&&!activePage.isClosed())await shot(activePage,'failure').catch(()=>{});throw error;}finally{fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));await browser.close();}
+}
+main().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,0 +1,66 @@
+   ▲ Next.js 15.5.18
+   - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 10.5s
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/37) ...
+[Firebase] Auth persistence set to LOCAL
+[Firebase] Auth persistence set to LOCAL
+   Generating static pages (9/37)
+   Generating static pages (18/37)
+   Generating static pages (27/37)
+ ✓ Generating static pages (37/37)
+   Finalizing page optimization ...
+   Collecting build traces ...
+   Exporting (0/2) ...
+ ✓ Exporting (2/2)
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      670 B         230 kB
+├ ○ /admin                               2.87 kB         272 kB
+├ ○ /admin/audit-logs                    3.04 kB         272 kB
+├ ○ /admin/classroom-schedules             340 B         274 kB
+├ ○ /admin/cleanup                       2.21 kB         231 kB
+├ ○ /admin/dl-exam-schedules               340 B         275 kB
+├ ○ /admin/equipment-health              5.74 kB         275 kB
+├ ○ /admin/equipment-items               5.38 kB         275 kB
+├ ○ /admin/record                        4.76 kB         314 kB
+├ ○ /admin/settings                      6.02 kB         275 kB
+├ ○ /admin/staff-analytics               6.56 kB         366 kB
+├ ○ /admin/system                        10.3 kB         303 kB
+├ ○ /admin/templates                       302 B         278 kB
+├ ○ /admin/users                         5.94 kB         275 kB
+├ ○ /apple-icon.png                          0 B            0 B
+├ ○ /calendar                              485 B         275 kB
+├ ○ /dashboard                           8.91 kB         282 kB
+├ ○ /dev/calendar                        16.7 kB         139 kB
+├ ○ /dev/equipment                         144 B         145 kB
+├ ○ /dev/equipment/usage                   144 B         145 kB
+├ ○ /dev/history                         9.13 kB         142 kB
+├ ○ /dev/record                          10.2 kB         143 kB
+├ ○ /dev/resources                         144 B         145 kB
+├ ○ /dev/ui                              3.84 kB         126 kB
+├ ○ /export                              4.57 kB         274 kB
+├ ○ /help                                6.37 kB         276 kB
+├ ○ /icon.png                                0 B            0 B
+├ ○ /login                               2.12 kB         237 kB
+├ ○ /_not-found                             1 kB         104 kB
+├ ○ /pending                             1.85 kB         231 kB
+├ ○ /profile                             22.6 kB         387 kB
+├ ○ /resources                             464 B         283 kB
+├ ○ /worklogs                            11.2 kB         283 kB
+└ ○ /worklogs/new                         3.6 kB         313 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/3131-4150bfed8305ab02.js      46.6 kB
+  ├ chunks/c7879cf7-fabe25011515220e.js  54.2 kB
+  └ other shared chunks (total)           2.4 kB
+
+
+○  (Static)  prerendered as static content
+
+ ⚠ Linting is disabled.
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme

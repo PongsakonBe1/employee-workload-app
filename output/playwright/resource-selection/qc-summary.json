@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-08",
+  "branch": "codex/resource-selection-states",
+  "base": "f72eafc",
+  "runtimeChanges": [
+    "frontend/app/dev/resources/resources.css"
+  ],
+  "syntheticOnly": true,
+  "productionDataUsed": false,
+  "deployed": false,
+  "browsers": {
+    "edge": {
+      "passed": 5,
+      "origin": "http://127.0.0.1:4310",
+      "browserVersion": "156.0.4314.58"
+    },
+    "chrome": {
+      "passed": 5,
+      "origin": "http://127.0.0.1:4310",
+      "browserVersion": "156.0.8078.81"
+    },
+    "public": {
+      "passed": 5,
+      "origin": "https://northwest-revised-domains-varies.trycloudflare.com",
+      "browserVersion": "156.0.4314.58"
+    }
+  },
+  "regressionScenarios": 8,
+  "compatibilityBuild": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "syntax": "passed",
+  "unitTests": "Not rerun: no business JavaScript changes; prior full suite 301 total, 293 passed, 8 known failures",
+  "limitations": [
+    "Not all app views or a full HIG/WCAG certification",
+    "No physical Safari/iPhone/Android UAT or real Firebase/backend SIT"
+  ]
+}

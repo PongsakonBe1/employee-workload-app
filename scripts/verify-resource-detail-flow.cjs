@@ -1,7 +1,7 @@
 /* Resource click destinations, downloads and return paths. Synthetic data only. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310',reference=process.argv[5]==='with-reference';
-const out=path.resolve(__dirname,'../output/playwright/resource-detail-flow',origin.startsWith('http://127.0.0.1')?/Google[\\/]Chrome/i.test(process.argv[3])?'chrome':'edge':'public');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(__dirname,process.argv[5]==='resource-selection'?'../output/playwright/resource-selection/regression':'../output/playwright/resource-detail-flow',origin.startsWith('http://127.0.0.1')?/Google[\\/]Chrome/i.test(process.argv[3])?'chrome':'edge':'public');fs.mkdirSync(out,{recursive:true});
 const report={completed:false,origin,checks:[],errors:[],externalRequests:[],referenceContracts:[],limitations:['Synthetic adapter only; no Firebase/Auth/backend SIT','Automated acceptance is not human UAT or physical Safari/scanner testing']};
 function parseCSV(text){const rows=[];let row=[],cell='',quoted=false;text=text.replace(/^\uFEFF/,'');for(let i=0;i<text.length;i++){const char=text[i];if(char==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(char===','&&!quoted){row.push(cell);cell='';}else if(char==='\n'&&!quoted){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell='';}else cell+=char;}row.push(cell.replace(/\r$/,''));rows.push(row);return rows;}
 async function main(){

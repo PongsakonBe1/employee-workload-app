@@ -1,0 +1,173 @@
+{
+  "completed": true,
+  "origin": "http://127.0.0.1:4310",
+  "checks": [
+    {
+      "name": "Resource rows use inset rounded selection, distinct hover and readable focused labels in both themes",
+      "status": "passed"
+    },
+    {
+      "name": "Keyboard focus is visible before selection; Enter selects without a write and moving to details restores inactive selection",
+      "status": "passed"
+    },
+    {
+      "name": "Equipment registry follows the same focus/inactive model without changing availability or borrower state",
+      "status": "passed"
+    },
+    {
+      "name": "Touch selection opens the same detail sheet and search focus does not leave a focused-blue row or sticky hover",
+      "status": "passed"
+    },
+    {
+      "name": "Reduced motion and forced colors keep selection and keyboard focus distinguishable",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "states": [
+    {
+      "colorScheme": "light",
+      "focused": {
+        "selected": "true",
+        "focused": true,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "rgb(7, 95, 203)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(255, 255, 255)",
+        "sub": "rgb(234, 242, 255)",
+        "badge": "เปิดอยู่",
+        "badgeFill": "rgb(226, 243, 233)",
+        "badgeInk": "rgb(23, 97, 61)"
+      },
+      "inactive": {
+        "selected": "true",
+        "focused": false,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "rgb(236, 238, 244)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(32, 33, 36)",
+        "sub": "rgb(85, 93, 112)",
+        "badge": "เปิดอยู่",
+        "badgeFill": "rgb(226, 243, 233)",
+        "badgeInk": "rgb(23, 97, 61)"
+      },
+      "hover": {
+        "selected": "false",
+        "focused": false,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "color(srgb 0.95902 0.963333 0.976274)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(32, 33, 36)",
+        "sub": "rgb(85, 93, 112)",
+        "badge": "ปิดอยู่",
+        "badgeFill": "rgb(236, 238, 244)",
+        "badgeInk": "rgb(85, 93, 112)"
+      }
+    },
+    {
+      "colorScheme": "dark",
+      "focused": {
+        "selected": "true",
+        "focused": true,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "rgb(7, 95, 203)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(255, 255, 255)",
+        "sub": "rgb(234, 242, 255)",
+        "badge": "เปิดอยู่",
+        "badgeFill": "rgb(21, 61, 48)",
+        "badgeInk": "rgb(155, 232, 191)"
+      },
+      "inactive": {
+        "selected": "true",
+        "focused": false,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "rgb(48, 52, 62)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(243, 245, 252)",
+        "sub": "rgb(185, 194, 212)",
+        "badge": "เปิดอยู่",
+        "badgeFill": "rgb(21, 61, 48)",
+        "badgeInk": "rgb(155, 232, 191)"
+      },
+      "hover": {
+        "selected": "false",
+        "focused": false,
+        "focusVisible": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "fill": "color(srgb 0.168824 0.18098 0.214902)",
+        "radius": "12px",
+        "inset": [
+          "5px",
+          "6px",
+          "5px",
+          "6px"
+        ],
+        "outline": "none",
+        "outlineWidth": "3px",
+        "transition": "0.14s, 0.14s, 0.1s",
+        "ink": "rgb(243, 245, 252)",
+        "sub": "rgb(185, 194, 212)",
+        "badge": "ปิดอยู่",
+        "badgeFill": "rgb(48, 52, 62)",
+        "badgeInk": "rgb(185, 194, 212)"
+      }
+    }
+  ],
+  "limitations": [
+    "Synthetic data only",
+    "Automated Chromium/touch emulation is not physical Safari/iPhone or user UAT"
+  ],
+  "browserVersion": "156.0.8078.81"
+}
