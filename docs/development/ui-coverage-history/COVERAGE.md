@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+8 พฤศจิกายน 2569: [Flow ทรัพยากร/ประวัติ/CSV ล่าสุด](../resource-detail-flow/README.md)
+
 อัปเดตเฟสห้อง/อุปกรณ์: Next 31 routes / dev 7 / feature previews 6; เมนู 6/18 ปลายทาง ดู [รายงานปัจจุบัน](../resources-equipment/README.md) ส่วนผลก่อนหน้าด้านล่างเป็น snapshot ของเฟสประวัติ
 
 7 พฤศจิกายน 2569 · ใช้ข้อมูลใน repo เท่านั้น · **all-pages-ready = false**
@@ -36,7 +38,7 @@
 | เข้าสู่ระบบ (login) | /login | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | รออนุมัติ (pending) | /pending | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ชุด UI และสถานะ (design) | design-only | /dev/ui | components lab ผ่าน regression | ไม่ใช่ feature page |
-| ห้องและทรัพยากร (resources) | RoomEquipmentStatus | /dev/resources | Partial — รายการ/detail/room action/ยืมคืน/Undo ผ่าน | export สถานะ/ตารางร่วม/บริการจริง |
+| ห้องและทรัพยากร (resources) | RoomEquipmentStatus | /dev/resources | Partial — รายการ/detail/history/CSV/status export/ยืมคืน/Undo ผ่าน | ตารางร่วม/บริการจริง/physical UAT |
 | สภาพและประวัติคืน (condition) | /admin/equipment-health | /dev/equipment/usage → สภาพตอนคืน | Partial — normal/damaged/lost/unknown events ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | คำขอส่งออก (export-requests) | /admin/system#exports | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | นำเข้าข้อมูลงาน (data-import) | /admin/system#import | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |

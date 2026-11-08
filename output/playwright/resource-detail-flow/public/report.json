@@ -1,0 +1,46 @@
+{
+  "completed": true,
+  "origin": "https://northwest-revised-domains-varies.trycloudflare.com",
+  "checks": [
+    {
+      "name": "Desktop row selection shows details without starting a transaction; action cancel and empty history preserve the room",
+      "status": "passed"
+    },
+    {
+      "name": "Explicit room confirmation writes one event; history dates, CSV and Undo use the same exact resource",
+      "status": "passed"
+    },
+    {
+      "name": "Admin history includes the team while Staff and downloaded CSV retain ownership scope",
+      "status": "passed"
+    },
+    {
+      "name": "Device selection opens read-only details and exact history before borrower-preserving return controls",
+      "status": "passed"
+    },
+    {
+      "name": "Registry history uses the same resource identity and inactive items remain in export preview",
+      "status": "passed"
+    },
+    {
+      "name": "Status export is an explicit, keyboard-accessible CSV preview including rooms and omitting borrower codes; failure remains retryable",
+      "status": "passed"
+    },
+    {
+      "name": "Details, back, close, cancel, save and export work at phone/tablet/desktop widths in both themes without stacked dialogs",
+      "status": "passed"
+    },
+    {
+      "name": "Mobile registry/resource history returns to details; editing a resource retains identity even when it becomes hidden from Quick Log",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "referenceContracts": [],
+  "limitations": [
+    "Synthetic adapter only; no Firebase/Auth/backend SIT",
+    "Automated acceptance is not human UAT or physical Safari/scanner testing"
+  ],
+  "browserVersion": "156.0.4314.58"
+}

@@ -1,5 +1,7 @@
 # เก็บรายละเอียด UI ห้องและอุปกรณ์
 
+Flow รายละเอียด/ประวัติ/ส่งออกล่าสุด: [รายงานและตารางปลายทางการคลิก](../resource-detail-flow/README.md) ผลด้านล่างเป็น snapshot ของเฟสก่อน
+
 8 พฤศจิกายน 2569 · branch `codex/resources-ui-refinement` · ฐาน `75859a5`
 
 ผู้ใช้อนุญาตให้แก้ตาม flow หลัง review 6 ประเด็น เฟสนี้แก้ UI บน development preview โดยคงธุรกรรมยืม–คืน ทะเบียน ประวัติ และ Undo เดิม ใช้ข้อมูลสังเคราะห์เท่านั้น ไม่มี Firebase Console, production writes, package installation, push หรือ deploy

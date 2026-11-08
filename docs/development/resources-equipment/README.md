@@ -1,5 +1,7 @@
 # ห้อง ทะเบียน และการใช้งานอุปกรณ์ — Development
 
+Flow รายละเอียด/ประวัติ/ส่งออกล่าสุด: [รายงานและตารางปลายทางการคลิก](../resource-detail-flow/README.md) ผลด้านล่างเป็น snapshot ของเฟสก่อน
+
 UI รอบเก็บรายละเอียด 8 พฤศจิกายน 2569: [รายงานล่าสุด](../resources-ui-refinement/README.md)
 
 7 พฤศจิกายน 2569 · branch `codex/resources-equipment-review` · ฐาน `e651c9e`

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "frontend/app/dev/resources/workspace.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "3ae7312d617ea9f16f15905a73082d4d8766c491d2bb2cc541ff2d14d707ac02"
+  },
+  {
+    "file": "frontend/app/dev/resources/ResourceDetails.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "2812c04a80848601a952d50e19150727776d99b0a57cfe63155d3a633a41e4c1"
+  },
+  {
+    "file": "frontend/app/dev/resources/ResourceHistory.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "ff4ae18f506380926352b75111aed586375ed865c546982c2adb49a932e93d27"
+  },
+  {
+    "file": "frontend/app/dev/resources/ResourceExportPreview.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "5582dd951e8679476b7a8097988fd661da0a89bfdb2f6eda86b9bcb7e6b6b9e4"
+  },
+  {
+    "file": "frontend/app/dev/resources/downloadCSV.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "d0a4ad8b335160d533be09e7b5d06b726ae26e00838b9b811911185fd06e68c2"
+  },
+  {
+    "file": "frontend/lib/resourcePreview.js",
+    "reactJsxWhitespaceNormalizedAstEquivalent": true,
+    "sha256": "f733cf12b9858fc458f2595a23864b6e1e34ae51993892212f791e43dcbcb68b"
+  }
+]

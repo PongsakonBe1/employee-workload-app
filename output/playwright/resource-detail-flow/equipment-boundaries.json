@@ -1,0 +1,47 @@
+{
+  "completed": true,
+  "states": [
+    {
+      "width": 900,
+      "colorScheme": "light",
+      "detailModal": 1,
+      "overflow": false,
+      "editCancelPreserved": true
+    },
+    {
+      "width": 901,
+      "colorScheme": "light",
+      "detailModal": 0,
+      "overflow": false,
+      "editCancelPreserved": true
+    },
+    {
+      "width": 1000,
+      "colorScheme": "light",
+      "detailModal": 0,
+      "overflow": false,
+      "editCancelPreserved": true
+    },
+    {
+      "width": 900,
+      "colorScheme": "dark",
+      "detailModal": 1,
+      "overflow": false,
+      "editCancelPreserved": true
+    },
+    {
+      "width": 901,
+      "colorScheme": "dark",
+      "detailModal": 0,
+      "overflow": false,
+      "editCancelPreserved": true
+    },
+    {
+      "width": 1000,
+      "colorScheme": "dark",
+      "detailModal": 0,
+      "overflow": false,
+      "editCancelPreserved": true
+    }
+  ]
+}

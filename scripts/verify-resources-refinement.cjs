@@ -3,7 +3,7 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
 const formOnly=process.argv[5]==='form-only';
-const out = path.resolve(__dirname, '../output/playwright/resources-ui-refinement', origin.startsWith('http://127.0.0.1') ? /Google[\\/]Chrome/i.test(process.argv[3]) ? 'chrome' : 'edge' : 'public', ...(formOnly?['form-only']:[]));
+const out = path.resolve(__dirname, process.argv[5]==='resource-detail-flow'?'../output/playwright/resource-detail-flow/regression':'../output/playwright/resources-ui-refinement', origin.startsWith('http://127.0.0.1') ? /Google[\\/]Chrome/i.test(process.argv[3]) ? 'chrome' : 'edge' : 'public', ...(formOnly?['form-only']:[]));
 fs.mkdirSync(out, { recursive: true });
 const report = { completed: false, origin, checks: [], errors: [], externalRequests: [], limitations: ['Synthetic adapter integration only, not Firebase/Auth/backend SIT', 'Automated acceptance checks are not human UAT or physical Safari/iPhone/scanner testing'] };
 async function main() {
@@ -65,7 +65,7 @@ async function main() {
       await nav('/admin/record', '/dev/record');await page.locator('.record-quick-grid').getByRole('button', { name: 'ยืม / คืนหูฟัง' }).click();
       assert.equal(await dialog().getByRole('button', { name: /หูฟังทดสอบ QC/ }).count(), 1);await page.keyboard.press('Escape');
       await nav('/resources', '/dev/resources');await page.getByRole('button', { name: 'อุปกรณ์', exact: true }).click();
-      await page.locator('.resource-card').filter({ hasText: 'QC-NEW' }).click();await dialog().getByRole('button', { name: 'บันทึกยืม' }).click();
+      await page.locator('.resource-card').filter({ hasText: 'QC-NEW' }).click();assert.equal(await dialog().count(),0);await page.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).getByRole('button',{name:'ยืมรายการนี้',exact:true}).click();await dialog().getByRole('button', { name: 'บันทึกยืม' }).click();
       assert.equal(await page.evaluate(() => document.activeElement.name), 'record-student');
       await dialog().locator('[name=record-student]').fill('๑๒๓๔๕๖๗๘๙๐๑๒๓');assert.equal(await dialog().locator('[name=record-student]').inputValue(), '');
       await dialog().locator('[name=record-student]').fill('0000000000000');await shot(page, 'borrow-desktop');
@@ -115,7 +115,7 @@ async function main() {
     });
     await test('Room action creates shared worklog and Undo restores the status', async () => {
       await nav('/resources', '/dev/resources');await page.getByRole('button', { name: 'ห้องบริการ', exact: true }).click();const card = page.locator('[data-room="303"]');const before = await card.innerText();
-      await card.click();await dialog().getByRole('button', { name: 'เปิดห้อง', exact: true }).click();await dialog().waitFor({ state: 'hidden' });assert.match(await card.innerText(), /เปิดอยู่/);
+      await card.click();assert.equal(await dialog().count(),0);await page.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).getByRole('button',{name:'เปิดห้อง',exact:true}).click();await dialog().getByRole('button', { name: 'เปิดห้อง', exact: true }).click();await dialog().waitFor({ state: 'hidden' });assert.match(await card.innerText(), /เปิดอยู่/);
       await page.getByRole('region', { name: 'เลิกทำรายการล่าสุด' }).getByRole('button', { name: 'เลิกทำ', exact: true }).click();assert.equal(await card.innerText(), before);await shot(page, 'resources-desktop-light');
       const boxes = await page.locator('.resource-room-grid').first().locator('button').evaluateAll(items => items.map(e => e.getBoundingClientRect().y));assert.equal(new Set(boxes).size, 4);assert.equal(await page.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).isVisible(),true);
     });
@@ -132,7 +132,7 @@ async function main() {
     });
     await test('Reduced motion, solid materials and forced colors remain operable', async () => {
       const accessible = await context({ reducedMotion: 'reduce', forcedColors: 'active' });const p = await accessible.newPage();await open(p, '/dev/resources');await bounds(p);
-      assert.equal(await p.locator('html').getAttribute('data-ui-motion'), 'reduce');await p.locator('[data-room="303"]').focus();await p.keyboard.press('Enter');await p.locator('dialog[open]').waitFor();await p.keyboard.press('Escape');
+      assert.equal(await p.locator('html').getAttribute('data-ui-motion'), 'reduce');await p.locator('[data-room="303"]').focus();await p.keyboard.press('Enter');assert.equal(await p.locator('dialog[open]').count(),0);await p.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).getByRole('button',{name:'เปิดห้อง',exact:true}).focus();await p.keyboard.press('Enter');await p.locator('dialog[open]').waitFor();await p.keyboard.press('Escape');
       await p.evaluate(() => { document.documentElement.dataset.uiMaterial = 'solid'; });await shot(p, 'resources-forced-colors');await accessible.close();
     });
     await test('Mobile selection labels stay above the lens in loading and active phases with sufficient selected contrast', async () => {
@@ -158,7 +158,7 @@ async function main() {
       await nav('/resources','/dev/resources');await page.getByRole('button',{name:'ห้องบริการ',exact:true}).click();
       for (const id of ['303','304']) {
         const row=page.locator('[data-room="'+id+'"]');const expected=await row.locator('.record-badge').getAttribute('data-tone'),label=await row.locator('.record-badge').innerText();
-        await row.click();assert.equal(await dialog().locator('.record-badge').getAttribute('data-tone'),expected);assert.equal(await dialog().locator('.record-badge').innerText(),label);await page.keyboard.press('Escape');
+        await row.click();assert.equal(await dialog().count(),0);await page.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).getByRole('button',{name:label==='เปิดอยู่'?'ปิดห้อง':'เปิดห้อง',exact:true}).click();assert.equal(await dialog().locator('.record-badge').getAttribute('data-tone'),expected);assert.equal(await dialog().locator('.record-badge').innerText(),label);await page.keyboard.press('Escape');
         assert.equal(await page.getByRole('complementary',{name:'รายละเอียดทรัพยากร'}).locator('.record-badge').getAttribute('data-tone'),expected);
         await nav('/admin/record','/dev/record');await page.locator('.record-quick-grid').getByRole('button',{name:/ห้องแลกเปลี่ยนความรู้/}).click();
         assert.equal(await dialog().locator('.record-resource-tile').filter({hasText:'ห้อง '+id}).locator('.record-badge').getAttribute('data-tone'),expected);await page.keyboard.press('Escape');await nav('/resources','/dev/resources');
