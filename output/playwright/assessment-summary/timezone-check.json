@@ -1,0 +1,14 @@
+[
+  {
+    "zone": "Asia/Bangkok",
+    "exitCode": 0
+  },
+  {
+    "zone": "UTC",
+    "exitCode": 0
+  },
+  {
+    "zone": "America/Los_Angeles",
+    "exitCode": 0
+  }
+]

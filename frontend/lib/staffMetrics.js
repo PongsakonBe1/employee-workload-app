@@ -95,6 +95,8 @@ export function calculateConsistency(employeeId, worklogs, dateRange) {
     byDate[w.date] = (byDate[w.date] || 0) + 1;
   });
 
+  // Only observed recording dates are available. An absent date is not evidence
+  // of zero work or absence from duty, so do not impute attendance here.
   const dailyCounts = Object.values(byDate);
 
   if (dailyCounts.length === 0) return 0;
