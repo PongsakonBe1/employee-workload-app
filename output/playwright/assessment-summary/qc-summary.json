@@ -1,0 +1,114 @@
+{
+  "date": "2026-11-08",
+  "branch": "codex/assessment-summary-analytics",
+  "base": "8b93c5f",
+  "legacyFixCommit": "7ca222d",
+  "scopes": [
+    "Overview: full minor-task catalog",
+    "Assessment evidence report",
+    "Staff count/share and personal trend",
+    "Eight legacy unit failures"
+  ],
+  "unit": {
+    "total": 331,
+    "passed": 331,
+    "failed": 0,
+    "skipped": 0,
+    "previousFailures": 8,
+    "additionalTests": 18
+  },
+  "browsers": {
+    "edge": {
+      "file": "edge/final/report.json",
+      "cases": 10,
+      "passed": 10,
+      "pageErrors": 0,
+      "httpErrors": 0
+    },
+    "chrome": {
+      "file": "chrome/report.json",
+      "cases": 10,
+      "passed": 10,
+      "pageErrors": 0,
+      "httpErrors": 0
+    },
+    "public": {
+      "file": "public/final/report.json",
+      "cases": 10,
+      "passed": 10,
+      "pageErrors": 0,
+      "httpErrors": 0
+    }
+  },
+  "viewports": {
+    "local": [
+      375,
+      390,
+      430,
+      768,
+      900,
+      1440
+    ],
+    "public": [
+      390,
+      1440
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ]
+  },
+  "regression": {
+    "planning": {
+      "file": "regression/chrome/report.json",
+      "cases": 8,
+      "passed": true
+    },
+    "resourceSelection": {
+      "file": "resource-selection-regression/edge/report.json",
+      "cases": 5,
+      "passed": true
+    }
+  },
+  "zoom": true,
+  "build": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "lint": {
+    "passed": true,
+    "scope": "Shared UI and development workspaces, planning/assessment modules; syntax and unit checks for changed legacy logic"
+  },
+  "timezone": [
+    {
+      "zone": "Asia/Bangkok",
+      "exitCode": 0
+    },
+    {
+      "zone": "UTC",
+      "exitCode": 0
+    },
+    {
+      "zone": "America/Los_Angeles",
+      "exitCode": 0
+    }
+  ],
+  "visualReview": "Inspected real PC/mobile light/dark screenshots, including result scroll and selected-person trend",
+  "clipboard": "Isolated test double plus fallback; real device clipboard UAT pending",
+  "allPagesReady": false,
+  "productionDataUsed": false,
+  "productionDataWritten": false,
+  "pushed": false,
+  "deployed": false,
+  "limitations": [
+    "No Firebase/Auth/backend SIT or billing/cache/index measurements",
+    "Synthetic data and simulated roles",
+    "Actual Safari/iPhone/Android and team UAT pending",
+    "Assessment mappings require review; no score or SLA inference"
+  ]
+}

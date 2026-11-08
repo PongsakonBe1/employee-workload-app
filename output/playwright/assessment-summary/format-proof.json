@@ -1,0 +1,32 @@
+[
+  {
+    "file": "frontend/app/dev/dashboard/workspace.js",
+    "ASTEquivalent": true,
+    "sha256": "7c6af49b1bf927644214230cbade05eb64f4c211219be37e5f17dd1428f96f74"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/AssessmentReport.js",
+    "ASTEquivalent": true,
+    "sha256": "0ae3a2890cd588f3c1ff0ec574f2a9b8669fef97d5e49bf8a05e82c013835a30"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/PlanningCharts.js",
+    "ASTEquivalent": true,
+    "sha256": "f4c4443ae6294f156fc4347214f28c145c56208d8202b601adb511a75f0488cc"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/TaskCatalog.js",
+    "ASTEquivalent": true,
+    "sha256": "045ced1b0f817dd4b2bf85f9225876c93e894aaebc54acdf83d25974b63c159d"
+  },
+  {
+    "file": "frontend/lib/assessmentPreview.js",
+    "ASTEquivalent": true,
+    "sha256": "1161a8ce1055336fef1ab9263fef7b1e5c2f9ee8a5b6158f177c286f917060e9"
+  },
+  {
+    "file": "frontend/lib/assessmentPreview.test.js",
+    "ASTEquivalent": true,
+    "sha256": "ebeae0562d9afbcb09ca316160f40e6b08ede0d2af5dab32a9a384fc80e48112"
+  }
+]

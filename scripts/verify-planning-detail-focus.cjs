@@ -2,7 +2,7 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
 const name = origin.includes('trycloudflare') ? 'public' : process.argv[3].includes('Chrome') ? 'chrome' : 'edge';
-const output = path.resolve(__dirname, '../output/playwright/dashboard-staff', name);
+const output = path.resolve(__dirname, process.argv[5] === 'assessment-summary' ? '../output/playwright/assessment-summary/regression' : '../output/playwright/dashboard-staff', name);
 const report = { passed: false, errors: [], productionDataUsed: false };
 (async () => {
   const browser = await chromium.launch({ executablePath: process.argv[3] });

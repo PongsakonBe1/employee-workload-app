@@ -1,7 +1,7 @@
 /* Selection, focus and hover acceptance on real UI components. No production I/O. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
-const out=path.resolve(__dirname,process.argv[5]==='dashboard-staff'?'../output/playwright/dashboard-staff/resource-selection-regression':'../output/playwright/resource-selection',origin.startsWith('http://127.0.0.1')?/Google[\\/]Chrome/i.test(process.argv[3])?'chrome':'edge':'public');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(__dirname,process.argv[5]==='assessment-summary'?'../output/playwright/assessment-summary/resource-selection-regression':process.argv[5]==='dashboard-staff'?'../output/playwright/dashboard-staff/resource-selection-regression':'../output/playwright/resource-selection',origin.startsWith('http://127.0.0.1')?/Google[\\/]Chrome/i.test(process.argv[3])?'chrome':'edge':'public');fs.mkdirSync(out,{recursive:true});
 const report={completed:false,origin,checks:[],errors:[],externalRequests:[],states:[],limitations:['Synthetic data only','Automated Chromium/touch emulation is not physical Safari/iPhone or user UAT']};
 const color=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
 const lum=rgb=>rgb.map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,n,i)=>sum+n*[.2126,.7152,.0722][i],0);

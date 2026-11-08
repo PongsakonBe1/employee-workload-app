@@ -6,7 +6,7 @@ const { chromium } = require(process.argv[2]);
 const executablePath = process.argv[3];
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
 const browserName = executablePath.toLowerCase().includes('edge') ? 'edge' : 'chrome';
-const output = path.resolve(__dirname, '../output/playwright/dashboard-staff', origin.includes('trycloudflare') ? 'public' : browserName, ...(process.argv[5] === 'accessibility' ? ['accessibility'] : []));
+const output = path.resolve(__dirname, process.argv[5] === 'assessment-summary' ? '../output/playwright/assessment-summary/regression' : '../output/playwright/dashboard-staff', origin.includes('trycloudflare') ? 'public' : browserName, ...(process.argv[5] === 'accessibility' ? ['accessibility'] : []));
 fs.mkdirSync(output, { recursive: true });
 const report = { origin, cases: [], errors: [], externalRequests: [], networkFailures: [], responseErrors: [], productionDataUsed: false, realDeviceUAT: false };
 let browser, currentPage;

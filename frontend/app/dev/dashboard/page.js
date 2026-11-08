@@ -12,3 +12,5 @@ export default function DashboardPreview() {
   if (process.env.NODE_ENV !== "development") notFound();
   return <PlanningWorkspace mode="dashboard" />;
 }
+
+import "./assessment.css";

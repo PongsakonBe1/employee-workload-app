@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+8 พฤศจิกายน 2569: [ทุกหัวข้อ/สรุปแบบประเมิน/Staff Analytics และแก้ legacy failures](../assessment-summary/README.md) · ไม่มี route ใหม่ · all-pages-ready = false
+
 8 พฤศจิกายน 2569: [ภาพรวมและ Staff Analytics](../dashboard-staff/README.md) — Next 33 routes / dev 9 / feature previews 8; เมนู 8/18 ปลายทาง · all-pages-ready = false
 
 8 พฤศจิกายน 2569: [Flow ทรัพยากร/ประวัติ/CSV ล่าสุด](../resource-detail-flow/README.md)
@@ -16,7 +18,7 @@
 
 | View ที่อนุมัติ | Source ของเดิมใน inventory | Preview ใหม่ | สถานะที่ยืนยันได้ | งานค้างหลัก |
 |---|---|---|---|---|
-| ภาพรวม (dashboard) | /dashboard | /dev/dashboard | Partial — shared ledger/weekly/custom/fiscal/drill/partial-data UI | data adapter/cache/index/Auth จริง และ physical UAT |
+| ภาพรวม (dashboard) | /dashboard | /dev/dashboard | Partial — shared ledger/weekly/custom/fiscal/all tasks/assessment summary/drill/partial-data UI | data adapter/cache/index/Auth จริง และ physical UAT |
 | บันทึกงาน (record) | /admin/record | /dev/record | Partial — flow บันทึกด่วน/กรอกเองและ shared ledger ผ่าน | template จริง/ธุรกรรมบริการจริง/ตารางร่วมยังไม่ครบ |
 | รายการงาน (worklogs) | /worklogs | /dev/history | Partial — list/calendar/details/edit text/delete/Undo/CSV ผ่าน | แก้วัน/เวลา/หัวข้อ, bulk edit, lock/audit จริง |
 | กรอกบันทึกงาน (new-log) | /worklogs/new | /dev/record → กรอกเอง | Partial — catalog เดิมและ validation ผ่าน | persistent draft/server integration |
@@ -24,7 +26,7 @@
 | ตารางเรียน (classrooms) | /admin/classroom-schedules | /dev/calendar | Partial — recurrence/filter/cancel ผ่าน | dedicated manager/PDF import และข้อมูลจริง |
 | จัดการอุปกรณ์ (equipment) | /admin/equipment-items | /dev/equipment | Partial — เพิ่ม/แก้/หยุดใช้/Undo และ Quick Log ร่วมผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | การใช้งานอุปกรณ์ (usage) | /admin/equipment-health | /dev/equipment/usage | Partial — ครั้งยืม/คืน/current outstanding/ID/date/person filters ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
-| Staff Analytics (staff) | /admin/staff-analytics | /dev/staff | Partial — measured counts/person search/CSV/team-wide fiscal JD UI | JD จริง/data adapter/Auth จริง และ physical UAT |
+| Staff Analytics (staff) | /admin/staff-analytics | /dev/staff | Partial — measured counts/count-share charts/person trend/assessment summary/person search/CSV/team-wide fiscal JD UI | JD จริง/data adapter/Auth จริง และ physical UAT |
 | โปรไฟล์ของฉัน (profile) | /profile | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ส่งออกข้อมูล (export) | /export | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ศูนย์ผู้ดูแล (admin) | /admin | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |

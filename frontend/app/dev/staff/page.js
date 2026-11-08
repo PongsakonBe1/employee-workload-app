@@ -12,3 +12,5 @@ export default function StaffPreview() {
   if (process.env.NODE_ENV !== "development") notFound();
   return <PlanningWorkspace mode="staff" />;
 }
+
+import "../dashboard/assessment.css";
