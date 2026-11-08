@@ -1,5 +1,6 @@
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from "firebase/firestore";
 import { db } from "./firebase";
+import { templateCreateFields } from "./templatePayload";
 
 /**
  * ดึง templates ทั้งหมด (admin ใช้)
@@ -89,17 +90,7 @@ export async function getTemplatesForUser(userDepartment) {
 export async function createTemplate(templateData) {
   try {
     const docRef = await addDoc(collection(db, "globalTemplates"), {
-      name: templateData.name,
-      minorTask: templateData.minorTask,
-      mainDuty: templateData.mainDuty,
-      dutyGroup: templateData.dutyGroup || "main",
-      comment: templateData.comment || "",
-      department: templateData.department || null,
-      requireRecipient: templateData.requireRecipient || false,
-      requireComment: templateData.requireComment || false,
-      isSmart: templateData.isSmart || false,
-      isActive: true,
-      usageCount: 0,
+      ...templateCreateFields(templateData),
       createdAt: serverTimestamp(),
       createdBy: templateData.createdBy
     });

@@ -310,7 +310,7 @@ export default function ResourcesWorkspace({
       {mode === "usage" && admin && <GlassButton mode="quick" onClick={() => navigate("/admin/equipment-items")}>ทะเบียนอุปกรณ์</GlassButton>}
     </div></div>
     {mode === "resources" || admin ? <>
-      {canUndoPreview(undo, actor) && <div className="resource-undo" role="region" aria-label="เลิกทำรายการล่าสุด"><span>เปลี่ยนข้อมูลตัวอย่าง {undo.count} รายการ</span><GlassButton mode="quick" onClick={() => {
+      {canUndoPreview(undo, actor) && !undo.kind.startsWith("template-") && <div className="resource-undo" role="region" aria-label="เลิกทำรายการล่าสุด"><span>เปลี่ยนข้อมูลตัวอย่าง {undo.count} รายการ</span><GlassButton mode="quick" onClick={() => {
           try {
             recordLedger.undo(actor, undo.id);
             setStatus("เลิกทำรายการล่าสุดแล้ว");

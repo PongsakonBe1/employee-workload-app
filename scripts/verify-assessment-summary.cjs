@@ -2,7 +2,7 @@
 const fs=require('node:fs'), path=require('node:path'), assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]);
 const origin=process.argv[4]||'http://127.0.0.1:4310', name=origin.includes('trycloudflare')?'public':process.argv[3].includes('Chrome')?'chrome':'edge';
-const output=path.resolve(__dirname,'../output/playwright/assessment-summary',name,...(process.argv[5]==='final'?['final']:[]));fs.mkdirSync(output,{recursive:true});
+const output=path.resolve(__dirname,process.argv[5]==='templates-combo'?'../output/playwright/templates-combo/regression-assessment':'../output/playwright/assessment-summary',name,...(process.argv[5]==='final'?['final']:[]));fs.mkdirSync(output,{recursive:true});
 const report={cases:[],errors:[],httpErrors:[],productionDataUsed:false,clipboard:'Isolated test double plus fallback; no OS clipboard reads or writes',realDeviceUAT:false};
 let browser;
 const dialog=p=>p.locator('dialog[open]');

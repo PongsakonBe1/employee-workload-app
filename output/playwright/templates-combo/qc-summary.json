@@ -1,0 +1,142 @@
+{
+  "phase": "Templates and Combo shared with Quick Log",
+  "branch": "codex/templates-combo-flow",
+  "date": "2026-11-09",
+  "completedWithinSyntheticScope": true,
+  "unit": {
+    "passed": 342,
+    "total": 342,
+    "skipped": 0,
+    "failed": 0,
+    "evidence": "unit-full.json"
+  },
+  "acceptance": {
+    "edge": {
+      "passed": 7,
+      "total": 7,
+      "evidence": "edge/final/report.json",
+      "browserVersion": "156.0.4314.58"
+    },
+    "chrome": {
+      "passed": 7,
+      "total": 7,
+      "evidence": "chrome/final/report.json",
+      "browserVersion": "156.0.8078.81"
+    },
+    "public": {
+      "passed": 7,
+      "total": 7,
+      "evidence": "public/final/report.json",
+      "browserVersion": "156.0.4314.58"
+    }
+  },
+  "pagination": {
+    "edge": {
+      "passed": true,
+      "evidence": "edge/pagination-report.json"
+    },
+    "chrome": {
+      "passed": true,
+      "evidence": "chrome/pagination-report.json"
+    },
+    "public": {
+      "passed": true,
+      "evidence": "public/pagination-report.json"
+    }
+  },
+  "regression": {
+    "record": {
+      "passed": 11,
+      "total": 11,
+      "browser": "Edge"
+    },
+    "assessment": {
+      "passed": 10,
+      "total": 10,
+      "browser": "Chrome"
+    }
+  },
+  "nativeZoom200": true,
+  "compatibilityExport": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "staticChecks": [
+    {
+      "command": "node node_modules/eslint/bin/eslint.js --config scripts/ui-eslint.config.mjs frontend/app/dev/templates frontend/app/dev/record/workspace.js frontend/app/dev/record/store.js frontend/app/dev/record/templateFixtures.js frontend/app/dev/history/workspace.js frontend/app/dev/resources/workspace.js frontend/lib/templatePreview.js frontend/lib/templatePayload.js frontend/lib/previewLedger.js frontend/lib/equipmentPreview.js frontend/lib/previewNavigation.js",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-templates-combo.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-template-pagination.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-ui-zoom.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-record-glass.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-assessment-summary.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/check-ui-build.mjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/ui-eslint.config.mjs",
+      "passed": true
+    }
+  ],
+  "localWidths": [
+    375,
+    390,
+    430,
+    768,
+    900,
+    901,
+    1440
+  ],
+  "publicWidths": [
+    390,
+    1440
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "coverage": {
+    "nextPageRoutes": 34,
+    "developmentRoutes": 10,
+    "featurePreviews": 9,
+    "featureMenuDestinations": "9/18",
+    "allPagesReady": false
+  },
+  "preview": "https://northwest-revised-domains-varies.trycloudflare.com/dev/templates",
+  "initialPublicAttempt": "Failed on a 502 script chunk; full rerun passed without retry suppression.",
+  "productionDataUsed": false,
+  "realFirebaseAuthSIT": false,
+  "realDeviceUAT": false,
+  "humanUAT": false,
+  "installedDependencies": false,
+  "pushed": false,
+  "deployed": false,
+  "limitations": [
+    "Synthetic in-memory ledger resets on refresh",
+    "Real active/inactive Firestore query and authorization are not integrated",
+    "Chromium touch emulation does not replace physical Safari/iPhone/Android/scanner UAT",
+    "Only the latest shared ledger transaction can be undone"
+  ]
+}

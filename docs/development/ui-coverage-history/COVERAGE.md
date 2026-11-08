@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [เทมเพลตและ Combo ร่วมกับ Quick Log](../templates-combo/README.md) — Next 34 routes / dev 10 / feature previews 9; เมนู 9/18 ปลายทาง · all-pages-ready = false
+
 8 พฤศจิกายน 2569: [ทุกหัวข้อ/สรุปแบบประเมิน/Staff Analytics และแก้ legacy failures](../assessment-summary/README.md) · ไม่มี route ใหม่ · all-pages-ready = false
 
 8 พฤศจิกายน 2569: [ภาพรวมและ Staff Analytics](../dashboard-staff/README.md) — Next 33 routes / dev 9 / feature previews 8; เมนู 8/18 ปลายทาง · all-pages-ready = false
@@ -31,7 +33,7 @@
 | ส่งออกข้อมูล (export) | /export | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ศูนย์ผู้ดูแล (admin) | /admin | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | จัดการผู้ใช้ (users) | /admin/users | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
-| บันทึกด่วนและ Combo (templates) | /admin/templates | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
+| บันทึกด่วนและ Combo (templates) | /admin/templates | /dev/templates | Partial — shared catalog/create/edit/deactivate/Undo/role/filter/explicit Combo selection และ snapshot เดิมผ่าน | collection/query/Auth จริง และ physical UAT |
 | จัดการระบบ (system) | /admin/system | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
 | ตั้งค่า (settings) | /admin/settings | /dev/ui และ AppearanceSettings | เฉพาะ appearance ร่วมผ่าน | system settings ส่วนที่เหลือยังเป็นหน้าเดิม |
 | ประวัติระบบ (audit) | /admin/audit-logs | — | ยังไม่ได้ย้าย feature UI; มีเพียงต้นแบบ/หน้าเดิม | ย้ายตาม Review + role/empty/error/data flows และ tests |
@@ -58,6 +60,6 @@ Anonymous redirect smoke ผ่าน 21/21 routes ที่ใช้สิท�
 ## เงื่อนไขที่ยังปิด gate
 
 - หลาย feature UI ยังไม่ย้ายตามตารางข้างบน
-- Full unit suite ยังมี baseline failures เดิม 8 ข้อ
+- Baseline failures เดิม 8 ข้อแก้แล้วในเฟส assessment-summary; ชุดล่าสุด 342/342 ผ่าน แต่ยังไม่ใช่หลักฐานว่าทุก feature flow ครบ
 - ยังไม่มี SIT กับ Firebase/Auth/backend จริงตามขอบเขต repository-only
 - ยังไม่มี UAT ของทีมและ physical Safari/iPhone/Android/เครื่องสแกน

@@ -11,7 +11,7 @@ export const EQUIPMENT_CONDITIONS = {
   unknown: "ยังไม่ระบุ"
 };
 export const canManageEquipment = actor => Boolean(actor?.id && ["admin", "superadmin"].includes(actor.role));
-export const canUndoPreview = (undo, actor) => Boolean(undo && actor?.id && ["staff", "admin", "superadmin"].includes(actor.role) && (undo.kind.startsWith("device-") ? canManageEquipment(actor) : actor.role !== "staff" || undo.actorId === actor.id));
+export const canUndoPreview = (undo, actor) => Boolean(undo && actor?.id && ["staff", "admin", "superadmin"].includes(actor.role) && (/^(device|template)-/.test(undo.kind) ? canManageEquipment(actor) : actor.role !== "staff" || undo.actorId === actor.id));
 export function normalizeEquipment(item) {
   const condition = Object.hasOwn(EQUIPMENT_CONDITIONS, item.condition) ? item.condition : item.available === false ? "unknown" : "normal";
   return {

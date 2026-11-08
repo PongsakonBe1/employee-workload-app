@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "label": "Role guard, search, kind/status filters and non-writing row selection",
+      "passed": true
+    },
+    {
+      "label": "Edit existing Combo: new item/reorder/requirements flow into Quick Log, with no preselection and real source counts",
+      "passed": true
+    },
+    {
+      "label": "Create repeated-task Combo, deactivate/reactivate through Undo and preserve the historical two-row count",
+      "passed": true
+    },
+    {
+      "label": "Standard templates apply optional/required fields and static detail; edits do not rewrite prior worklogs",
+      "passed": true
+    },
+    {
+      "label": "Validation/failure retains drafts; retry creates once; Smart and mandatory phone fields remain protected",
+      "passed": true
+    },
+    {
+      "label": "Mobile/PC light-dark matrix, checkbox sizing, editor add/remove focus and cancel return paths",
+      "passed": true
+    },
+    {
+      "label": "Keyboard focus/inactive selection and reduced motion/forced colors retain visible semantic status",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "productionDataUsed": false,
+  "realAuthSIT": false,
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.8078.81",
+  "completed": true
+}

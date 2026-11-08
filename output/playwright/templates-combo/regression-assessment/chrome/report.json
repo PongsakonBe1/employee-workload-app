@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "label": "All minor tasks include zeros; search/group filtering and zero source drill keep the weekly scope",
+      "passed": true,
+      "ms": 9933
+    },
+    {
+      "label": "Assessment counts only current staff; zero differs from unmapped headings; no guessed SLA or scores",
+      "passed": true,
+      "ms": 7693
+    },
+    {
+      "label": "Three fiscal rounds and new-hire dates remain explicit, with fiscal/cross-year and dirty-draft validation",
+      "passed": true,
+      "ms": 7073
+    },
+    {
+      "label": "Admin selects an exact employee; source/back and Escape restore keyboard focus to the correct trigger",
+      "passed": true,
+      "ms": 4960
+    },
+    {
+      "label": "Shared mapping moves evidence once, retains ambiguous tasks and updates the staff distribution",
+      "passed": true,
+      "ms": 9862
+    },
+    {
+      "label": "Partial report blocks copy, load-more reconciles totals, and clipboard failure provides selectable text",
+      "passed": true,
+      "ms": 5297
+    },
+    {
+      "label": "Actual Combo with repeated minorTask reconciles ledger, overview and assessment without deduplicating children",
+      "passed": true,
+      "ms": 8211
+    },
+    {
+      "label": "Staff count/share charts preserve raw totals and person trend drills reconcile with source records",
+      "passed": true,
+      "ms": 7171
+    },
+    {
+      "label": "PC/mobile light-dark layouts keep all-task controls, assessment dates and report sources inside the viewport",
+      "passed": true,
+      "ms": 99053
+    },
+    {
+      "label": "Reduced motion/forced colors retain chart labels and a keyboard-operable assessment report",
+      "passed": true,
+      "ms": 3427
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "productionDataUsed": false,
+  "clipboard": "Isolated test double plus fallback; no OS clipboard reads or writes",
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.8078.81",
+  "completed": true
+}

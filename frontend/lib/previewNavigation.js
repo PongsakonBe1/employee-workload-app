@@ -1,4 +1,5 @@
 const destinations = {
+  "/admin/templates": "/dev/templates",
   "/dashboard": "/dev/dashboard",
   "/admin/staff-analytics": "/dev/staff",
   "/worklogs/new": "/dev/record",

@@ -9,13 +9,14 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassControls";
 import { useAppearance } from "../../../components/ui/AppearanceProvider";
 import { ReviewSymbol } from "../../../components/ui/ReviewSymbol";
-import { manualRecordEntry, phoneRecordEntry, assignedRecordEntry, comboRecordEntries } from "../../../lib/recordPreview";
+import { manualRecordEntry } from "../../../lib/recordPreview";
 import { combos, people, schedule, tasks } from "./fixtures";
 import { recordLedger, useRecordLedger } from "./store";
 import { canViewPreviewLog } from "../../../lib/previewLedger";
 import { canBorrowEquipment, canReturnEquipment, canUndoPreview, equipmentState } from "../../../lib/equipmentPreview";
 import { roomWorklog, deviceWorklog, roomState } from "../../../lib/resourceWorklog";
 import { previewDestination } from "../../../lib/previewNavigation";
+import { previewTemplateEntries } from "../../../lib/templatePreview";
 import { LoanFields } from "../resources/LoanFields";
 
 const deviceIcons = { headphones: Headphones, plug: Plug, usb: Usb };
@@ -52,6 +53,9 @@ export default function RecordPreview() {
   const { data, undo, revision } = useRecordLedger();
   const [status, setStatus] = useState("");
   const [dialog, setDialog] = useState(null), [query, setQuery] = useState(""), [deviceId, setDeviceId] = useState(null);
+  const [openedTemplate, setOpenedTemplate] = useState(null), [templateReview, setTemplateReview] = useState([]);
+  const [quickSearch, setQuickSearch] = usePreviewState("record.quickSearch", "");
+  const reviewHeading = useRef(null);
   const [selected, setSelected] = useState([]), [recipient, setRecipient] = useState(""), [notes, setNotes] = useState("");
   const [step, setStep] = useState("edit"), [error, setError] = useState(""), [selectedLog, setSelectedLog] = useState(null);
   const [manual, setManual] = usePreviewState("record.manual", { taskId: tasks[0].id, recipient: "", notes: "" });
@@ -60,7 +64,10 @@ export default function RecordPreview() {
   const [manualField, setManualField] = useState(null), [manualReview, setManualReview] = useState(null);
   const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualDateRef = useRef(null), manualTimeRef = useRef(null), taskSearchRef = useRef(null), requestId = useRef(null), expectedRevision = useRef(revision);
   const person = people.find(item => item.id === personId), task = tasks.find(item => item.id === manual.taskId) || tasks[0];
-  const device = data.devices.find(item => item.id === deviceId), combo = combos[dialog];
+  const activeQuickItems = data.templates.filter(item=>item.isActive && item.name.toLocaleLowerCase().includes(quickSearch.trim().toLocaleLowerCase())).sort((a,b)=>a.order-b.order || a.name.localeCompare(b.name,"th")).map(item=>({...quickItems.find(core=>core.id===item.id),id:item.id,title:item.name,symbol:item.symbol,tone:item.tone || "blue",count:item.isCombo ? item.comboItems.length : null,hint:item.isCombo?"เลือกเฉพาะงานที่ทำ":item.isSmart?"เลือกห้องหรืออุปกรณ์":"กรอกข้อมูลแล้วตรวจรายการ"}));
+  const pageCount = Math.max(1,Math.ceil(activeQuickItems.length/6)), currentQuickPage = Math.min(quickPage,pageCount-1);
+  const device = data.devices.find(item => item.id === deviceId), combo = openedTemplate?.isCombo && dialog === openedTemplate.id ? {title:openedTemplate.name,tasks:openedTemplate.comboItems.map(item=>item.name),requireRecipient:openedTemplate.requireRecipient} : null;
+  const templateStandard = openedTemplate && dialog===openedTemplate.id && !openedTemplate.isCombo && !openedTemplate.isSmart && !["phone","assigned"].includes(openedTemplate.action);
   const DeviceIcon = device ? deviceIcons[device.kind] : Headphones;
   const floor = dialog === "rooms3" ? "3" : "4";
   const deviceDialog = ["headphones", "plug", "usb"].includes(dialog);
@@ -78,14 +85,18 @@ export default function RecordPreview() {
   function focusField(ref) {
     requestAnimationFrame(() => { ref.current?.focus({ preventScroll: true });ref.current?.scrollIntoView({ block: "center", behavior: "instant" }); });
   }
+  useEffect(()=>{if(step === "review") reviewHeading.current?.focus();},[step]);
   function openDialog(value) {
+    setOpenedTemplate(data.templates.find(item=>item.id===value && item.isActive) || null);setTemplateReview([]);
     requestId.current = crypto.randomUUID();expectedRevision.current = revision;
     setError("");setQuery("");setSelected([]);setRecipient("");setNotes("");setStep("edit");setDeviceId(null);setReturnCondition("unknown");setDialog(value);
     if (value === "datetime") setDateDraft(dateTime);
   }
   function commit(entries) {
     try {
-      const result = recordLedger.transact({ actor, requestId: requestId.current, expectedRevision: expectedRevision.current, entries: entries.map(entry => ({ ...entry, ...dateTime, employeeId: person.id, person: person.displayName, minorTask: entry.minorTask || entry.title, recipient: entry.recipient || "", comment: entry.comment || entry.detail || "" })) });
+      const source = openedTemplate && dialog === openedTemplate.id ? openedTemplate : null;
+      if(entries.some(entry=>(entry.comment || "").length>500)) throw Error("รายละเอียดรวมไม่เกิน 500 ตัวอักษร");
+      const result = recordLedger.transact({ actor, requestId: requestId.current, expectedRevision: expectedRevision.current, entries: entries.map(entry => ({ ...entry, ...(source?{templateId:source.id,templateVersion:source.version,templateNameAtRecord:source.name}:{}), ...dateTime, employeeId: person.id, person: person.displayName, minorTask: entry.minorTask || entry.title, recipient: entry.recipient || "", comment: entry.comment || entry.detail || "" })) });
       setDialog(null);setStatus(`บันทึกตัวอย่าง ${result.count} รายการแล้ว`);return true;
     } catch (failure) { setError(failure.message);setStatus(failure.message);return false; }
   }
@@ -98,7 +109,9 @@ export default function RecordPreview() {
   function reviewCombo(event) {
     event.preventDefault();
     if (!selected.length) { setError("เลือกอย่างน้อย 1 งานที่ทำจริง");focusField(firstChoiceRef);return; }
-    if (!recipient.trim()) { setError("ระบุผู้รับบริการก่อนตรวจรายการ");focusField(recipientRef);return; }
+    if (openedTemplate.requireRecipient && !recipient.trim()) { setError("ระบุผู้รับบริการก่อนตรวจรายการ");focusField(recipientRef);return; }
+    if (openedTemplate.requireComment && !notes.trim()) { setError("ระบุรายละเอียดเพิ่มเติม");focusField(notesRef);return; }
+    try { setTemplateReview(previewTemplateEntries(openedTemplate, selected, recipient, notes, dateTime)); } catch(failure) { setError(failure.message);return; }
     setError("");setStep("review");
   }
   function submitDevice(event) {
@@ -115,7 +128,7 @@ export default function RecordPreview() {
     requestId.current = crypto.randomUUID();expectedRevision.current = revision;setError("");
     setManualError("");setManualField(null);setManualReview(result.entry);setDialog("manualReview");
   }
-  const dialogTitle = dialog?.startsWith("rooms") ? `เลือกห้อง ชั้น ${floor}` : deviceDialog ? device ? `${device.student ? "คืน" : "ยืม"}${device.name}` : quickItems.find(item => item.id === dialog).title : combo?.title || ({ datetime: "วันที่และเวลา", task: "เลือกหัวข้อรอง", person: "ผู้ปฏิบัติงาน", phone: "รับสายโทรศัพท์", assigned: "งานที่ได้รับมอบหมาย", manualReview: "ตรวจรายการก่อนบันทึก", history: "ประวัติงานตัวอย่าง", log: selectedLog?.title, schedule: "ตารางวันที่เลือก", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const dialogTitle = dialog?.startsWith("rooms") ? `เลือกห้อง ชั้น ${floor}` : deviceDialog ? device ? `${device.student ? "คืน" : "ยืม"}${device.name}` : quickItems.find(item => item.id === dialog).title : combo?.title || (templateStandard ? openedTemplate.name : null) || (["phone","assigned"].includes(dialog) ? openedTemplate?.name : null) || ({ datetime: "วันที่และเวลา", task: "เลือกหัวข้อรอง", person: "ผู้ปฏิบัติงาน", phone: "รับสายโทรศัพท์", assigned: "งานที่ได้รับมอบหมาย", manualReview: "ตรวจรายการก่อนบันทึก", history: "ประวัติงานตัวอย่าง", log: selectedLog?.title, schedule: "ตารางวันที่เลือก", notifications: "การแจ้งเตือน" }[dialog] || "");
   const visibleTasks = tasks.filter(item => `${item.label} ${item.major} ${item.label === "คุมสอบ DL" ? "Digital Literacy" : ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
   return <WorkspaceFrame
@@ -182,12 +195,13 @@ export default function RecordPreview() {
             </button>
           </div>
           <div hidden={mode !== "quick"}>
+            <label className="ui-field"><span>ค้นหาบันทึกด่วน</span><input className="apple-input" type="search" aria-label="ค้นหาบันทึกด่วน" value={quickSearch} onChange={event=>{setQuickSearch(event.target.value);setQuickPage(0);}} /></label>
             <div className="record-quick-grid">
-              {quickItems.slice(quickPage * 6, quickPage * 6 + 6).map(({ id, title, hint, tone, count }) => <button
+              {activeQuickItems.slice(currentQuickPage * 6, currentQuickPage * 6 + 6).map(({ id, title, hint, tone, count, symbol }) => <button
                 key={id} type="button"
                 className="record-quick-card" onClick={() => openDialog(id)}
               >
-                <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={id.startsWith("rooms") ? "door" : id === "headphones" ? "resources" : id === "assigned" ? "history" : id} size={29} /></span>
+                <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={symbol || "templates"} size={29} /></span>
                 {count && <span className="record-quick-count">
                   {count}
                   {' '}
@@ -197,22 +211,23 @@ export default function RecordPreview() {
                 <small>{hint}</small>
               </button>)}
             </div>
+            {!activeQuickItems.length && <p className="ui-caption">ไม่พบบันทึกด่วนตรงกับคำค้นหาหรือสถานะเปิดใช้</p>}
             <div className="record-pagination" aria-label="หน้าบันทึกด่วน">
               <button
-                type="button" disabled={quickPage === 0}
-                onClick={() => setQuickPage(0)}
+                type="button" disabled={currentQuickPage === 0}
+                onClick={() => setQuickPage(currentQuickPage-1)}
               >
                 <ChevronLeft size={16} aria-hidden="true" />
                 ก่อนหน้า
               </button>
               <span>
-                {quickPage + 1}
+                {currentQuickPage + 1}
                 {' '}
-                / 2
+                / {pageCount}
               </span>
               <button
-                type="button" disabled={quickPage === 1}
-                onClick={() => setQuickPage(1)}
+                type="button" disabled={currentQuickPage >= pageCount-1}
+                onClick={() => setQuickPage(currentQuickPage+1)}
               >
                 ถัดไป
                 <ChevronRight size={16} aria-hidden="true" />
@@ -257,7 +272,7 @@ export default function RecordPreview() {
             <small>ตารางตัวอย่างสำหรับตรวจแบบ ไม่ใช่ตารางจริง</small>
           </details>
         </section>
-        {canUndoPreview(undo, actor) && <div
+        {canUndoPreview(undo, actor) && !undo.kind.startsWith("template-") && <div
           className="record-undo" role="region"
           aria-label="เลิกทำรายการล่าสุด"
         >
@@ -394,7 +409,7 @@ export default function RecordPreview() {
       title={dialogTitle} className={`record-dialog ${dialog?.startsWith("rooms") ? "record-room-dialog" : ""}`}
       description={dialog?.startsWith("rooms") ? "กดเปิดหรือปิดห้องเพื่อบันทึกทันที แล้วเลิกทำได้จากหน้าบันทึก" : "ข้อมูลสังเคราะห์สำหรับตรวจแบบ — ไม่มีการบันทึกไปยังระบบจริง"}
     >
-      {error && (!["phone", "assigned", "account", "software", "headphones", "plug", "usb"].includes(dialog) || (combo && step === "review")) && <p className="record-error" role="alert">{error}</p>}
+      {error && ((!combo && !["phone", "assigned", "account", "software", "headphones", "plug", "usb"].includes(dialog)) || (combo && step === "review")) && <p className="record-error" role="alert">{error}</p>}
       {dialog?.startsWith("rooms") && <div className="record-room-grid">
         {data.rooms.filter(room => room.floor === floor).map(room => { const Icon = room.open ? DoorOpen : DoorClosed;return <button
           key={room.id} type="button"
@@ -491,15 +506,16 @@ export default function RecordPreview() {
         <label className="ui-field record-recipient">
           <span>
             ผู้รับบริการ
-            <small>จำเป็น</small>
+            <small>{openedTemplate?.requireRecipient ? "จำเป็น" : "ถ้ามี"}</small>
           </span>
           <input
-            className="apple-input" name="record-combo-recipient"
+            className="apple-input" name="record-combo-recipient" maxLength={50}
             value={recipient} ref={recipientRef}
-            aria-required="true" aria-invalid={Boolean(error) && !recipient.trim()}
+            aria-required={openedTemplate?.requireRecipient} aria-invalid={Boolean(error) && openedTemplate?.requireRecipient && !recipient.trim()}
             aria-describedby="record-combo-error" onChange={event => { setRecipient(event.target.value);setError(""); }}
           />
         </label>
+        <label className="ui-field"><span>รายละเอียดเพิ่มเติม {openedTemplate?.requireComment ? "(จำเป็น)" : "(ถ้ามี)"}</span><textarea className="apple-input" aria-label="รายละเอียด Combo" value={notes} ref={notesRef} maxLength={500} onChange={event=>{setNotes(event.target.value);setError("");}} /></label>
         <p
           className="record-error" id="record-combo-error"
           role="alert"
@@ -518,37 +534,43 @@ export default function RecordPreview() {
         </div>
       </form>}
       {combo && step === "review" && <div>
-        <p className="record-review-count">
+        <p className="record-review-count" ref={reviewHeading} tabIndex={-1}>
           {selected.length}
           {' '}
           <span>รายการที่เลือก</span>
         </p>
         <p className="ui-caption">
           ผู้รับบริการ:
-          {recipient}
+          {recipient || "ไม่ระบุ"}
           {' '}
           ·
           {dateTime.time}
         </p>
         <ul className="record-review-list">
-          {selected.map(i => <li key={i}>
+          {templateReview.map((entry, i) => <li key={i}>
             <Check size={16} aria-hidden="true" />
-            {combo.tasks[i]}
+            <span><strong>{entry.title}</strong><small style={{display:"block"}}>{entry.minorTask}</small>{entry.comment !== entry.title && <span style={{display:"block"}}>{entry.comment}</span>}</span>
           </li>)}
         </ul>
         <div className="record-form-actions">
-          <GlassButton mode={glassMode} onClick={() => setStep("edit")}>
+          <GlassButton mode={glassMode} onClick={() => {setStep("edit");requestAnimationFrame(()=>firstChoiceRef.current?.focus());}}>
             <ChevronLeft size={16} aria-hidden="true" />
             แก้ไขรายการ
           </GlassButton>
           <GlassButton
             mode={glassMode} variant="prominent"
-            onClick={() => { try { commit(comboRecordEntries(combo, selected, recipient, dateTime)); } catch (failure) { setError(failure.message); } }}
+            onClick={() => commit(templateReview)}
           >
             {`บันทึก ${selected.length} รายการ`}
           </GlassButton>
         </div>
       </div>}
+      {templateStandard && step === "edit" && <form noValidate onSubmit={event=>{event.preventDefault();try{setTemplateReview(previewTemplateEntries(openedTemplate,[],recipient,notes,dateTime));setError("");setStep("review");}catch(failure){setError(failure.message);focusField(failure.field === "recipient" ? recipientRef : notesRef);}}}>
+        <p className="ui-caption">{openedTemplate.minorTask}{openedTemplate.comment ? " · "+openedTemplate.comment : ""}</p>
+        <label className="ui-field"><span>ผู้รับบริการ {openedTemplate.requireRecipient ? "(จำเป็น)" : "(ถ้ามี)"}</span><input className="apple-input" name="template-recipient" ref={recipientRef} value={recipient} maxLength={50} onChange={event=>setRecipient(event.target.value)} /></label>
+        <label className="ui-field"><span>รายละเอียดเพิ่มเติม {openedTemplate.requireComment ? "(จำเป็น)" : "(ถ้ามี)"}</span><textarea className="apple-input" aria-label="รายละเอียดเทมเพลต" ref={notesRef} value={notes} maxLength={500} onChange={event=>setNotes(event.target.value)} /></label><GlassButton mode={glassMode} type="submit" variant="prominent">ตรวจ 1 รายการ</GlassButton>
+      </form>}
+      {templateStandard && step === "review" && <section><h3 ref={reviewHeading} tabIndex={-1}>ตรวจ 1 รายการ</h3><p>{templateReview[0]?.minorTask}</p><p>{templateReview[0]?.recipient || "ไม่ระบุผู้รับบริการ"}</p><p>{templateReview[0]?.comment || "ไม่ระบุรายละเอียด"}</p><div className="record-form-actions"><GlassButton mode={glassMode} onClick={()=>{setStep("edit");requestAnimationFrame(()=>recipientRef.current?.focus());}}>แก้ไขรายการ</GlassButton><GlassButton mode={glassMode} variant="prominent" onClick={()=>commit(templateReview)}>บันทึก 1 รายการ</GlassButton></div></section>}
       {dialog === "task" && <div>
         <label className="ui-field">
           <span>ค้นหาหัวข้อรอง</span>
@@ -629,10 +651,11 @@ export default function RecordPreview() {
           <GlassButton mode={glassMode} variant="prominent" onClick={() => { if (commit([manualReview])) { setManual(current => ({ ...current, notes: "", recipient: "" }));setManualReview(null); } }}>ยืนยันบันทึก</GlassButton>
         </div>
       </div>}
-      {["phone", "assigned"].includes(dialog) && <form noValidate onSubmit={event => { event.preventDefault();const result = (dialog === "phone" ? phoneRecordEntry : assignedRecordEntry)(recipient, notes, dateTime);if (!result.entry) { setError(result.message);focusField(result.field === "recipient" ? recipientRef : notesRef);return; }commit([result.entry]); }}>
+      {["phone", "assigned"].includes(dialog) && <form noValidate onSubmit={event => { event.preventDefault();try { commit(previewTemplateEntries(openedTemplate, [], recipient, notes, dateTime).map(entry => ({ ...entry, title: entry.minorTask }))); } catch(failure) { setError(failure.message);focusField(failure.field === "recipient" ? recipientRef : notesRef); } }}>
+        <p className="ui-caption">{openedTemplate?.minorTask}{openedTemplate?.comment ? " · " + openedTemplate.comment : ""}</p>
         <label className="ui-field record-recipient">
-          <span>ผู้รับบริการ <small>{dialog === "phone" ? "จำเป็น" : "ถ้ามี"}</small></span>
-          <input className="apple-input" name="record-phone-recipient" ref={recipientRef} value={recipient} aria-required={dialog === "phone"} aria-invalid={dialog === "phone" && Boolean(error) && !recipient.trim()} aria-describedby="record-phone-error" onChange={event => { setRecipient(event.target.value);setError(""); }} />
+          <span>ผู้รับบริการ <small>{openedTemplate?.requireRecipient ? "จำเป็น" : "ถ้ามี"}</small></span>
+          <input className="apple-input" name="record-phone-recipient" maxLength={50} ref={recipientRef} value={recipient} aria-required={openedTemplate?.requireRecipient} aria-invalid={openedTemplate?.requireRecipient && Boolean(error) && !recipient.trim()} aria-describedby="record-phone-error" onChange={event => { setRecipient(event.target.value);setError(""); }} />
         </label>
         <label className="ui-field">
           <span>
@@ -640,7 +663,7 @@ export default function RecordPreview() {
             <small>จำเป็น</small>
           </span>
           <textarea
-            className="apple-input" rows={4}
+            className="apple-input" rows={4} maxLength={500}
             ref={notesRef} value={notes}
             name="record-phone-notes" aria-required="true" aria-invalid={Boolean(error) && (dialog === "assigned" || Boolean(recipient.trim())) && !notes.trim()} aria-describedby="record-phone-error"
             onChange={event => { setNotes(event.target.value);setError(""); }}

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "frontend/app/dev/templates/page.js",
+    "ASTEquivalent": true,
+    "sha256": "2d2c49c9ce8a4778e28efcf0eac62601f62aba5f048e6855e6b136cc9252b7ab"
+  },
+  {
+    "file": "frontend/app/dev/templates/TemplateEditor.js",
+    "ASTEquivalent": true,
+    "sha256": "f00f978fd21592ff7c4ae4770a44ff0b3567b530a74505dceffa80b10d93f007"
+  },
+  {
+    "file": "frontend/app/dev/templates/workspace.js",
+    "ASTEquivalent": true,
+    "sha256": "f54463d2194f50da5b8bded4888ec05242fc22c9da9f11dc99904e5ff9f8a057"
+  },
+  {
+    "file": "frontend/lib/templatePreview.js",
+    "ASTEquivalent": true,
+    "sha256": "a78bf5174d4eecb60abe43561da1d5a9df389da99d67170dd3ad5ee855982a26"
+  },
+  {
+    "file": "frontend/lib/templatePayload.js",
+    "ASTEquivalent": true,
+    "sha256": "18be41e0f9a0735304c051c36fe595f0cfa6fcda9f00f3a340bac7709341db58"
+  },
+  {
+    "file": "frontend/app/dev/record/templateFixtures.js",
+    "ASTEquivalent": true,
+    "sha256": "d6bb518a4d7eb3823f633d207c3e6d7c34eb844add18d9fb2d5d876352cb7b05"
+  }
+]

@@ -1,6 +1,7 @@
 // Isolated in-memory adapter. Never imports Firebase, Auth or a production client.
 import { validCalendarDate } from "./calendarView";
 import { canManageEquipment, canBorrowEquipment, canUndoPreview, equipmentDraft, normalizeEquipment, EQUIPMENT_CONDITIONS } from "./equipmentPreview";
+import { templateFields } from "./templatePreview";
 const copy = value => structuredClone(value);
 const freeze = value => {
   Object.freeze(value);
@@ -15,6 +16,7 @@ export const canManagePreviewLog = (row, actor, now = Date.now()) => canViewPrev
 export function createPreviewLedger(initialData) {
   const base = freeze(copy({
       ...initialData,
+      templates: initialData.templates || [],
       devices: initialData.devices.map(normalizeEquipment)
     })),
     listeners = new Set(),
@@ -56,7 +58,8 @@ export function createPreviewLedger(initialData) {
     requestId,
     expectedRevision = snapshot.revision,
     now = Date.now(),
-    device
+    device,
+    template
   }) {
     if (!actor?.id || !roles.includes(actor.role)) throw Error("ไม่มีสิทธิ์ทำรายการ");
     if (!requestId) throw Error("ต้องมีรหัสคำขอ");
@@ -75,6 +78,12 @@ export function createPreviewLedger(initialData) {
       affected,
       nextCatalog = catalog;
     if (kind === "create") {
+      for (const entry of entries.filter(row => row.templateId)) {
+        const source = before.templates.find(item => item.id === entry.templateId);
+        if (!source?.isActive || entry.templateVersion !== source.version) throw Error("เทมเพลตเปลี่ยนแล้ว กรุณาเปิดใหม่");
+        if (source.requireRecipient && !entry.recipient?.trim() || source.requireComment && !entry.comment?.trim()) throw Error("ข้อมูลที่เทมเพลตกำหนดยังไม่ครบ");
+        if (!source.isSmart && !(source.isCombo ? source.comboItems.map(item => item.minorTask) : [source.minorTask]).includes(entry.minorTask)) throw Error("หัวข้อรองไม่ตรงเทมเพลต");
+      }
       if (!entries.length || entries.some(row => !row.employeeId || actor.role === "staff" && row.employeeId !== actor.id)) throw Error("ผู้ปฏิบัติงานไม่ถูกต้อง");
       if (entries.some(row => !validCalendarDate(row.date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(row.time || "") || !row.minorTask?.trim() || row.requireRecipient && !row.recipient?.trim() || row.requireComment && !row.comment?.trim())) throw Error("ข้อมูลบันทึกงานไม่ครบหรือไม่ถูกต้อง");
       const pendingDevices = copy(before.devices);
@@ -118,6 +127,21 @@ export function createPreviewLedger(initialData) {
           comment: comment.trim(),
           detail: [recipient.trim(), comment.trim()].filter(Boolean).join(" · ")
         } : row);
+      }
+    } else if (["template-create", "template-update", "template-toggle"].includes(kind)) {
+      if (!canManageEquipment(actor)) throw Error("เฉพาะผู้ดูแลที่จัดการเทมเพลตได้");
+      nextCatalog = copy(catalog); logs = before.logs;
+      if (kind === "template-create") {
+        const fields = templateFields(template, before.templates);
+        let id; do { id = `preview-template-${++sequence}`; } while (before.templates.some(item => item.id === id));
+        affected = [{ ...fields, id, isActive: true, version: 1, action: null, symbol: "templates" }];
+        nextCatalog.templates.push(...affected);
+      } else {
+        const current = before.templates.find(item => item.id === ids[0]);
+        if (ids.length !== 1 || !current) throw Error("ไม่พบเทมเพลต");
+        const fields = kind === "template-toggle" ? { isActive: !current.isActive } : templateFields(template, before.templates, current);
+        affected = [{ ...current, ...fields, version: current.version + 1 }];
+        nextCatalog.templates = nextCatalog.templates.map(item => item.id === current.id ? affected[0] : item);
       }
     } else if (["device-create", "device-update", "device-toggle"].includes(kind)) {
       if (!canManageEquipment(actor)) throw Error("เฉพาะผู้ดูแลที่จัดการทะเบียนได้");

@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { createPreviewLedger } from "../../../lib/previewLedger";
 import { initialRooms, initialDevices, initialLogs, people, tasks } from "./fixtures";
+import { initialTemplates } from "./templateFixtures";
 const logs = initialLogs.map(row => {
   const minorTask = row.title === "คุมสอบ Digital Literacy" ? "คุมสอบ DL" : row.title,
     task = tasks.find(item => item.label === minorTask);
@@ -24,6 +25,7 @@ const logs = initialLogs.map(row => {
   };
 });
 export const recordLedger = createPreviewLedger({
+  templates: initialTemplates,
   rooms: initialRooms,
   devices: initialDevices.map(item => ({
     ...item,
