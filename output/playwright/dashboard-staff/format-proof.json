@@ -1,0 +1,32 @@
+[
+  {
+    "file": "frontend/lib/planningPreview.js",
+    "ASTEquivalent": true,
+    "sha256": "156551b7911e47cc5fd049ad773b33925c4019056b50ea97872202a1b6c0a0bb"
+  },
+  {
+    "file": "frontend/lib/planningPreview.test.js",
+    "ASTEquivalent": true,
+    "sha256": "bcbe512af0aa8fe15222165f871e53b9a1f7669714e9b4d84fb047094352cb02"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/workspace.js",
+    "ASTEquivalent": true,
+    "sha256": "9825c1b160be3fea40852d14a1f5dacd61881a22d0a6bde8da482fefc69f2b6c"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/PlanningDialogs.js",
+    "ASTEquivalent": true,
+    "sha256": "0ce944c0cce849a57e395e8fa44818c35fe89db61994b6e231f19bd4bbcd4110"
+  },
+  {
+    "file": "frontend/app/dev/dashboard/page.js",
+    "ASTEquivalent": true,
+    "sha256": "5ff832b75ec85b9b40f0bf3a658249329d315051d1be950983f39da510c35528"
+  },
+  {
+    "file": "frontend/app/dev/staff/page.js",
+    "ASTEquivalent": true,
+    "sha256": "4cc366924178589b9c53041f305acece80ff21916a884879876be868b182ab5c"
+  }
+]

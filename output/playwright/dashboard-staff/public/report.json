@@ -1,0 +1,53 @@
+{
+  "origin": "https://northwest-revised-domains-varies.trycloudflare.com",
+  "cases": [
+    {
+      "name": "Weekly default, exact staff scope, admin totals, source count reconciliation and focused filter layout",
+      "passed": true,
+      "ms": 5753
+    },
+    {
+      "name": "Day/month/quarter/fiscal/custom ranges, previous/next, invalid range and keyboard Escape return focus",
+      "passed": true,
+      "ms": 4462
+    },
+    {
+      "name": "Staff access guard, roster search, person filters, actual CSV and recoverable export failure",
+      "passed": true,
+      "ms": 4364
+    },
+    {
+      "name": "Explicit partial totals, load more, chart/task reconciliation, partial CSV and scope resets",
+      "passed": true,
+      "ms": 6045
+    },
+    {
+      "name": "Team-wide fiscal JD requires 100%, counts unmapped tasks, survives navigation and never inherits across years",
+      "passed": true,
+      "ms": 5412
+    },
+    {
+      "name": "Shared ledger: room Quick Log changes overview/staff totals once; Undo restores counts across navigation",
+      "passed": true,
+      "ms": 6532
+    },
+    {
+      "name": "Light/dark desktop and mobile matrix: period forms, date sizing, staff cards, drill sheets and keyboard",
+      "passed": true,
+      "ms": 78837
+    },
+    {
+      "name": "Reduced motion, solid materials and forced colors retain interactive and readable chart data",
+      "passed": true,
+      "ms": 2616
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "networkFailures": [],
+  "responseErrors": [],
+  "productionDataUsed": false,
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.4314.58",
+  "completed": true
+}

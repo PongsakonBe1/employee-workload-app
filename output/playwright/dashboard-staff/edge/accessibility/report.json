@@ -1,0 +1,16 @@
+{
+  "origin": "http://127.0.0.1:4310",
+  "cases": [
+    {
+      "name": "Reduced motion, solid materials and forced colors retain interactive and readable chart data",
+      "passed": true,
+      "ms": 3483
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "productionDataUsed": false,
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.4314.58",
+  "completed": true
+}

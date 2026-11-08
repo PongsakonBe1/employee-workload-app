@@ -1,0 +1,20 @@
+{
+  "completed": true,
+  "method": "Native browser preference 200%, isolated profiles",
+  "normal": {
+    "innerWidth": 1416,
+    "outerWidth": 1440,
+    "dpr": 1,
+    "rootFont": "16px",
+    "cssZoom": "1",
+    "scrollWidth": 1416
+  },
+  "zoomed": {
+    "innerWidth": 708,
+    "outerWidth": 1440,
+    "dpr": 2,
+    "rootFont": "16px",
+    "cssZoom": "1",
+    "scrollWidth": 708
+  }
+}

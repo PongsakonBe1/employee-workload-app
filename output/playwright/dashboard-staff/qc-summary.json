@@ -1,0 +1,164 @@
+{
+  "date": "2026-11-08",
+  "branch": "codex/dashboard-staff-analytics",
+  "base": "41c3ff9",
+  "scope": [
+    "/dev/dashboard",
+    "/dev/staff"
+  ],
+  "allPagesReady": false,
+  "productionDataUsed": false,
+  "productionDataWritten": false,
+  "pushed": false,
+  "deployed": false,
+  "unitTargeted": {
+    "total": 64,
+    "passed": 64,
+    "failed": 0
+  },
+  "unitFull": {
+    "base": "41c3ff9",
+    "total": 313,
+    "passed": 305,
+    "failed": 8,
+    "newPlanningTests": 12,
+    "sameFailuresAsBaseline": true,
+    "failures": [
+      "analyzeSeasonalPattern should identify outliers correctly",
+      "calculateConsistency should calculate lower consistency for variable daily counts",
+      "calculateRadarMetrics should calculate realistic values",
+      "detectOutliers should detect daily outliers correctly",
+      "getTrendIndicator should return 'up' for > 10% increase",
+      "predictNextPeak academic period fallback should identify next academic period correctly",
+      "predictNextPeak academic period fallback should return exam period for single year data",
+      "validateDate accepts tomorrow (allows 1 day ahead for late-night entries)"
+    ]
+  },
+  "browsers": {
+    "edge": {
+      "completed": true,
+      "cases": 8,
+      "errors": 0,
+      "externalRequests": [],
+      "detailFocus": {
+        "passed": true,
+        "errors": [],
+        "productionDataUsed": false
+      },
+      "explicitSolidMaterial": true
+    },
+    "chrome": {
+      "completed": true,
+      "cases": 8,
+      "errors": 0,
+      "externalRequests": [],
+      "detailFocus": {
+        "passed": true,
+        "errors": [],
+        "productionDataUsed": false
+      },
+      "explicitSolidMaterial": true
+    },
+    "public": {
+      "completed": true,
+      "cases": 8,
+      "errors": 0,
+      "externalRequests": [],
+      "detailFocus": {
+        "passed": true,
+        "errors": [],
+        "productionDataUsed": false
+      },
+      "networkFailures": [],
+      "responseErrors": []
+    }
+  },
+  "reference": {
+    "approvedReview": 10,
+    "cases": [
+      {
+        "width": 390,
+        "composition": {
+          "columns": 1,
+          "width": 350
+        },
+        "modeOptionsMatch": true,
+        "dashboardCompositionMatch": true,
+        "staffPersonDestinationMatch": true
+      },
+      {
+        "width": 900,
+        "composition": {
+          "columns": 2,
+          "width": 634
+        },
+        "modeOptionsMatch": true,
+        "dashboardCompositionMatch": true,
+        "staffPersonDestinationMatch": true
+      },
+      {
+        "width": 1440,
+        "composition": {
+          "columns": 2,
+          "width": 1114
+        },
+        "modeOptionsMatch": true,
+        "dashboardCompositionMatch": true,
+        "staffPersonDestinationMatch": true
+      }
+    ],
+    "errors": [],
+    "differences": [
+      "Shared runtime uses functional QuickLiquid controls and the current approved shell",
+      "Runtime uses the existing two-person ledger, not the prototype six-month demo series",
+      "JD weights start unconfigured because no real weights were verified"
+    ],
+    "productionDataUsed": false,
+    "completed": true
+  },
+  "zoom": {
+    "completed": true,
+    "method": "Native browser preference 200%, isolated profiles",
+    "normal": {
+      "innerWidth": 1416,
+      "outerWidth": 1440,
+      "dpr": 1,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 1416
+    },
+    "zoomed": {
+      "innerWidth": 708,
+      "outerWidth": 1440,
+      "dpr": 2,
+      "rootFont": "16px",
+      "cssZoom": "1",
+      "scrollWidth": 708
+    }
+  },
+  "build": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "regression": {
+    "completed": true,
+    "cases": 5
+  },
+  "lint": {
+    "passed": true,
+    "command": "node node_modules/eslint/bin/eslint.js --config scripts/ui-eslint.config.mjs frontend/components/ui frontend/app/dev/record frontend/app/dev/history frontend/app/dev/calendar frontend/app/dev/resources frontend/app/dev/equipment frontend/app/dev/dashboard frontend/app/dev/staff frontend/lib/planningPreview.js frontend/lib/previewNavigation.js"
+  },
+  "finalChange": "Nested person/task/back and hour/source transition retains modal keyboard focus; targeted reruns in Edge/Chrome/public after the full flow runs",
+  "limitations": [
+    "No Firebase/Auth/backend SIT",
+    "No verified real JD weights",
+    "No actual free-tier read billing/cache/index verification",
+    "No human UAT or physical Safari/iPhone/Android testing"
+  ],
+  "acceptance": "Development scope passed with unchanged legacy unit failures; pending human review"
+}

@@ -1,0 +1,43 @@
+{
+  "approvedReview": 10,
+  "cases": [
+    {
+      "width": 390,
+      "composition": {
+        "columns": 1,
+        "width": 350
+      },
+      "modeOptionsMatch": true,
+      "dashboardCompositionMatch": true,
+      "staffPersonDestinationMatch": true
+    },
+    {
+      "width": 900,
+      "composition": {
+        "columns": 2,
+        "width": 634
+      },
+      "modeOptionsMatch": true,
+      "dashboardCompositionMatch": true,
+      "staffPersonDestinationMatch": true
+    },
+    {
+      "width": 1440,
+      "composition": {
+        "columns": 2,
+        "width": 1114
+      },
+      "modeOptionsMatch": true,
+      "dashboardCompositionMatch": true,
+      "staffPersonDestinationMatch": true
+    }
+  ],
+  "errors": [],
+  "differences": [
+    "Shared runtime uses functional QuickLiquid controls and the current approved shell",
+    "Runtime uses the existing two-person ledger, not the prototype six-month demo series",
+    "JD weights start unconfigured because no real weights were verified"
+  ],
+  "productionDataUsed": false,
+  "completed": true
+}
