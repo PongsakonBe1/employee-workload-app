@@ -2,6 +2,8 @@
 
 Branch `codex/dock-navigation-pilot` · ฐาน `845bf84` · 9 พฤศจิกายน 2569
 
+**แบบล่าสุด:** [Dock ตามเมาส์และ Launchpad เต็มพื้นที่เว็บ](LAUNCHPAD.md) แทนรายการเครื่องมือใน modal ของเฟสก่อน
+
 ปรับการเคลื่อนไหวต่อใน [Dock motion pass](MOTION.md): spring magnification, ไอคอนข้างเคียงเลื่อนรับกัน และหน้าเครื่องมือใช้ชุดไอคอนเดียวกับ Dock
 
 เปิด [หน้าบันทึกงาน](https://northwest-revised-domains-varies.trycloudflare.com/dev/record) หรือ [ปฏิทิน](https://northwest-revised-domains-varies.trycloudflare.com/dev/calendar) เพื่อทดลอง ลิงก์ใช้ได้ขณะเครื่อง develop และ tunnel ทำงาน

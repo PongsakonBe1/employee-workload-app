@@ -1,0 +1,96 @@
+{
+  "completed": true,
+  "cases": [
+    {
+      "width": 1440,
+      "theme": "light",
+      "columns": 6,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "columns": 6,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "columns": 4,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "columns": 4,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "columns": 3,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "columns": 3,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "columns": 3,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "columns": 3,
+      "fullWindow": true,
+      "roleFiltering": true,
+      "searchAndCategories": true,
+      "keyboardAndFocus": true,
+      "draftPreserved": true,
+      "reducedAndSolid": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "physicalIOS": false
+}

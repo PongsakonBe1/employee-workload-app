@@ -13,6 +13,7 @@ import { GlassSelection } from "./GlassSelection";
 import { ReviewSymbol } from "./ReviewSymbol";
 import { SidebarGlassHover } from "./SidebarGlassHover";
 import { DockNavigation } from "./DockNavigation";
+import { WorkspaceLauncher } from "./WorkspaceLauncher";
 import { useAppearance } from "./AppearanceProvider";
 
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
@@ -23,7 +24,6 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   const groups = getWorkspaceNavigation(user.role), all = groups.flatMap(group => group.items), current = activeNavigation(pathname, groups);
   const [collapsed, setCollapsed] = useState(false), [wide, setWide] = useState(false), [scrolled, setScrolled] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(() => groups.find(group => group.id === "tools")?.items.some(entry => entry.id === current));
-  const [toolsOrigin, setToolsOrigin] = useState(null);
   const [dialog, setDialog] = useState(null), [search, setSearch] = useState("");
   const calendar = ["/calendar", "/admin/classroom-schedules", "/admin/dl-exam-schedules"].includes(pathname);
   const compact = !dock && calendar && wide && !collapsed;
@@ -45,21 +45,21 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
   }, []);
   useEffect(() => { setDialog(null); }, [pathname]);
   useEffect(() => {
-    const shortcut = event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault();if (document.querySelector("dialog[open]")) return;setToolsOrigin(null);setSearch("");setDialog("routes"); } };
+    const shortcut = event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault();if (document.querySelector("dialog[open]")) return;setSearch("");setDialog("routes"); } };
     document.addEventListener("keydown", shortcut);return () => document.removeEventListener("keydown", shortcut);
   }, []);
   function navigate(event, href) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button > 0) return;
     setDialog(null);if (onNavigate) { event.preventDefault();onNavigate(href); }
   }
-  function navLink(entry, tooltip = false, launcher = false) {
+  function navLink(entry, tooltip = false) {
     const link = <Link
       key={entry.id} href={entry.href}
       prefetch={false} className="ui-sidebar-link"
       aria-label={entry.label} aria-current={current === entry.id ? "page" : undefined}
       onClick={event => navigate(event, entry.href)}
     >
-      <span className={launcher ? "ui-dock-tile" : "ui-nav-symbol"} data-tone={entry.tone}><ReviewSymbol name={entry.icon} size={20} /></span>
+      <span className="ui-nav-symbol" data-tone={entry.tone}><ReviewSymbol name={entry.icon} size={20} /></span>
       <span className="ui-nav-text">{entry.label}</span>
     </Link>;
     return tooltip ? <Tooltip
@@ -69,7 +69,8 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       {link}
     </Tooltip> : link;
   }
-  const menuItems = [...all, { id: "profile", href: "/profile", label: "โปรไฟล์", icon: "staff", tone: "blue" }, { id: "help", href: "/help", label: "คู่มือการใช้งาน", icon: "audit", tone: "blue" }].filter(entry => entry.label.toLocaleLowerCase("th").includes(search.trim().toLocaleLowerCase("th")));
+  const launcherItems = [...all, { id: "profile", href: "/profile", label: "โปรไฟล์", icon: "staff", tone: "blue" }, { id: "help", href: "/help", label: "คู่มือการใช้งาน", icon: "audit", tone: "blue" }];
+  const menuItems = launcherItems.filter(entry => entry.label.toLocaleLowerCase("th").includes(search.trim().toLocaleLowerCase("th")));
   return <div
     className="ui-workspace" data-workspace
     data-compact={compact} data-sidebar-hidden={collapsed}
@@ -78,7 +79,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
     data-navigation={dock ? "dock" : "sidebar"}
   >
     <a href="#workspace-content" className="ui-skip-link">ข้ามไปเนื้อหา</a>
-    {dock ? <DockNavigation groups={groups} current={current} area={dockArea} collapsed={collapsed} mode={pilotMode} initial={initial} displayName={displayName} onNavigate={navigate} onTools={event=>{const box=event.currentTarget.getBoundingClientRect();setToolsOrigin({x:box.x+box.width/2,y:box.y+box.height/2});setSearch("");setDialog("routes");}} paused={Boolean(dialog)} onAppearance={()=>setDialog("appearance")} onAccount={()=>setDialog("account")} toolsOpen={dialog === "routes" || dialog === "menu"}/> : <aside
+    {dock ? <DockNavigation groups={groups} current={current} area={dockArea} collapsed={collapsed} mode={pilotMode} initial={initial} displayName={displayName} onNavigate={navigate} onTools={()=>{setSearch("");setDialog("routes");}} paused={Boolean(dialog)} onAppearance={()=>setDialog("appearance")} onAccount={()=>setDialog("account")} toolsOpen={dialog === "routes" || dialog === "menu"}/> : <aside
       className="ui-sidebar ui-glass" aria-label="พื้นที่ทำงาน"
       id="workspace-sidebar" hidden={collapsed}
     >
@@ -166,7 +167,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
         />
         <button
           type="button" className="ui-icon-button"
-          aria-label="ค้นหาหน้าและเครื่องมือ" onClick={() => { setToolsOrigin(null);setSearch("");setDialog("routes"); }}
+          aria-label="ค้นหาหน้าและเครื่องมือ" onClick={() => { setSearch("");setDialog("routes"); }}
         >
           <Search size={20} aria-hidden="true" />
         </button>
@@ -225,10 +226,9 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
     >
       <AppearanceSettings />
     </Dialog>
-    <Dialog
+    {dock ? <WorkspaceLauncher open={dialog === "routes" || dialog === "menu"} onClose={() => setDialog(null)} items={launcherItems} current={current} onNavigate={navigate} mode={pilotMode} /> : <Dialog
       open={dialog === "routes" || dialog === "menu"} onClose={() => setDialog(null)}
       title="หน้าและเครื่องมือ" description="ค้นหาปลายทางจากงานที่ต้องการทำ"
-      origin={toolsOrigin} className={dock ? `ui-dock-tools${toolsOrigin ? " ui-dock-tools-anchored" : ""}` : ""}
     >
       <label className="ui-field">
         <span>ค้นหาหน้า</span>
@@ -238,8 +238,8 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           onChange={event => setSearch(event.target.value)}
         />
       </label>
-      <nav className="ui-route-list" aria-label="ผลการค้นหาหน้า">{menuItems.length ? menuItems.map(entry => navLink(entry, false, dock)) : <p className="ui-caption">ไม่พบหน้า ลองใช้คำอื่น</p>}</nav>
-    </Dialog>
+      <nav className="ui-route-list" aria-label="ผลการค้นหาหน้า">{menuItems.length ? menuItems.map(entry => navLink(entry)) : <p className="ui-caption">ไม่พบหน้า ลองใช้คำอื่น</p>}</nav>
+    </Dialog>}
     <Dialog
       open={dialog === "account"} onClose={() => setDialog(null)}
       title="บัญชีและพื้นที่ทำงาน" description={`${displayName} · ${roleLabels[user.role]}`}
@@ -253,7 +253,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           <ClipboardList size={20} aria-hidden="true" />
           ประวัติงาน
         </Link>
-        <button type="button" onClick={() => { setToolsOrigin(null);setSearch("");setDialog("routes"); }}>
+        <button type="button" onClick={() => { setSearch("");setDialog("routes"); }}>
           <Menu size={20} aria-hidden="true" />
           หน้าและเครื่องมือทั้งหมด
         </button>

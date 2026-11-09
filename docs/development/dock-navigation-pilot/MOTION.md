@@ -1,5 +1,7 @@
 # Dock motion pass — ส่งตรวจใน Develop
 
+เอกสารเฟสก่อน: ดูพฤติกรรมล่าสุดและการแก้อาการหน่วงระหว่างลากเมาส์ใน [Dock และ Launchpad](LAUNCHPAD.md)
+
 9 พฤศจิกายน 2569 · branch `codex/dock-navigation-pilot` · ต่อจาก `e0783c2`
 
 ## สิ่งที่ปรับ

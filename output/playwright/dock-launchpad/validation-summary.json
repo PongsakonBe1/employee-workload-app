@@ -1,0 +1,53 @@
+{
+  "unit": {
+    "passed": 368,
+    "failed": 0
+  },
+  "reports": [
+    {
+      "file": "motion/local/chrome/report.json",
+      "passed": true,
+      "checks": 6
+    },
+    {
+      "file": "motion/public/edge/report.json",
+      "passed": true,
+      "checks": 6
+    },
+    {
+      "file": "launcher/local/chrome/report.json",
+      "passed": true,
+      "flows": 8
+    },
+    {
+      "file": "launcher/public/edge/report.json",
+      "passed": true,
+      "flows": 8
+    },
+    {
+      "file": "local/edge/report.json",
+      "passed": true,
+      "flows": 4,
+      "renders": 36
+    },
+    {
+      "file": "regression-record/report.json",
+      "passed": true,
+      "checks": 11
+    },
+    {
+      "file": "regression-calendar/report.json",
+      "passed": true,
+      "checks": 11
+    },
+    {
+      "file": "zoom-report.json",
+      "passed": true
+    }
+  ],
+  "targetedESLintPassed": true,
+  "compatibilityBuildPassed": true,
+  "continuousPointerTracking": "30-frame streams; latest target reaches magnification on next rAF; not an end-to-end hardware latency measurement",
+  "productionDeployed": false,
+  "physicalDeviceUAT": false
+}

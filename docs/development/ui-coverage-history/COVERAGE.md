@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [Dock ตามเมาส์และ Launchpad](../dock-navigation-pilot/LAUNCHPAD.md) — direct pointer tracking, เครื่องมือเต็ม viewport, search/categories/keyboard และ layout 6/4/3 คอลัมน์; ตรวจ stream ระหว่างเมาส์เคลื่อนบน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false
+
 9 พฤศจิกายน 2569: [Dock navigation และไอคอน](../dock-navigation-pilot/README.md) และ [motion pass](../dock-navigation-pilot/MOTION.md) — spring magnification, neighbor displacement, Tools เข้าชุดกับ Dock; PC Dock / Sidebar toggle, มือถือ 4 tabs; ตรวจ 9 previews × PC/mobile × light/dark บน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false
 
 9 พฤศจิกายน 2569: [นำเข้าตารางเรียนจาก PDF](../classroom-pdf-import/README.md) — ติดตั้ง PDF.js และทดสอบ assets จริง local 8 / Cloudflare 4 cases ผ่านแล้ว; เพิ่มพื้นที่ทดลองแยก/Undo แยกชุด และช่วงวันที่ 2/2569 ที่ทีมยืนยัน; ไม่มี route ใหม่; all-pages-ready = false

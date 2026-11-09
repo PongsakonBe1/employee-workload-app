@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
 const name=/chrome.exe$/i.test(process.argv[3])?'chrome':'edge';
-const out=path.resolve('output/playwright',process.argv[5]==='dock-motion-pass'?'dock-motion-pass':'dock-navigation-pilot',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
+const out=path.resolve('output/playwright',['dock-motion-pass','dock-launchpad'].includes(process.argv[5])?process.argv[5]:'dock-navigation-pilot',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
 const report={completed:false,cases:[],errors:[],httpErrors:[],unexpectedOrigins:[],physicalIOS:false};
 const routes=['/dev/record','/dev/history','/dev/calendar','/dev/resources','/dev/equipment','/dev/equipment/usage','/dev/dashboard','/dev/staff','/dev/templates'];
 async function main(){

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { uiDevelopmentEnvironment } from "./dev-ui.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
-const artifactFolder=["resources-ui-refinement","resource-detail-flow","resource-selection","dashboard-staff","assessment-summary","templates-combo","glass-button-roles","liquid-glass-button-pilot","quickliquid-preferred","classroom-pdf-import","dock-navigation-pilot","dock-motion-pass"].includes(process.argv[2])?process.argv[2]:"develop-ui-foundation";
+const artifactFolder=["resources-ui-refinement","resource-detail-flow","resource-selection","dashboard-staff","assessment-summary","templates-combo","glass-button-roles","liquid-glass-button-pilot","quickliquid-preferred","classroom-pdf-import","dock-navigation-pilot","dock-motion-pass","dock-launchpad"].includes(process.argv[2])?process.argv[2]:"develop-ui-foundation";
 const output=path.join(root,"output/playwright",artifactFolder);fs.mkdirSync(output,{recursive:true});
 const result=spawnSync(process.execPath,[path.join(root,"node_modules/next/dist/bin/next"),"build","--no-lint"],{cwd:path.join(root,"frontend"),env:{...process.env,...uiDevelopmentEnvironment,NODE_ENV:"production",UI_BUILD_CHECK:"1"},encoding:"utf8",maxBuffer:8*1024*1024});
 fs.writeFileSync(path.join(output,"build.log"),(result.stdout||"")+(result.stderr||""));

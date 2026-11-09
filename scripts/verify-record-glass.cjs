@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, ['templates-combo','glass-button-roles','liquid-glass-button-pilot','dock-navigation-pilot','dock-motion-pass'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
+const out = path.resolve(__dirname, ['templates-combo','glass-button-roles','liquid-glass-button-pilot','dock-navigation-pilot','dock-motion-pass','dock-launchpad'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
 fs.mkdirSync(out, { recursive: true });
 const report = { url: origin + '/dev/record', completed: false, checks: [], errors: [], blockedOrigins: [], limitations: ['Synthetic in-memory transactions only', 'Chromium touch emulation is not physical Safari/iPhone or Android UAT'] };
 async function main() {
