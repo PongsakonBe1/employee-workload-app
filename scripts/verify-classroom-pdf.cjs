@@ -31,20 +31,30 @@ async function main(){
    await open();await dialog.locator('input[type=file]').setInputFiles({name:'wrong.pdf',mimeType:'application/pdf',buffer:Buffer.from('not a pdf')});await dialog.getByRole('alert').filter({hasText:'ไม่ใช่ PDF'}).waitFor();await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();assert.equal(await page.locator('.cal-undo').count(),0);
    await open();holdReader=true;const loading=new Promise(resolve=>{readerRequested=resolve;});await upload();await loading;await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();holdReader=false;releaseReader();await page.waitForTimeout(300);assert.equal(workerRequests,0,'Cancel during module loading must not start a PDF worker');assert.equal(await page.locator('.cal-undo').count(),0);
    await open();await upload();try {await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor({timeout:20000});}catch(error){report.failure=await dialog.innerText();await page.screenshot({path:path.join(out,'failure.png')});throw error;}
-   const terms=dialog.locator('.cal-import-term');await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');
+   const terms=dialog.locator('.cal-import-term');
+   const confirm=dialog.getByRole('checkbox',{name:'ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว'});
+   await confirm.check();
+   await dialog.getByRole('button',{name:'กำหนดช่วงภาคเรียน',exact:true}).click();
+   assert.equal(await terms.locator('input[type=date]').nth(0).evaluate(el=>el===document.activeElement),true);
+   await terms.locator('input[type=date]').nth(0).fill('2026-11-23');
+   await dialog.getByRole('button',{name:'กำหนดช่วงภาคเรียน',exact:true}).click();
+   assert.equal(await terms.locator('input[type=date]').nth(1).evaluate(el=>el===document.activeElement),true);
+   await page.screenshot({path:path.join(out,`missing-date-${width}-${theme}.png`)});
+   await terms.locator('input[type=date]').nth(1).fill('2026-12-07');
    assert.equal(await dialog.locator('.cal-import-row').count(),2);assert.equal(await dialog.locator('.cal-import-row').first().locator('input[type=time]').nth(0).inputValue(),'17:00');assert.equal(await dialog.locator('.cal-import-row').last().locator('input[type=time]').nth(1).inputValue(),'21:00');
-   const confirm=dialog.getByRole('checkbox',{name:'ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว'});const save=dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true});assert.equal(await save.isDisabled(),true);
+   await dialog.getByRole('button',{name:'ยืนยันการตรวจรายการ',exact:true}).click();assert.equal(await confirm.evaluate(el=>el===document.activeElement),true);
+   const save=dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true});
    await dialog.locator('.cal-import-row').first().getByLabel('ชื่อวิชา / รายละเอียด',{exact:true}).fill('วิชาทดสอบแก้ไข');
    await confirm.check();assert.equal(await save.isEnabled(),true);
    const bounds=await dialog.evaluate(el=>({width:el.getBoundingClientRect().width,viewport:innerWidth,scroll:el.scrollWidth,client:el.clientWidth,theme:document.documentElement.dataset.uiTheme}));assert.ok(bounds.width<=width);assert.ok(bounds.scroll<=bounds.client+1);assert.equal(bounds.theme,theme);
    if(width===390)for(const input of await dialog.locator('input[type=date],input[type=time]').all()) assert.ok(await input.evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=16));
    await dialog.locator('.cal-import-rows').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,`preview-${width}-${theme}.png`)});
    await save.click();await page.locator('.cal-undo').filter({hasText:'นำเข้า 2 ตารางรายสัปดาห์แล้ว'}).waitFor();
-   await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');await dialog.locator('.cal-form-error').filter({hasText:'ซ้ำหรือชน'}).first().waitFor();assert.equal(await dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true}).isDisabled(),true);await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();
+   await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');await dialog.locator('.cal-form-error').filter({hasText:'ซ้ำหรือชน'}).first().waitFor();await dialog.getByRole('button',{name:'ตรวจจุดที่ต้องแก้',exact:true}).click();assert.equal(await dialog.locator('.cal-import-row[data-issue=true]').first().evaluate(el=>el===document.activeElement),true);assert.equal(await dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true}).count(),0);await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();
    await page.locator('.cal-undo').getByRole('button',{name:'เลิกทำ',exact:true}).click();assert.equal(await page.locator('.cal-undo').count(),0);
    await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');assert.equal(await dialog.locator('.cal-form-error').count(),0);await page.keyboard.press('Escape');
    await page.locator('.cal-inspector summary').click();await page.locator('.cal-inspector select').selectOption('staff');assert.equal(await page.getByRole('button',{name:'นำเข้าตาราง',exact:true}).isDisabled(),true);
-   report.checks.push({width,theme,status:'passed',tests:['invalid signature/cancel','cancel during deferred reader load','real PDF worker and merged slots','gray annotation ignored','edit/explicit dates/confirm','atomic commit','duplicate prevention','Undo restores importability','staff guard','input 16px and no overflow']});await ctx.close();
+   report.checks.push({width,theme,status:'passed',tests:['invalid signature/cancel','cancel during deferred reader load','real PDF worker and merged slots','gray annotation ignored','missing-date action scrolls/focuses exact start/end','confirmation action focuses checkbox','edit/explicit dates/confirm','atomic commit','duplicate prevention with actionable focus','Undo restores importability','staff guard','input 16px and no overflow']});await ctx.close();
   }
   assert.deepEqual(report.errors,[]);assert.deepEqual(report.externalRequests,[]);assert.deepEqual(report.httpErrors,[]);report.completed=true;
  }finally{await browser.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));}

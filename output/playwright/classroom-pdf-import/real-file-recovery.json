@@ -1,0 +1,28 @@
+{
+  "completed": true,
+  "localOnly": true,
+  "screenshotsCaptured": false,
+  "identitiesSaved": false,
+  "cases": [
+    {
+      "width": 390,
+      "parsedRows": 25,
+      "focusedMissingDate": true,
+      "conflictsWithFixtures": 4,
+      "partialSelectionImported": 21,
+      "completeFileImportedWithoutFixtures": 25,
+      "undo": true,
+      "testDatesExplicit": true
+    },
+    {
+      "width": 1440,
+      "parsedRows": 25,
+      "focusedMissingDate": true,
+      "conflictsWithFixtures": 4,
+      "partialSelectionImported": 21,
+      "completeFileImportedWithoutFixtures": 25,
+      "undo": true,
+      "testDatesExplicit": true
+    }
+  ]
+}

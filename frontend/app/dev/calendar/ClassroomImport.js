@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, FileText, Upload } from "lucide-react";
 import { GlassButton } from "../../../components/ui/GlassControls";
-import { IMPORT_WEEKDAYS, planClassroomImport } from "../../../lib/classroomImport";
+import { IMPORT_WEEKDAYS, importTermIssues, planClassroomImport } from "../../../lib/classroomImport";
 import { readClassroomPdf } from "../../../lib/readClassroomPdf";
 
 const initialTerms={vocational:{start:"",end:""},higher:{start:"",end:""}};
@@ -10,26 +10,48 @@ export default function ClassroomImport({data,canEdit,glassMode,onCancel,onImpor
   const [result,setResult]=useState(null),[fileName,setFileName]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const [terms,setTerms]=useState(initialTerms),[semester,setSemester]=useState("2/2569"),[confirmed,setConfirmed]=useState(false);
   const [roomFilter,setRoomFilter]=useState("all");
-  const request=useRef(null),errorRef=useRef(null);
+  const [focusTarget,setFocusTarget]=useState(null),[showTermErrors,setShowTermErrors]=useState(false);
+  const request=useRef(null),errorRef=useRef(null),formRef=useRef(null);
   useEffect(()=>()=>request.current?.abort(),[]);
+  useEffect(()=>{
+    if (!focusTarget) return;
+    const target=formRef.current?.querySelector(focusTarget.selector);
+    if (target) { target.scrollIntoView({block:"center",behavior:"auto"});target.focus({preventScroll:true}); }
+  },[focusTarget]);
+  useEffect(()=>{if(error)errorRef.current?.focus();},[error]);
   async function choose(file) {
     request.current?.abort();const controller=new AbortController();request.current=controller;
-    setBusy(true);setError("");setResult(null);setConfirmed(false);setRoomFilter("all");setFileName(file?.name||"");
+    setBusy(true);setError("");setResult(null);setConfirmed(false);setRoomFilter("all");setShowTermErrors(false);setFileName(file?.name||"");
     try {const parsed=await readClassroomPdf(file,controller.signal);if(!controller.signal.aborted)setResult(parsed);}
     catch (failure) {if(!controller.signal.aborted){setError(failure.message||"อ่านไฟล์ไม่สำเร็จ");}}
     finally {if(request.current===controller)setBusy(false);}
   }
   function update(id,patch) {setConfirmed(false);setResult(previous=>({...previous,rows:previous.rows.map(row=>row.id===id?{...row,...patch}:row)}));}
   const plan=result?planClassroomImport(result.rows,terms,semester,data):null;
+  const termIssues=result?importTermIssues(result.rows,terms):[];
   const selected=result?.rows.filter(row=>row.selected).length||0;
+  const needsReview=Boolean(result&&(plan.issues.length||!confirmed));
+  const nextLabel=termIssues.length?"กำหนดช่วงภาคเรียน":plan?.issues.length?"ตรวจจุดที่ต้องแก้":!confirmed?"ยืนยันการตรวจรายการ":`เพิ่ม ${selected} ตาราง`;
+  function reviewNext() {
+    if (!result) return;
+    if (termIssues.length) {
+      const issue=termIssues[0];
+      setShowTermErrors(true);
+      setFocusTarget({selector:`[data-term-group="${issue.group}"][data-term-field="${issue.field}"]`});
+    } else if (plan.issues.length) {
+      setRoomFilter("all");
+      setFocusTarget({selector:selected===0?'.cal-import-row input[type="checkbox"]':plan.issues.some(issue=>issue.id)?'.cal-import-row[data-issue="true"]':'[name="import-semester"]'});
+    } else setFocusTarget({selector:'[name="import-confirm"]'});
+  }
   function submit(event) {
     event.preventDefault();
     // Re-plan against current state at commit time, including newly added exams.
     const current=planClassroomImport(result?.rows||[],terms,semester,data);
-    if(!canEdit||!confirmed||current.issues.length){setError("ตรวจแก้รายการและยืนยันก่อนนำเข้า");errorRef.current?.focus();return;}
+    if(!canEdit)return;
+    if(!confirmed||current.issues.length){reviewNext();return;}
     onImport(current.rules);
   }
-  return <form className="cal-import-form" onSubmit={submit}>
+  return <form ref={formRef} className="cal-import-form" onSubmit={submit}>
     <ol className="cal-import-steps" aria-label="ขั้นตอนนำเข้า">
       <li aria-current={!result?"step":undefined}>1 · เลือก PDF</li><li aria-current={result?"step":undefined}>2 · ตรวจและปรับแก้</li><li>3 · เพิ่มลงปฏิทิน</li>
     </ol>
@@ -44,10 +66,14 @@ export default function ClassroomImport({data,canEdit,glassMode,onCancel,onImpor
     {result&&<>
       <section className="cal-import-terms" aria-label="กำหนดช่วงภาคเรียน">
         <h3>ช่วงภาคเรียน</h3><p className="cal-form-note">กรอกวันเริ่มและสิ้นสุดให้ตรงแต่ละกลุ่ม ใช้ซ้ำทุกสัปดาห์ในช่วงนี้ วันหยุดแสดงในปฏิทิน แต่ไม่ตัดคาบเรียนอัตโนมัติ</p>
-        <label className="ui-field"><span>ภาคเรียน</span><input className="apple-input" value={semester} onChange={event=>{setSemester(event.target.value);setConfirmed(false);}} placeholder="2/2569" maxLength={6}/></label>
+        <label className="ui-field"><span>ภาคเรียน</span><input name="import-semester" className="apple-input" value={semester} onChange={event=>{setSemester(event.target.value);setConfirmed(false);}} placeholder="2/2569" maxLength={6}/></label>
         {[["vocational","ปวช."],["higher","ป.ตรี / อื่น ๆ"]].filter(([key])=>result.rows.some(row=>row.selected&&row.group===key)).map(([key,label])=><fieldset className="cal-import-term" key={key}>
           <legend>{label}</legend><p className="cal-form-note">{key==="higher"?"เอกสารอาจระบุแค่วันเริ่ม กรุณายืนยันวันสิ้นสุดเอง":"ตรวจวันเริ่มและสิ้นสุดตามประกาศภาคเรียน"}</p>
-          <div className="cal-form-grid">{[["start","เริ่มเรียน"],["end","สิ้นสุด"]].map(([field,text])=><label key={field} className="ui-field"><span>{label} · {text}</span><input className="apple-input" type="date" value={terms[key][field]} onChange={event=>{setTerms(previous=>({...previous,[key]:{...previous[key],[field]:event.target.value}}));setConfirmed(false);}}/></label>)}</div>
+          <div className="cal-form-grid">{[["start","เริ่มเรียน"],["end","สิ้นสุด"]].map(([field,text])=>{
+            const issue=showTermErrors&&termIssues.find(item=>item.group===key&&item.field===field);
+            const errorId=`import-${key}-${field}-error`;
+            return <label key={field} className="ui-field"><span>{label} · {text} <small>(จำเป็น)</small></span><input className="apple-input" type="date" data-term-group={key} data-term-field={field} aria-required="true" aria-invalid={Boolean(issue)} aria-describedby={issue?errorId:undefined} value={terms[key][field]} onChange={event=>{setTerms(previous=>({...previous,[key]:{...previous[key],[field]:event.target.value}}));setConfirmed(false);}}/>{issue&&<span className="cal-form-error" id={errorId}>{issue.message}</span>}</label>;
+          })}</div>
         </fieldset>)}
       </section>
       <div className="cal-import-list-heading"><h3>ตรวจรายการ · {result.rows.length} รายการ</h3><span>เลือก {selected} รายการ</span></div>
@@ -56,7 +82,7 @@ export default function ClassroomImport({data,canEdit,glassMode,onCancel,onImpor
       {result.warnings.length>0&&<div className="cal-import-warning" role="status"><AlertCircle size={18} aria-hidden="true"/><div><strong>บางส่วนอ่านไม่ได้ ตรวจเทียบต้นฉบับก่อน</strong>{result.warnings.map((warning,i)=><p key={i}>{warning}</p>)}</div></div>}
       <div className="cal-import-rows">{result.rows.map((row,index)=>{
         const issue=plan.issues.find(item=>item.id===row.id&&item.field!=="term");
-        return <fieldset key={row.id} className="cal-import-row" data-selected={row.selected} hidden={roomFilter!=="all"&&roomFilter!==row.room}>
+        return <fieldset key={row.id} className="cal-import-row" tabIndex={-1} data-selected={row.selected} data-issue={Boolean(row.selected&&issue)} hidden={roomFilter!=="all"&&roomFilter!==row.room}>
           <legend>รายการ {index+1} · หน้า {row.page}</legend>
           <label className="cal-import-check"><input type="checkbox" className="ui-checkbox" checked={row.selected} onChange={event=>update(row.id,{selected:event.target.checked})}/><span>นำเข้ารายการ {index+1}</span></label>
           <label className="ui-field cal-import-title"><span>ชื่อวิชา / รายละเอียด</span><input className="apple-input" value={row.title} maxLength={500} disabled={!row.selected} onChange={event=>update(row.id,{title:event.target.value})}/></label>
@@ -70,9 +96,12 @@ export default function ClassroomImport({data,canEdit,glassMode,onCancel,onImpor
           {row.selected&&issue&&<p className="cal-form-error"><AlertCircle size={15} aria-hidden="true"/> {issue.message}</p>}
         </fieldset>;
       })}</div>
-      <div className="cal-import-summary" aria-live="polite">{plan.issues.some(issue=>issue.field==="term")?"ระบุช่วงภาคเรียนของกลุ่มที่เลือกให้ครบก่อน":plan.issues.length?`ยังมี ${plan.issues.length} จุดที่ต้องตรวจแก้`:`พร้อมเพิ่ม ${plan.rules.length} ตารางรายสัปดาห์ · ${plan.occurrences} คาบตลอดช่วงที่เลือก`}</div>
-      <label className="cal-import-check"><input type="checkbox" className="ui-checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว</span></label>
+      <div className="cal-import-summary" aria-live="polite">{termIssues.length?`ยังขาดหรือผิด ${termIssues.length} ช่องในช่วงภาคเรียน`:plan.issues.length?`ยังมี ${plan.issues.length} จุดที่ต้องตรวจแก้`:`พร้อมเพิ่ม ${plan.rules.length} ตารางรายสัปดาห์ · ${plan.occurrences} คาบตลอดช่วงที่เลือก`}</div>
+      <label className="cal-import-check"><input type="checkbox" name="import-confirm" className="ui-checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว</span></label>
     </>}
-    <div className="cal-dialog-actions cal-import-actions"><GlassButton mode={glassMode} onClick={onCancel}>ยกเลิก</GlassButton><GlassButton mode={glassMode} variant="prominent" type="submit" disabled={!canEdit||!result||busy||!confirmed||plan?.issues.length>0}>เพิ่ม {selected||""} ตาราง</GlassButton></div>
+    <div className="cal-import-actions">
+      {result&&<p className="cal-import-next-help" id="import-next-help" aria-live="polite">{termIssues.length?`${termIssues[0].message} · กดปุ่มเพื่อไปกรอก`:plan.issues.length?`${plan.issues[0].message} · กดปุ่มเพื่อตรวจแก้`:!confirmed?"ยืนยันว่าได้ตรวจรายการแล้วก่อนเพิ่มลงปฏิทิน":"ตรวจครบแล้ว เพิ่มเป็นชุดและ Undo ได้"}</p>}
+      <div className="cal-dialog-actions"><GlassButton mode={glassMode} onClick={onCancel}>ยกเลิก</GlassButton><GlassButton mode={glassMode} variant="prominent" type={needsReview?"button":"submit"} onClick={needsReview?reviewNext:undefined} aria-describedby={result?"import-next-help":undefined} disabled={!canEdit||!result||busy}>{result?nextLabel:"เพิ่มตาราง"}</GlassButton></div>
+    </div>
   </form>;
 }

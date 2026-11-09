@@ -15,6 +15,20 @@ export function importDate(value) {
   return validCalendarDate(date) ? date : "";
 }
 
+// One actionable issue per missing/invalid input, rather than one per course.
+export function importTermIssues(rows, terms) {
+  const groups = [...new Set(rows.filter(row => row.selected).map(row => row.group))];
+  const issues = [];
+  for (const group of groups) {
+    const label = group === "vocational" ? "ปวช." : "ป.ตรี / อื่น ๆ";
+    const term = terms[group] || {}, start = importDate(term.start), end = importDate(term.end);
+    if (!start) issues.push({ group, field: "start", message: term.start ? `วันเริ่มเรียนของ ${label} ไม่ถูกต้อง` : `ระบุวันเริ่มเรียนของ ${label}` });
+    if (!end) issues.push({ group, field: "end", message: term.end ? `วันสิ้นสุดของ ${label} ไม่ถูกต้อง` : `ระบุวันสิ้นสุดของ ${label}` });
+    else if (start && (end < start || end > addCalendarDays(start, 369))) issues.push({ group, field: "end", message: `วันสิ้นสุดของ ${label} ต้องตั้งแต่วันเริ่มและไม่เกิน 1 ปี` });
+  }
+  return issues;
+}
+
 // The adapter supplies PDF coordinates in top-left space. Boundaries come from
 // vector paths, never from the width of the course text or its background color.
 export function parseClassroomPages(pages) {
@@ -75,10 +89,12 @@ export function planClassroomImport(rows, terms, semester, data) {
   const selected = rows.filter(row=>row.selected), issues = [], rules = [];
   if (!selected.length) return { rules:[], issues:[{message:"เลือกอย่างน้อย 1 รายการ"}], occurrences:0 };
   if (selected.length > IMPORT_LIMITS.rows || !/^\d\/(25|26)\d{2}$/.test(semester)) return {rules:[],issues:[{message:"ตรวจจำนวนรายการและภาคเรียน เช่น 2/2569"}],occurrences:0};
+  const termIssues = importTermIssues(rows, terms);
   for (const row of selected) {
     const term = terms[row.group] || {}, start = importDate(term.start), end = importDate(term.end);
     const fail = (message,field="row") => issues.push({id:row.id,message,field});
-    if (!start || !end || end < start || end > addCalendarDays(start,369)) { fail("ระบุช่วงภาคเรียนที่ถูกต้อง ไม่เกิน 1 ปี","term");continue; }
+    const invalidTerm = termIssues.find(issue => issue.group === row.group);
+    if (invalidTerm) { fail(invalidTerm.message,"term");continue; }
     if (!clean(row.title) || row.title.length > 500 || !["401","402","406","407"].includes(row.room) || !Number.isInteger(row.weekday) || row.weekday < 0 || row.weekday > 6 || !Number.isFinite(timeMinutes(row.start)) || !Number.isFinite(timeMinutes(row.end)) || timeMinutes(row.end) <= timeMinutes(row.start)) { fail("ตรวจชื่อ ห้อง วัน และเวลา");continue; }
     const validFrom = addCalendarDays(start,(row.weekday-calendarWeekday(start)+7)%7);
     if (validFrom > end) { fail("ไม่มีวันเรียนในช่วงที่เลือก");continue; }

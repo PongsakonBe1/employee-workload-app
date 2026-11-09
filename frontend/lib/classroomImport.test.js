@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importDate, parseClassroomPages, planClassroomImport } from "./classroomImport";
+import { importDate, importTermIssues, parseClassroomPages, planClassroomImport } from "./classroomImport";
 const empty={events:[],rules:[]};
 const terms={vocational:{start:"2569-11-02",end:"2570-03-14"},higher:{start:"2026-11-23",end:"2027-03-14"}};
 const row={id:"a",title:"วิชาตัวอย่าง",room:"401",weekday:0,start:"08:00",end:"10:00",group:"higher",selected:true};
@@ -24,6 +24,21 @@ describe("classroom PDF geometry",()=>{
   });
 });
 describe("classroom import planning",()=>{
+  it("identifies each missing term field once for multiple selected courses",()=>{
+    const rows=[row,{...row,id:"b"},{...row,id:"c",group:"vocational"}];
+    const issues=importTermIssues(rows,{higher:{start:"2026-11-23"},vocational:{}});
+    expect(issues.map(({group,field})=>({group,field}))).toEqual([{group:"higher",field:"end"},{group:"vocational",field:"start"},{group:"vocational",field:"end"}]);
+    expect(issues[0].message).toContain("วันสิ้นสุดของ ป.ตรี");
+    expect(planClassroomImport(rows,{higher:{start:"2026-11-23"}},"2/2569",empty).rules).toEqual([]);
+  });
+  it("does not require term dates for deselected groups or invent a higher end date",()=>{
+    expect(importTermIssues([{...row,selected:false},{...row,id:"v",group:"vocational"}],terms)).toEqual([]);
+    expect(importTermIssues([row],{higher:{start:"2026-11-23"}})).toMatchObject([{field:"end"}]);
+  });
+  it("points to the end field for reversed/oversized ranges and the invalid field for rollover",()=>{
+    for(const end of ["2026-11-01","2028-03-14"]) expect(importTermIssues([row],{higher:{start:"2026-11-23",end}})).toMatchObject([{field:"end"}]);
+    expect(importTermIssues([row],{higher:{start:"2027-02-29",end:"2027-03-14"}})).toMatchObject([{field:"start"}]);
+  });
   it("converts Buddhist dates and rejects rollover",()=>{expect(importDate("2569-11-02")).toBe("2026-11-02");expect(importDate("2570-02-29")).toBe("");});
   it("aligns weekly occurrences to the first weekday after term start",()=>{
     const result=planClassroomImport([{...row,weekday:1}],terms,"2/2569",empty);expect(result.issues).toEqual([]);expect(result.rules[0].validFrom).toBe("2026-11-24");expect(result.occurrences).toBe(16);
