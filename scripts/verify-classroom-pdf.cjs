@@ -25,6 +25,7 @@ async function main(){
    page.on('response',response=>{if(response.status()>=400&&['script','stylesheet','document'].includes(response.request().resourceType()))report.httpErrors.push({status:response.status(),path:new URL(response.url()).pathname});});
    page.on('console',message=>{if(message.type()==='error')report.errors.push(message.text());});
    await page.goto(origin+'/dev/calendar',{timeout:90000});await page.waitForFunction(()=>document.documentElement.dataset.uiReady==='true');
+   await page.getByRole('group',{name:'เลือกชุดข้อมูลปฏิทิน',exact:true}).getByRole('button',{name:'พื้นที่ทดลองนำเข้า',exact:true}).click();
    const dialog=page.locator('dialog.cal-import-dialog[open]');
    const open=()=>page.getByRole('button',{name:'นำเข้าตาราง',exact:true}).click();
    const upload=()=>dialog.locator('input[type=file]').setInputFiles(path.resolve('output/playwright/classroom-pdf-import/anonymous-timetable.pdf'));
@@ -32,6 +33,8 @@ async function main(){
    await open();holdReader=true;const loading=new Promise(resolve=>{readerRequested=resolve;});await upload();await loading;await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();holdReader=false;releaseReader();await page.waitForTimeout(300);assert.equal(workerRequests,0,'Cancel during module loading must not start a PDF worker');assert.equal(await page.locator('.cal-undo').count(),0);
    await open();await upload();try {await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor({timeout:20000});}catch(error){report.failure=await dialog.innerText();await page.screenshot({path:path.join(out,'failure.png')});throw error;}
    const terms=dialog.locator('.cal-import-term');
+   assert.equal(await terms.locator('input[type=date]').nth(0).inputValue(),'2026-11-23');assert.equal(await terms.locator('input[type=date]').nth(1).inputValue(),'2027-03-14');
+   await terms.locator('input[type=date]').nth(0).fill('');await terms.locator('input[type=date]').nth(1).fill('');
    const confirm=dialog.getByRole('checkbox',{name:'ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว'});
    await confirm.check();
    await dialog.getByRole('button',{name:'กำหนดช่วงภาคเรียน',exact:true}).click();
@@ -50,7 +53,7 @@ async function main(){
    if(width===390)for(const input of await dialog.locator('input[type=date],input[type=time]').all()) assert.ok(await input.evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=16));
    await dialog.locator('.cal-import-rows').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,`preview-${width}-${theme}.png`)});
    await save.click();await page.locator('.cal-undo').filter({hasText:'นำเข้า 2 ตารางรายสัปดาห์แล้ว'}).waitFor();
-   await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');await dialog.locator('.cal-form-error').filter({hasText:'ซ้ำหรือชน'}).first().waitFor();await dialog.getByRole('button',{name:'ตรวจจุดที่ต้องแก้',exact:true}).click();assert.equal(await dialog.locator('.cal-import-row[data-issue=true]').first().evaluate(el=>el===document.activeElement),true);assert.equal(await dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true}).count(),0);await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();
+   await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');await dialog.locator('.cal-form-error').filter({hasText:/เวลาชนกับ|มีรายการซ้ำกับ/}).first().waitFor();await dialog.getByRole('button',{name:'ตรวจจุดที่ต้องแก้',exact:true}).click();assert.equal(await dialog.locator('.cal-import-row[data-issue=true]').first().evaluate(el=>el===document.activeElement),true);assert.equal(await dialog.getByRole('button',{name:'เพิ่ม 2 ตาราง',exact:true}).count(),0);await dialog.getByRole('button',{name:'ยกเลิก',exact:true}).click();
    await page.locator('.cal-undo').getByRole('button',{name:'เลิกทำ',exact:true}).click();assert.equal(await page.locator('.cal-undo').count(),0);
    await open();await upload();await dialog.getByRole('heading',{name:'ตรวจรายการ · 2 รายการ',exact:true}).waitFor();await terms.locator('input[type=date]').nth(0).fill('2026-11-23');await terms.locator('input[type=date]').nth(1).fill('2026-12-07');assert.equal(await dialog.locator('.cal-form-error').count(),0);await page.keyboard.press('Escape');
    await page.locator('.cal-inspector summary').click();await page.locator('.cal-inspector select').selectOption('staff');assert.equal(await page.getByRole('button',{name:'นำเข้าตาราง',exact:true}).isDisabled(),true);

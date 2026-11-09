@@ -82,11 +82,17 @@ export default function CalendarPreview() {
   const router = useRouter();
   const [date, setDate] = usePreviewState("calendar.date", "2026-11-06"), [miniMonth, setMiniMonth] = useState(date), [today, setToday] = useState("2026-11-06"), [mode, setMode] = usePreviewState("calendar.mode", "week");
   const [role, setRole] = usePreviewState("calendar.role", "admin"), [glassMode, setGlassMode] = useState("quick"), [sideOpen, setSideOpen] = useState(true);
-  const [data, setData] = usePreviewState("calendar.data", initialCalendar), [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
+  const [sampleData, setSampleData] = usePreviewState("calendar.data", initialCalendar);
+  const [sandboxData, setSandboxData] = usePreviewState("calendar.sandbox.data", { rules: [], events: [] });
+  const [dataset, setDataset] = usePreviewState("calendar.dataset", "sample");
+  const [sampleUndo, setSampleUndo] = usePreviewState("calendar.undo", null), [sandboxUndo, setSandboxUndo] = usePreviewState("calendar.sandbox.undo", null);
+  const data = dataset === "sandbox" ? sandboxData : sampleData, setData = dataset === "sandbox" ? setSandboxData : setSampleData;
+  const undo = dataset === "sandbox" ? sandboxUndo : sampleUndo, setUndo = dataset === "sandbox" ? setSandboxUndo : setSampleUndo;
+  const [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
   const [dialog, setDialog] = useState(null), [selected, setSelected] = useState(null), [selectedHoliday, setSelectedHoliday] = useState(null);
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
   const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09");
-  const [status, setStatus] = useState(""), [undo, setUndo] = usePreviewState("calendar.undo", null);
+  const [status, setStatus] = useState("");
   const counter = useRef(Date.now()), restoredMode = useRef(hasPreviewState("calendar.mode"));
   useEffect(() => { const current = calendarToday();setToday(current);if (!restoredMode.current && matchMedia("(max-width:760px)").matches) setMode("day"); }, [setMode]);
   const canEdit = role !== "staff", range = calendarRange(date, mode), week = calendarRange(date, "week");
@@ -101,7 +107,7 @@ export default function CalendarPreview() {
     if (!canEdit) return;
     setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
   }
-  function commit(next, message) { setUndo({ before: data, message });setData(next);setDialog(null);setStatus(message + " · ข้อมูลตัวอย่าง"); }
+  function commit(next, message) { setUndo({ before: data, message });setData(next);setDialog(null);setStatus(message + (dataset === "sample" ? " · ชุดตัวอย่าง" : " · พื้นที่ทดลองนำเข้า")); }
   function saveEntry(event) {
     event.preventDefault();if (!canEdit) return;
     const value = { ...entry, title: entry.title.trim(), rooms: entry.kind === "dl" ? Number(entry.participants) > 40 ? ["406", "407"] : ["406"] : entry.rooms, participants: Number(entry.participants) };
@@ -168,6 +174,13 @@ export default function CalendarPreview() {
         </GlassButton>
       </div>
     </div>
+    <section className="cal-dataset-switch" aria-label="ชุดข้อมูลสำหรับทดลอง">
+      <GlassControlGroup mode={glassMode} label="เลือกชุดข้อมูลปฏิทิน">
+        <button type="button" aria-pressed={dataset === "sample"} onClick={() => setDataset("sample")}>ชุดตัวอย่าง</button>
+        <button type="button" aria-pressed={dataset === "sandbox"} onClick={() => setDataset("sandbox")}>พื้นที่ทดลองนำเข้า</button>
+      </GlassControlGroup>
+      <p>{dataset === "sample" ? "ชุดตัวอย่างสำหรับตรวจหน้าตาและการทำงาน · ทดลองไฟล์ของคุณได้ในพื้นที่แยก" : "พื้นที่เริ่มว่างสำหรับไฟล์ของคุณ แยกจากชุดตัวอย่าง · ข้อมูลอยู่เฉพาะแท็บนี้และยังไม่บันทึกระบบจริง"}</p>
+    </section>
     <div className="cal-layout" data-side-open={sideOpen}>
       <aside className="cal-sidebar" aria-label="ปฏิทินและตัวกรอง">
         <GlassSurface
@@ -364,7 +377,7 @@ export default function CalendarPreview() {
     <Dialog
       open={Boolean(dialog)} onClose={() => setDialog(null)}
       title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""} ${dialog === "import" ? "cal-import-dialog" : ""}`}
-      description={dialog === "entry" || dialog === "import" ? "Development · ทดลองด้วยข้อมูลตัวอย่าง ยังไม่บันทึกไปยังระบบจริง" : undefined}
+      description={dialog === "entry" || dialog === "import" ? "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
     >
       {dialog === "date" && <form onSubmit={event => { event.preventDefault();if (validCalendarDate(dateDraft)) { selectDate(dateDraft);setDialog(null); } }}>
         <label className="ui-field">
@@ -501,7 +514,7 @@ export default function CalendarPreview() {
           </GlassButton>
         </div>
       </div>}
-      {dialog === "import" && <ClassroomImport data={data} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/>}
+      {dialog === "import" && <ClassroomImport data={data} dataset={dataset} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>
   </WorkspaceFrame>;

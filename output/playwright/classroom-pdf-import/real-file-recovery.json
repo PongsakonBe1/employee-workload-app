@@ -7,22 +7,26 @@
     {
       "width": 390,
       "parsedRows": 25,
-      "focusedMissingDate": true,
+      "confirmedSemesterDates": true,
+      "conflictsNamed": true,
       "conflictsWithFixtures": 4,
-      "partialSelectionImported": 21,
-      "completeFileImportedWithoutFixtures": 25,
-      "undo": true,
-      "testDatesExplicit": true
+      "sandboxImport": 25,
+      "duplicateBlocked": 25,
+      "fixtureRecordsPreserved": 4,
+      "independentUndo": true,
+      "noCoursesDropped": true
     },
     {
       "width": 1440,
       "parsedRows": 25,
-      "focusedMissingDate": true,
+      "confirmedSemesterDates": true,
+      "conflictsNamed": true,
       "conflictsWithFixtures": 4,
-      "partialSelectionImported": 21,
-      "completeFileImportedWithoutFixtures": 25,
-      "undo": true,
-      "testDatesExplicit": true
+      "sandboxImport": 25,
+      "duplicateBlocked": 25,
+      "fixtureRecordsPreserved": 4,
+      "independentUndo": true,
+      "noCoursesDropped": true
     }
   ]
 }

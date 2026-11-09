@@ -1,8 +1,14 @@
 // Pure timetable geometry and transaction planning. No services or file uploads.
-import { addCalendarDays, calendarConflicts, calendarDates, calendarWeekday, expandCalendar, timeMinutes, validCalendarDate } from "./calendarView.js";
+import { addCalendarDays, calendarConflicts, calendarDates, calendarLabel, calendarWeekday, expandCalendar, timeMinutes, validCalendarDate } from "./calendarView.js";
 
 export const IMPORT_WEEKDAYS = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"];
 export const IMPORT_LIMITS = { bytes: 10 * 1024 * 1024, pages: 5, rows: 200 };
+// Confirmed by the team for this semester only; future semesters start blank.
+export function classroomTermDefaults(semester) {
+  return semester === "2/2569"
+    ? { vocational: { start: "2026-11-02", end: "2027-03-14" }, higher: { start: "2026-11-23", end: "2027-03-14" } }
+    : { vocational: { start: "", end: "" }, higher: { start: "", end: "" } };
+}
 const clean = value => String(value || "").normalize("NFC").replace(/\s+/g, " ").trim();
 const near = (a, b, tolerance = 2) => Math.abs(a - b) < tolerance;
 const unique = values => [...new Set(values.map(x => Math.round(x * 2) / 2))].sort((a, b) => a - b);
@@ -85,7 +91,7 @@ export function parseClassroomPages(pages) {
   return { rows, warnings, ignored, tables };
 }
 
-export function planClassroomImport(rows, terms, semester, data) {
+export function planClassroomImport(rows, terms, semester, data, existingLabel = "ตารางที่มีอยู่") {
   const selected = rows.filter(row=>row.selected), issues = [], rules = [];
   if (!selected.length) return { rules:[], issues:[{message:"เลือกอย่างน้อย 1 รายการ"}], occurrences:0 };
   if (selected.length > IMPORT_LIMITS.rows || !/^\d\/(25|26)\d{2}$/.test(semester)) return {rules:[],issues:[{message:"ตรวจจำนวนรายการและภาคเรียน เช่น 2/2569"}],occurrences:0};
@@ -104,7 +110,14 @@ export function planClassroomImport(rows, terms, semester, data) {
     const existing = expandCalendar(combined,{start:validFrom,end});
     let conflict;
     for (const date of dates) { const found = calendarConflicts({...candidate,date},existing)[0];if (found) {conflict={date,found};break;} }
-    if (conflict) { fail(`ห้อง ${row.room} ซ้ำหรือชนกับตาราง ${conflict.date} ${conflict.found.start}–${conflict.found.end}`);continue; }
+    if (conflict) {
+      const found = conflict.found;
+      const origin = rules.some(rule => rule.id === found.sourceId) ? "batch" : "existing";
+      const duplicate = candidate.title === found.title && candidate.kind === found.kind && candidate.start === found.start && candidate.end === found.end && [...candidate.rooms].sort().join() === [...found.rooms].sort().join();
+      const sourceLabel = origin === "batch" ? "รายการอื่นในไฟล์ที่เลือก" : existingLabel;
+      issues.push({ id: row.id, field: "conflict", code: duplicate ? "duplicate" : "overlap", conflict: { origin, title: found.title, date: conflict.date, start: found.start, end: found.end, sourceLabel }, message: `ห้อง ${row.room} ${duplicate ? "มีรายการซ้ำกับ" : "เวลาชนกับ"} “${found.title}” (${sourceLabel}) วันที่ ${calendarLabel(conflict.date,{dateStyle:"medium"})} ${found.start}–${found.end} · รายการนี้ ${row.start}–${row.end}` });
+      continue;
+    }
     rules.push(candidate);
   }
   // An invalid batch never exposes a partial transaction for the caller to save.

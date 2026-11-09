@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importDate, importTermIssues, parseClassroomPages, planClassroomImport } from "./classroomImport";
+import { classroomTermDefaults, importDate, importTermIssues, parseClassroomPages, planClassroomImport } from "./classroomImport";
 const empty={events:[],rules:[]};
 const terms={vocational:{start:"2569-11-02",end:"2570-03-14"},higher:{start:"2026-11-23",end:"2027-03-14"}};
 const row={id:"a",title:"วิชาตัวอย่าง",room:"401",weekday:0,start:"08:00",end:"10:00",group:"higher",selected:true};
@@ -24,6 +24,26 @@ describe("classroom PDF geometry",()=>{
   });
 });
 describe("classroom import planning",()=>{
+  it("uses the confirmed semester dates for both levels and leaves other semesters blank",()=>{
+    expect(classroomTermDefaults("2/2569")).toEqual({vocational:{start:"2026-11-02",end:"2027-03-14"},higher:{start:"2026-11-23",end:"2027-03-14"}});
+    expect(classroomTermDefaults("1/2570").higher.end).toBe("");
+    const edited=classroomTermDefaults("2/2569");edited.higher.end="2027-01-01";expect(classroomTermDefaults("2/2569").higher.end).toBe("2027-03-14");
+  });
+  it("allows two levels in the same room at separate hours but detects an actual overlapping occurrence",()=>{
+    const vocational={...row,id:"v",group:"vocational"};
+    const higher={...row,id:"h",start:"10:00",end:"12:00"};
+    const defaults=classroomTermDefaults("2/2569");
+    expect(planClassroomImport([vocational,higher],defaults,"2/2569",empty).rules).toHaveLength(2);
+    const overlap=planClassroomImport([vocational,{...higher,start:"09:00"}],defaults,"2/2569",empty);
+    expect(overlap.issues[0]).toMatchObject({code:"overlap",conflict:{origin:"batch",date:"2026-11-23",sourceLabel:"รายการอื่นในไฟล์ที่เลือก"}});
+  });
+  it("names the existing conflicting course and separates duplicate records from time overlaps",()=>{
+    const defaults=classroomTermDefaults("2/2569"), existing=planClassroomImport([row],defaults,"2/2569",empty).rules;
+    const duplicate=planClassroomImport([row],defaults,"2/2569",{events:[],rules:existing},"ชุดตัวอย่าง");
+    expect(duplicate.issues[0]).toMatchObject({code:"duplicate",conflict:{origin:"existing",title:row.title,sourceLabel:"ชุดตัวอย่าง"}});
+    expect(duplicate.issues[0].message).toContain(row.title);
+    const overlap=planClassroomImport([{...row,title:"อีกวิชา"}],defaults,"2/2569",{events:[],rules:existing});expect(overlap.issues[0].code).toBe("overlap");
+  });
   it("identifies each missing term field once for multiple selected courses",()=>{
     const rows=[row,{...row,id:"b"},{...row,id:"c",group:"vocational"}];
     const issues=importTermIssues(rows,{higher:{start:"2026-11-23"},vocational:{}});
@@ -51,7 +71,7 @@ describe("classroom import planning",()=>{
     const result=planClassroomImport([row,{...row,id:"b"}],terms,"2/2569",empty);expect(result.rules).toEqual([]);expect(result.issues[0].id).toBe("b");expect(result.occurrences).toBe(0);
   });
   it("checks all dates including a dated exam late in the semester",()=>{
-    const data={rules:[],events:[{id:"exam",date:"2027-03-08",start:"09:00",end:"09:30",rooms:["401"],title:"สอบตัวอย่าง"}]};expect(planClassroomImport([row],terms,"2/2569",data).issues[0].message).toContain("2027-03-08");expect(data.events).toHaveLength(1);
+    const data={rules:[],events:[{id:"exam",date:"2027-03-08",start:"09:00",end:"09:30",rooms:["401"],title:"สอบตัวอย่าง"}]};const issue=planClassroomImport([row],terms,"2/2569",data).issues[0];expect(issue.conflict.date).toBe("2027-03-08");expect(issue.message).toContain("2570");expect(data.events).toHaveLength(1);
   });
   it("allows touching periods and different rooms; ignores unchecked invalid rows",()=>{
     const result=planClassroomImport([row,{...row,id:"b",start:"10:00",end:"11:00"},{...row,id:"c",room:"402"},{...row,id:"d",start:"bad",selected:false}],terms,"2/2569",empty);expect(result.rules).toHaveLength(3);
