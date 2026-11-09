@@ -1,0 +1,34 @@
+{
+  "baseline": {
+    "info": 0,
+    "low": 0,
+    "moderate": 23,
+    "high": 14,
+    "critical": 5,
+    "total": 42
+  },
+  "current": {
+    "info": 0,
+    "low": 0,
+    "moderate": 23,
+    "high": 14,
+    "critical": 5,
+    "total": 42
+  },
+  "existingVersionChanges": [],
+  "newPackageAdvisories": [],
+  "newPackages": [
+    "@tesseract.js-data/eng",
+    "@tesseract.js-data/tha",
+    "bmp-js",
+    "idb-keyval",
+    "is-url",
+    "opencollective-postinstall",
+    "regenerator-runtime",
+    "tesseract.js",
+    "tesseract.js-core",
+    "wasm-feature-detect",
+    "zlibjs"
+  ],
+  "existingAdvisoriesRemediated": false
+}

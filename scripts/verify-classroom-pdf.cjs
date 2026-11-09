@@ -1,9 +1,9 @@
 /* Real browser/file/worker verification, with anonymous PDF inputs only. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
-const runtimePdf=process.argv[5];
+const runtimePdf=process.argv[5]&&process.argv[5]!=='dl-image-import'?process.argv[5]:undefined;
 const browserName=/chrome.exe$/i.test(process.argv[3])?'chrome':'edge';
-const out=path.resolve('output/playwright/classroom-pdf-import',origin.includes('127.0.0.1')?'browser':'public',browserName);fs.mkdirSync(out,{recursive:true});
+const out=path.resolve((process.argv[5]==='dl-image-import'||process.argv[6]==='dl-image-import')?'output/playwright/dl-image-import/regression-pdf':'output/playwright/classroom-pdf-import',origin.includes('127.0.0.1')?'browser':'public',browserName);fs.mkdirSync(out,{recursive:true});
 const report={completed:false,browser:browserName,checks:[],errors:[],httpErrors:[],readerSource:runtimePdf?'Bundled test tool PDF.js 5.6.205; installed application dependency still requires approval':'Application self-hosted PDF.js',externalRequests:[]};
 async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});

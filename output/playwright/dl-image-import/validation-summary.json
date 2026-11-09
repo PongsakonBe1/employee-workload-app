@@ -1,0 +1,51 @@
+{
+  "unit": {
+    "passed": 402,
+    "failed": 0
+  },
+  "reports": [
+    {
+      "file": "local/report.json",
+      "passed": true,
+      "checks": 3
+    },
+    {
+      "file": "flows/local/chrome/report.json",
+      "passed": true,
+      "checks": 7
+    },
+    {
+      "file": "flows/public/edge/report.json",
+      "passed": true,
+      "checks": 7
+    },
+    {
+      "file": "regression-calendar/report.json",
+      "passed": true,
+      "checks": 11
+    },
+    {
+      "file": "regression-pdf/browser/chrome/report.json",
+      "passed": true,
+      "checks": 4
+    },
+    {
+      "file": "zoom-report.json",
+      "passed": true
+    }
+  ],
+  "targetedESLintPassed": true,
+  "compatibilityBuildPassed": true,
+  "actualSourceImage": {
+    "localTestPassed": true,
+    "rounds": 18,
+    "automaticTimeRanges": 16,
+    "explicitManualTimeCorrections": 2,
+    "recognizedNamesStored": false,
+    "sourceImageStored": false,
+    "externalPreviewAttempt": "Rejected by automatic approval review due to personal names on an external preview; synthetic images used on Cloudflare instead"
+  },
+  "physicalDeviceUAT": false,
+  "productionIntegration": false,
+  "deployed": false
+}

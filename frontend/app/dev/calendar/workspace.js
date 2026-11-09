@@ -12,6 +12,8 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { CALENDAR_KINDS, CALENDAR_ROOMS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
 import CalendarEntryForm from "./CalendarEntryForm";
 import ClassroomImport from "./ClassroomImport";
+import DlImageImport from "./DlImageImport";
+import { planDlImport } from "../../../lib/dlImageImport";
 import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar } from "./CalendarViews";
 import { calendarPeople, initialCalendar } from "./fixtures";
 import holidays from "./holidays.json";
@@ -93,6 +95,7 @@ export default function CalendarPreview() {
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
   const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09");
   const [status, setStatus] = useState("");
+  const [importKind, setImportKind] = useState("classroom");
   const counter = useRef(Date.now()), restoredMode = useRef(hasPreviewState("calendar.mode"));
   useEffect(() => { const current = calendarToday();setToday(current);if (!restoredMode.current && matchMedia("(max-width:760px)").matches) setMode("day"); }, [setMode]);
   const canEdit = role !== "staff", range = calendarRange(date, mode), week = calendarRange(date, "week");
@@ -138,8 +141,20 @@ export default function CalendarPreview() {
     selectDate(imported.map(rule=>rule.validFrom).sort()[0]);
     setFilters(previous=>({...previous,semester:imported[0].semester,kinds:[...new Set([...previous.kinds,"classroom"])]}));
   }
+  function importDlRounds(events, options) {
+    if (!canEdit) return "ไม่มีสิทธิ์นำเข้าตารางสอบ";
+    const candidate = events.map((row,index)=>({...row,id:"commit-"+index,selected:true,proctorKeys:[],manualProctors:row.proctors}));
+    const checked = planDlImport(candidate,{...options,people:calendarPeople},data);
+    if(checked.issues.length) return checked.issues[0].message;
+    const additions=checked.events.map(event=>({...event,id:"dl-image-preview-"+(++counter.current)}));
+    if(!additions.length)return "ไม่มีรอบสอบที่พร้อมนำเข้า";
+    commit({...data,events:[...data.events,...additions]},"นำเข้า "+additions.length+" รอบสอบ DL แล้ว");
+    selectDate(additions.map(row=>row.date).sort()[0]);
+    setFilters(previous=>({...previous,semester:options.semester,kinds:[...new Set([...previous.kinds,"dl"])]}));
+    return null;
+  }
   function navigatePeriod(direction) { selectDate(mode === "month" ? addCalendarMonths(date, direction) : addCalendarDays(date, direction * (mode === "day" ? 1 : 7))); }
-  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: "นำเข้าตารางเรียนจาก PDF", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: importKind === "dl" ? "นำเข้าตารางสอบ DL จากรูปภาพ" : "นำเข้าตารางเรียนจาก PDF", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
 
   return <WorkspaceFrame
     user={{ uid: "calendar-fixture", displayName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A", role }} pathname="/calendar"
@@ -514,7 +529,10 @@ export default function CalendarPreview() {
           </GlassButton>
         </div>
       </div>}
-      {dialog === "import" && <ClassroomImport data={data} dataset={dataset} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/>}
+      {dialog === "import" && <>
+        <GlassControlGroup mode={glassMode} label="ชนิดตารางที่นำเข้า"><button type="button" aria-pressed={importKind==="classroom"} onClick={()=>setImportKind("classroom")}>ตารางเรียน · PDF</button><button type="button" aria-pressed={importKind==="dl"} onClick={()=>setImportKind("dl")}>ตารางสอบ DL · รูปภาพ</button></GlassControlGroup>
+        {importKind === "dl" ? <DlImageImport data={data} dataset={dataset} canEdit={canEdit} glassMode={glassMode} onUseSandbox={()=>setDataset("sandbox")} onCancel={()=>setDialog(null)} onImport={importDlRounds}/> : <ClassroomImport data={data} dataset={dataset} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/> }
+      </>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>
   </WorkspaceFrame>;

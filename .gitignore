@@ -22,3 +22,6 @@ yarn-error.log*
 **/serviceAccountKey.json
 **/serviceAccountKey*.json
 **/service-account*.json
+
+frontend/public/dev-ocr/
+output/playwright/dl-image-import/source-private*

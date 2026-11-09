@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+เฟส [นำเข้าตารางสอบ DL จากภาพ](../dl-image-import/README.md): OCR/review/mapping/atomic import/Undo ใน develop; ภาพจริง localhost และภาพสมมติ Chrome/Edge/Cloudflare ผ่าน ไม่เชื่อมข้อมูลจริง ไม่มี feature route ใหม่; all-pages-ready = false
+
 9 พฤศจิกายน 2569: [Dock ตามเมาส์และ Launchpad](../dock-navigation-pilot/LAUNCHPAD.md) — direct pointer tracking, เครื่องมือเต็ม viewport, search/categories/keyboard และ layout 6/4/3 คอลัมน์; ตรวจ stream ระหว่างเมาส์เคลื่อนบน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false
 
 9 พฤศจิกายน 2569: [Dock navigation และไอคอน](../dock-navigation-pilot/README.md) และ [motion pass](../dock-navigation-pilot/MOTION.md) — spring magnification, neighbor displacement, Tools เข้าชุดกับ Dock; PC Dock / Sidebar toggle, มือถือ 4 tabs; ตรวจ 9 previews × PC/mobile × light/dark บน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false
@@ -34,7 +36,7 @@
 | บันทึกงาน (record) | /admin/record | /dev/record | Partial — flow บันทึกด่วน/กรอกเองและ shared ledger ผ่าน | template จริง/ธุรกรรมบริการจริง/ตารางร่วมยังไม่ครบ |
 | รายการงาน (worklogs) | /worklogs | /dev/history | Partial — list/calendar/details/edit text/delete/Undo/CSV ผ่าน | แก้วัน/เวลา/หัวข้อ, bulk edit, lock/audit จริง |
 | กรอกบันทึกงาน (new-log) | /worklogs/new | /dev/record → กรอกเอง | Partial — catalog เดิมและ validation ผ่าน | persistent draft/server integration |
-| ตารางสอบ DL (dl) | /admin/dl-exam-schedules | /dev/calendar | Partial — CRUD ตัวอย่าง/75 คน/รอบเย็น/ห้องชนผ่าน | dedicated manager/import และข้อมูลจริง |
+| ตารางสอบ DL (dl) | /admin/dl-exam-schedules | /dev/calendar | Partial — CRUD/75 คน/รอบเย็น/ห้องชน และ image import/review/Undo ใน develop ผ่าน | dedicated manager, production adapter และข้อมูลจริง |
 | ตารางเรียน (classrooms) | /admin/classroom-schedules | /dev/calendar | Partial — recurrence/filter/cancel และ PDF preview/import/Undo ผ่านด้วย assets ของแอปจริง local/Cloudflare | dedicated manager, physical UAT และข้อมูลจริง |
 | จัดการอุปกรณ์ (equipment) | /admin/equipment-items | /dev/equipment | Partial — เพิ่ม/แก้/หยุดใช้/Undo และ Quick Log ร่วมผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | การใช้งานอุปกรณ์ (usage) | /admin/equipment-health | /dev/equipment/usage | Partial — ครั้งยืม/คืน/current outstanding/ID/date/person filters ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |

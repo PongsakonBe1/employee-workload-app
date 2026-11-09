@@ -4,6 +4,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { prepareClassroomPdfAssets } from "./prepare-classroom-pdf.mjs";
+import { prepareDlOcrAssets } from "./prepare-dl-ocr.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let uiBranch = "development";
 try { uiBranch = execFileSync("git", ["branch", "--show-current"], { cwd: root, encoding: "utf8", windowsHide: true }).trim() || uiBranch; } catch { /* A source archive can still run without Git. */ }
@@ -21,6 +22,7 @@ export const uiDevelopmentEnvironment = {
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if(!prepareClassroomPdfAssets()) console.warn("Classroom PDF assets are not installed yet; the rest of the development UI remains available.");
+  prepareDlOcrAssets();
   console.log("Development UI preview: http://127.0.0.1:4310/dev/ui — synthetic configuration, no production sign-in");
   const child = spawn(process.execPath, [path.join(root, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "4310"], { cwd: path.join(root, "frontend"), env: { ...process.env, ...uiDevelopmentEnvironment }, stdio: "inherit" });
   child.on("exit", code => { process.exitCode = code ?? 1; });

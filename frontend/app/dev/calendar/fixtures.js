@@ -1,6 +1,7 @@
 // Display-only examples. Identities, courses and assignments are synthetic.
 export const calendarPeople = [
   { id: "demo-a", label: "เจ้าหน้าที่ตัวอย่าง A" }, { id: "demo-b", label: "เจ้าหน้าที่ตัวอย่าง B" }, { id: "demo-c", label: "เจ้าหน้าที่ตัวอย่าง C" },
+  ...["d","e","f","g","h"].map(letter=>({id:`demo-${letter}`,label:`เจ้าหน้าที่ตัวอย่าง ${letter.toUpperCase()}`})),
 ];
 export const initialCalendar = {
   rules: [
