@@ -1,0 +1,7 @@
+{
+  "completed": false,
+  "browser": "webkit",
+  "physicalIOS": false,
+  "status": "not-verified",
+  "reason": "Installed WebKit attempt did not complete; interrupted. No physical Safari result is claimed."
+}

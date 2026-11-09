@@ -1,0 +1,46 @@
+{
+  "completed": true,
+  "browser": "chrome",
+  "physicalIOS": false,
+  "cases": [
+    {
+      "width": 390,
+      "theme": "light",
+      "formatDetection": "telephone=no, date=no, email=no, address=no",
+      "serverCaptionMatchesHydratedCaption": true,
+      "importDialog": true,
+      "nextNavigation": true,
+      "hardReload": true
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "formatDetection": "telephone=no, date=no, email=no, address=no",
+      "serverCaptionMatchesHydratedCaption": true,
+      "importDialog": true,
+      "nextNavigation": true,
+      "hardReload": true
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "formatDetection": "telephone=no, date=no, email=no, address=no",
+      "serverCaptionMatchesHydratedCaption": true,
+      "importDialog": true,
+      "nextNavigation": true,
+      "hardReload": true
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "formatDetection": "telephone=no, date=no, email=no, address=no",
+      "serverCaptionMatchesHydratedCaption": true,
+      "importDialog": true,
+      "nextNavigation": true,
+      "hardReload": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "unexpectedOrigins": []
+}

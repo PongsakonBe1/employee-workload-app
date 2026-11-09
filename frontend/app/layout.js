@@ -48,7 +48,11 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <head><script id="ui-appearance-bootstrap" dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} /></head>
+      <head>
+        {/* Send this before body parsing, including when Next streams metadata. */}
+        <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+        <script id="ui-appearance-bootstrap" dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />
+      </head>
       <body>
         <AppearanceProvider>
           <ButtonMaterialProvider>

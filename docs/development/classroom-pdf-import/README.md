@@ -6,6 +6,17 @@ Branch: `codex/classroom-pdf-import` · วันที่ 9 พฤศจิก�
 
 ลิงก์ทดลอง: [ตารางและการใช้ห้อง — Develop](https://northwest-revised-domains-varies.trycloudflare.com/dev/calendar) กด **นำเข้าตาราง** ลิงก์ชั่วคราวใช้ได้ขณะ develop server และ Cloudflare tunnel ยังทำงาน ข้อมูลที่เพิ่มเป็นข้อมูลทดลองในหน่วยความจำ
 
+## ป้องกัน hydration mismatch บน iOS
+
+ผู้ใช้รายงานว่า text node หลัง `br` ในข้อความปีอ้างอิงถูกแยก: ฝั่ง browser เหลือเพียง “ชุดอ้างอิง ” ในขณะที่ React คาดว่าจะมีช่วงปีด้วย ข้อความเดิมเป็นค่าคงที่ ไม่ได้คำนวณจากเวลาปัจจุบัน อาการสอดคล้องกับ iOS data detection ที่แปลงตัวเลข/วันที่เป็นลิงก์ก่อน hydration ตาม [คำอธิบายของ Next.js](https://nextjs.org/docs/messages/react-hydration-error) แต่ยังไม่ได้ตรวจ DOM บน Safari เครื่องจริงเพื่อยืนยันสาเหตุโดยตรง
+
+- ส่ง `format-detection` โดยตรงใน `head`: `telephone=no, date=no, email=no, address=no` เพื่อให้ถึง browser ก่อน parse body การทดลองใช้ metadata export ใน dev พบว่า directive อยู่ใน body จึงใช้ explicit head tag แทน
+- แสดงข้อความอ้างอิงใน `span` เดียว และเขียนช่วงปีว่า “ปี พ.ศ. 2569 ถึง 2570”
+- Regression test หยุดโหลด Next scripts ไว้ก่อน ตรวจว่า directive อยู่ใน head และเก็บ caption จาก server DOM แล้วจึงปล่อยให้ hydrate เปรียบเทียบข้อความหลัง hydration และตรวจการเปิด dialog / เปลี่ยนหน้า / hard reload
+- Chrome local 4 และ Cloudflare 4 cases (390/1440 × light/dark) ผ่าน ไม่มี page/console errors และไม่มี HTTP errors ของเอกสาร/สคริปต์/สไตล์ ดู `hydration/local/chrome` และ `hydration/public/chrome`
+- Calendar regression 11 กลุ่มและ compatibility build ผ่าน การแก้รอบนี้เป็น layout/caption ไม่มีการแก้ pure business logic หรือเพิ่มแพ็กเกจ
+- WebKit ที่ติดตั้งในเครื่องรันทดสอบไม่จบและถูกหยุด บันทึกสถานะ not-verified ไว้ ไม่อ้างว่าผ่าน Safari/iPhone จริง ต้องให้ผู้ใช้ reload บน iPhone เพื่อยืนยันอีกครั้ง
+
 ## แก้จุดที่กดเพิ่มไม่ได้จากการทดลองบนมือถือ
 
 ไฟล์แนบอ่านได้ครบ 25 รายการ แต่ช่วงภาคเรียนเริ่มเป็นค่าว่าง ปุ่มเดิมถูกปิดโดยมีเพียงข้อความรวมท้ายฟอร์ม ทำให้ผู้ใช้ที่เลื่อนมาท้าย 25 แถวไม่พบช่องที่ต้องกรอก เป็นช่องโหว่ของ flow ที่ชุดทดสอบเดิมไม่ได้ครอบคลุม: เดิมเทสต์กรอกวันที่ให้ครบก่อนลองกดบันทึก

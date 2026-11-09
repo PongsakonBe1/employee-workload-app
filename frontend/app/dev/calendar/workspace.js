@@ -207,7 +207,7 @@ export default function CalendarPreview() {
           <p className="cal-source-caption">
             วันหยุดจาก Google ประเทศไทย
             <br />
-            ชุดอ้างอิง 2569–2570
+            <span>ชุดอ้างอิงปี พ.ศ. 2569 ถึง 2570</span>
           </p>
         </div>
       </aside>
