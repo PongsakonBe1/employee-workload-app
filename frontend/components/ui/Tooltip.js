@@ -9,7 +9,7 @@ export function Tooltip({ label, enabled = true, children, className = "", delay
   const show = (delay = 320) => {
     if (!enabled) return;
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => { const box = anchor.current?.getBoundingClientRect();if (box) setPosition({ left: Math.min(box.right + 12, innerWidth - 268), top: Math.min(Math.max(8, box.top + box.height / 2 - 20), innerHeight - 64) }); }, delay);
+    timer.current = setTimeout(() => { const box = (anchor.current?.querySelector("a,button") || anchor.current)?.getBoundingClientRect();if (box) setPosition({ left: Math.min(box.right + 12, innerWidth - 268), top: Math.min(Math.max(8, box.top + box.height / 2 - 20), innerHeight - 64) }); }, delay);
   };
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => { if (!enabled) hide(); }, [enabled]);

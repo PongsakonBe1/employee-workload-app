@@ -1,0 +1,24 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "spring magnification, neighbor displacement, bounds and no content reflow",
+      "peak": 1.48
+    },
+    {
+      "name": "pointer leave settles exactly and stops animation"
+    },
+    {
+      "name": "source-anchored tools, consistent uncropped tiles, modal pause, Escape focus and arrow navigation"
+    },
+    {
+      "name": "short viewport scroll mode disables magnification to prevent clipping"
+    },
+    {
+      "name": "reduced motion disables icon and source presentation animation"
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "physicalSafari": false
+}

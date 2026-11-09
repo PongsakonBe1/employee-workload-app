@@ -5,31 +5,20 @@
   .ui-workspace[data-navigation=dock][data-sidebar-hidden=true] { --ui-sidebar-width:0px; }
   .ui-dock { --dock-slot:56px; --dock-tile:46px; --dock-gap:8px; position:fixed; z-index:45; left:16px; top:50%; transform:translateY(-50%); width:76px; max-height:calc(100dvh - 32px); padding:12px 9px; border-radius:30px; display:flex; align-items:center; flex-direction:column; gap:8px; isolation:isolate; }
   .ui-dock[hidden] { display:none; }
-  .ui-dock>.ui-optical-layer { z-index:-1; }
+  .ui-dock-shell { position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;transform:scale(var(--dock-shell-x,1),var(--dock-shell-y,1)); }
+  .ui-dock-shell>.ui-optical-layer { z-index:-1; }
   .ui-dock-brand { display:grid; place-items:center; flex-shrink:0; width:48px; height:44px; border-radius:15px; }
   .ui-dock-brand img { border-radius:10px; }
   .ui-dock-links,.ui-dock-utilities { display:flex; flex-direction:column; align-items:center; gap:var(--dock-gap); width:100%; }
   .ui-dock-links { min-height:0; overflow:visible; }
   .ui-dock .ui-tooltip-anchor { display:block; width:var(--dock-slot); height:var(--dock-slot); flex-shrink:0; }
   .ui-dock-utilities { flex-shrink:0; gap:4px; }
-  .ui-dock-link { position:relative; display:grid; place-items:center; flex-shrink:0; width:var(--dock-slot); height:var(--dock-slot); min-height:44px; color:var(--ui-ink); border:0; border-radius:18px; background:transparent; text-decoration:none; }
+  .ui-dock-link { position:relative; display:grid; place-items:center; flex-shrink:0; width:var(--dock-slot); height:var(--dock-slot); min-height:44px; transform:translateY(var(--dock-shift,0px)); color:var(--ui-ink); border:0; border-radius:18px; background:transparent; text-decoration:none; }
   .ui-dock-link:focus-visible,.ui-dock-brand:focus-visible { outline:3px solid var(--ui-accent); outline-offset:3px; }
   .ui-dock-separator { width:32px; height:1px; flex-shrink:0; background:var(--ui-line); opacity:.75; margin:2px 0; }
-  .ui-dock-tile { --dock-top:#3d9aff; --dock-bottom:#0055d8; display:grid; place-items:center; position:relative; width:var(--dock-tile); height:var(--dock-tile); border-radius:14px; color:#fff; background:linear-gradient(150deg,var(--dock-top),var(--dock-bottom)); box-shadow:inset 0 1px 1px #ffffffa0,inset 0 -1px 1px #0002,0 4px 9px #152e4426; border:1px solid #ffffff59; transform:scale(var(--dock-scale,1)); transition:transform 160ms cubic-bezier(.2,.8,.2,1),box-shadow 160ms ease; }
-  .ui-dock-tile[data-tone=purple] { --dock-top:#bc80f6; --dock-bottom:#7836cc; }
-  .ui-dock-tile[data-tone=green] { --dock-top:#18ad8b; --dock-bottom:#076653; }
-  .ui-dock-tile[data-tone=amber] { --dock-top:#ffc665; --dock-bottom:#b77500; }
-  .ui-dock-link[href="/worklogs"] .ui-dock-tile { --dock-top:#788ead; --dock-bottom:#425675; }
-  .ui-dock-link[href="/dashboard"] .ui-dock-tile { --dock-top:#d87423; --dock-bottom:#a83c09; }
-  .ui-dock-tile[data-tone=neutral] { color:var(--ui-ink); background:linear-gradient(145deg,var(--ui-surface),var(--ui-soft)); border-color:var(--ui-line); box-shadow:inset 0 1px 1px #ffffff50,0 2px 4px #142a4412; }
-  .ui-dock-person { color:var(--ui-blue-ink); background:var(--ui-blue); border-radius:50%; font-size:.9375rem; font-weight:650; }
   .ui-dock-link[aria-current]::before { content:""; position:absolute; inset:2px -1px; border-radius:19px; background:color-mix(in srgb,var(--ui-surface) 72%,transparent); border:1px solid var(--ui-glass-edge); box-shadow:inset 0 1px 0 #fff6,0 2px 5px #14254712; }
   .ui-dock-active-dot { position:absolute; left:-6px; top:calc(50% - 2px); width:4px; height:4px; border-radius:50%; background:var(--ui-accent); opacity:0; }
   .ui-dock-link[aria-current] .ui-dock-active-dot { opacity:1; }
-  .ui-dock-tooltip { position:absolute; left:calc(100% + 14px); top:50%; transform:translate(5px,-50%) scale(.97); transform-origin:left; opacity:0; visibility:hidden; pointer-events:none; white-space:nowrap; padding:9px 13px; background:var(--ui-glass); backdrop-filter:var(--ui-glass-filter); -webkit-backdrop-filter:var(--ui-glass-filter); color:var(--ui-ink); border:1px solid var(--ui-glass-edge); border-radius:12px; box-shadow:var(--ui-glass-shadow); font-size:.8125rem; transition:opacity 140ms ease,transform 170ms cubic-bezier(.2,.8,.2,1),visibility 140ms; }
-  .ui-dock-link:is(:hover,:focus-visible) .ui-dock-tooltip { opacity:1; visibility:visible; transform:translate(0,-50%) scale(1); }
-  .ui-dock-link:focus-visible .ui-dock-tile { transform:scale(1.1); }
-  .ui-dock-link:active .ui-dock-tile { transform:scale(.94); }
 }
 .ui-tooltip.ui-dock-label { animation:dock-label-enter 160ms cubic-bezier(.2,.8,.2,1); }
 @keyframes dock-label-enter { from { opacity:0;translate:-5px 0; } to { opacity:1;translate:0 0; } }
@@ -46,9 +35,28 @@
   .ui-workspace[data-navigation=dock] .ui-mobile-nav svg { stroke-width:1.9; }
 }
 [data-ui-motion=reduce] .ui-dock-tile { transform:none!important; transition:none; }
-[data-ui-motion=reduce] .ui-dock-tooltip { transition:none; }
 [data-ui-motion=reduce] .ui-tooltip.ui-dock-label { animation:none; }
-[data-ui-material=solid] .ui-dock { background:var(--ui-surface); backdrop-filter:none; -webkit-backdrop-filter:none; }
-@media(prefers-reduced-motion:reduce) { .ui-dock-tile { transform:none!important; transition:none; }.ui-dock-tooltip { transition:none; }.ui-tooltip.ui-dock-label { animation:none; } }
-@media(forced-colors:active) { .ui-dock { background:Canvas; border-color:CanvasText; box-shadow:none; }.ui-dock-tile { background:Canvas; color:CanvasText; border-color:CanvasText; box-shadow:none; }.ui-dock-active-dot { background:Highlight; }.ui-dock-link[aria-current]::before { outline:2px solid Highlight; background:Canvas; }.ui-dock-tooltip { background:Canvas; border-color:CanvasText; color:CanvasText; } }
+[data-ui-material=solid] .ui-dock-shell { background:var(--ui-surface); backdrop-filter:none; -webkit-backdrop-filter:none; }
 @media print { .ui-dock { display:none; } }
+
+.ui-dock-tile { --dock-top:#3d9aff; --dock-bottom:#0055d8; display:grid; place-items:center; position:relative; width:var(--dock-tile); height:var(--dock-tile); border-radius:14px; color:#fff; background:linear-gradient(150deg,var(--dock-top),var(--dock-bottom)); box-shadow:inset 0 1px 1px #ffffffa0,inset 0 -1px 1px #0002,0 4px 9px #152e4426; border:1px solid #ffffff59; transform:scale(var(--dock-scale,1)); transition:box-shadow 160ms ease; }
+.ui-dock-tile[data-tone=purple] { --dock-top:#bc80f6; --dock-bottom:#7836cc; }
+.ui-dock-tile[data-tone=green] { --dock-top:#18ad8b; --dock-bottom:#076653; }
+.ui-dock-tile[data-tone=amber] { --dock-top:#ffc665; --dock-bottom:#b77500; }
+.ui-workspace a[href="/worklogs"] .ui-dock-tile,.ui-dock-tools a[href="/worklogs"] .ui-dock-tile { --dock-top:#788ead; --dock-bottom:#425675; }
+.ui-workspace a[href="/dashboard"] .ui-dock-tile,.ui-dock-tools a[href="/dashboard"] .ui-dock-tile { --dock-top:#d87423; --dock-bottom:#a83c09; }
+.ui-dock-tile[data-tone=neutral] { color:var(--ui-ink); background:linear-gradient(145deg,var(--ui-surface),var(--ui-soft)); border-color:var(--ui-line); box-shadow:inset 0 1px 1px #ffffff50,0 2px 4px #142a4412; }
+.ui-dock-person { color:var(--ui-blue-ink); background:var(--ui-blue); border-radius:50%; font-size:.9375rem; font-weight:650; }
+.ui-dock-tools { --dock-tile:40px; }
+.ui-dock-tools .ui-route-list { grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px; }
+.ui-dock-tools .ui-sidebar-link { min-height:64px;gap:12px;padding:10px;border-radius:16px; }
+.ui-dock-tools .ui-dock-tile { flex-shrink:0;border-radius:12px;transform:none; }
+.ui-dock-tools .ui-nav-text { white-space:normal;line-height:1.5; }
+@media(min-width:761px) {
+ .ui-dock-tools { width:min(620px,calc(100vw - 144px)); }
+ .ui-dock-tools-anchored { margin-inline:112px auto;margin-block:auto; }
+}
+@media(max-width:760px) { .ui-dock-tools .ui-route-list { grid-template-columns:1fr; } }
+[data-ui-motion=reduce] :is(.ui-dock-link,.ui-dock-shell) { transform:none!important; }
+@media(prefers-reduced-motion:reduce) { .ui-dock-link,.ui-dock-shell { transform:none!important; } }
+@media(forced-colors:active) { .ui-dock-shell { background:Canvas;border:1px solid CanvasText;box-shadow:none; }.ui-dock-tile { background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none; } }

@@ -19,7 +19,7 @@ export function useGlassEnvironment(enabled) {
   return environment;
 }
 
-export function GlassSurface({ mode, radius, name, as: Element = "div", interactive = true }) {
+export function GlassSurface({ mode, radius, name, as: Element = "div", interactive = true, interactionRoot }) {
   const { resolved } = useAppearance(), environment = useGlassEnvironment(process.env.NODE_ENV === "development" && mode === "quick");
   const host = useRef(null), engine = useRef(null);
   const failedMap = useRef(false);
@@ -54,7 +54,7 @@ export function GlassSurface({ mode, radius, name, as: Element = "div", interact
         engine.current = new LiquidGlassEngine(element, latestConfig.current);
         // Forward only passive lighting events to this decorative sibling. Real controls
         // remain outside the engine's clipped content and retain their own pointer events.
-        const parent = element.parentElement;
+        const parent = interactionRoot?.current || element.parentElement;
         const move = event => { if (event.target === element || event.pointerType === "touch" || (!latestConfig.current.cursorTracking && !latestConfig.current.hoverLighting)) return;element.dispatchEvent(new PointerEvent("pointermove", { clientX: event.clientX, clientY: event.clientY, pointerType: event.pointerType })); };
         const enter = () => { if (latestConfig.current.hoverLighting) element.dispatchEvent(new MouseEvent("mouseenter")); };
         const leave = () => { if (latestConfig.current.hoverLighting) element.dispatchEvent(new MouseEvent("mouseleave")); };
@@ -66,7 +66,7 @@ export function GlassSurface({ mode, radius, name, as: Element = "div", interact
     }
     const observer = new ResizeObserver(measure);observer.observe(element);measure();
     return () => { disposed = true;observer.disconnect();release(); };
-  }, [policy.active]);
+  }, [policy.active, interactionRoot]);
 
   useEffect(() => { if (engine.current) { engine.current.setConfig(failedMap.current ? { ...config, refractionMode: "css" } : config);if (failedMap.current || config.refractionMode === "css") setPhase("css"); } }, [config]);
   const active = policy.active && ["svg", "css"].includes(phase);

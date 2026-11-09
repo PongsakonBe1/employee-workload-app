@@ -1,0 +1,37 @@
+{
+  "completed": true,
+  "cases": [
+    {
+      "width": 1440,
+      "theme": "light",
+      "routes": 9,
+      "draftSurvivesNavigationAndSidebarSwitch": true,
+      "desktopDockOrFourMobileTabs": true
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "routes": 9,
+      "draftSurvivesNavigationAndSidebarSwitch": true,
+      "desktopDockOrFourMobileTabs": true
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "routes": 9,
+      "draftSurvivesNavigationAndSidebarSwitch": true,
+      "desktopDockOrFourMobileTabs": true
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "routes": 9,
+      "draftSurvivesNavigationAndSidebarSwitch": true,
+      "desktopDockOrFourMobileTabs": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "unexpectedOrigins": [],
+  "physicalIOS": false
+}

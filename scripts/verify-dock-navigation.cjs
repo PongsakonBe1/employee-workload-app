@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
 const name=/chrome.exe$/i.test(process.argv[3])?'chrome':'edge';
-const out=path.resolve('output/playwright/dock-navigation-pilot',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
+const out=path.resolve('output/playwright',process.argv[5]==='dock-motion-pass'?'dock-motion-pass':'dock-navigation-pilot',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
 const report={completed:false,cases:[],errors:[],httpErrors:[],unexpectedOrigins:[],physicalIOS:false};
 const routes=['/dev/record','/dev/history','/dev/calendar','/dev/resources','/dev/equipment','/dev/equipment/usage','/dev/dashboard','/dev/staff','/dev/templates'];
 async function main(){
@@ -40,7 +40,7 @@ async function main(){
     await page.locator('.ui-dock').getByRole('button',{name:'หน้าและเครื่องมือทั้งหมด',exact:true}).click();await page.locator('dialog[open]').getByRole('link',{name:'บันทึกด่วนและ Combo',exact:true}).click();await page.waitForURL('**/dev/templates');
     await page.setViewportSize({width:1440,height:480});const short=await page.locator('.ui-dock').boundingBox();assert.ok(short.y>=0&&short.y+short.height<=480);assert.equal(await page.locator('.ui-dock a,.ui-dock button').evaluateAll(nodes=>nodes.filter(node=>{const box=node.getBoundingClientRect();return box.width<44||box.height<44;}).length),0);await page.locator('.ui-dock').getByRole('button',{name:'รูปแบบการแสดงผล',exact:true}).click();await page.keyboard.press('Escape');await page.setViewportSize({width:1440,height:1000});
     await appearance();await page.locator('dialog[open]').getByRole('checkbox',{name:/ลดการเคลื่อนไหว/}).check();await page.locator('dialog[open]').getByRole('checkbox',{name:/ลดความโปร่งใส/}).check();await page.keyboard.press('Escape');
-    await page.locator('.ui-dock-links a').first().hover();assert.equal(await page.locator('.ui-dock-tile').first().evaluate(el=>getComputedStyle(el).transform),'none');assert.equal(await page.locator('.ui-dock').evaluate(el=>getComputedStyle(el).backdropFilter),'none');
+    await page.locator('.ui-dock-links a').first().hover();assert.equal(await page.locator('.ui-dock-tile').first().evaluate(el=>getComputedStyle(el).transform),'none');assert.equal(await page.locator('.ui-dock-shell').evaluate(el=>getComputedStyle(el).backdropFilter),'none');
    }
    await page.screenshot({path:path.join(out,`dock-${width}-${theme}.png`),fullPage:true});
    report.cases.push({width,theme,routes:routes.length,draftSurvivesNavigationAndSidebarSwitch:true,desktopDockOrFourMobileTabs:true});await ctx.close();

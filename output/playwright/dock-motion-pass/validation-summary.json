@@ -1,0 +1,46 @@
+{
+  "unit": {
+    "passed": 368,
+    "failed": 0
+  },
+  "results": [
+    {
+      "file": "local/chrome/report.json",
+      "passed": true,
+      "renders": 36
+    },
+    {
+      "file": "public/edge/report.json",
+      "passed": true,
+      "renders": 36
+    },
+    {
+      "file": "motion/local/chrome/report.json",
+      "passed": true,
+      "groups": 5
+    },
+    {
+      "file": "motion/local/edge/report.json",
+      "passed": true,
+      "groups": 5
+    },
+    {
+      "file": "regression-calendar/report.json",
+      "passed": true,
+      "groups": 11
+    },
+    {
+      "file": "regression-record/report.json",
+      "passed": true,
+      "groups": 11
+    },
+    {
+      "file": "zoom-report.json",
+      "passed": true
+    }
+  ],
+  "targetedESLintPassed": true,
+  "compatibilityBuildPassed": true,
+  "productionDeployed": false,
+  "physicalDeviceUAT": false
+}
