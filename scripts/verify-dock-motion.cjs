@@ -2,7 +2,8 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
 const name=/chrome.exe$/i.test(process.argv[3])?'chrome':'edge';
-const out=path.resolve('output/playwright/dock-launchpad/motion',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
+const phase=process.argv[5]==='dock-brand-hover'?'dock-brand-hover':'dock-launchpad';
+const out=path.resolve('output/playwright',phase,'motion',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
 const report={completed:false,checks:[],errors:[],externalOrigins:[],physicalSafari:false};
 async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
@@ -47,10 +48,19 @@ async function main(){
   await page.waitForTimeout(300);await page.screenshot({path:path.join(out,'tools.png')});await page.keyboard.press('Escape');assert.ok(await tools.evaluate(n=>n===document.activeElement));
   await page.keyboard.press('ArrowUp');assert.equal(await dock.locator('a[href="/dashboard"]').evaluate(n=>n===document.activeElement),true);
   report.checks.push({name:'full-window launcher, consistent uncropped tiles, modal pause, Escape focus and arrow navigation'});
+  const brand=dock.locator('.ui-dock-brand'),logo=brand.locator('img');await page.locator('main').focus();await page.mouse.move(400,120);await brand.hover();
+  await page.waitForFunction(()=>document.querySelector('.ui-dock-brand img').getBoundingClientRect().width>40);
+  const brandBox=await logo.boundingBox(),firstBox=await links.first().locator('.ui-dock-tile').boundingBox();assert.ok(brandBox.width>40&&brandBox.y>=0&&brandBox.y+brandBox.height<firstBox.y);
+  await page.screenshot({path:path.join(out,'brand-hover.png')});
+  await page.mouse.move(400,120);await page.waitForFunction(()=>document.querySelector('.ui-dock').dataset.moving==='false');assert.equal(Math.round((await logo.boundingBox()).width),30);
+  await links.first().focus();await page.keyboard.press('Home');assert.ok(await brand.evaluate(n=>n===document.activeElement));await page.waitForFunction(()=>document.querySelector('.ui-dock-brand img').getBoundingClientRect().width>40);
+  await brand.click();await page.waitForURL('**/dev/record');await dock.locator('a[href="/calendar"]').click();await page.waitForURL('**/dev/calendar');
+  report.checks.push({name:'brand logo magnifies on hover and keyboard focus, preserves its gap, returns to 30px and retains native navigation'});
   await page.setViewportSize({width:1440,height:480});await page.waitForFunction(()=>document.querySelector('.ui-dock').dataset.motionLimited==='true');await links.first().hover();await page.waitForTimeout(200);assert.ok((await geometry()).every(b=>!b.scale||b.scale===1));
   report.checks.push({name:'short viewport scroll mode disables magnification to prevent clipping'});
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await page.locator('.ui-dock[data-motion-ready=reduced]').waitFor();await links.first().hover();assert.equal(await links.first().evaluate(n=>getComputedStyle(n).transform),'none');
-  await tools.click();assert.equal(await dialog.evaluate(n=>n.getAnimations().length),0);await page.keyboard.press('Escape');report.checks.push({name:'reduced motion disables icon and launcher presentation animation'});
+  await brand.hover();assert.equal(await logo.evaluate(n=>getComputedStyle(n).transform),'none');
+  await tools.click();assert.equal(await dialog.evaluate(n=>n.getAnimations().length),0);await page.keyboard.press('Escape');report.checks.push({name:'reduced motion disables brand, icon and launcher presentation animation'});
   assert.deepEqual(report.errors,[]);assert.deepEqual(report.externalOrigins,[]);report.completed=true;
  }finally{if(page){const video=page.video();await ctx.close();if(video){await video.saveAs(path.join(out,'dock-motion.webm'));await video.delete();}}await browser.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));}
  console.log('PASS motion: '+report.checks.length+' groups; recorded synthetic Dock sweep and tools');

@@ -7,8 +7,8 @@
   .ui-dock[hidden] { display:none; }
   .ui-dock-shell { position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;transform:scale(var(--dock-shell-x,1),var(--dock-shell-y,1)); }
   .ui-dock-shell>.ui-optical-layer { z-index:-1; }
-  .ui-dock-brand { display:grid; place-items:center; flex-shrink:0; width:48px; height:44px; border-radius:15px; }
-  .ui-dock-brand img { border-radius:10px; }
+  .ui-dock-brand { display:grid; place-items:center; flex-shrink:0; width:48px; height:44px; border-radius:15px;transform:translateY(var(--dock-shift,0px)); }
+  .ui-dock-brand img { border-radius:10px;transform:scale(var(--dock-scale,1)); }
   .ui-dock-links,.ui-dock-utilities { display:flex; flex-direction:column; align-items:center; gap:var(--dock-gap); width:100%; }
   .ui-dock-links { min-height:0; overflow:visible; }
   .ui-dock .ui-tooltip-anchor { display:block; width:var(--dock-slot); height:var(--dock-slot); flex-shrink:0; }
@@ -47,8 +47,8 @@
 .ui-workspace a[href="/dashboard"] .ui-dock-tile,.ui-launcher a[href="/dashboard"] .ui-dock-tile { --dock-top:#d87423; --dock-bottom:#a83c09; }
 .ui-dock-tile[data-tone=neutral] { color:var(--ui-ink); background:linear-gradient(145deg,var(--ui-surface),var(--ui-soft)); border-color:var(--ui-line); box-shadow:inset 0 1px 1px #ffffff50,0 2px 4px #142a4412; }
 .ui-dock-person { color:var(--ui-blue-ink); background:var(--ui-blue); border-radius:50%; font-size:.9375rem; font-weight:650; }
-[data-ui-motion=reduce] :is(.ui-dock-link,.ui-dock-shell) { transform:none!important; }
-@media(prefers-reduced-motion:reduce) { .ui-dock-link,.ui-dock-shell { transform:none!important; } }
+[data-ui-motion=reduce] :is(.ui-dock-brand,.ui-dock-brand img,.ui-dock-link,.ui-dock-shell) { transform:none!important; }
+@media(prefers-reduced-motion:reduce) { .ui-dock-brand,.ui-dock-brand img,.ui-dock-link,.ui-dock-shell { transform:none!important; } }
 @media(forced-colors:active) { .ui-dock-shell { background:Canvas;border:1px solid CanvasText;box-shadow:none; }.ui-dock-tile { background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none; } }
 
 /* Full-window app launcher: material background, glass controls, native links. */

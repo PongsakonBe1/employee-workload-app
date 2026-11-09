@@ -36,4 +36,19 @@ describe("Dock magnification geometry", () => {
     expect(dockMotionTargets([100], 279.9)[0].scale - 1).toBeLessThan(.00001);
     expect(dockMotionTargets([100], 280)[0]).toEqual({ scale: 1, shift: 0 });
   });
+  it("preserves the actual gap between a smaller brand image and menu tiles", () => {
+    const sizes = [30, 46, 46, 46, 46];
+    for (const pointer of [100, 164, 228]) {
+      const targets = dockMotionTargets(centers, pointer, sizes);
+      for (let i = 1; i < centers.length; i++) {
+        const originalGap = centers[i] - centers[i-1] - (sizes[i] + sizes[i-1]) / 2;
+        const magnifiedGap = centers[i] + targets[i].shift - centers[i-1] - targets[i-1].shift - (sizes[i] * targets[i].scale + sizes[i-1] * targets[i-1].scale) / 2;
+        expect(magnifiedGap).toBeCloseTo(originalGap);
+      }
+    }
+    expect(dockMotionTargets(centers, 100, sizes)[0].scale).toBeCloseTo(1.48);
+  });
+  it("keeps rest geometry if per-icon measurements are missing or invalid", () => {
+    for (const sizes of [[30], [30, 46, 0, 46, 46]]) expect(dockMotionTargets(centers, 100, sizes)).toEqual(centers.map(() => ({ scale: 1, shift: 0 })));
+  });
 });

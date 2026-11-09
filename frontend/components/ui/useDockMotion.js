@@ -8,8 +8,8 @@ export function useDockMotion(root, { reducedMotion, paused, collapsed }) {
   useEffect(() => {
     const host = root.current;
     if (!host) return;
-    const links = [...host.querySelectorAll(".ui-dock-link")], nav = host.querySelector(".ui-dock-links");
-    let frame = 0, disposed = false, springs = [], shell, centers = [], pointer = null, pressed = null, limited = false, height = 1, tileSize = 46, margin = 0, pending = null;
+    const links = [...host.querySelectorAll(".ui-dock-brand,.ui-dock-link")], nav = host.querySelector(".ui-dock-links");
+    let frame = 0, disposed = false, springs = [], shell, centers = [], pointer = null, pressed = null, limited = false, height = 1, tileSizes = [], margin = 0, pending = null;
     function clear() {
       cancelAnimationFrame(frame);frame = 0;pending = null;host.dataset.moving = "false";
       links.forEach(link => { link.style.removeProperty("--dock-scale");link.style.removeProperty("--dock-shift"); });
@@ -38,9 +38,9 @@ export function useDockMotion(root, { reducedMotion, paused, collapsed }) {
     }
     function update(direct = false) {
       if (!shell) return;
-      const targets = dockMotionTargets(centers, limited || blocked.current ? null : pointer, tileSize, margin);
+      const targets = dockMotionTargets(centers, limited || blocked.current ? null : pointer, tileSizes, margin);
       const values = targets.map((target, i) => [Math.max(.9, target.scale - (pressed === links[i] ? .1 : 0)), target.shift]);
-      const shellTarget = [Math.max(0, ...targets.map(target => (target.scale - 1) / .48)), targets.reduce((sum, target) => sum + (target.scale - 1) * tileSize, 0)];
+      const shellTarget = [Math.max(0, ...targets.map(target => (target.scale - 1) / .48)), targets.reduce((sum, target, index) => sum + (target.scale - 1) * tileSizes[index], 0)];
       if (direct) pending = { targets: values, shell: shellTarget };
       else {
         pending = null;const now = performance.now();
@@ -57,8 +57,11 @@ export function useDockMotion(root, { reducedMotion, paused, collapsed }) {
     }
     function measure() {
       const box = host.getBoundingClientRect();height = Math.max(1, host.offsetHeight);
-      centers = links.map(link => { const rect = link.parentElement.getBoundingClientRect();return rect.top + rect.height / 2; });
-      tileSize = parseFloat(getComputedStyle(host).getPropertyValue("--dock-tile")) || 46;
+      centers = links.map(link => {
+        if (link.classList.contains("ui-dock-brand")) return box.top + link.offsetTop + link.offsetHeight / 2;
+        const rect = link.parentElement.getBoundingClientRect();return rect.top + rect.height / 2;
+      });
+      tileSizes = links.map(link => parseFloat(getComputedStyle(link.querySelector(".ui-dock-tile,img")).width));
       margin = Math.max(0, Math.min(36, box.top - 16, innerHeight - box.bottom - 16));
       limited = !host.offsetWidth || host.hidden || nav.scrollHeight > nav.clientHeight + 1;
       host.dataset.motionLimited = String(limited);settle(true);
@@ -72,7 +75,7 @@ export function useDockMotion(root, { reducedMotion, paused, collapsed }) {
       if (index >= 0 && event.target.matches(":focus-visible") && !blocked.current) { pointer = centers[index];update(true); }
     };
     const blur = event => { if (!host.contains(event.relatedTarget)) settle(); };
-    const down = event => { if (!blocked.current && event.pointerType !== "touch") { pressed = event.target.closest?.(".ui-dock-link");update(true); } };
+    const down = event => { if (!blocked.current && event.pointerType !== "touch") { pressed = event.target.closest?.(".ui-dock-brand,.ui-dock-link");update(true); } };
     const up = () => { if (pressed) { pressed = null;update(true); } };
     const visibility = () => { if (document.hidden) settle(true); };
     const observer = new ResizeObserver(measure);observer.observe(host);observer.observe(nav);

@@ -1,0 +1,32 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "continuous 30-frame pointer stream reaches latest target on each next frame",
+      "minPointedScale": 1.48,
+      "samples": 30
+    },
+    {
+      "name": "spring magnification, neighbor displacement, bounds and no content reflow",
+      "peak": 1.48
+    },
+    {
+      "name": "pointer leave settles exactly and stops animation"
+    },
+    {
+      "name": "full-window launcher, consistent uncropped tiles, modal pause, Escape focus and arrow navigation"
+    },
+    {
+      "name": "brand logo magnifies on hover and keyboard focus, preserves its gap, returns to 30px and retains native navigation"
+    },
+    {
+      "name": "short viewport scroll mode disables magnification to prevent clipping"
+    },
+    {
+      "name": "reduced motion disables brand, icon and launcher presentation animation"
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "physicalSafari": false
+}

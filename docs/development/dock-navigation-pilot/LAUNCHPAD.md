@@ -44,3 +44,9 @@ Dock ขยายและเลื่อนไอคอนข้างเคี
 วิดีโอจริงอยู่ใน `motion/public/edge/dock-motion.webm` และภาพ launcher อยู่ใน `launcher/public/edge/` ใช้ข้อมูลสังเคราะห์ ไม่ได้เปิด Firebase, ติดตั้ง package, push หรือ deploy
 
 ส่งให้ผู้ใช้ตรวจความรู้สึกและความเร็วของ Dock/launcher ก่อนเริ่มเฟสนำเข้าตารางสอบ DL จากภาพต่อ
+
+## เพิ่มเติม: Hover โลโก้ labboy บน Dock
+
+รวมโลโก้ labboy ด้านบนเข้าใน motion driver เดียวกับเมนู รองรับ hover และ keyboard focus โดยใช้ขนาดภาพจริง 30px แยกจาก tile เมนู 46/41px เพื่อรักษาระยะห่างระหว่างไอคอน ขยายสูงสุด 1.48 เท่าและคืนตัวพร้อมเพื่อนบ้าน การคลิกยังเปิดหน้าบันทึกงานเดิม และ reduced motion/หน้าต่างเตี้ยยังปิด magnification ตามเดิม
+
+หลักฐานอยู่ใน `output/playwright/dock-brand-hover/`: unit 370 ผ่าน รวม geometry ของไอคอนต่างขนาด และ motion checks อย่างละ 7 กลุ่มบน Chrome local / Edge ผ่าน Cloudflare รวม hover, Home/focus, คืนขนาด 30px, ไม่ชนเมนู, navigation และ reduced motion ผ่าน targeted ESLint ด้วย รอบย่อยนี้ไม่ได้รัน compatibility build ใหม่ Safari/iPhone เครื่องจริงยังต้อง UAT ตามข้อจำกัดเดิม

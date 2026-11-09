@@ -1,0 +1,22 @@
+{
+  "unit": {
+    "passed": 370,
+    "failed": 0
+  },
+  "reports": [
+    {
+      "file": "motion/local/chrome/report.json",
+      "groups": 7,
+      "passed": true
+    },
+    {
+      "file": "motion/public/edge/report.json",
+      "groups": 7,
+      "passed": true
+    }
+  ],
+  "targetedESLintPassed": true,
+  "compatibilityBuildRerun": false,
+  "physicalDeviceUAT": false,
+  "productionDeployed": false
+}
