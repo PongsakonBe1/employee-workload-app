@@ -1,0 +1,18 @@
+{
+  "files": [
+    "frontend/lib/calendarReadOnly.js",
+    "frontend/lib/calendarReadOnly.test.js",
+    "frontend/lib/calendarEmulatorConfig.js",
+    "frontend/lib/calendarEmulatorClient.js",
+    "frontend/components/DevelopmentAuthBoundary.js",
+    "frontend/app/dev/calendar-readonly/page.js",
+    "frontend/app/dev/calendar-readonly/preview.js",
+    "firebase/calendar-emulator/fixtures.mjs",
+    "scripts/seed-calendar-emulator.mjs",
+    "scripts/start-calendar-emulator.mjs",
+    "scripts/verify-calendar-emulator.mjs",
+    "scripts/verify-calendar-readonly.cjs"
+  ],
+  "tool": "Existing Next bundled Babel parser/generator",
+  "astUnchanged": true
+}

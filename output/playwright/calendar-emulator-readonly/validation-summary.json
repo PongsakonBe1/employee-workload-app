@@ -1,0 +1,26 @@
+{
+  "branch": "codex/calendar-emulator-readonly",
+  "unitPassed": 461,
+  "newReaderTests": 15,
+  "realEmulatorIntegrationGroups": 3,
+  "deniedWrites": 15,
+  "localBrowserGroups": 4,
+  "anonymousRedirects": 21,
+  "publicLoopbackGuardGroups": 1,
+  "calendarRegressionGroups": 11,
+  "lint": "passed",
+  "scriptSyntax": "passed",
+  "build": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "productionConnected": false,
+  "productionCredentialsUsed": false,
+  "deployed": false,
+  "physicalDeviceUAT": false
+}

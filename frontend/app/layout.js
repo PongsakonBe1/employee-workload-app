@@ -5,7 +5,7 @@ import "./quick-liquid-pilot.css";
 import "./dock-navigation.css";
 import "@zakisheriff/liquid-glass/styles.css";
 import "./zak-button-pilot.css";
-import { AuthProvider } from "../components/AuthProvider";
+import { DevelopmentAuthBoundary } from "../components/DevelopmentAuthBoundary";
 import FABVersionControl from "../components/FABVersionControl";
 import thMessages from "../messages/th.json";
 import { AppearanceProvider } from "../components/ui/AppearanceProvider";
@@ -58,10 +58,10 @@ export default function RootLayout({ children }) {
         <AppearanceProvider>
           <ButtonMaterialProvider>
             <NextIntlClientProvider locale="th" messages={thMessages}>
-              <AuthProvider>
+              <DevelopmentAuthBoundary>
                 {children}
                 <FABVersionControl />
-              </AuthProvider>
+              </DevelopmentAuthBoundary>
             </NextIntlClientProvider>
           </ButtonMaterialProvider>
         </AppearanceProvider>

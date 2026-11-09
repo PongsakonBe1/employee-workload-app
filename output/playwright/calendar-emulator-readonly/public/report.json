@@ -1,0 +1,14 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "public HTTPS preview blocks emulator initialization and login; no loopback connection",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "firestoreWriteRPCs": [],
+  "legacyLoginWrites": [],
+  "physicalIOS": false
+}

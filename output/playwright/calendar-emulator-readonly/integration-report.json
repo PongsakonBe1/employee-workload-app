@@ -1,0 +1,22 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "unauthenticated, pending and inactive accounts denied all three collections",
+      "passed": true
+    },
+    {
+      "name": "staff/admin/superadmin read succeeds; 15 creates/updates/deletes/role changes denied; unrelated collection denied; offline server read rejects instead of cached success",
+      "passed": true
+    },
+    {
+      "name": "real SDK Auth → scoped reads → adapter; active filter, UID/time preservation, monthly reuse, wider-window fetch, logout/account switch invalidation",
+      "passed": true
+    }
+  ],
+  "project": "demo-calendar-readonly",
+  "edition": "standard",
+  "productionUsed": false,
+  "credentialFilesUsed": false,
+  "deniedWrites": 15
+}

@@ -1,0 +1,56 @@
+{
+  "url": "http://127.0.0.1:4310/dev/calendar",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Desktop calendar uses the compact workspace rail, visible mini-calendar and four functional views",
+      "status": "passed"
+    },
+    {
+      "name": "Anchored More menu supports arrows/Escape, and mini-calendar supports day and month keyboard movement",
+      "status": "passed"
+    },
+    {
+      "name": "Filters use exact rooms, preserve cancelled drafts and keep empty selections explicit",
+      "status": "passed"
+    },
+    {
+      "name": "Month selection preserves month mode; public holidays and observances retain separate meaning",
+      "status": "passed"
+    },
+    {
+      "name": "Evening DL creation allocates two rooms for 75 per round, prevents conflicts and retains editable details",
+      "status": "passed"
+    },
+    {
+      "name": "Classroom recurrence edits affect the declared series, while cancellation leaves occurrences unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "Copy stays atomic/reversible; PDF import requires an actual file and explicit review",
+      "status": "passed"
+    },
+    {
+      "name": "Dark calendar event surfaces remain dark with readable semantic text; reduced/solid/forced colors work",
+      "status": "passed"
+    },
+    {
+      "name": "Staff can inspect calendar details but cannot create, copy, import or edit records",
+      "status": "passed"
+    },
+    {
+      "name": "Next navigation between record/calendar retains manual draft and calendar filters without disk storage",
+      "status": "passed"
+    },
+    {
+      "name": "Touch widths 375/390/430/768 retain all views, visible More and correctly sized date/time fields",
+      "status": "passed"
+    }
+  ],
+  "errors": [],
+  "blockedOrigins": [],
+  "limitations": [
+    "Synthetic local data; PDF file/worker behavior verified separately; no production integration or OCR",
+    "Chromium emulation; physical iPhone/Safari and Android UAT remains pending"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "1440px: real Emulator Auth/query/adapter/details, all edits disabled, bounded month cache reuse, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass",
+      "passed": true
+    },
+    {
+      "name": "connection failure times out, removes stale rows and recovers with a fresh session",
+      "passed": true
+    },
+    {
+      "name": "390px: real Emulator Auth/query/adapter/details, all edits disabled, bounded month cache reuse, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass",
+      "passed": true
+    },
+    {
+      "name": "legacy anonymous routes still redirect to login after development Auth isolation",
+      "routes": 21,
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "firestoreWriteRPCs": [],
+  "legacyLoginWrites": [],
+  "physicalIOS": false
+}
