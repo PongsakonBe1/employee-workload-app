@@ -1,0 +1,38 @@
+{
+  "status": "proposed-not-provisioned",
+  "reviewDate": "2026-11-10",
+  "development": {
+    "projectId": "demo-calendar-readonly",
+    "transport": "local-emulator"
+  },
+  "staging": {
+    "proposedProjectId": "labboy-workload-app-staging",
+    "displayName": "labboy Workload Staging",
+    "databaseId": "(default)",
+    "edition": "STANDARD",
+    "locationId": "asia-southeast1",
+    "billingIntent": "SPARK_NO_BILLING_ACCOUNT",
+    "dataPolicy": "synthetic-only",
+    "clientAccess": "read-only",
+    "calendarCollections": ["users", "classroomSchedules", "dlExamSchedules"],
+    "maxRecordsPerQuery": 200,
+    "cacheTtlMs": 120000
+  },
+  "production": {
+    "projectId": "labboy-workload-app",
+    "databaseId": "(default)",
+    "documentReadsAuthorizedByThisPlan": false,
+    "writesAuthorizedByThisPlan": false
+  },
+  "activationGates": {
+    "cloudCreationApprovalRequired": true,
+    "stagingRulesDeploymentApprovalRequired": true,
+    "verifyProjectIdAvailability": true,
+    "verifyActualEditionLocationAndBilling": true,
+    "requireSeparateStagingAuth": true,
+    "reuseEmulatorCredentialsInCloud": false,
+    "copyProductionDocuments": false,
+    "changeExistingProjectAliases": false,
+    "publishHostingOrFunctions": false
+  }
+}

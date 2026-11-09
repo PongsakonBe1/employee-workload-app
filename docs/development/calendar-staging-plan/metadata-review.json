@@ -1,0 +1,21 @@
+{
+  "reviewDate": "2026-11-10",
+  "source": "Firebase CLI metadata queries with the user-specified account; sanitized allowlist output",
+  "existingProject": {
+    "projectId": "labboy-workload-app",
+    "databaseId": "(default)",
+    "type": "FIRESTORE_NATIVE",
+    "edition": "STANDARD",
+    "locationId": "asia-southeast1"
+  },
+  "repoAliases": {
+    "default": "labboy-workload-app",
+    "development": "labboy-workload-app"
+  },
+  "relatedProjectsVisible": ["labboy-workload-app"],
+  "projectNameFilter": "labboy-workload-app or labboy-workload-app-*",
+  "documentCollectionsRead": [],
+  "cloudMutationsPerformed": [],
+  "credentialFilesInspected": false,
+  "stagingProvisioned": false
+}
