@@ -1,0 +1,14 @@
+{
+  "package": "pdfjs-dist",
+  "version": "5.6.205",
+  "integrityVerified": true,
+  "installScriptsRun": false,
+  "optionalDependenciesInstalled": false,
+  "existingOptionalPackagesPreserved": 77,
+  "nodeVersion": "v24.15.0",
+  "installedAssetHashes": {
+    "pdf.mjs": "43c67d941a73a2d65be72c97f5e68d9a7963df53b219cc1c0aa85f2b8bd1c9bd",
+    "pdf.worker.min.mjs": "51a2fd1ea47f1a9b0814e65e0c336c739c54957795ee774e8f93cb81e8028dd1"
+  },
+  "optionalPackageVersionsPreserved": true
+}

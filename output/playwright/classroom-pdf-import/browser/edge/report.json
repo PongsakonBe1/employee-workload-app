@@ -73,6 +73,6 @@
   ],
   "errors": [],
   "httpErrors": [],
-  "readerSource": "Bundled test tool PDF.js 5.6.205; installed application dependency still requires approval",
+  "readerSource": "Application self-hosted PDF.js",
   "externalRequests": []
 }

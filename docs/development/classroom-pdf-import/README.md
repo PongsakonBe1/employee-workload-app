@@ -2,7 +2,9 @@
 
 Branch: `codex/classroom-pdf-import` · วันที่ 9 พฤศจิกายน 2569
 
-**สถานะ: เตรียมโค้ดและตรวจสอบแล้ว แต่ยังไม่เปิดใช้ตัวอ่านในเว็บ develop** — รอผู้ใช้อนุมัติเพิ่ม `pdfjs-dist@5.6.205` ตามกฎห้ามติดตั้งแพ็กเกจใหม่โดยไม่ได้รับอนุมัติ ไม่มีการติดตั้งแพ็กเกจในเฟสนี้
+**สถานะ: ติดตั้งและเปิดใช้ใน develop แล้ว** — ผู้ใช้อนุมัติเพิ่ม `pdfjs-dist@5.6.205` และผ่านการทดสอบโดยใช้ module/worker ที่แอปเสิร์ฟเอง ไม่มีการแทนไฟล์ด้วย runtime ของเครื่องมือทดสอบ
+
+ลิงก์ทดลอง: [ตารางและการใช้ห้อง — Develop](https://northwest-revised-domains-varies.trycloudflare.com/dev/calendar) กด **นำเข้าตาราง** ลิงก์ชั่วคราวใช้ได้ขณะ develop server และ Cloudflare tunnel ยังทำงาน ข้อมูลที่เพิ่มเป็นข้อมูลทดลองในหน่วยความจำ
 
 ## สิ่งที่ทำ
 
@@ -29,20 +31,21 @@ Branch: `codex/classroom-pdf-import` · วันที่ 9 พฤศจิก�
 
 - Unit suite: **355/355 ผ่าน**, เพิ่ม 13 ข้อสำหรับ geometry, ปี พ.ศ., ขอบเขตวันที่, ชน/ซ้ำ และการป้องกันบันทึกบางส่วน
 - PDF ต้นฉบับ: ตรวจภาพเทียบผล พบ **25 ตารางรายสัปดาห์** — ห้อง 401: 9, 402: 7, 406: 2, 407: 7 ไม่มีคำเตือน บันทึกหลักฐานเฉพาะจำนวนและช่วงเวลา ไม่มีชื่อผู้สอน/รายละเอียดจริงใน fixtures หรือรายงาน
-- Edge และ Chrome: browser/file/worker จริง **8 cases** (1440/390 × light/dark × 2 browsers) ตรวจแก้ชื่อ, เวลาในช่องรวม, ไม่นำเข้า annotation, ยืนยันวันที่, Cancel, บันทึกเป็นชุด, ป้องกันซ้ำ, Undo และ Staff guard
-- Browser ใช้ PDF.js 5.6.205 จาก runtime ของเครื่องมือทดสอบ โดยเสิร์ฟผ่าน request interception ที่ origin เดียวกัน **ไม่ได้ mock ผลการ parse และยังไม่ใช่หลักฐานว่าติดตั้ง dependency ในแอปแล้ว**
+- Edge และ Chrome: browser/file/worker จริง **8 cases** (1440/390 × light/dark × 2 browsers) โดยใช้ assets ที่แอปเสิร์ฟจริง ตรวจแก้ชื่อ, เวลาในช่องรวม, ไม่นำเข้า annotation, ยืนยันวันที่, Cancel ระหว่างโหลดตัวอ่าน, บันทึกเป็นชุด, ป้องกันซ้ำ, Undo และ Staff guard
+- Cloudflare: **4 cases** ใน Chrome (1440/390 × light/dark) ผ่าน flow เดียวกันด้วย assets ของแอปจริง ไม่มี page/console errors, HTTP errors ของเอกสาร/สคริปต์/สไตล์ หรือการเรียก origin ภายนอก รวม browser cases หลังติดตั้ง **12 cases** หลักฐานใน `browser/edge`, `browser/chrome` และ `public/chrome`
+- การทดสอบก่อนอนุมัติติดตั้งเคยใช้ runtime ของเครื่องมือทดสอบ ผลปัจจุบันแทนที่ด้วยการตรวจแอปที่ติดตั้ง dependency แล้วทั้งหมด
 - Regression ปฏิทินเดิม: **11 กลุ่มผ่าน** รวม DL 75 คน/รอบเย็น, recurrence, keyboard, filters, 4 views และ touch widths 375/390/430/768
 - Targeted ESLint ผ่าน และ compatibility export ผ่านใน `.ui-build-check`; หน้า develop ไม่ render ใน production export
 - ยังไม่ทดสอบบน Safari/iPhone/Android เครื่องจริง และยังไม่ทำ UAT โดยผู้ใช้ ไม่มีการ deploy, push หรือเชื่อมฐานข้อมูลจริง
 
 ดูหลักฐานที่ `output/playwright/classroom-pdf-import/` เฉพาะรายงาน, screenshot ข้อมูลสังเคราะห์ และ PDF สังเคราะห์ ภาพ render ต้นฉบับเป็นไฟล์ private ที่ถูก ignore ไม่อยู่ใน commit
 
-## ขั้นตอนเปิดใช้หลังอนุมัติ dependency
+## การติดตั้งและเริ่ม develop
 
-1. เพิ่มแพ็กเกจเวอร์ชันที่ตรึงไว้ ปิด install scripts และ optional dependencies โดยรักษา platform dependencies เดิมของ Next.js
+1. เพิ่มแพ็กเกจเวอร์ชันที่ตรึงไว้และ lockfile ด้วย npm จากนั้นดาวน์โหลด tarball ทางการ ตรวจ SHA-512 ตรงกับ lockfile ก่อนติดตั้งเฉพาะ PDF.js ไม่มีการรัน install scripts หรือเพิ่ม optional dependencies ของแพ็กเกจนี้ และแพ็กเกจ optional เดิมทั้ง 77 รายการยังอยู่ในเวอร์ชันเดิม ดู `dependency-install.json`
 2. รัน `node scripts/prepare-classroom-pdf.mjs` เพื่อคัดลอก module/worker รุ่นเดียวกันและ LICENSE ไป `frontend/public/dev-pdfjs/` ซึ่งเป็น generated assets และถูก ignore จาก Git
 3. เริ่ม `node scripts/dev-ui.mjs` ใหม่ สคริปต์จะเตรียม assets ให้อัตโนมัติเมื่อพบ dependency ที่ตรงเวอร์ชัน
-4. รัน `scripts/verify-classroom-pdf.cjs` อีกครั้ง **โดยไม่ส่ง argument runtimePdf** ให้ทดสอบ assets ของแอปจริง และตรวจลิงก์ Cloudflare สำหรับ UAT จากมือถือ
+4. รัน `scripts/verify-classroom-pdf.cjs` **โดยไม่ส่ง argument runtimePdf** เพื่อทดสอบ assets ของแอปจริง ผลตรวจ local และ Cloudflare ผ่านแล้ว ขั้นต่อไปคือ UAT บนอุปกรณ์จริงของผู้ใช้
 
 หากยังไม่ติดตั้ง reader หน้าปฏิทินและฟอร์มเดิมใช้งานต่อได้ การเลือก PDF จะแจ้งว่าตัวอ่านยังไม่พร้อม ไม่มีผลลัพธ์นำเข้าจำลองแทนให้เข้าใจผิด
 
