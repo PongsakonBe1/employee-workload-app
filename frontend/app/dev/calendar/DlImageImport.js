@@ -5,7 +5,7 @@ import { GlassButton } from "../../../components/ui/GlassControls";
 import { planDlImport } from "../../../lib/dlImageImport";
 import { readDlImage, validateDlImageFile } from "../../../lib/readDlImage";
 
-export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandbox,onCancel,onImport,people,onAddPerson}){
+export default function DlImageImport({data,dataset,datasetLabel,canEdit,glassMode,onUseSandbox,onCancel,onImport,people,onAddPerson}){
  const [file,setFile]=useState(null),[preview,setPreview]=useState(""),[result,setResult]=useState(null),[mapping,setMapping]=useState({});
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(null),[error,setError]=useState(""),[participants,setParticipants]=useState("75"),[semester,setSemester]=useState("2/2569");
  const [confirmed,setConfirmed]=useState(false),[dayFilter,setDayFilter]=useState("all"),[focus,setFocus]=useState(null);
@@ -16,6 +16,7 @@ export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandb
  useEffect(()=>{if(error)errorRef.current?.focus();},[error]);
  useEffect(()=>{if(focus){const node=form.current?.querySelector(focus.selector);node?.scrollIntoView({block:"center",behavior:"auto"});node?.focus({preventScroll:true});}},[focus]);
  const options={participants,semester,mapping,people};
+ const existingLabel=datasetLabel||(dataset==="sample"?"ชุดตัวอย่าง":"พื้นที่ทดลองนำเข้า");
  const plan=result?planDlImport(result.rows,options,data):{events:[],issues:[],selected:0};
  async function choose(next){
   request.current?.abort();const controller=new AbortController();request.current=controller;setBusy(true);setFile(null);setError("");setResult(null);setMapping({});setNameDrafts({});setNameErrors({});setConfirmed(false);setDayFilter("all");
@@ -63,7 +64,7 @@ export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandb
   {result&&<>
    <p className="dl-import-found" role="status">อ่านได้ {result.sourceRows} แถวต้นฉบับ · {result.rows.length} รอบสอบ — กรุณาตรวจวัน เวลา และผู้คุมตามภาพ</p>
    {result.warnings.map(message=><p key={message} className="cal-form-note">{message}</p>)}
-   <section className="cal-import-dataset-note"><strong>{dataset==="sample"?"กำลังตรวจเทียบกับชุดตัวอย่าง":"พื้นที่ทดลองนำเข้าแยกจากชุดตัวอย่าง"}</strong><p>ตรวจตารางซ้ำและห้องชนในชุดที่เลือก ข้อมูลอยู่เฉพาะแท็บนี้ ยังไม่บันทึกระบบจริง</p>{dataset==="sample"&&<GlassButton mode={glassMode} onClick={()=>{setConfirmed(false);onUseSandbox();}}>ใช้พื้นที่ทดลองแยก</GlassButton>}</section>
+   <section className="cal-import-dataset-note"><strong>กำลังตรวจเทียบกับ{existingLabel}</strong><p>ตรวจตารางซ้ำและห้องชนในชุดที่เลือก ข้อมูลอยู่เฉพาะแท็บนี้ ยังไม่บันทึกระบบจริง</p>{dataset==="sample"&&<GlassButton mode={glassMode} onClick={()=>{setConfirmed(false);onUseSandbox();}}>ใช้พื้นที่ทดลองแยก</GlassButton>}</section>
    <div className="cal-form-grid"><label className="ui-field"><span>จำนวนคนต่อรอบ</span><input name="dl-import-participants" aria-invalid={plan.issues.some(item=>item.field==="participants")} aria-describedby="dl-import-help" className="apple-input" inputMode="numeric" value={participants} onChange={event=>{setParticipants(event.target.value);setConfirmed(false);}}/></label><label className="ui-field"><span>ภาคเรียน</span><input name="dl-import-semester" aria-invalid={plan.issues.some(item=>item.field==="semester")} aria-describedby="dl-import-help" className="apple-input" value={semester} maxLength={6} onChange={event=>{setSemester(event.target.value);setConfirmed(false);}}/></label></div>
    <p className="cal-form-note">75 คนเป็นค่าตั้งต้นที่ทีมยืนยัน ใช้กับแต่ละรอบ · มากกว่า 40 คนใช้ห้อง 406 + 407 ตามเกณฑ์เดิม · ไม่สร้างรอบเย็นหากไม่มีในภาพ</p>
    {result.names.length>0&&<section className="dl-import-mappings" data-private="true" aria-label="จับคู่ผู้คุมจากภาพ"><h3>ตรวจชื่อและจับคู่ผู้คุม</h3><p className="cal-form-note">รายชื่อ A–H เป็นข้อมูลตัวอย่าง หากไม่มีชื่อที่ตรงกัน ให้แก้ชื่อจากภาพแล้วกด “ใช้ชื่อนี้ชั่วคราว” ใช้กับทุกรอบที่พบชื่อนั้น รายชื่ออยู่เฉพาะแท็บทดลอง รีเฟรชแล้วหาย ไม่สร้างบัญชีผู้ใช้จริง</p>{result.names.map((person,index)=><div className="dl-import-map-card" data-dl-map="true" key={person.key}>
@@ -84,7 +85,7 @@ export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandb
    </fieldset>;})}</div>
    <div className="cal-import-summary">เลือก {plan.selected} รอบ · {Number(participants)>40?"ห้อง 406 + 407":"ห้อง 406"}</div>
    <label className="cal-import-check"><input name="dl-import-confirm" className="ui-checkbox" type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/>ตรวจเทียบภาพ วัน เวลา จำนวนคน และผู้คุมสอบครบแล้ว</label>
-   <div className="cal-import-actions"><p id="dl-import-help" className="cal-import-next-help">{issue?.message||(!confirmed?"ยืนยันการตรวจรายการก่อนเพิ่ม":`พร้อมเพิ่ม ${plan.selected} รอบสอบใน${dataset==="sample"?"ชุดตัวอย่าง":"พื้นที่ทดลองนำเข้า"}`)}</p><div className="cal-dialog-actions"><GlassButton mode={glassMode} onClick={onCancel}>ยกเลิก</GlassButton>{issue||!confirmed?<GlassButton mode={glassMode} variant="prominent" disabled={!canEdit} onClick={next}>{sandboxNext?"ใช้พื้นที่ทดลองแยก":issue?`ตรวจ ${plan.issues.length} จุดที่ต้องแก้`:"ยืนยันการตรวจรายการ"}</GlassButton>:<GlassButton mode={glassMode} variant="prominent" type="submit" disabled={!canEdit}>เพิ่ม {plan.selected} รอบสอบ</GlassButton>}</div></div>
+   <div className="cal-import-actions"><p id="dl-import-help" className="cal-import-next-help">{issue?.message||(!confirmed?"ยืนยันการตรวจรายการก่อนเพิ่ม":`พร้อมเพิ่ม ${plan.selected} รอบสอบใน${existingLabel}`)}</p><div className="cal-dialog-actions"><GlassButton mode={glassMode} onClick={onCancel}>ยกเลิก</GlassButton>{issue||!confirmed?<GlassButton mode={glassMode} variant="prominent" disabled={!canEdit} onClick={next}>{sandboxNext?"ใช้พื้นที่ทดลองแยก":issue?`ตรวจ ${plan.issues.length} จุดที่ต้องแก้`:"ยืนยันการตรวจรายการ"}</GlassButton>:<GlassButton mode={glassMode} variant="prominent" type="submit" disabled={!canEdit}>เพิ่ม {plan.selected} รอบสอบ</GlassButton>}</div></div>
   </>}
  </form>;
 }

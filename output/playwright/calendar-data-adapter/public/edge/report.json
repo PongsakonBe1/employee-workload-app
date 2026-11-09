@@ -1,0 +1,34 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "1440px: legacy source/UIDs, explicit historical + current evening times, unchanged/edit/Undo dry-run, four views + client navigation use one cached load, no page overflow",
+      "passed": true
+    },
+    {
+      "name": "1440px: actual self-hosted PDF import into adapted data, two valid create payloads, isolated Undo",
+      "passed": true
+    },
+    {
+      "name": "1440px: actual image OCR/temporary + directory identities, no duplicate options, local import/details, temporary UID blocked from document plan, Undo and Staff guard, dataset isolation",
+      "passed": true
+    },
+    {
+      "name": "390px: legacy source/UIDs, explicit historical + current evening times, unchanged/edit/Undo dry-run, four views + client navigation use one cached load, no page overflow",
+      "passed": true
+    },
+    {
+      "name": "390px: actual self-hosted PDF import into adapted data, two valid create payloads, isolated Undo",
+      "passed": true
+    },
+    {
+      "name": "390px: actual image OCR/temporary + directory identities, no duplicate options, local import/details, temporary UID blocked from document plan, Undo and Staff guard, dataset isolation",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "writeRequests": [],
+  "physicalIOS": false,
+  "productionConnected": false
+}

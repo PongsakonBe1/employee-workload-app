@@ -223,6 +223,8 @@
 .cal-import-term .cal-form-error { font-size:.8125rem; }
 .cal-dataset-switch { margin:0 0 18px; display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; }
 .cal-dataset-switch p { flex:1; min-width:200px; margin:0; font-size:.8125rem; line-height:1.6; color:var(--ui-sub); }
+.cal-adapter-checks { margin-top:16px;padding-top:16px;border-top:1px solid var(--ui-line); }
+.cal-adapter-checks>[role=status] { margin-top:12px; }
 .cal-import-dataset-note { margin:18px 0; padding:16px; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-soft); }
 .cal-import-dataset-note p { font-size:.8125rem; line-height:1.6; color:var(--ui-sub); }
 .dl-import-form { margin-top:20px; }
@@ -243,5 +245,5 @@
 .dl-import-time-source summary { min-height:44px;padding-block:12px;cursor:pointer;font-size:.875rem; }
 .dl-import-time-source img { display:block;max-width:100%;max-height:180px;object-fit:contain;background:white;border:1px solid var(--ui-line);border-radius:12px;margin-block:8px; }
 @media(max-width:760px) { .dl-import-mappings { grid-template-columns:1fr; }.dl-import-round-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }.dl-import-round-fields>.ui-field:first-child { grid-column:1/-1; } }
-@media(max-width:760px) { .cal-dataset-switch>.ui-glass-controls { width:100%; }.cal-dataset-switch>.ui-glass-controls>button { flex:1; min-width:0; }.cal-dataset-switch p { min-width:0; flex-basis:100%; } }
+@media(max-width:760px) { .cal-dataset-switch>.ui-glass-controls { width:100%; }.cal-dataset-switch>.ui-glass-controls>button { flex:1;min-width:0;padding-inline:6px;line-height:1.5;text-align:center; }.cal-dataset-switch p { min-width:0; flex-basis:100%; } }
 @media(max-width:760px) { .cal-import-dialog { width:calc(100vw - 16px); max-width:calc(100vw - 16px); }.cal-import-row-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }.cal-import-row-fields>.ui-field:last-child { grid-column:1/-1; }.cal-import-term .cal-form-grid { grid-template-columns:1fr; }.cal-import-file { padding:14px; }.cal-import-file>svg { display:none; }.cal-import-picker { width:100%; justify-content:center; }.cal-import-steps { gap:6px; font-size:.75rem; }.cal-import-steps li { padding:7px 8px; }.cal-import-form .ui-checkbox { width:21px; min-height:21px; }.cal-import-actions { bottom:-20px; } }

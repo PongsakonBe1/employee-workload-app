@@ -1,0 +1,29 @@
+{
+  "branch": "codex/calendar-data-adapter",
+  "unitPassed": 446,
+  "adapterUnitAndSIT": 38,
+  "e2e": {
+    "chromeLocal": 6,
+    "edgeCloudflare": 6
+  },
+  "regression": {
+    "calendar": 11,
+    "pdf": 4,
+    "dl": 7
+  },
+  "lint": "passed",
+  "build": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "productionConnected": false,
+  "productionDataUsed": false,
+  "packagesInstalled": false,
+  "deployed": false,
+  "physicalDeviceUAT": false
+}

@@ -14,6 +14,8 @@ import CalendarEntryForm from "./CalendarEntryForm";
 import ClassroomImport from "./ClassroomImport";
 import DlImageImport from "./DlImageImport";
 import { addDlPreviewPerson, planDlImport } from "../../../lib/dlImageImport";
+import { planCalendarDocumentChanges } from "../../../lib/calendarDataAdapter";
+import { legacyCalendarCache } from "./adapterFixtures";
 import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar } from "./CalendarViews";
 import { calendarPeople, initialCalendar } from "./fixtures";
 import holidays from "./holidays.json";
@@ -86,20 +88,31 @@ export default function CalendarPreview() {
   const [role, setRole] = usePreviewState("calendar.role", "admin"), [glassMode, setGlassMode] = useState("quick"), [sideOpen, setSideOpen] = useState(true);
   const [sampleData, setSampleData] = usePreviewState("calendar.data", initialCalendar);
   const [sandboxData, setSandboxData] = usePreviewState("calendar.sandbox.data", { rules: [], events: [] });
+  const [legacyData, setLegacyData] = usePreviewState("calendar.legacy.data", null), [legacySnapshot, setLegacySnapshot] = usePreviewState("calendar.legacy.snapshot", null);
+  const [legacyError, setLegacyError] = useState(""), [contractResult, setContractResult] = useState(null);
   const [dataset, setDataset] = usePreviewState("calendar.dataset", "sample");
   const [sampleUndo, setSampleUndo] = usePreviewState("calendar.undo", null), [sandboxUndo, setSandboxUndo] = usePreviewState("calendar.sandbox.undo", null);
-  const data = dataset === "sandbox" ? sandboxData : sampleData, setData = dataset === "sandbox" ? setSandboxData : setSampleData;
-  const undo = dataset === "sandbox" ? sandboxUndo : sampleUndo, setUndo = dataset === "sandbox" ? setSandboxUndo : setSampleUndo;
+  const [legacyUndo, setLegacyUndo] = usePreviewState("calendar.legacy.undo", null);
+  const data = dataset === "legacy" ? legacyData || { rules: [], events: [] } : dataset === "sandbox" ? sandboxData : sampleData, setData = dataset === "legacy" ? setLegacyData : dataset === "sandbox" ? setSandboxData : setSampleData;
+  const undo = dataset === "legacy" ? legacyUndo : dataset === "sandbox" ? sandboxUndo : sampleUndo, setUndo = dataset === "legacy" ? setLegacyUndo : dataset === "sandbox" ? setSandboxUndo : setSampleUndo;
+  const datasetLabel = dataset === "legacy" ? "ข้อมูลเดิมจำลอง" : dataset === "sample" ? "ชุดตัวอย่าง" : "พื้นที่ทดลองนำเข้า";
   const [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
   const [dialog, setDialog] = useState(null), [selected, setSelected] = useState(null), [selectedHoliday, setSelectedHoliday] = useState(null);
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
   const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09");
   const [status, setStatus] = useState("");
   const [importKind, setImportKind] = useState("classroom");
-  const [people, setPeople] = usePreviewState("calendar.people", calendarPeople);
+  const [previewPeople, setPeople] = usePreviewState("calendar.people", calendarPeople);
+  const people = dataset === "legacy" ? [...previewPeople, ...(legacySnapshot?.people || [])] : previewPeople;
   const counter = useRef(Date.now()), restoredMode = useRef(hasPreviewState("calendar.mode"));
   useEffect(() => { const current = calendarToday();setToday(current);if (!restoredMode.current && matchMedia("(max-width:760px)").matches) setMode("day"); }, [setMode]);
-  const canEdit = role !== "staff", range = calendarRange(date, mode), week = calendarRange(date, "week");
+  useEffect(() => {
+    if (dataset !== "legacy" || legacySnapshot) return;
+    let active = true;
+    legacyCalendarCache.read().then(snapshot => { if (active) { setLegacySnapshot(snapshot);if (!legacyData) setLegacyData(structuredClone(snapshot.data)); } }).catch(() => { if (active) setLegacyError("โหลดข้อมูลจำลองไม่สำเร็จ กรุณาเปิดหน้านี้ใหม่"); });
+    return () => { active = false; };
+  }, [dataset, legacySnapshot, legacyData, setLegacySnapshot, setLegacyData]);
+  const canEdit = role !== "staff" && (dataset !== "legacy" || Boolean(legacySnapshot?.complete)), range = calendarRange(date, mode), week = calendarRange(date, "week");
   const renderRange = mode === "month" ? { start: monthCalendarDates(date)[0], end: monthCalendarDates(date).at(-1) } : range;
   const rows = filterCalendar(expandCalendar(data, renderRange, filters.semester), filters);
   const shared = { rows, range, holidays, holidayOptions: filters, onEvent: row => { setSelected(row);setDialog("detail"); }, onHoliday: item => { setSelectedHoliday(item);setDialog("holiday"); } };
@@ -111,7 +124,7 @@ export default function CalendarPreview() {
     if (!canEdit) return;
     setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
   }
-  function commit(next, message) { setUndo({ before: data, message });setData(next);setDialog(null);setStatus(message + (dataset === "sample" ? " · ชุดตัวอย่าง" : " · พื้นที่ทดลองนำเข้า")); }
+  function commit(next, message) { setUndo({ before: data, message });setData(next);setContractResult(null);setDialog(null);setStatus(message + " · " + datasetLabel); }
   function saveEntry(event) {
     event.preventDefault();if (!canEdit) return;
     const value = { ...entry, title: entry.title.trim(), rooms: entry.kind === "dl" ? Number(entry.participants) > 40 ? ["406", "407"] : ["406"] : entry.rooms, participants: Number(entry.participants) };
@@ -146,7 +159,8 @@ export default function CalendarPreview() {
     if(!canEdit)return {error:"ไม่มีสิทธิ์เพิ่มผู้คุมทดลอง"};
     const next=addDlPreviewPerson(people,name,"dl-person-"+(++counter.current));
     if(next.error)return next;
-    setPeople(next.people);return {person:next.person};
+    if (next.person.temporary && !previewPeople.some(person => person.id === next.person.id)) setPeople([...previewPeople, next.person]);
+    return {person:next.person};
   }
   function importDlRounds(events, options) {
     if (!canEdit) return "ไม่มีสิทธิ์นำเข้าตารางสอบ";
@@ -200,9 +214,12 @@ export default function CalendarPreview() {
       <GlassControlGroup mode={glassMode} label="เลือกชุดข้อมูลปฏิทิน">
         <button type="button" aria-pressed={dataset === "sample"} onClick={() => setDataset("sample")}>ชุดตัวอย่าง</button>
         <button type="button" aria-pressed={dataset === "sandbox"} onClick={() => setDataset("sandbox")}>พื้นที่ทดลองนำเข้า</button>
+        <button type="button" aria-pressed={dataset === "legacy"} onClick={() => setDataset("legacy")}>ข้อมูลเดิมจำลอง</button>
       </GlassControlGroup>
-      <p>{dataset === "sample" ? "ชุดตัวอย่างสำหรับตรวจหน้าตาและการทำงาน · ทดลองไฟล์ของคุณได้ในพื้นที่แยก" : "พื้นที่เริ่มว่างสำหรับไฟล์ของคุณ แยกจากชุดตัวอย่าง · ข้อมูลอยู่เฉพาะแท็บนี้และยังไม่บันทึกระบบจริง"}</p>
+      <p>{dataset === "legacy" ? "ข้อมูลสังเคราะห์รูปแบบเดียวกับระบบเดิม · การแก้ไขและนำเข้ายังอยู่เฉพาะแท็บนี้ ไม่เชื่อมฐานข้อมูลจริง" : dataset === "sample" ? "ชุดตัวอย่างสำหรับตรวจหน้าตาและการทำงาน · ทดลองไฟล์ของคุณได้ในพื้นที่แยก" : "พื้นที่เริ่มว่างสำหรับไฟล์ของคุณ แยกจากชุดตัวอย่าง · ข้อมูลอยู่เฉพาะแท็บนี้และยังไม่บันทึกระบบจริง"}</p>
     </section>
+    {dataset === "legacy" && !legacySnapshot && <p role="status">{legacyError || "กำลังโหลดข้อมูลเดิมจำลอง…"}</p>}
+    {dataset === "legacy" && legacySnapshot?.issues.length > 0 && <p role="alert" className="cal-coverage-note">มี {legacySnapshot.issues.length} รายการข้อมูลเดิมที่ต้องตรวจ รายการเหล่านี้ยังไม่แสดงในปฏิทิน และยังแก้ไขชุดนี้ไม่ได้</p>}
     <div className="cal-layout" data-side-open={sideOpen}>
       <aside className="cal-sidebar" aria-label="ปฏิทินและตัวกรอง">
         <GlassSurface
@@ -353,7 +370,7 @@ export default function CalendarPreview() {
             <Check size={17} aria-hidden="true" />
             {undo.message}
           </span>
-          <GlassButton mode={glassMode} onClick={() => { setData(undo.before);setUndo(null);setStatus("เลิกทำการเปลี่ยนแปลงล่าสุดแล้ว"); }}>
+          <GlassButton mode={glassMode} onClick={() => { setData(undo.before);setUndo(null);setContractResult(null);setStatus("เลิกทำการเปลี่ยนแปลงล่าสุดแล้ว"); }}>
             <Undo2 size={16} aria-hidden="true" />
             เลิกทำ
           </GlassButton>
@@ -389,6 +406,11 @@ export default function CalendarPreview() {
         <a href="/dev/record">หน้าบันทึกงาน</a>
       </div>
       <p className="ui-caption">ตารางและธุรกรรมในหน้านี้เป็นข้อมูลตัวอย่างในหน่วยความจำ ไม่มีการอ่านหรือเขียน production · วันหยุดเป็นชุดอ้างอิงจากวันที่ 5 พ.ย. 2569</p>
+      {dataset === "legacy" && legacySnapshot && <section className="cal-adapter-checks" aria-label="ผลตรวจตัวแปลงข้อมูล">
+        <p className="ui-caption" data-adapter-loads={legacyCalendarCache.stats().loads}>โหลดชุดเอกสารจำลอง {legacyCalendarCache.stats().loads} ครั้ง · เปลี่ยนวัน/สัปดาห์/เดือนและตัวกรองจากข้อมูลในหน่วยความจำ</p>
+        <GlassButton mode={glassMode} disabled={!canEdit} onClick={() => setContractResult(planCalendarDocumentChanges(legacySnapshot.data, data, { people, role }))}>ตรวจการแก้ไขกับรูปแบบข้อมูลเดิม</GlassButton>
+        {contractResult && <div role="status" data-contract-issues={contractResult.issues.length}><p>{contractResult.issues.length ? `มี ${contractResult.issues.length} จุดที่ยังเตรียมบันทึกจริงไม่ได้` : `ตรวจรูปแบบผ่าน ${contractResult.commands.length} คำสั่งจำลอง · ยังไม่ส่งไปฐานข้อมูล`}</p>{contractResult.issues.map((item, index) => <p key={index} className="cal-form-error">{item.message}</p>)}</div>}
+      </section>}
     </details>
     <p
       className="cal-live-status" role="status"
@@ -538,7 +560,7 @@ export default function CalendarPreview() {
       </div>}
       {dialog === "import" && <>
         <GlassControlGroup mode={glassMode} label="ชนิดตารางที่นำเข้า"><button type="button" aria-pressed={importKind==="classroom"} onClick={()=>setImportKind("classroom")}>ตารางเรียน · PDF</button><button type="button" aria-pressed={importKind==="dl"} onClick={()=>setImportKind("dl")}>ตารางสอบ DL · รูปภาพ</button></GlassControlGroup>
-        {importKind === "dl" ? <DlImageImport people={people} onAddPerson={addPreviewPerson} data={data} dataset={dataset} canEdit={canEdit} glassMode={glassMode} onUseSandbox={()=>setDataset("sandbox")} onCancel={()=>setDialog(null)} onImport={importDlRounds}/> : <ClassroomImport data={data} dataset={dataset} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/> }
+        {importKind === "dl" ? <DlImageImport people={people} onAddPerson={addPreviewPerson} data={data} dataset={dataset} datasetLabel={datasetLabel} canEdit={canEdit} glassMode={glassMode} onUseSandbox={()=>setDataset("sandbox")} onCancel={()=>setDialog(null)} onImport={importDlRounds}/> : <ClassroomImport data={data} dataset={dataset} datasetLabel={datasetLabel} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/> }
       </>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>

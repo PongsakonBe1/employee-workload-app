@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+เฟส [ตัวแปลงข้อมูลปฏิทิน](../calendar-data-adapter/README.md): legacy document mapping/dry-run/cache ด้วย fixture ใน Develop; เพิ่มโหมดข้อมูลเดิมจำลอง ไม่เชื่อมบริการหรือข้อมูลจริง และยังไม่มี production writer · all-pages-ready = false
+
 เฟส [นำเข้าตารางสอบ DL จากภาพ](../dl-image-import/README.md): OCR/review/mapping/atomic import/Undo ใน develop; ภาพจริง localhost และภาพสมมติ Chrome/Edge/Cloudflare ผ่าน ไม่เชื่อมข้อมูลจริง ไม่มี feature route ใหม่; all-pages-ready = false
 
 9 พฤศจิกายน 2569: [Dock ตามเมาส์และ Launchpad](../dock-navigation-pilot/LAUNCHPAD.md) — direct pointer tracking, เครื่องมือเต็ม viewport, search/categories/keyboard และ layout 6/4/3 คอลัมน์; ตรวจ stream ระหว่างเมาส์เคลื่อนบน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false

@@ -1,0 +1,10 @@
+{
+  "files": [
+    "frontend/lib/calendarDataAdapter.js",
+    "frontend/lib/calendarDataAdapter.test.js",
+    "frontend/app/dev/calendar/adapterFixtures.js",
+    "scripts/verify-calendar-adapter.cjs"
+  ],
+  "tool": "Existing Next bundled Babel parser/generator",
+  "astUnchanged": true
+}
