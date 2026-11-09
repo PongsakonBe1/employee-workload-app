@@ -2,6 +2,16 @@ import { addCalendarDays, calendarConflicts, expandCalendar, timeMinutes, validC
 
 export const DL_IMAGE_LIMITS = { bytes:10*1024*1024, pixels:12_000_000, dimension:6000, tableRows:31, rounds:100 };
 export const dlNameKey = value => String(value||"").normalize("NFC").replace(/[\s\u200b-\u200d\ufeff]+/g,"").trim();
+// Preview-only roster entries stay in the tab; source fixtures remain anonymous.
+export function addDlPreviewPerson(people,name,id){
+ const label=String(name||"").normalize("NFC").replace(/\s+/g," ").trim();
+ const key=dlNameKey(label).toLocaleLowerCase("th");
+ if(!key||label.length>100||/[\u0000-\u001f\u007f]/.test(label))return {error:"ระบุชื่อผู้คุมที่ตรวจแล้ว 1–100 ตัวอักษร"};
+ const existing=people.find(person=>dlNameKey(person.label).toLocaleLowerCase("th")===key);
+ if(existing)return {people,person:existing};
+ if(!id||people.some(person=>person.id===id))return {error:"เพิ่มรายชื่อทดลองไม่สำเร็จ กรุณาลองใหม่"};
+ const person={id,label,temporary:true};return {people:[...people,person],person};
+}
 const digits = value => String(value||"").replace(/[๐-๙]/g, digit=>String("๐๑๒๓๔๕๖๗๘๙".indexOf(digit)));
 export function dlDate(value){
  const match=/^(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{2}|\d{4})$/.exec(digits(value).trim());if(!match)return "";

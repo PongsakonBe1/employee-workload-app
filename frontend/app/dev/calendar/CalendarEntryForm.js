@@ -6,7 +6,7 @@ import { CALENDAR_KINDS, CALENDAR_ROOMS } from "../../../lib/calendarView";
 import { GlassButton } from "../../../components/ui/GlassControls";
 import { calendarPeople } from "./fixtures";
 
-export default function CalendarEntryForm({ entry, setEntry, editing, error, glassMode, onSave, onCancel }) {
+export default function CalendarEntryForm({ entry, setEntry, editing, error, glassMode, onSave, onCancel, people = calendarPeople }) {
   const form = useRef(null), errorRef = useRef(null);
   useEffect(() => {
     if (!error) return;
@@ -135,7 +135,7 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
       </div>}
       {entry.kind === "dl" ? <div className="cal-proctor-options">
         <p className="ui-caption">ผู้คุมสอบ</p>
-        {calendarPeople.map(person => <label className="ui-check-row" key={person.id}>
+        {people.map(person => <label className="ui-check-row" key={person.id}>
           <span>{person.label}</span>
           <input
             className="ui-checkbox" type="checkbox"

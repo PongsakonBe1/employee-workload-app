@@ -1,7 +1,9 @@
 /* Actual local OCR; source images and recognized names never enter report artifacts. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310';
-const out=path.resolve('output/playwright/dl-image-import',origin.includes('127.0.0.1')?'local':'public');fs.mkdirSync(out,{recursive:true});
+const reviewedRoster=process.argv[6]==='--reviewed-roster';
+if(new URL(origin).hostname!=='127.0.0.1')throw new Error('Real-image validation is localhost-only');
+const out=path.resolve('output/playwright',reviewedRoster?'dl-image-roster':'dl-image-import',origin.includes('127.0.0.1')?(reviewedRoster?'local/actual':'local'):'public');fs.mkdirSync(out,{recursive:true});
 const report={completed:false,checks:[],errors:[],externalOrigins:[],sourceImageStored:false,recognizedNamesStored:false,physicalIOS:false};
 async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]}),ctx=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block'});
@@ -19,12 +21,17 @@ async function main(){
   assert.equal(values.length,18);assert.deepEqual(values.map(v=>v.date),['03','04','05','10','11','12','17','18','19'].flatMap(day=>[`2026-11-${day}`,`2026-11-${day}`]));let corrections=0;
   for(let i=0;i<values.length;i++){const expected=i%2?{start:'13:30',end:'15:00'}:{start:'09:00',end:'10:30'};if(!values[i].start||!values[i].end){await rows.nth(i).locator('input[name$="-start"]').fill(expected.start);await rows.nth(i).locator('input[name$="-end"]').fill(expected.end);corrections++;}else assert.deepEqual({start:values[i].start,end:values[i].end},expected);}
   assert.ok(corrections<=2);report.checks[0].automaticTimeRanges=values.length-corrections;report.checks[0].explicitReviewCorrections=corrections;console.log(JSON.stringify({sourceRows:9,rounds:18,automaticTimeRanges:values.length-corrections,explicitReviewCorrections:corrections}));
-  const maps=dialog.locator('[data-dl-map] select');for(let i=0;i<await maps.count();i++)await maps.nth(i).selectOption('demo-'+String.fromCharCode(97+i%8));
+  const maps=dialog.locator('[data-dl-map] select'),reviewedNames=[];
+  for(let i=0;i<await maps.count();i++){
+   if(reviewedRoster){const card=dialog.locator('[data-dl-map]').nth(i);reviewedNames.push(await card.locator('input').inputValue());await card.getByRole('button',{name:'ใช้ชื่อนี้ชั่วคราว',exact:true}).click();assert.ok((await maps.nth(i).inputValue()).startsWith('dl-person-'));}
+   else await maps.nth(i).selectOption('demo-'+String.fromCharCode(97+i%8));
+  }
   await dialog.locator('[name=dl-import-confirm]').check();await dialog.getByRole('button',{name:'เพิ่ม 18 รอบสอบ',exact:true}).click();await dialog.waitFor({state:'hidden'});
   await page.getByRole('button',{name:'รายการ',exact:true}).click();assert.ok(await page.getByText('นำเข้า 18 รอบสอบ DL แล้ว',{exact:false}).first().isVisible());
   assert.equal(await page.locator('.cal-agenda-event[data-kind=dl]').count(),6);
-  await page.screenshot({path:path.join(out,'imported-calendar.png')});
-  report.checks.push({name:'reviewed anonymous fixture assignments import atomically into sandbox',rounds:18,participantsPerRound:75,rooms:['406','407']});
+  if(!reviewedRoster)await page.screenshot({path:path.join(out,'imported-calendar.png')});
+  else {await page.locator('.cal-agenda-event[data-kind=dl]').first().click();const detail=await dialog.locator('.cal-detail-facts').textContent();assert.ok(reviewedNames.filter(name=>detail.includes(name)).length===3);await page.keyboard.press('Escape');}
+  report.checks.push({name:reviewedRoster?'temporary OCR roster IDs import atomically; first-round detail resolves all three source names (spelling still needs human review)':'reviewed anonymous fixture assignments import atomically into sandbox',rounds:18,participantsPerRound:75,rooms:['406','407']});
   await page.getByRole('button',{name:'เดือน',exact:true}).click();assert.equal(await page.locator('.cal-month-event[data-kind=dl]').count(),18);
   const undo=page.getByRole('button',{name:/เลิกทำ/}).first();await undo.click();await page.getByText('เลิกทำการเปลี่ยนแปลงล่าสุดแล้ว',{exact:true}).waitFor();assert.equal(await page.locator('.cal-month-event[data-kind=dl]').count(),0);report.checks.push({name:'all 18 rounds appear across the month and Undo restores empty sandbox'});
   assert.deepEqual(report.externalOrigins,[]);assert.deepEqual(report.errors,[]);report.completed=true;

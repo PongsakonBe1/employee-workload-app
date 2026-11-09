@@ -1,0 +1,21 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "1440px: actual anonymous OCR, reviewed names, exact reuse, similar names distinct, duplicate guard, import/detail/edit identity and input containment",
+      "passed": true
+    },
+    {
+      "name": "client navigation and reopen retain roster; Undo removes events; names absent from Web Storage; reload clears temporary roster",
+      "passed": true
+    },
+    {
+      "name": "390px: actual anonymous OCR, reviewed names, exact reuse, similar names distinct, duplicate guard, import/detail/edit identity and input containment",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "writeRequests": [],
+  "physicalIOS": false
+}

@@ -1,0 +1,124 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "actual image OCR",
+      "sourceRows": 9,
+      "rounds": 18,
+      "uniqueDates": 9,
+      "recognizedNameGroups": 8,
+      "elapsedMs": 7041,
+      "values": [
+        {
+          "date": "2026-11-03",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-03",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-04",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-04",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-05",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-05",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-10",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-10",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-11",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-11",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-12",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-12",
+          "start": "",
+          "end": ""
+        },
+        {
+          "date": "2026-11-17",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-17",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-18",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-18",
+          "start": "13:30",
+          "end": "15:00"
+        },
+        {
+          "date": "2026-11-19",
+          "start": "09:00",
+          "end": "10:30"
+        },
+        {
+          "date": "2026-11-19",
+          "start": "",
+          "end": ""
+        }
+      ],
+      "automaticTimeRanges": 16,
+      "explicitReviewCorrections": 2
+    },
+    {
+      "name": "temporary OCR roster IDs import atomically; first-round detail resolves all three source names (spelling still needs human review)",
+      "rounds": 18,
+      "participantsPerRound": 75,
+      "rooms": [
+        "406",
+        "407"
+      ]
+    },
+    {
+      "name": "all 18 rounds appear across the month and Undo restores empty sandbox"
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "sourceImageStored": false,
+  "recognizedNamesStored": false,
+  "physicalIOS": false
+}

@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { dlDate, dlNameKey, dlTableGeometry, parseDlTimeCell, planDlImport } from "./dlImageImport";
+import { addDlPreviewPerson, dlDate, dlNameKey, dlTableGeometry, parseDlTimeCell, planDlImport } from "./dlImageImport";
 const people=[{id:"a"},{id:"b"},{id:"c"}],mapping={alpha:"a",beta:"b",gamma:"c"};
 const options={people,mapping,participants:75,semester:"2/2569"},empty={rules:[],events:[]};
 const row=(id="one",patch={})=>({id,selected:true,date:"2026-11-03",start:"09:00",end:"10:30",proctorKeys:["alpha","beta","gamma"],...patch});
+describe("tab-local reviewed proctor roster",()=>{
+ it("creates a reviewed identity without mutating anonymous fixtures",()=>{const roster=[{id:"demo-a",label:"เจ้าหน้าที่ตัวอย่าง A"}],before=JSON.stringify(roster);const result=addDlPreviewPerson(roster," ผู้คุมทดลอง   ก ","temporary-1");expect(result.person).toEqual({id:"temporary-1",label:"ผู้คุมทดลอง ก",temporary:true});expect(result.people).toHaveLength(2);expect(JSON.stringify(roster)).toBe(before);});
+ it("reuses an exact normalized identity instead of creating duplicates",()=>{const roster=[{id:"temporary-1",label:"Staff A",temporary:true}];const result=addDlPreviewPerson(roster," staff\u200bA ","temporary-2");expect(result.people).toBe(roster);expect(result.person.id).toBe("temporary-1");});
+ it("never merges similar first names or different nicknames",()=>{let roster=[];for(const [i,name] of ["ผู้คุมทดลอง ก","ผู้คุมทดลอง กข","ผู้คุมทดลอง ก (หนึ่ง)","ผู้คุมทดลอง ก (สอง)"].entries())roster=addDlPreviewPerson(roster,name,`temporary-${i}`).people;expect(roster).toHaveLength(4);expect(new Set(roster.map(p=>p.id)).size).toBe(4);});
+ it("rejects blank, invisible-only, oversized and control-character names",()=>{for(const name of ["","  ","\u200b","x".repeat(101),"Staff\u0000A"])expect(addDlPreviewPerson([],name,"temporary-1").error).toBeTruthy();});
+ it("rejects missing or colliding temporary IDs",()=>{expect(addDlPreviewPerson([],"Staff A","").error).toBeTruthy();expect(addDlPreviewPerson([{id:"taken",label:"Staff B"}],"Staff A","taken").error).toBeTruthy();});
+ it("uses reviewed IDs in the import and rejects a repeated identity within a round",()=>{let roster=[];for(const [i,name] of ["Staff A","Staff B","Staff C"].entries())roster=addDlPreviewPerson(roster,name,`temporary-${i}`).people;const result=planDlImport([row()],{...options,people:roster,mapping:{alpha:"temporary-0",beta:"temporary-1",gamma:"temporary-2"}},empty);expect(result.issues).toEqual([]);expect(result.events[0].proctors).toEqual(roster.map(p=>p.id));expect(JSON.stringify(result.events)).not.toContain("Staff");expect(planDlImport([row()],{...options,people:roster,mapping:{alpha:"temporary-0",beta:"temporary-0",gamma:"temporary-2"}},empty).events).toEqual([]);});
+});
 describe("DL image date and cell parsing",()=>{
  it("converts short/full Buddhist years, CE and Thai digits without host locale",()=>{for(const source of ["3/11/69","03/11/2569","3/11/2026","๓/๑๑/๖๙"])expect(dlDate(source)).toBe("2026-11-03");});
  it("rejects impossible and incomplete dates",()=>{for(const source of ["31/11/69","29/2/2569","3/11","69-11-03"])expect(dlDate(source)).toBe("");});

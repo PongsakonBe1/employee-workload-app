@@ -4,32 +4,38 @@ import { ImageIcon, Plus, Upload } from "lucide-react";
 import { GlassButton } from "../../../components/ui/GlassControls";
 import { planDlImport } from "../../../lib/dlImageImport";
 import { readDlImage, validateDlImageFile } from "../../../lib/readDlImage";
-import { calendarPeople } from "./fixtures";
 
-export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandbox,onCancel,onImport}){
+export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandbox,onCancel,onImport,people,onAddPerson}){
  const [file,setFile]=useState(null),[preview,setPreview]=useState(""),[result,setResult]=useState(null),[mapping,setMapping]=useState({});
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(null),[error,setError]=useState(""),[participants,setParticipants]=useState("75"),[semester,setSemester]=useState("2/2569");
  const [confirmed,setConfirmed]=useState(false),[dayFilter,setDayFilter]=useState("all"),[focus,setFocus]=useState(null);
+ const [nameDrafts,setNameDrafts]=useState({}),[nameErrors,setNameErrors]=useState({});
  const request=useRef(null),form=useRef(null),errorRef=useRef(null),serial=useRef(0);
  useEffect(()=>()=>request.current?.abort(),[]);
  useEffect(()=>{if(!file){setPreview("");return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url);},[file]);
  useEffect(()=>{if(error)errorRef.current?.focus();},[error]);
  useEffect(()=>{if(focus){const node=form.current?.querySelector(focus.selector);node?.scrollIntoView({block:"center",behavior:"auto"});node?.focus({preventScroll:true});}},[focus]);
- const options={participants,semester,mapping,people:calendarPeople};
+ const options={participants,semester,mapping,people};
  const plan=result?planDlImport(result.rows,options,data):{events:[],issues:[],selected:0};
  async function choose(next){
-  request.current?.abort();const controller=new AbortController();request.current=controller;setBusy(true);setFile(null);setError("");setResult(null);setMapping({});setConfirmed(false);setDayFilter("all");
+  request.current?.abort();const controller=new AbortController();request.current=controller;setBusy(true);setFile(null);setError("");setResult(null);setMapping({});setNameDrafts({});setNameErrors({});setConfirmed(false);setDayFilter("all");
   try{await validateDlImageFile(next);if(!controller.signal.aborted)setFile(next);}
   catch(failure){if(!controller.signal.aborted)setError(failure.message);}
   finally{if(request.current===controller)setBusy(false);}
  }
  async function read(){
-  request.current?.abort();const controller=new AbortController();request.current=controller;setBusy(true);setError("");setResult(null);setMapping({});setConfirmed(false);setDayFilter("all");
+  request.current?.abort();const controller=new AbortController();request.current=controller;setBusy(true);setError("");setResult(null);setMapping({});setNameDrafts({});setNameErrors({});setConfirmed(false);setDayFilter("all");
   try{const parsed=await readDlImage(file,{signal:controller.signal,onProgress:setProgress});if(!controller.signal.aborted)setResult(parsed);}
   catch(failure){if(!controller.signal.aborted)setError(failure.message||"อ่านภาพไม่สำเร็จ กรุณาตรวจภาพหรือลงรายการเอง");}
   finally{if(request.current===controller){setBusy(false);setProgress(null);}}
  }
  function update(id,patch){setConfirmed(false);setResult(previous=>({...previous,rows:previous.rows.map(row=>row.id===id?{...row,...patch}:row)}));}
+ function addReviewedName(person,index){
+  if(!canEdit)return;
+  const added=onAddPerson(nameDrafts[person.key]??person.text);
+  if(added.error){setNameErrors(previous=>({...previous,[person.key]:added.error}));setFocus({selector:`[name="dl-preview-name-${index}"]`});return;}
+  setMapping(previous=>({...previous,[person.key]:added.person.id}));setNameErrors(previous=>({...previous,[person.key]:""}));setConfirmed(false);
+ }
  function addRound(){
   const id=`manual-${++serial.current}`,row={id,sourceRow:"เพิ่มเอง",date:"",start:"",end:"",proctorKeys:[],manualProctors:["","",""],selected:true};
   setConfirmed(false);setDayFilter("all");setResult(previous=>previous?{...previous,rows:[...previous.rows,row]}:{rows:[row],names:[],warnings:[],sourceRows:0});setFocus({selector:`[data-dl-row="${id}"] input[type=date]`});
@@ -46,7 +52,7 @@ export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandb
   const current=planDlImport(result.rows,options,data);if(current.issues.length||!confirmed){next();return;}
   const failure=onImport(current.events,{participants,semester});if(failure){setError(failure);setConfirmed(false);}
  }
- const personOptions=<><option value="">เลือกผู้คุมสอบ</option>{calendarPeople.map(person=><option value={person.id} key={person.id}>{person.label}</option>)}<option value="none">ไม่มีชื่อในช่องนี้</option></>;
+ const personOptions=<><option value="">เลือกผู้คุมสอบ</option>{people.map(person=><option value={person.id} key={person.id}>{person.label}{person.temporary?" · ทดลอง":""}</option>)}<option value="none">ไม่มีชื่อในช่องนี้</option></>;
  return <form className="cal-import-form dl-import-form" ref={form} onSubmit={submit} noValidate>
   <ol className="cal-import-steps" aria-label="ขั้นตอนนำเข้า"><li aria-current={!result?"step":undefined}>1 · เลือกและอ่านภาพ</li><li aria-current={result?"step":undefined}>2 · ตรวจและจับคู่ผู้คุม</li><li>3 · เพิ่มลงปฏิทิน</li></ol>
   <div className="cal-import-file"><ImageIcon size={26} aria-hidden="true"/><div><strong>{file?.name||"ตารางสอบ Digital Literacy"}</strong><p>PNG/JPEG · ไม่เกิน 10 MB / 12 ล้านพิกเซล · ตารางแบบตัวอย่างที่มีผู้คุม 3 ช่อง</p></div><label className="cal-import-picker"><Upload size={17} aria-hidden="true"/><span>{file?"เปลี่ยนรูปภาพ":"เลือกรูปภาพ"}</span><input type="file" aria-label="เลือกรูปตารางสอบ DL" accept="image/png,image/jpeg,.png,.jpg,.jpeg" disabled={busy||!canEdit} onChange={event=>{choose(event.target.files?.[0]);event.target.value="";}}/></label></div>
@@ -60,7 +66,13 @@ export default function DlImageImport({data,dataset,canEdit,glassMode,onUseSandb
    <section className="cal-import-dataset-note"><strong>{dataset==="sample"?"กำลังตรวจเทียบกับชุดตัวอย่าง":"พื้นที่ทดลองนำเข้าแยกจากชุดตัวอย่าง"}</strong><p>ตรวจตารางซ้ำและห้องชนในชุดที่เลือก ข้อมูลอยู่เฉพาะแท็บนี้ ยังไม่บันทึกระบบจริง</p>{dataset==="sample"&&<GlassButton mode={glassMode} onClick={()=>{setConfirmed(false);onUseSandbox();}}>ใช้พื้นที่ทดลองแยก</GlassButton>}</section>
    <div className="cal-form-grid"><label className="ui-field"><span>จำนวนคนต่อรอบ</span><input name="dl-import-participants" aria-invalid={plan.issues.some(item=>item.field==="participants")} aria-describedby="dl-import-help" className="apple-input" inputMode="numeric" value={participants} onChange={event=>{setParticipants(event.target.value);setConfirmed(false);}}/></label><label className="ui-field"><span>ภาคเรียน</span><input name="dl-import-semester" aria-invalid={plan.issues.some(item=>item.field==="semester")} aria-describedby="dl-import-help" className="apple-input" value={semester} maxLength={6} onChange={event=>{setSemester(event.target.value);setConfirmed(false);}}/></label></div>
    <p className="cal-form-note">75 คนเป็นค่าตั้งต้นที่ทีมยืนยัน ใช้กับแต่ละรอบ · มากกว่า 40 คนใช้ห้อง 406 + 407 ตามเกณฑ์เดิม · ไม่สร้างรอบเย็นหากไม่มีในภาพ</p>
-   {result.names.length>0&&<section className="dl-import-mappings" data-private="true" aria-label="จับคู่ผู้คุมจากภาพ"><h3>จับคู่ผู้คุมจากภาพ</h3><p className="cal-form-note">เลือกชื่อในระบบให้ตรงกับชื่อจากภาพหนึ่งครั้ง ใช้กับทุกรอบที่พบชื่อนั้น หรือปรับแยกในรายละเอียดแต่ละรอบได้</p>{result.names.map((person,index)=><label className="ui-field" data-dl-map="true" key={person.key}><span>{index+1}. จากภาพ: {person.text||"อ่านชื่อไม่ครบ — ตรวจต้นฉบับ"}</span><select className="apple-input" aria-label={`จับคู่ผู้คุมจากภาพ ${index+1}`} data-unmapped={!mapping[person.key]} value={mapping[person.key]||""} onChange={event=>{setMapping(previous=>({...previous,[person.key]:event.target.value}));setConfirmed(false);}}>{personOptions}</select></label>)}</section>}
+   {result.names.length>0&&<section className="dl-import-mappings" data-private="true" aria-label="จับคู่ผู้คุมจากภาพ"><h3>ตรวจชื่อและจับคู่ผู้คุม</h3><p className="cal-form-note">รายชื่อ A–H เป็นข้อมูลตัวอย่าง หากไม่มีชื่อที่ตรงกัน ให้แก้ชื่อจากภาพแล้วกด “ใช้ชื่อนี้ชั่วคราว” ใช้กับทุกรอบที่พบชื่อนั้น รายชื่ออยู่เฉพาะแท็บทดลอง รีเฟรชแล้วหาย ไม่สร้างบัญชีผู้ใช้จริง</p>{result.names.map((person,index)=><div className="dl-import-map-card" data-dl-map="true" key={person.key}>
+    <p>{index+1}. จากภาพ: {person.text||"อ่านชื่อไม่ครบ — ตรวจต้นฉบับ"}</p>
+    <label className="ui-field"><span>ชื่อที่ตรวจแล้ว</span><input className="apple-input" name={`dl-preview-name-${index}`} aria-label={`ชื่อผู้คุมที่ตรวจแล้ว ${index+1}`} maxLength={100} aria-invalid={Boolean(nameErrors[person.key])} aria-describedby={nameErrors[person.key]?`dl-name-error-${index}`:undefined} value={nameDrafts[person.key]??person.text} onChange={event=>{setNameDrafts(previous=>({...previous,[person.key]:event.target.value}));setMapping(previous=>({...previous,[person.key]:""}));setNameErrors(previous=>({...previous,[person.key]:""}));setConfirmed(false);}}/></label>
+    <GlassButton mode={glassMode} disabled={!canEdit} onClick={()=>addReviewedName(person,index)}>ใช้ชื่อนี้ชั่วคราว</GlassButton>
+    {nameErrors[person.key]&&<p className="cal-form-error" role="alert" id={`dl-name-error-${index}`}>{nameErrors[person.key]}</p>}
+    <label className="ui-field"><span>ผู้คุมที่ใช้ในรอบสอบ</span><select className="apple-input" aria-label={`จับคู่ผู้คุมจากภาพ ${index+1}`} data-unmapped={!mapping[person.key]} value={mapping[person.key]||""} onChange={event=>{setMapping(previous=>({...previous,[person.key]:event.target.value}));setConfirmed(false);}}>{personOptions}</select></label>
+   </div>)}</section>}
    <div className="cal-import-list-heading"><h3>ตรวจรายการสอบ</h3><GlassButton mode={glassMode} onClick={addRound} disabled={!canEdit||result.rows.length>=100}><Plus size={16} aria-hidden="true"/>เพิ่มรอบสอบ</GlassButton></div>
    <label className="ui-field cal-import-room-filter"><span>แสดงวันที่</span><select className="apple-input" value={dayFilter} onChange={event=>setDayFilter(event.target.value)}><option value="all">ทุกวัน</option>{[...new Set(result.rows.map(row=>row.date).filter(Boolean))].sort().map(date=><option key={date}>{date}</option>)}</select></label>
    <div className="cal-import-rows">{result.rows.map((row,index)=>{const problem=plan.issues.find(item=>item.id===row.id),assignments=row.manualProctors||row.proctorKeys.map(key=>mapping[key]||"");return <fieldset className="cal-import-row" key={row.id} data-dl-row={row.id} data-issue={Boolean(problem)} data-selected={row.selected} hidden={dayFilter!=="all"&&row.date!==dayFilter}>
