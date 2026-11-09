@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { GlassButton } from "../../../components/ui/GlassControls";
@@ -8,10 +8,12 @@ import { Dialog } from "../../../components/ui/Dialog";
 import { useButtonMaterial } from "../../../components/ui/ButtonMaterialProvider";
 
 export function ButtonMaterialReview({ mode }) {
-  const { engine, setEngine, phase } = useButtonMaterial(), router = useRouter(), id = useId();
+  const { engine, setEngine, phase, requestPreview } = useButtonMaterial(), router = useRouter(), id = useId();
+  useEffect(() => { requestPreview(); }, [requestPreview]);
   const [recipient, setRecipient] = useState(""), [saved, setSaved] = useState(0), [deleted, setDeleted] = useState(0), [dialog, setDialog] = useState(null);
   return <section id="button-materials" className="apple-panel ui-dev-form ui-button-ab" aria-label="เปรียบเทียบวัสดุปุ่ม A/B">
     <h2 className="ui-section-title">เปรียบเทียบวัสดุปุ่ม A/B</h2>
+    <p className="ui-caption">เลือก A · QuickLiquid เป็นค่าเริ่มต้นของหน้าทำงานแล้ว ส่วน B ยังทดลองเทียบได้ที่นี่</p>
     <p className="ui-caption">ข้อความไทยและร่างเดียวกัน · ทดลองกด กรอกข้อมูล และเลื่อนหน้าได้ · ไม่มีข้อมูลจริง</p>
     <div className="ui-button-ab-controls" role="group" aria-label="วัสดุปุ่มสำหรับหน้า develop">
       {[["quick", "QuickLiquid เดิม"], ["zak", "Liquid Glass ใหม่"]].map(([value, label]) => <button key={value} className="ui-choice" type="button" aria-pressed={engine === value} onClick={() => setEngine(value)}>{label}</button>)}

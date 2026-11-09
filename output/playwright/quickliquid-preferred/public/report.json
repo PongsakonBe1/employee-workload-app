@@ -1,0 +1,32 @@
+{
+  "completed": true,
+  "cases": [
+    {
+      "width": 390,
+      "colorScheme": "light",
+      "passed": true,
+      "workingPageModuleRequests": 0
+    },
+    {
+      "width": 1440,
+      "colorScheme": "light",
+      "passed": true,
+      "workingPageModuleRequests": 0
+    },
+    {
+      "width": 390,
+      "colorScheme": "dark",
+      "passed": true,
+      "workingPageModuleRequests": 0
+    },
+    {
+      "width": 1440,
+      "colorScheme": "dark",
+      "passed": true,
+      "workingPageModuleRequests": 0
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "productionDataUsed": false
+}

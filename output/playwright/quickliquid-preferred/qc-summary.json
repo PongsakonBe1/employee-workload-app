@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-09",
+  "decision": "Reviewer preferred A / QuickLiquid",
+  "base": "59c50bc",
+  "branch": "codex/liquid-glass-button-pilot",
+  "defaultEngine": "quick",
+  "candidateEngine": "B remains available for explicit review",
+  "candidateJsLoadedOnFreshWorkingPage": false,
+  "results": {
+    "edge": {
+      "passed": 4,
+      "total": 4,
+      "evidence": "edge/report.json"
+    },
+    "public": {
+      "passed": 4,
+      "total": 4,
+      "evidence": "public/report.json"
+    }
+  },
+  "compatibilityExport": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "targetedLint": "passed: ButtonMaterialProvider.js and ButtonMaterialReview.js",
+  "sourceHashes": {
+    "frontend/components/ui/ButtonMaterialProvider.js": "b4af374c0c2a5e7e79161e92e3599e84628b108e3e7542e0ddcf1fcb50fc9795",
+    "frontend/app/dev/ui/ButtonMaterialReview.js": "560761e9d12832ec0692735b5b9ff38ece4c3cd16f6251fcf139ec5f4d03b323"
+  },
+  "productionDataUsed": false,
+  "deployed": false,
+  "realDeviceUAT": false,
+  "allPagesReady": false
+}

@@ -2,13 +2,15 @@
 
 Branch `codex/liquid-glass-button-pilot` จาก `97a8371` · Develop เท่านั้น · ใช้ข้อมูลสังเคราะห์
 
+**ผลตรวจรับล่าสุด: ผู้ใช้เลือก A · QuickLiquid เดิม** จึงตั้ง A เป็นค่าเริ่มต้นของ shared buttons และไม่โหลด JavaScript engine B ในหน้าทำงานปกติจนกว่าจะเข้า A/B หรือเลือกทดลอง B โดยตรง ผล pilot ด้านล่างเป็นหลักฐานช่วงเปรียบเทียบก่อนตัดสินใจ ดูการตรวจการเลือก A ที่ `output/playwright/quickliquid-preferred/`
+
 ## สิ่งที่นำมาใช้
 
 ติดตั้ง `@zakisheriff/liquid-glass` **0.3.20 แบบ exact version** ใน frontend workspace ใช้ `--ignore-scripts` และ lockfile เพิ่ม dependency เดียว ไม่เปลี่ยนแพ็กเกจอื่น เก็บ MIT License และ third-party notices ที่ `/notices/liquid-glass.txt` ไม่มีการนำฟอนต์หรือ SF Symbols มาแจกเพิ่ม
 
 ใช้ public `usePress` / `useRefraction` และ CSS ของ library กับ native `GlassButton` ของโครงการ เพื่อรักษา `type`, `form`, `disabled`, ARIA, ref และ event handlers เดิม ไม่แก้ node_modules และไม่คัดลอกหน้าตา demo มาทับ flow งาน
 
-- ปุ่มใหม่เป็นค่าเริ่มต้นของ shared controls ในหน้า **develop**
+- หลังตรวจรับ ปุ่ม A เป็นค่าเริ่มต้นของ shared controls ในหน้า **develop** ส่วน B คงเป็นตัวเลือกทดลอง
 - Navigation, selection lens และกลไกของ `GlassControlGroup` ใช้ QuickLiquid เดิม
 - หน้าฟอร์ม ตาราง ข้อมูล และ input เดิมยังใช้ของโครงการ ไม่เปลี่ยนเป็น GlassInput/Sheet/Menu ของ library ในเฟสนี้
 - Primary, neutral และ destructive ใช้สีและบทบาทจากเฟสก่อน รักษาตัวอักษรเหนือชั้นแสง ไม่ทำให้ข้อความไทยหักเหตามพื้นหลัง
