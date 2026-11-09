@@ -8,6 +8,6 @@ export function DevelopmentAuthBoundary({
   children
 }) {
   const pathname = usePathname();
-  if (process.env.NODE_ENV === "development" && pathname === "/dev/calendar-readonly") return children;
+  if (process.env.NODE_ENV === "development" && ["/dev/calendar-readonly","/dev/calendar-staging"].includes(pathname)) return children;
   return <AuthProvider>{children}</AuthProvider>;
 }

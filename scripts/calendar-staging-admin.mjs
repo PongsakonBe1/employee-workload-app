@@ -1,0 +1,303 @@
+// Use the installed CLI's authenticated API client; never read credential files or tokens.
+import { createRequire } from "node:module";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { calendarEmulatorFixtures } from "../firebase/calendar-emulator/fixtures.mjs";
+import { adaptCalendarDocuments } from "../frontend/lib/calendarDataAdapter.js";
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
+  target = "labboy-workload-app-staging";
+const account = process.argv[2],
+  action = process.argv[3];
+if (!account?.includes("@")) throw new Error("Explicit account required");
+const directory = path.join(root, ".tools/calendar-staging");
+fs.mkdirSync(directory, {
+  recursive: true
+});
+process.chdir(directory);
+delete process.env.FIREBASE_TOKEN;
+delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const require = createRequire(path.join(process.env.APPDATA, "npm/node_modules/firebase-tools/package.json"));
+if (require("./package.json").version !== "15.18.0") throw new Error("Review staging admin compatibility before changing the installed Firebase CLI version");
+const {
+    Command
+  } = require("./lib/command"),
+  {
+    requireAuth
+  } = require("./lib/requireAuth");
+function field(value) {
+  if (typeof value === "string") return {
+    stringValue: value
+  };
+  if (typeof value === "boolean") return {
+    booleanValue: value
+  };
+  if (typeof value === "number") return {
+    integerValue: String(value)
+  };
+  if (Array.isArray(value)) return {
+    arrayValue: {
+      values: value.map(field)
+    }
+  };
+  return {
+    mapValue: {
+      fields: Object.fromEntries(Object.entries(value).map(([key, item]) => [key, field(item)]))
+    }
+  };
+}
+async function writeFixtures(records) {
+  if (records.some(record => !["users", "classroomSchedules", "dlExamSchedules"].includes(record.collection) || !record.id || record.id.includes("/"))) throw new Error("Invalid staging fixture reference");
+  const {
+      Client
+    } = require("./lib/apiv2"),
+    client = new Client({
+      urlPrefix: "https://firestore.googleapis.com",
+      apiVersion: "v1"
+    });
+  const writes = records.map(({
+    collection,
+    id,
+    data
+  }) => ({
+    update: {
+      name: `projects/${target}/databases/(default)/documents/${collection}/${id}`,
+      fields: field(data).mapValue.fields
+    }
+  }));
+  await client.post(`/projects/${target}/databases/(default)/documents:commit`, {
+    writes
+  });
+  return writes.length;
+}
+const command = new Command("calendar-staging-internal").before(options => {
+  if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
+}).before(requireAuth).action(async () => {
+  if (action === "billing") return {
+    billingEnabled: await require("./lib/gcp/cloudbilling").checkBillingEnabled(target)
+  };
+  if (action === "enableFirestore") {
+    await require("./lib/ensureApiEnabled").ensure(target, "firestore.googleapis.com", "calendar-staging", false);
+    return {
+      firestoreApiEnabled: true
+    };
+  }
+  if (action === "authDomains") {
+    const {
+      Client
+    } = require("./lib/apiv2");
+    const client = new Client({
+      urlPrefix: "https://identitytoolkit.googleapis.com",
+      apiVersion: "admin/v2"
+    });
+    const authorizedDomains = ["labboy-workload-app-staging.firebaseapp.com", "labboy-workload-app-staging.web.app", "localhost", "127.0.0.1", "northwest-revised-domains-varies.trycloudflare.com"];
+    const response = await client.patch(`/projects/${target}/config`, {
+      authorizedDomains
+    }, {
+      queryParams: {
+        updateMask: "authorizedDomains",
+        fields: "authorizedDomains"
+      }
+    });
+    return {
+      authorizedDomains: response.body.authorizedDomains
+    };
+  }
+  if (action === "authStatus") {
+    const {
+        Client
+      } = require("./lib/apiv2"),
+      client = new Client({
+        urlPrefix: "https://identitytoolkit.googleapis.com",
+        apiVersion: "admin/v2"
+      });
+    const provider = await client.get(`/projects/${target}/defaultSupportedIdpConfigs/google.com`, {
+      queryParams: {
+        fields: "name,enabled"
+      }
+    });
+    return {
+      googleEnabled: provider.body.enabled === true
+    };
+  }
+  if (action === "indexes") {
+    const indexes = await new (require("./lib/firestore/api").FirestoreApi)().listIndexes(target, "(default)");
+    return {
+      indexes: indexes.map(index => ({
+        name: index.name,
+        state: index.state,
+        fields: index.fields?.map(field => ({
+          fieldPath: field.fieldPath,
+          order: field.order,
+          arrayConfig: field.arrayConfig
+        }))
+      }))
+    };
+  }
+  if (action === "queryValidation") {
+    const {
+        Client
+      } = require("./lib/apiv2"),
+      client = new Client({
+        urlPrefix: "https://firestore.googleapis.com",
+        apiVersion: "v1"
+      });
+    const decode = value => value.stringValue ?? value.booleanValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : value.arrayValue ? value.arrayValue.values?.map(decode) || [] : value.mapValue ? Object.fromEntries(Object.entries(value.mapValue.fields || {}).map(([key, item]) => [key, decode(item)])) : null);
+    const equal = (fieldPath, value) => ({
+      fieldFilter: {
+        field: {
+          fieldPath
+        },
+        op: "EQUAL",
+        value: field(value)
+      }
+    });
+    async function query(collection, filters, fields, orderBy) {
+      const structuredQuery = {
+        from: [{
+          collectionId: collection
+        }],
+        select: {
+          fields: fields.map(fieldPath => ({
+            fieldPath
+          }))
+        },
+        where: {
+          compositeFilter: {
+            op: "AND",
+            filters
+          }
+        },
+        limit: 201
+      };
+      if (orderBy) structuredQuery.orderBy = orderBy;
+      const response = await client.post(`/projects/${target}/databases/(default)/documents:runQuery`, {
+        structuredQuery
+      });
+      return response.body.filter(row => row.document).map(row => ({
+        ...Object.fromEntries(Object.entries(row.document.fields || {}).map(([key, value]) => [key, decode(value)])),
+        id: row.document.name.split("/").at(-1)
+      }));
+    }
+    const users = await query("users", [equal("active", true), {
+      fieldFilter: {
+        field: {
+          fieldPath: "role"
+        },
+        op: "IN",
+        value: field(["staff", "admin", "superadmin"])
+      }
+    }], ["displayName", "role", "active"]);
+    const classroomSchedules = await query("classroomSchedules", [equal("isActive", true)], ["room", "dayOfWeek", "startTime", "endTime", "subject", "teacher", "semester", "validFrom", "validTo", "isActive"]);
+    const dlExamSchedules = await query("dlExamSchedules", [equal("isActive", true), {
+      fieldFilter: {
+        field: {
+          fieldPath: "date"
+        },
+        op: "GREATER_THAN_OR_EQUAL",
+        value: field("2026-11-01")
+      }
+    }, {
+      fieldFilter: {
+        field: {
+          fieldPath: "date"
+        },
+        op: "LESS_THAN_OR_EQUAL",
+        value: field("2026-11-30")
+      }
+    }], ["date", "startTime", "endTime", "timeSlot", "locations", "location", "studentCount", "proctors", "examType", "isActive"], [{
+      field: {
+        fieldPath: "date"
+      },
+      direction: "ASCENDING"
+    }]);
+    const result = adaptCalendarDocuments({
+      users,
+      classroomSchedules,
+      dlExamSchedules
+    });
+    return {
+      authorization: "provisioning-cli-not-app-user",
+      directoryCount: users.length,
+      classroomCount: result.data.rules.length,
+      novemberExamCount: result.data.events.length,
+      adapterIssues: result.issues.length,
+      starts: result.data.events.map(event => event.start).sort(),
+      documentDetailsLogged: false
+    };
+  }
+  if (action === "seed") {
+    const records = Object.entries(calendarEmulatorFixtures).flatMap(([collection, values]) => values.map(({
+      id,
+      ...data
+    }) => ({
+      collection,
+      id,
+      data
+    })));
+    return {
+      syntheticDocumentsWritten: await writeFixtures(records),
+      authAccountsCopied: false,
+      productionRead: false
+    };
+  }
+  if (action === "provisionReader") {
+    const {
+        Client
+      } = require("./lib/apiv2"),
+      client = new Client({
+        urlPrefix: "https://identitytoolkit.googleapis.com",
+        apiVersion: "v1"
+      });
+    const response = await client.post(`/projects/${target}/accounts:lookup`, {
+      email: [account]
+    }, {
+      queryParams: {
+        fields: "users(localId,emailVerified,providerUserInfo(providerId))"
+      }
+    });
+    const users = response.body.users || [];
+    if (users.length !== 1 || !users[0].emailVerified || !users[0].providerUserInfo?.some(p => p.providerId === "google.com")) return {
+      readerProfileReady: false,
+      reason: "verified_google_login_required"
+    };
+    await writeFixtures([{
+      collection: "users",
+      id: users[0].localId,
+      data: {
+        displayName: "ผู้ทดสอบหลัก",
+        role: "admin",
+        active: true
+      }
+    }]);
+    return {
+      readerProfileReady: true,
+      role: "admin",
+      personalDetailsLogged: false
+    };
+  }
+  throw new Error("Unknown staging admin action");
+});
+try {
+  const result = await command.runner()({
+    project: target,
+    account,
+    json: true,
+    nonInteractive: true,
+    cwd: directory
+  });
+  console.log(JSON.stringify({
+    success: true,
+    target,
+    action,
+    result
+  }));
+} catch (error) {
+  console.log(JSON.stringify({
+    success: false,
+    target,
+    action,
+    reason: String(error.message || "Staging admin operation failed").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[account]").replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 1000)
+  }));
+  process.exitCode = 1;
+}

@@ -1,9 +1,10 @@
 // Dedicated in-memory Auth and Firestore clients; never import the application's firebase.js.
 import { initializeApp, deleteApp } from "firebase/app";
 import { initializeAuth, inMemoryPersistence, connectAuthEmulator, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { initializeFirestore, connectFirestoreEmulator, getDocFromServer, getDocsFromServer, doc, collection, query, where, orderBy, limit, terminate } from "firebase/firestore";
+import { initializeFirestore, connectFirestoreEmulator, terminate } from "firebase/firestore";
 import { calendarEmulator, calendarTestAccounts, calendarTestPassword } from "./calendarEmulatorConfig.js";
-import { CALENDAR_READ_LIMIT, createCalendarReadOnly } from "./calendarReadOnly.js";
+import { createCalendarReadOnly } from "./calendarReadOnly.js";
+import { calendarSdkTransport } from "./calendarSdkTransport.js";
 let sequence = 0;
 export function createCalendarEmulatorClient({
   local = false
@@ -31,22 +32,7 @@ export function createCalendarEmulatorClient({
     experimentalForceLongPolling: true
   });
   connectFirestoreEmulator(db, host, firestorePort);
-  const records = async request => (await getDocsFromServer(request)).docs.map(record => ({
-    ...record.data(),
-    id: record.id
-  }));
-  const reader = createCalendarReadOnly({
-    identity: async uid => {
-      const record = await getDocFromServer(doc(db, "users", uid));
-      return record.exists() ? {
-        ...record.data(),
-        id: record.id
-      } : null;
-    },
-    directory: () => records(query(collection(db, "users"), where("role", "in", ["staff", "admin", "superadmin"]), where("active", "==", true), limit(CALENDAR_READ_LIMIT + 1))),
-    classrooms: () => records(query(collection(db, "classroomSchedules"), where("isActive", "==", true), limit(CALENDAR_READ_LIMIT + 1))),
-    exams: (start, end) => records(query(collection(db, "dlExamSchedules"), where("isActive", "==", true), where("date", ">=", start), where("date", "<=", end), orderBy("date"), limit(CALENDAR_READ_LIMIT + 1)))
-  });
+  const reader = createCalendarReadOnly(calendarSdkTransport(db));
   let session = 0,
     closed = false,
     closing = null;

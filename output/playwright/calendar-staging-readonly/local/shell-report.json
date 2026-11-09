@@ -1,0 +1,20 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "width": 1440,
+      "passed": true,
+      "configurationLoaded": true,
+      "mutationsDisabled": true
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "configurationLoaded": true,
+      "mutationsDisabled": true
+    }
+  ],
+  "errors": [],
+  "unexpectedOrigins": [],
+  "googleLoginAttempted": false
+}

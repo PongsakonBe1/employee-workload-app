@@ -25,6 +25,8 @@ yarn-error.log*
 
 frontend/public/dev-ocr/
 .tools/calendar-emulator/
+.tools/calendar-staging/
+frontend/public/dev-staging-config.json
 firebase/calendar-emulator/*-debug.log*
 firebase/calendar-emulator/.firebase/
 output/playwright/dl-image-import/source-private*

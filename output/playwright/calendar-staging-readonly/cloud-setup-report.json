@@ -1,0 +1,27 @@
+{
+  "checkedOn": "2026-11-10",
+  "projectId": "labboy-workload-app-staging",
+  "database": "(default)",
+  "edition": "STANDARD",
+  "mode": "FIRESTORE_NATIVE",
+  "location": "asia-southeast1",
+  "billingEnabled": false,
+  "googleSignInEnabled": true,
+  "readyIndexes": 2,
+  "syntheticDocumentsSeeded": 11,
+  "authAccountsCopied": false,
+  "queryValidation": {
+    "authorization": "provisioning-cli-not-app-user",
+    "directoryCount": 3,
+    "classroomCount": 1,
+    "novemberExamCount": 3,
+    "adapterIssues": 0,
+    "starts": ["09:00", "15:00", "17:00"]
+  },
+  "readerProfileReady": false,
+  "authenticatedCloudUat": "pending-user-google-sign-in",
+  "productionDocumentsAccessed": false,
+  "productionConfigurationChanged": false,
+  "webAppDeployed": false,
+  "personalDetailsLogged": false
+}

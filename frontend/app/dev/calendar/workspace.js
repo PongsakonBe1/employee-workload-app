@@ -182,7 +182,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
   const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: importKind === "dl" ? "นำเข้าตารางสอบ DL จากรูปภาพ" : "นำเข้าตารางเรียนจาก PDF", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
 
   return <WorkspaceFrame
-    user={externalCalendar ? { uid: externalIdentity || "emulator-signed-out", displayName: externalCalendar.identity?.displayName || "Emulator", initial: "E", role: externalCalendar.identity?.role || "staff" } : { uid: "calendar-fixture", displayName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A", role }} pathname="/calendar"
+    user={externalCalendar ? { uid: externalIdentity || "calendar-signed-out", displayName: externalCalendar.identity?.displayName || externalCalendar.sourceName || "Emulator", initial: "E", role: externalCalendar.identity?.role || "staff" } : { uid: "calendar-fixture", displayName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A", role }} pathname="/calendar"
     notificationSlot={<button
       type="button" className="ui-icon-button"
       aria-label="การแจ้งเตือนตัวอย่าง" onClick={() => open("notifications")}
@@ -195,7 +195,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
       <div>
         <h1>ตารางและการใช้ห้อง</h1>
         <p>เรียน สอบรายวิชา และ Digital Literacy ในปฏิทินเดียว</p>
-        <small className="cal-preview-label">{externalCalendar ? "Development · Emulator อ่านอย่างเดียว" : "Development · ข้อมูลตัวอย่าง"}</small>
+        <small className="cal-preview-label">{externalCalendar ? externalCalendar.label || "Development · Emulator อ่านอย่างเดียว" : "Development · ข้อมูลตัวอย่าง"}</small>
       </div>
       <div className="cal-heading-actions">
         <GlassButton
