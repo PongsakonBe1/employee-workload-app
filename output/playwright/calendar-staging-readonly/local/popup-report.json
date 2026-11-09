@@ -1,0 +1,19 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "width": 1440,
+      "googlePopupReached": true,
+      "cancellationRecoverable": true,
+      "mutationsDisabled": true
+    },
+    {
+      "width": 390,
+      "googlePopupReached": true,
+      "cancellationRecoverable": true,
+      "mutationsDisabled": true
+    }
+  ],
+  "credentialsEntered": false,
+  "authenticatedReadsTested": false
+}

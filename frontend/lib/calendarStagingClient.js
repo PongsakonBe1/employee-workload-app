@@ -1,6 +1,6 @@
 // Cloud staging only. No production configuration, shared test passwords or database writes.
 import { initializeApp, deleteApp } from "firebase/app";
-import { initializeAuth, inMemoryPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { initializeFirestore, terminate } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 import { createCalendarReadOnly } from "./calendarReadOnly.js";
@@ -10,7 +10,8 @@ export function createCalendarStagingClient(config) {
   const approved = validateCalendarStagingConfig(config);
   const app = initializeApp(approved, "calendar-staging-" + ++sequence);
   const auth = initializeAuth(app, {
-    persistence: inMemoryPersistence
+    persistence: inMemoryPersistence,
+    popupRedirectResolver: browserPopupRedirectResolver
   });
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true

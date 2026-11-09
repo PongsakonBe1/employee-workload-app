@@ -5,6 +5,7 @@ import CalendarPreview from "../calendar/workspace";
 import { GlassButton } from "../../../components/ui/GlassControls";
 import { createCalendarStagingClient } from "../../../lib/calendarStagingClient";
 import { validateCalendarStagingConfig, STAGING_PROJECT } from "../../../lib/calendarStagingConfig";
+import { calendarStagingAuthError } from "../../../lib/calendarStagingAuthError";
 const empty = {
   rules: [],
   events: []
@@ -73,7 +74,7 @@ export default function StagingCalendar() {
       if (current === operation.current) setSignedIn(true);
     } catch (failure) {
       if (current === operation.current) {
-        setError(failure.code === "auth/popup-closed-by-user" ? "ปิดหน้าต่างเข้าสู่ระบบแล้ว" : "เข้าสู่ระบบ staging ไม่สำเร็จ ตรวจบัญชีและ domain ที่อนุญาต");
+        setError(calendarStagingAuthError(failure));
         client.current?.close().catch(() => {});
         client.current = null;
       }

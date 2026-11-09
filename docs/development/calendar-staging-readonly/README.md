@@ -74,3 +74,17 @@ node scripts/check-ui-build.mjs calendar-staging-readonly
 ```
 
 หาก pilot ไม่ผ่าน ให้ logout/หยุดใช้ route staging และกลับไป Emulator ที่ผ่าน UAT ไม่มีการลบ project หรือเปลี่ยน production อัตโนมัติ ขั้นถัดไปหลัง UAT คือทบทวนขอบเขต writer/import และเสนอแผนใหม่ก่อนเริ่ม
+
+## แก้ Google popup หลังผู้ใช้ทดสอบ
+
+ผู้ใช้พบว่าเข้าสู่ staging ไม่สำเร็จ ข้อความเดิมรวมทุกสาเหตุเป็นเรื่องบัญชี/domain จึงทำให้วินิจฉัยไม่ได้ ตรวจแล้วพบว่า `initializeAuth` กำหนดเฉพาะ in-memory persistence แต่ขาด `browserPopupRedirectResolver` ขณะที่ `signInWithPopup` ต้องใช้ resolver ตาม [Firebase: custom Auth dependencies](https://firebase.google.com/docs/auth/web/custom-dependencies) SDK ที่ติดตั้งจะคืน `auth/argument-error` ก่อนเปิด Google เมื่อไม่มี resolver; ทดสอบหน้าเดิมแล้วพบว่ากด login ล้มเหลวโดยไม่มี popup
+
+เติม resolver โดยยังใช้ in-memory session และ client แยกแบบเดิม แยกข้อความตาม error codes ที่รู้จัก เช่น popup ถูกบล็อก, domain ไม่อนุญาต, network และผู้ใช้ปิดหน้าต่าง ไม่แสดง raw provider message/code ที่ไม่รู้จัก ซึ่งอาจมีข้อมูลบัญชีหรือรายละเอียดรับรอง ไม่แก้ cloud config หรือ production
+
+ผลตรวจรอบแก้ไข:
+
+- Targeted Unit **24/24 ผ่าน** (error diagnostics/config isolation/read orchestration) รวมทดสอบไม่แสดงข้อความ provider และ arbitrary error code; targeted ESLint, script syntax และ compatibility build ผ่าน
+- Chrome local และ Edge ผ่าน Cloudflare **อย่างละ 2 viewports: 1440/390** ใช้ SDK จริงเปิด popup ไปถึง `accounts.google.com` ได้ ไม่พบ redirect/client rejection ที่ตรวจในหน้า Google ปิด popup แล้วหน้าเดิมแจ้ง `auth/popup-closed-by-user` และเพิ่ม/นำเข้าตารางยัง disabled
+- การทดสอบใช้ browser context ใหม่ที่ไม่มีบัญชี Google ไม่กรอก credentials ไม่บันทึก OAuth URL/payload/token หลักฐานคือ `auth-unit-report.json` และ `local/popup-report.json`, `public/popup-report.json`
+- การรัน Vitest ครั้งแรกใน sandbox ถูก Windows ปฏิเสธ rename cache (`EPERM`) และยังไม่ได้รัน tests จึงรันซ้ำด้วยสิทธิ์เครื่องมือที่อนุมัติแล้วได้ผล 24 ผ่าน ไม่มีการเปลี่ยนโค้ดเพื่อเลี่ยงข้อจำกัดนี้
+- ยังรอผู้ใช้ Google sign-in และ UAT การอ่านด้วยบัญชีที่ผูกสิทธิ์จริง; popup smoke test ไม่ใช่ authenticated read test หรือ physical Safari UAT
