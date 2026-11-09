@@ -1,0 +1,39 @@
+{
+  "completed": true,
+  "browserVersion": "156.0.4314.58",
+  "samples": [
+    {
+      "engine": "quick",
+      "submitCount": 20,
+      "elapsedMs": 7495.5999999940395,
+      "rafSamples": 1340,
+      "rafMedianMs": 5.599999999999454,
+      "rafP95Ms": 5.699999999999818,
+      "framesOver50ms": 0,
+      "taskDurationSeconds": 1.3678789999999998,
+      "scriptDurationSeconds": 0.14759500000000003,
+      "heapUsedDeltaBytes": -6447432,
+      "adaptiveQuality": "high"
+    },
+    {
+      "engine": "zak",
+      "submitCount": 20,
+      "elapsedMs": 7610.0999999940395,
+      "rafSamples": 1355,
+      "rafMedianMs": 5.599999999998545,
+      "rafP95Ms": 5.700000000000728,
+      "framesOver50ms": 0,
+      "taskDurationSeconds": 4.744524999999999,
+      "scriptDurationSeconds": 0.19748900000000003,
+      "heapUsedDeltaBytes": 1230616,
+      "adaptiveQuality": "high"
+    }
+  ],
+  "productionDataUsed": false,
+  "physicalDeviceBenchmark": false,
+  "limitations": [
+    "One warmed headless desktop context with both A/B panes present",
+    "No claim of mobile FPS, battery use or memory-leak absence",
+    "Frame timing includes browser automation and host load; metrics are descriptive"
+  ]
+}

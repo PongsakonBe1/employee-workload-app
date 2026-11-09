@@ -1,7 +1,7 @@
 /* Browser verification of the calendar UI; all transactions are synthetic and tab-local. */
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]), origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, '../output/playwright/'+(process.argv[5]==='glass-button-roles'?'glass-button-roles/regression-calendar':'calendar-liquid-glass'), origin.startsWith('http://127.0.0.1') ? '' : 'public');fs.mkdirSync(out, { recursive: true });
+const out = path.resolve(__dirname, '../output/playwright/'+(['glass-button-roles','liquid-glass-button-pilot'].includes(process.argv[5])?process.argv[5]+'/regression-calendar':'calendar-liquid-glass'), origin.startsWith('http://127.0.0.1') ? '' : 'public');fs.mkdirSync(out, { recursive: true });
 const report = { url: origin + '/dev/calendar', completed: false, checks: [], errors: [], blockedOrigins: [], limitations: ['Synthetic local data, no production integration or PDF/OCR parser', 'Chromium emulation; physical iPhone/Safari and Android UAT remains pending'] };
 async function main() {
   const browser = await chromium.launch({ headless: true, executablePath: process.argv[3] });let page;

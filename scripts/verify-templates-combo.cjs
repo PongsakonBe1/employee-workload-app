@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]);
 const origin=process.argv[4]||'http://127.0.0.1:4310',name=origin.includes('trycloudflare')?'public':process.argv[3].includes('Chrome')?'chrome':'edge';
-const output=path.resolve(__dirname,'../output/playwright/'+(process.argv[5]==='glass-button-roles'?'glass-button-roles/regression-templates':'templates-combo'),name,...(process.argv[5]==='final'?['final']:[]));fs.mkdirSync(output,{recursive:true});
+const output=path.resolve(__dirname,'../output/playwright/'+(['glass-button-roles','liquid-glass-button-pilot'].includes(process.argv[5])?process.argv[5]+'/regression-templates':'templates-combo'),name,...(process.argv[5]==='final'?['final']:[]));fs.mkdirSync(output,{recursive:true});
 const report={cases:[],errors:[],httpErrors:[],productionDataUsed:false,realAuthSIT:false,realDeviceUAT:false};let browser;
 const modal=p=>p.locator('dialog[open]');
 async function ctx(options={}){const c=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'block',...options});c.setDefaultTimeout(25000);c.setDefaultNavigationTimeout(90000);await c.route('**/*',r=>{const u=new URL(r.request().url());return u.origin===origin||['data:','blob:'].includes(u.protocol)?r.continue():r.abort()});c.on('page',p=>p.on('pageerror',e=>report.errors.push(e.message)));c.on('response',r=>{const u=new URL(r.url());if(u.origin===origin&&r.status()>=400&&['script','stylesheet','document'].includes(r.request().resourceType()))report.httpErrors.push({path:u.pathname,status:r.status()})});return c;}

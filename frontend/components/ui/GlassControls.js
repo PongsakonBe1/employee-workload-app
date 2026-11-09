@@ -3,14 +3,23 @@
 import { GlassSurface } from "./GlassSurface";
 import { GlassSelection } from "./GlassSelection";
 import { Children, isValidElement } from "react";
+import { useButtonMaterial } from "./ButtonMaterialProvider";
+import { useAppearance } from "./AppearanceProvider";
+import { useGlassEnvironment } from "./GlassSurface";
+import { ZakButton } from "./ZakButton";
 
 // The optical layer is decorative; the native button owns focus, form and pointer behavior.
-// Variants: regular, prominent (safe primary action), destructive (loss/rejection).
+// Variants: regular, tinted, prominent (safe primary action), destructive (loss/rejection).
 // The variant is a visual intent, not a nonstandard ARIA role or an authorization check.
-export function GlassButton({ children, mode = "css", variant = "regular", className = "", type = "button", ...props }) {
+export function GlassButton({ children, icon, engine, mode = "css", variant = "regular", className = "", type = "button", ...props }) {
+  const material = useButtonMaterial(), { resolved } = useAppearance();
+  const environment = useGlassEnvironment(process.env.NODE_ENV === "development" && mode === "quick");
+  const candidate = (engine || material.engine) === "zak" && material.library && environment.ready && environment.backdrop && !environment.forcedColors && !resolved.solid && !resolved.reducedMotion && mode === "quick" && process.env.NODE_ENV === "development";
+  if (candidate) return <ZakButton {...props} library={material.library} coarse={environment.coarse} chromium={environment.chromium} icon={icon} variant={variant} className={className} type={type}>{children}</ZakButton>;
   return <button
     {...props} type={type}
     className={`ui-glass-button ${className}`} data-kind={variant}
+    data-button-engine={mode === "quick" ? "quick" : "css"} data-icon-only={icon && children == null ? "" : undefined}
   >
     <GlassSurface
       as="span" mode={mode}
@@ -18,7 +27,7 @@ export function GlassButton({ children, mode = "css", variant = "regular", class
       radius={24}
       name="button"
     />
-    <span className="ui-glass-button-label">{children}</span>
+    <span className="ui-glass-button-label">{icon}{children}</span>
   </button>;
 }
 

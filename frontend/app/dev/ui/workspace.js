@@ -9,6 +9,7 @@ import { EmptyState } from "../../../components/EmptyState";
 import ViewToggle from "../../../components/ViewToggle";
 import { useAppearance } from "../../../components/ui/AppearanceProvider";
 import { GlassButton } from "../../../components/ui/GlassControls";
+import { ButtonMaterialReview } from "./ButtonMaterialReview";
 
 // This route mounts real shared components with local display fixtures only.
 // It does not supply AuthContext, tokens, API clients or a production identity.
@@ -72,6 +73,7 @@ export default function DevelopmentWorkspace() {
       <h1>{title}</h1>
       <p>พื้นที่ตรวจ component จริงก่อนทยอยย้ายรายละเอียดแต่ละหน้า</p>
     </div>
+    <ButtonMaterialReview mode={glassMode} />
     <section className="apple-panel ui-dev-form ui-button-demo" aria-label="สีและบทบาทของปุ่ม">
       <h2 className="ui-section-title">สีและบทบาทของปุ่ม</h2>
       <p className="ui-caption">ตัวอย่าง controls กลาง · ไม่ลบข้อมูลหรือปฏิเสธคำขอจริง · สลับธีมและวัสดุเพื่อตรวจได้</p>

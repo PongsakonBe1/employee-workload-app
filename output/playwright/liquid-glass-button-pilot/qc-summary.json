@@ -1,0 +1,156 @@
+{
+  "date": "2026-11-09",
+  "branch": "codex/liquid-glass-button-pilot",
+  "base": "97a8371",
+  "completedWithinDevelopmentScope": true,
+  "dependency": {
+    "name": "@zakisheriff/liquid-glass",
+    "version": "0.3.20",
+    "integrity": "sha512-onU8WmLoYD08pEx2grU6sleFtlCE5QhgWrfTYakAW/tboW4uu/LXFYD7o+1aSUbhhwueJDQXCsZJbqaYjv8GEg==",
+    "license": "MIT",
+    "installScriptsRun": false,
+    "newPackages": 1
+  },
+  "unit": {
+    "passed": 342,
+    "total": 342,
+    "failed": 0,
+    "skipped": 0
+  },
+  "acceptance": {
+    "edge": {
+      "passed": 8,
+      "total": 8,
+      "minimumContrast": 4.6079160644711905,
+      "contrastSamples": 160,
+      "browserVersion": "156.0.4314.58",
+      "iosPolicySmokeOnly": true,
+      "pinchGestureVerified": false,
+      "evidence": "edge/report.json"
+    },
+    "chrome": {
+      "passed": 8,
+      "total": 8,
+      "minimumContrast": 4.6079160644711905,
+      "contrastSamples": 160,
+      "browserVersion": "156.0.8078.81",
+      "iosPolicySmokeOnly": true,
+      "pinchGestureVerified": false,
+      "evidence": "chrome/report.json"
+    },
+    "public": {
+      "passed": 8,
+      "total": 8,
+      "minimumContrast": 4.6079160644711905,
+      "contrastSamples": 64,
+      "browserVersion": "156.0.4314.58",
+      "iosPolicySmokeOnly": true,
+      "pinchGestureVerified": false,
+      "evidence": "public/report.json"
+    }
+  },
+  "regression": {
+    "record": {
+      "passed": 11,
+      "total": 11,
+      "evidence": "regression-record/report.json"
+    },
+    "history": {
+      "passed": 9,
+      "total": 9,
+      "evidence": "regression-history/chrome/report.json"
+    },
+    "calendar": {
+      "passed": 11,
+      "total": 11,
+      "evidence": "regression-calendar/report.json"
+    },
+    "templates": {
+      "passed": 7,
+      "total": 7,
+      "evidence": "regression-templates/edge/report.json"
+    }
+  },
+  "staticChecks": [
+    {
+      "command": "node node_modules/eslint/bin/eslint.js --config scripts/ui-eslint.config.mjs frontend/components/ui/GlassControls.js frontend/components/ui/ZakButton.js frontend/components/ui/ButtonMaterialProvider.js frontend/app/dev/ui",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-liquid-button-pilot.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/benchmark-button-materials.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-record-glass.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-record-history.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-calendar-glass.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-templates-combo.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/verify-ui-zoom.cjs",
+      "passed": true
+    },
+    {
+      "command": "node --check scripts/check-ui-build.mjs",
+      "passed": true
+    }
+  ],
+  "nativeZoom200": true,
+  "compatibilityExport": {
+    "compiled": true,
+    "exportDirectory": "frontend/.ui-build-check",
+    "productionOutUntouched": true,
+    "developmentPreviewRendered": false,
+    "lint": "Targeted ESLint is a separate command",
+    "productionDataUsed": false,
+    "deployed": false
+  },
+  "performanceSampleRecorded": true,
+  "defaultDevelopButtonEngine": "zak",
+  "navigationAndSelection": "QuickLiquid unchanged",
+  "sourceHashes": {
+    "frontend/components/ui/GlassControls.js": "b27451b7c4dc476783423fe464f741cf6a64b14d44fae67ae449554c2042dcdf",
+    "frontend/components/ui/ZakButton.js": "78bdd227a99d30d7f05f7b04725fdf7364fa3a89152bc761eb0550ab2d051bf8",
+    "frontend/components/ui/ButtonMaterialProvider.js": "a5bdc1f28952a09ee3675ff00b249e00682a3ce5338ced92ea2d4d8b08c80dc4",
+    "frontend/app/dev/ui/ButtonMaterialReview.js": "8bdb7f1fec775a735ec98607615b1b85b672e393d52764643892d77abb026a68",
+    "frontend/app/dev/ui/workspace.js": "2aca68f338291b011dc73be3d5acc5a6867660eee2339eb73dfc21102a1439d2",
+    "frontend/app/zak-button-pilot.css": "790287524309274b02f844b73a8a76ff77a162275ae00f58c51b5a1858039c7b",
+    "frontend/app/layout.js": "119e0787039fc17ca6c280127a90384b39fcb40b5c65f317b287b2fb0c5ae480",
+    "frontend/package.json": "91d7e2bd64a60d5b69551a996a74599d0c573d3e56d4ff12d3bd7ca1d63e0a17",
+    "package-lock.json": "c96154a78dddc7936ae5533e2ac18d4d2e33aafd9128d7ab41c2c717dc05e33b"
+  },
+  "preview": "https://northwest-revised-domains-varies.trycloudflare.com/dev/ui#button-materials",
+  "productionDataUsed": false,
+  "realAuthFirestoreSIT": false,
+  "humanUAT": false,
+  "physicalSafariAndroidUAT": false,
+  "physicalPinchGestureVerified": false,
+  "pushed": false,
+  "deployed": false,
+  "coverage": {
+    "featurePreviews": 9,
+    "newFeatureRoutes": 0,
+    "allPagesReady": false
+  },
+  "limitations": [
+    "Physical Safari/iPhone/Android and pinch UAT remain pending",
+    "iOS user-agent smoke runs on Chromium, not WebKit",
+    "SVG refraction is deliberately disabled for non-Chromium; CSS material remains available",
+    "The candidate has higher TaskDuration in the one desktop sample; it is not a phone FPS/battery benchmark",
+    "Only native buttons were adopted; inputs/sheets/menus were not replaced"
+  ]
+}

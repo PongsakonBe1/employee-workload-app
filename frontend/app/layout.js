@@ -2,10 +2,13 @@ import { NextIntlClientProvider } from "next-intl";
 import "./ui-foundation.css";
 import "./globals.css";
 import "./quick-liquid-pilot.css";
+import "@zakisheriff/liquid-glass/styles.css";
+import "./zak-button-pilot.css";
 import { AuthProvider } from "../components/AuthProvider";
 import FABVersionControl from "../components/FABVersionControl";
 import thMessages from "../messages/th.json";
 import { AppearanceProvider } from "../components/ui/AppearanceProvider";
+import { ButtonMaterialProvider } from "../components/ui/ButtonMaterialProvider";
 import { appearanceBootstrap } from "../lib/appearance";
 
 export const metadata = {
@@ -48,12 +51,14 @@ export default function RootLayout({ children }) {
       <head><script id="ui-appearance-bootstrap" dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} /></head>
       <body>
         <AppearanceProvider>
-          <NextIntlClientProvider locale="th" messages={thMessages}>
-            <AuthProvider>
-              {children}
-              <FABVersionControl />
-            </AuthProvider>
-          </NextIntlClientProvider>
+          <ButtonMaterialProvider>
+            <NextIntlClientProvider locale="th" messages={thMessages}>
+              <AuthProvider>
+                {children}
+                <FABVersionControl />
+              </AuthProvider>
+            </NextIntlClientProvider>
+          </ButtonMaterialProvider>
         </AppearanceProvider>
       </body>
     </html>

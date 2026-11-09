@@ -1,0 +1,1017 @@
+{
+  "completed": true,
+  "cases": [
+    {
+      "label": "Pinned candidate and QuickLiquid coexist; real native validation, submit, disabled and icon-only controls remain usable",
+      "passed": true
+    },
+    {
+      "label": "Desktop spring/lighting is active; release outside does not submit; Enter and Space trigger one native action",
+      "passed": true
+    },
+    {
+      "label": "Touch pan starting on a candidate button scrolls instead of submitting or vibrating; the adapter leaves native zoom policy enabled",
+      "passed": true
+    },
+    {
+      "label": "Light/dark A/B and tinted role colors preserve 4.5 contrast including the candidate highlight; 375–1440px layouts fit",
+      "passed": true
+    },
+    {
+      "label": "App and OS motion/transparency preferences, forced colors and unsupported backdrop use the existing controls",
+      "passed": true
+    },
+    {
+      "label": "A failed candidate chunk keeps working baseline controls and can select QuickLiquid without a blocked form",
+      "passed": true
+    },
+    {
+      "label": "The selected engine and record drafts survive Next navigation; actual Combo review/save stays opt-in and idempotent",
+      "passed": true
+    },
+    {
+      "label": "Dialog cancel/delete focus is preserved and repeated opens do not leave pressed buttons or hidden haptic inputs",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "contrast": [
+    {
+      "label": "light/quick/375",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/375",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.455604788172211
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.866955024619048
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.537373658253682
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.7427992881861325
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.8419783858957235
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.196741982699107
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.631400778968365
+    },
+    {
+      "label": "light/zak/375",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.194072755726443
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/390",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.455604788172211
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.866955024619048
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.537373658253682
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.7427992881861325
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.8419783858957235
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.196741982699107
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.631400778968365
+    },
+    {
+      "label": "light/zak/390",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.194072755726443
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/430",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.455604788172211
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.866955024619048
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.537373658253682
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.7427992881861325
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.8419783858957235
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.196741982699107
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.631400778968365
+    },
+    {
+      "label": "light/zak/430",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.194072755726443
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/768",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.455604788172211
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.866955024619048
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.537373658253682
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.7427992881861325
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.8419783858957235
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.196741982699107
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.631400778968365
+    },
+    {
+      "label": "light/zak/768",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.194072755726443
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.659555520227284
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.958775577594269
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.706955597948915
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.8572783339933805
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.733858619147613
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.193401955467705
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.582355030363618
+    },
+    {
+      "label": "light/quick/1440",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.190511133000977
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.455604788172211
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.866955024619048
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.537373658253682
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.7427992881861325
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 5.8419783858957235
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 7.196741982699107
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 6.631400778968365
+    },
+    {
+      "label": "light/zak/1440",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.194072755726443
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/375",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 7.947474908001174
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.6079160644711905
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.046580848167537
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.389562158359642
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 7.4411158912871755
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 5.168519047282173
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 7.201544189369872
+    },
+    {
+      "label": "dark/zak/375",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 6.233488957716183
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/390",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 7.947474908001174
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.6079160644711905
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.046580848167537
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.389562158359642
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 7.4411158912871755
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 5.168519047282173
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 7.201544189369872
+    },
+    {
+      "label": "dark/zak/390",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 6.233488957716183
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/430",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 7.947474908001174
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.6079160644711905
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.046580848167537
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.389562158359642
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 7.4411158912871755
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 5.168519047282173
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 7.201544189369872
+    },
+    {
+      "label": "dark/zak/430",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 6.233488957716183
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/768",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 7.947474908001174
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.6079160644711905
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.046580848167537
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.389562158359642
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 7.4411158912871755
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 5.168519047282173
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 7.201544189369872
+    },
+    {
+      "label": "dark/zak/768",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 6.233488957716183
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 8.132086912091198
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.690295641335624
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.1978113246768505
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.491108343659957
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 9.391291298973368
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 6.530265151709872
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 9.113276504138486
+    },
+    {
+      "label": "dark/quick/1440",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 7.926132545378131
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.84,
+      "bg": 0,
+      "ratio": 7.947474908001174
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.84,
+      "bg": 255,
+      "ratio": 4.6079160644711905
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.92,
+      "bg": 0,
+      "ratio": 7.046580848167537
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.92,
+      "bg": 255,
+      "ratio": 5.389562158359642
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.9,
+      "bg": 0,
+      "ratio": 7.4411158912871755
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.9,
+      "bg": 255,
+      "ratio": 5.168519047282173
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.96,
+      "bg": 0,
+      "ratio": 7.201544189369872
+    },
+    {
+      "label": "dark/zak/1440",
+      "alpha": 0.96,
+      "bg": 255,
+      "ratio": 6.233488957716183
+    }
+  ],
+  "productionDataUsed": false,
+  "realDeviceUAT": false,
+  "browserVersion": "156.0.8078.81",
+  "touchScroll": {
+    "before": 1058,
+    "after": 1175
+  },
+  "pinch": {
+    "candidateScale": 1,
+    "baselineScale": 1,
+    "gestureVerified": false,
+    "policyEnabled": true,
+    "limitation": "Headless CDP did not zoom either target; physical phone gesture UAT remains pending"
+  },
+  "iosUserAgentPolicyOnly": true,
+  "simulatedModuleAborts": 1
+}

@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [Liquid Glass Button Pilot / A/B](../liquid-glass-button-pilot/README.md) — เพิ่มวัสดุ shared buttons ใน develop และ fallback; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false
+
 9 พฤศจิกายน 2569: [สีและบทบาทของปุ่ม Liquid Glass](../glass-button-roles/README.md) — ปรับ shared controls/คำสั่งลบ; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false
 
 9 พฤศจิกายน 2569: [เทมเพลตและ Combo ร่วมกับ Quick Log](../templates-combo/README.md) — Next 34 routes / dev 10 / feature previews 9; เมนู 9/18 ปลายทาง · all-pages-ready = false

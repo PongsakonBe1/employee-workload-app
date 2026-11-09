@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, ['templates-combo','glass-button-roles'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
+const out = path.resolve(__dirname, ['templates-combo','glass-button-roles','liquid-glass-button-pilot'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
 fs.mkdirSync(out, { recursive: true });
 const report = { url: origin + '/dev/record', completed: false, checks: [], errors: [], blockedOrigins: [], limitations: ['Synthetic in-memory transactions only', 'Chromium touch emulation is not physical Safari/iPhone or Android UAT'] };
 async function main() {
@@ -89,8 +89,8 @@ async function main() {
       assert.equal(await notes.inputValue(), 'ร่างทดสอบ');await page.getByRole('group', { name: 'ข้อความแนะนำ' }).getByRole('button', { name: 'เช้า', exact: true }).click();assert.equal(await notes.inputValue(), 'เช้า');
       await page.getByRole('button', { name: 'เปลี่ยนวันที่และเวลา' }).click();await dialog(page).locator('input[type=time]').fill('17:00');await dialog(page).getByRole('button', { name: 'ใช้วันที่และเวลานี้', exact: true }).click();
       await page.locator('.record-inspector summary').click();await page.getByRole('button', { name: 'CSS เดิม', exact: true }).click();await engineCount(page, 0);assert.equal(await notes.inputValue(), 'เช้า');
-      await page.getByRole('button', { name: 'QuickLiquid', exact: true }).click();await page.waitForSelector('.record-form .ui-optical-layer[data-active=true]');
-      await page.waitForSelector('.record-form [data-glass-surface="button"][data-glass-phase="svg"]');assert.equal(await page.locator('.record-form [data-glass-surface="button"]').evaluate(element => element.tagName), 'SPAN');
+      await page.getByRole('button', { name: 'QuickLiquid', exact: true }).click();await page.waitForSelector('.record-form .ui-optical-layer[data-active=true],.record-form .ui-zak-button');
+      if(await page.locator('.record-form .ui-zak-button').count()){await page.waitForFunction(()=>{const el=document.querySelector('.record-form .ui-zak-button');return el&&getComputedStyle(el).getPropertyValue('--lg-refraction').includes('url(')});assert.equal(await page.locator('.record-form .ui-zak-button').first().evaluate(el=>el.tagName),'BUTTON');}else{await page.waitForSelector('.record-form [data-glass-surface="button"][data-glass-phase="svg"]');assert.equal(await page.locator('.record-form [data-glass-surface="button"]').evaluate(element=>element.tagName),'SPAN');}
       await shot(page, 'manual-desktop-light');await page.locator('form[aria-label="กรอกบันทึกงาน"]').getByRole('button', { name: 'ตรวจรายการก่อนบันทึก', exact: true }).click();await dialog(page).getByRole('button', { name: 'ยืนยันบันทึก', exact: true }).click();
       assert.ok((await page.locator('.record-recent').textContent()).includes('17:00'));await page.locator('.record-mode').getByRole('button', { name: 'บันทึกด่วน', exact: true }).click();await page.locator('.record-inspector summary').click();
     });
