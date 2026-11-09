@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import "./ui-foundation.css";
 import "./globals.css";
 import "./quick-liquid-pilot.css";
+import "./dock-navigation.css";
 import "@zakisheriff/liquid-glass/styles.css";
 import "./zak-button-pilot.css";
 import { AuthProvider } from "../components/AuthProvider";

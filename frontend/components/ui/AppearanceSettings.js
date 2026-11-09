@@ -6,6 +6,13 @@ import { useAppearance } from "./AppearanceProvider";
 export function AppearanceSettings() {
   const { preferences, updatePreferences } = useAppearance();
   return <div className="ui-appearance-settings">
+    {process.env.NODE_ENV === "development" && <fieldset className="ui-form-group">
+      <legend>เมนูบนคอมพิวเตอร์ · Develop</legend>
+      <div className="ui-choice-row">
+        {[["dock","Dock ลอยตัว"],["sidebar","Sidebar แบบเดิม"]].map(([navigation,label])=><button type="button" key={navigation} className="ui-choice" aria-pressed={(preferences.navigation === "sidebar" ? "sidebar" : "dock") === navigation} onClick={()=>updatePreferences({navigation})}>{label}{(preferences.navigation === "sidebar" ? "sidebar" : "dock") === navigation && <Check size={16} aria-hidden="true"/>}</button>)}
+      </div>
+      <p className="ui-caption">มือถือใช้ 4 เมนูหลักด้านล่างเหมือนเดิม สลับรูปแบบได้โดยเก็บงานที่กำลังกรอกไว้</p>
+    </fieldset>}
     <fieldset className="ui-form-group">
       <legend>รูปแบบการแสดงผล</legend>
       <div className="ui-choice-row">

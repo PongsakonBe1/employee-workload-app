@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [Dock navigation และไอคอน](../dock-navigation-pilot/README.md) — PC Dock / Sidebar toggle, มือถือ 4 tabs, glyph แยกตามหน้าที่; ตรวจ 9 previews × PC/mobile × light/dark บน Chrome/Edge และ Cloudflare; ไม่มี route ใหม่; all-pages-ready = false
+
 9 พฤศจิกายน 2569: [นำเข้าตารางเรียนจาก PDF](../classroom-pdf-import/README.md) — ติดตั้ง PDF.js และทดสอบ assets จริง local 8 / Cloudflare 4 cases ผ่านแล้ว; เพิ่มพื้นที่ทดลองแยก/Undo แยกชุด และช่วงวันที่ 2/2569 ที่ทีมยืนยัน; ไม่มี route ใหม่; all-pages-ready = false
 
 9 พฤศจิกายน 2569: [Liquid Glass Button Pilot / A/B](../liquid-glass-button-pilot/README.md) — เพิ่มวัสดุ shared buttons ใน develop และ fallback; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false

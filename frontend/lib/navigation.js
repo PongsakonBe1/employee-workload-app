@@ -16,7 +16,7 @@ export function getWorkspaceNavigation(role) {
       item("export", "/export", "ส่งออกข้อมูล", "export", "green"),
       ...(admin ? [
         item("admin", "/admin", "ศูนย์ควบคุม", "admin"),
-        item("staff", "/admin/staff-analytics", "วิเคราะห์บุคลากร", "staff"),
+        item("staff", "/admin/staff-analytics", "วิเคราะห์บุคลากร", "staffAnalytics"),
         item("equipment", "/admin/equipment-items", "ทะเบียนอุปกรณ์", "equipment", "green"),
         item("condition", "/admin/equipment-health", "การใช้งานและสภาพอุปกรณ์", "resources", "green"),
         item("classes", "/admin/classroom-schedules", "จัดตารางเรียน", "calendar", "purple"),

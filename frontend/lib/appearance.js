@@ -1,5 +1,5 @@
 export const APPEARANCE_KEY = "labboy.appearance.v1";
-export const DEFAULT_APPEARANCE = Object.freeze({ theme: "system", background: "classic", material: "regular", motion: "system" });
+export const DEFAULT_APPEARANCE = Object.freeze({ theme: "system", background: "classic", material: "regular", motion: "system", navigation: "auto" });
 
 // Accept only display preferences; stored JSON never controls authorization or routes.
 export function normalizeAppearance(value) {
@@ -9,6 +9,7 @@ export function normalizeAppearance(value) {
     background: ["classic", "ambient", "plain"].includes(input.background) ? input.background : "classic",
     material: ["regular", "solid"].includes(input.material) ? input.material : "regular",
     motion: ["system", "reduce"].includes(input.motion) ? input.motion : "system",
+    navigation: ["auto", "sidebar", "dock"].includes(input.navigation) ? input.navigation : "auto",
   };
 }
 

@@ -5,7 +5,7 @@ export const initialTemplates = core.map(([id, name, kind, minorTask, symbol, to
   action: id,
   name,
   minorTask,
-  symbol,
+  symbol: id === "headphones" ? "headphones" : symbol,
   tone,
   order,
   version: 1,

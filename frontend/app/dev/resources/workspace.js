@@ -31,7 +31,7 @@ const emptyDevice = () => ({
   active: true
 });
 const symbols = {
-  headphones: "resources",
+  headphones: "headphones",
   plug: "plug",
   usb: "usb"
 };

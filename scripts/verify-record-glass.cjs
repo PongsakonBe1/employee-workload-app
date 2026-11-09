@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(process.argv[2]);
 const origin = process.argv[4] || 'http://127.0.0.1:4310';
-const out = path.resolve(__dirname, ['templates-combo','glass-button-roles','liquid-glass-button-pilot'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
+const out = path.resolve(__dirname, ['templates-combo','glass-button-roles','liquid-glass-button-pilot','dock-navigation-pilot'].includes(process.argv[5])?'../output/playwright/'+process.argv[5]+'/regression-record':'../output/playwright/record-liquid-glass', origin.startsWith('http://127.0.0.1') ? '' : 'public');
 fs.mkdirSync(out, { recursive: true });
 const report = { url: origin + '/dev/record', completed: false, checks: [], errors: [], blockedOrigins: [], limitations: ['Synthetic in-memory transactions only', 'Chromium touch emulation is not physical Safari/iPhone or Android UAT'] };
 async function main() {
@@ -40,7 +40,7 @@ async function main() {
       assert.equal(await page.locator('.record-quick-card').count(), 6);
       const y = await page.locator('.record-quick-card').evaluateAll(nodes => nodes.slice(0, 3).map(n => n.getBoundingClientRect().y));assert.ok(y.every(v => v === y[0]));
       assert.equal(await page.locator('.record-mode button[aria-pressed=true]').textContent(), 'บันทึกด่วน');
-      await engineCount(page, 2);assert.equal(await page.locator('.ui-optical-layer button,.ui-optical-layer input').count(), 0);
+      await engineCount(page, await page.locator('.ui-dock').isVisible() ? 3 : 2);assert.equal(await page.locator('.ui-optical-layer button,.ui-optical-layer input').count(), 0);
       await shot(page, 'record-desktop-light');
     });
     await test('Both room floors use four desktop columns, distinct state labels, immediate save and persistent Undo', async () => {

@@ -12,17 +12,23 @@ import { GlassSurface } from "./GlassSurface";
 import { GlassSelection } from "./GlassSelection";
 import { ReviewSymbol } from "./ReviewSymbol";
 import { SidebarGlassHover } from "./SidebarGlassHover";
+import { DockNavigation } from "./DockNavigation";
+import { useAppearance } from "./AppearanceProvider";
 
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
 
 export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, glassMode = "css" }) {
+  const { preferences } = useAppearance();
+  const dock = process.env.NODE_ENV === "development" && preferences.navigation !== "sidebar";
   const groups = getWorkspaceNavigation(user.role), all = groups.flatMap(group => group.items), current = activeNavigation(pathname, groups);
   const [collapsed, setCollapsed] = useState(false), [wide, setWide] = useState(false), [scrolled, setScrolled] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(() => groups.find(group => group.id === "tools")?.items.some(entry => entry.id === current));
   const [dialog, setDialog] = useState(null), [search, setSearch] = useState("");
   const calendar = ["/calendar", "/admin/classroom-schedules", "/admin/dl-exam-schedules"].includes(pathname);
-  const compact = calendar && wide && !collapsed;
-  const mobileArea = ["record", "worklogs", "templates"].includes(current) ? "record" : ["calendar", "classes", "dl"].includes(current) ? "calendar" : ["resources", "equipment", "condition"].includes(current) ? "resources" : ["dashboard", "staff"].includes(current) ? "dashboard" : current;
+  const compact = !dock && calendar && wide && !collapsed;
+  const previewArea = pathname === "/admin/templates" ? "record" : ["/admin/equipment-items","/admin/equipment-health"].includes(pathname) ? "resources" : pathname === "/admin/staff-analytics" ? "dashboard" : ["/admin/classroom-schedules","/admin/dl-exam-schedules"].includes(pathname) ? "calendar" : null;
+  const mobileArea = ["record", "worklogs", "templates"].includes(current) ? "record" : ["calendar", "classes", "dl"].includes(current) ? "calendar" : ["resources", "equipment", "condition"].includes(current) ? "resources" : ["dashboard", "staff"].includes(current) ? "dashboard" : current || previewArea;
+  const dockArea = ["record", "worklogs", "calendar", "resources", "dashboard"].includes(current) ? current : mobileArea;
   const label = all.find(entry => entry.id === current)?.label || ({ "/profile": "โปรไฟล์", "/help": "คู่มือการใช้งาน" }[pathname] || "พื้นที่ทำงาน");
   const displayName = user.displayName || user.nickname || user.fullName || "ผู้ใช้งาน";
   const initial = user.initial || Array.from(displayName.trim())[0] || "?";
@@ -68,9 +74,10 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
     data-compact={compact} data-sidebar-hidden={collapsed}
     data-calendar={calendar}
     data-glass-pilot={pilotMode}
+    data-navigation={dock ? "dock" : "sidebar"}
   >
     <a href="#workspace-content" className="ui-skip-link">ข้ามไปเนื้อหา</a>
-    <aside
+    {dock ? <DockNavigation groups={groups} current={current} area={dockArea} collapsed={collapsed} mode={pilotMode} initial={initial} displayName={displayName} onNavigate={navigate} onTools={()=>{setSearch("");setDialog("routes");}} onAppearance={()=>setDialog("appearance")} onAccount={()=>setDialog("account")} toolsOpen={dialog === "routes" || dialog === "menu"}/> : <aside
       className="ui-sidebar ui-glass" aria-label="พื้นที่ทำงาน"
       id="workspace-sidebar" hidden={collapsed}
     >
@@ -133,7 +140,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           </button>
         </Tooltip>
       </div>
-    </aside>
+    </aside>}
     <header className="ui-header" data-scrolled={scrolled}>
       <div className="ui-header-leading">
         <button

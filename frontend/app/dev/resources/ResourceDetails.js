@@ -16,7 +16,7 @@ export function ResourceDetails({
   const room = kind === "room",
     state = room ? roomState(item) : equipmentState(item);
   const symbols = {
-    headphones: "resources",
+    headphones: "headphones",
     plug: "plug",
     usb: "usb"
   };

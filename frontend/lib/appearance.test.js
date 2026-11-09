@@ -8,7 +8,13 @@ describe("local display preferences", () => {
     expect(normalizeAppearance([])).toEqual(normalizeAppearance(null));
   });
   it("keeps supported display choices independent", () => {
-    expect(parseAppearance('{"theme":"dark","background":"plain","material":"solid","motion":"reduce"}')).toEqual({ theme: "dark", background: "plain", material: "solid", motion: "reduce" });
+    expect(parseAppearance('{"theme":"dark","background":"plain","material":"solid","motion":"reduce"}')).toEqual({ theme: "dark", background: "plain", material: "solid", motion: "reduce", navigation: "auto" });
+  });
+  it("migrates old display preferences and validates the reversible navigation choice", () => {
+    expect(parseAppearance('{"theme":"dark"}').navigation).toBe("auto");
+    expect(normalizeAppearance({ navigation:"dock" }).navigation).toBe("dock");
+    expect(normalizeAppearance({ navigation:"sidebar" }).navigation).toBe("sidebar");
+    expect(normalizeAppearance({ navigation:"/admin" }).navigation).toBe("auto");
   });
   it("follows system theme without overriding an explicit theme", () => {
     expect(resolveAppearance({}, { dark: true }).resolvedTheme).toBe("dark");
