@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+9 พฤศจิกายน 2569: [นำเข้าตารางเรียนจาก PDF](../classroom-pdf-import/README.md) — โค้ด/ทดสอบด้วยตัวอ่านจากเครื่องมือพร้อมตรวจ แต่รออนุมัติติดตั้ง PDF.js ก่อนเปิดใช้ใน develop; ไม่มี route ใหม่; all-pages-ready = false
+
 9 พฤศจิกายน 2569: [Liquid Glass Button Pilot / A/B](../liquid-glass-button-pilot/README.md) — เพิ่มวัสดุ shared buttons ใน develop และ fallback; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false
 
 9 พฤศจิกายน 2569: [สีและบทบาทของปุ่ม Liquid Glass](../glass-button-roles/README.md) — ปรับ shared controls/คำสั่งลบ; ไม่มี feature route ใหม่; feature previews ยัง 9 · all-pages-ready = false
@@ -29,7 +31,7 @@
 | รายการงาน (worklogs) | /worklogs | /dev/history | Partial — list/calendar/details/edit text/delete/Undo/CSV ผ่าน | แก้วัน/เวลา/หัวข้อ, bulk edit, lock/audit จริง |
 | กรอกบันทึกงาน (new-log) | /worklogs/new | /dev/record → กรอกเอง | Partial — catalog เดิมและ validation ผ่าน | persistent draft/server integration |
 | ตารางสอบ DL (dl) | /admin/dl-exam-schedules | /dev/calendar | Partial — CRUD ตัวอย่าง/75 คน/รอบเย็น/ห้องชนผ่าน | dedicated manager/import และข้อมูลจริง |
-| ตารางเรียน (classrooms) | /admin/classroom-schedules | /dev/calendar | Partial — recurrence/filter/cancel ผ่าน | dedicated manager/PDF import และข้อมูลจริง |
+| ตารางเรียน (classrooms) | /admin/classroom-schedules | /dev/calendar | Partial — recurrence/filter/cancel และโค้ด PDF preview/import/Undo ผ่านใน test harness | อนุมัติ dependency/ตรวจ assets จริง, dedicated manager, UAT และข้อมูลจริง |
 | จัดการอุปกรณ์ (equipment) | /admin/equipment-items | /dev/equipment | Partial — เพิ่ม/แก้/หยุดใช้/Undo และ Quick Log ร่วมผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | การใช้งานอุปกรณ์ (usage) | /admin/equipment-health | /dev/equipment/usage | Partial — ครั้งยืม/คืน/current outstanding/ID/date/person filters ผ่าน | บริการจริง/ข้อมูลจริง/physical UAT |
 | Staff Analytics (staff) | /admin/staff-analytics | /dev/staff | Partial — measured counts/count-share charts/person trend/assessment summary/person search/CSV/team-wide fiscal JD UI | JD จริง/data adapter/Auth จริง และ physical UAT |

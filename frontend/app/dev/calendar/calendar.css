@@ -195,3 +195,25 @@
 }
 @media(any-pointer:coarse) { .cal-dialog input,.cal-dialog select { font-size: max(1rem,16px); } .cal-month-date { width: 44px; height: 44px; } .cal-filter-check { min-height: 44px; } .cal-sidebar :is(.cal-mini-grid,.cal-mini-heading) { display: none; } }
 @media(forced-colors:active) { .cal-timed-event,.cal-month-event,.cal-holiday,.cal-kind-badge { background: Canvas; color: CanvasText; border: 1px solid CanvasText; } .cal-sidebar { background: Canvas; border-color: CanvasText; } .cal-mini-grid>button[aria-pressed=true],.cal-day-strip>button[aria-pressed=true] { outline: 2px solid Highlight; outline-offset: -2px; } }
+
+/* Imported content stays on a readable surface; glass is reserved for controls. */
+.cal-import-dialog { width: min(960px,calc(100vw - 32px)); max-width: calc(100vw - 32px); }
+.cal-import-form { min-width: 0; }
+.cal-import-steps { list-style: none; display:flex; gap:8px; padding:0; margin:0 0 22px; flex-wrap:wrap; color:var(--ui-sub); font-size:.8125rem; }
+.cal-import-steps li { padding:8px 12px; border-radius:14px; background:var(--ui-soft); }
+.cal-import-steps [aria-current=step] { color:var(--ui-accent); box-shadow:inset 0 0 0 1px currentColor; }
+.cal-import-file { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:18px; border:1px solid var(--ui-line); border-radius:20px; }
+.cal-import-file>div { flex:1; min-width:0; overflow-wrap:anywhere; }.cal-import-file p { margin:5px 0 0; font-size:.8125rem; color:var(--ui-sub); }
+.cal-import-picker { position:relative; display:flex; align-items:center; gap:8px; padding:12px 16px; border:1px solid var(--ui-line); border-radius:24px; color:var(--ui-accent); cursor:pointer; }
+.cal-import-picker input { position:absolute; inset:0; opacity:0; cursor:pointer; }.cal-import-picker:focus-within { outline:3px solid var(--ui-accent); outline-offset:3px; }
+.cal-import-terms { margin:24px 0; }.cal-import-terms>.ui-field { max-width:220px; }
+.cal-import-term { margin:16px 0; border:1px solid var(--ui-line); border-radius:18px; padding:14px; min-width:0; }.cal-import-term legend { padding-inline:6px; font-weight:600; }
+.cal-import-list-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }.cal-import-list-heading span { font-size:.8125rem; color:var(--ui-sub); }
+.cal-import-room-filter { max-width:220px; }.cal-import-row[hidden] { display:none; }
+.cal-import-rows { display:grid; gap:16px; }.cal-import-row { min-width:0; border:1px solid var(--ui-line); border-radius:18px; padding:16px; margin:0; }.cal-import-row legend { color:var(--ui-sub); padding-inline:6px; font-size:.8125rem; }
+.cal-import-check { display:flex; align-items:center; gap:10px; min-height:44px; font-size:.875rem; }.cal-import-check .ui-checkbox { flex:0 0 21px; width:21px; height:21px; }
+.cal-import-title { margin:8px 0 14px; }.cal-import-row-fields { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }.cal-import-row .ui-field { min-width:0; }
+.cal-import-row input,.cal-import-row select { min-width:0; width:100%; }.cal-import-row[data-selected=false] .ui-field { opacity:.6; }
+.cal-import-summary { padding:18px 0 8px; font-weight:600; }.cal-import-warning { display:flex; gap:10px; border:1px solid var(--ui-line); border-radius:16px; padding:14px; margin-bottom:20px; }.cal-import-warning p { margin-bottom:0; }
+.cal-import-actions { position:sticky; bottom:-24px; padding:18px 0; background:var(--ui-surface); border-top:1px solid var(--ui-line); }
+@media(max-width:760px) { .cal-import-dialog { width:calc(100vw - 16px); max-width:calc(100vw - 16px); }.cal-import-row-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }.cal-import-row-fields>.ui-field:last-child { grid-column:1/-1; }.cal-import-term .cal-form-grid { grid-template-columns:1fr; }.cal-import-file { padding:14px; }.cal-import-file>svg { display:none; }.cal-import-picker { width:100%; justify-content:center; }.cal-import-steps { gap:6px; font-size:.75rem; }.cal-import-steps li { padding:7px 8px; }.cal-import-form .ui-checkbox { width:21px; min-height:21px; }.cal-import-actions { bottom:-20px; } }

@@ -1,0 +1,78 @@
+{
+  "completed": true,
+  "browser": "chrome",
+  "checks": [
+    {
+      "width": 1440,
+      "theme": "light",
+      "status": "passed",
+      "tests": [
+        "invalid signature/cancel",
+        "cancel during deferred reader load",
+        "real PDF worker and merged slots",
+        "gray annotation ignored",
+        "edit/explicit dates/confirm",
+        "atomic commit",
+        "duplicate prevention",
+        "Undo restores importability",
+        "staff guard",
+        "input 16px and no overflow"
+      ]
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "status": "passed",
+      "tests": [
+        "invalid signature/cancel",
+        "cancel during deferred reader load",
+        "real PDF worker and merged slots",
+        "gray annotation ignored",
+        "edit/explicit dates/confirm",
+        "atomic commit",
+        "duplicate prevention",
+        "Undo restores importability",
+        "staff guard",
+        "input 16px and no overflow"
+      ]
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "status": "passed",
+      "tests": [
+        "invalid signature/cancel",
+        "cancel during deferred reader load",
+        "real PDF worker and merged slots",
+        "gray annotation ignored",
+        "edit/explicit dates/confirm",
+        "atomic commit",
+        "duplicate prevention",
+        "Undo restores importability",
+        "staff guard",
+        "input 16px and no overflow"
+      ]
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "status": "passed",
+      "tests": [
+        "invalid signature/cancel",
+        "cancel during deferred reader load",
+        "real PDF worker and merged slots",
+        "gray annotation ignored",
+        "edit/explicit dates/confirm",
+        "atomic commit",
+        "duplicate prevention",
+        "Undo restores importability",
+        "staff guard",
+        "input 16px and no overflow"
+      ]
+    }
+  ],
+  "errors": [],
+  "httpErrors": [],
+  "readerSource": "Bundled test tool PDF.js 5.6.205; installed application dependency still requires approval",
+  "externalRequests": []
+}

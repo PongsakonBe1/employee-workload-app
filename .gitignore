@@ -6,6 +6,8 @@ dist
 out
 firebase/out
 frontend/out
+frontend/public/dev-pdfjs/
+output/playwright/classroom-pdf-import/source-private*
 .env
 .env.local
 .env.new

@@ -11,6 +11,7 @@ import { MenuPopover } from "../../../components/ui/MenuPopover";
 import { Dialog } from "../../../components/ui/Dialog";
 import { CALENDAR_KINDS, CALENDAR_ROOMS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
 import CalendarEntryForm from "./CalendarEntryForm";
+import ClassroomImport from "./ClassroomImport";
 import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar } from "./CalendarViews";
 import { calendarPeople, initialCalendar } from "./fixtures";
 import holidays from "./holidays.json";
@@ -19,7 +20,7 @@ import { hasPreviewState, usePreviewState } from "../previewState";
 const defaults = { kinds: Object.keys(CALENDAR_KINDS), room: "all", semester: "2/2569", query: "", public: true, observance: false };
 const newEntry = (date, kind = "classroom") => ({ title: kind === "dl" ? "สอบ Digital Literacy" : "", kind, date, start: "09:00", end: "10:30", repeat: kind === "classroom" ? "weekly" : "none", validTo: addCalendarMonths(date, 3), rooms: ["401"], semester: "2/2569", teacher: "", participants: "75", proctors: [] });
 
-function FilterFields({ filters, onChange, id }) {
+function FilterFields({ filters, onChange, id, semesters = [] }) {
   return <div className="cal-filter-fields">
     <fieldset>
       <legend>ประเภทกิจกรรม</legend>
@@ -52,8 +53,7 @@ function FilterFields({ filters, onChange, id }) {
         value={filters.semester} onChange={event => onChange({ ...filters, semester: event.target.value })}
       >
         <option value="all">ทุกภาคเรียน</option>
-        <option>2/2569</option>
-        <option>1/2570</option>
+        {[...new Set(["2/2569","1/2570",...semesters,filters.semester])].filter(value=>value&&value!=="all").map(value=><option key={value}>{value}</option>)}
       </select>
     </label>
     <fieldset>
@@ -85,7 +85,7 @@ export default function CalendarPreview() {
   const [data, setData] = usePreviewState("calendar.data", initialCalendar), [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
   const [dialog, setDialog] = useState(null), [selected, setSelected] = useState(null), [selectedHoliday, setSelectedHoliday] = useState(null);
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
-  const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09"), [importReady, setImportReady] = useState(false);
+  const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09");
   const [status, setStatus] = useState(""), [undo, setUndo] = usePreviewState("calendar.undo", null);
   const counter = useRef(Date.now()), restoredMode = useRef(hasPreviewState("calendar.mode"));
   useEffect(() => { const current = calendarToday();setToday(current);if (!restoredMode.current && matchMedia("(max-width:760px)").matches) setMode("day"); }, [setMode]);
@@ -96,7 +96,7 @@ export default function CalendarPreview() {
   const monthEvents = rows.filter(row => row.date === date), copyRows = filterCalendar(expandCalendar({ events: data.events, rules: [] }, week), filters);
   const coverage = holidays.coverageYears.includes(date.slice(0, 4));
   function selectDate(value) { setDate(value);setMiniMonth(value); }
-  function open(value) { setError(null);setDialog(value);if (value === "filters") setFilterDraft({ ...filters });if (value === "date") setDateDraft(date);if (value === "copy") setCopyDate(addCalendarDays(week.start, 7));if (value === "import") setImportReady(false); }
+  function open(value) { setError(null);setDialog(value);if (value === "filters") setFilterDraft({ ...filters });if (value === "date") setDateDraft(date);if (value === "copy") setCopyDate(addCalendarDays(week.start, 7)); }
   function startEntry(kind = "classroom", existing = null) {
     if (!canEdit) return;
     setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
@@ -125,16 +125,15 @@ export default function CalendarPreview() {
     }
     commit({ ...data, events: [...data.events, ...additions] }, `คัดลอกรายการสอบ ${additions.length} รายการแล้ว`);selectDate(copyDate);
   }
-  function importExample() {
-    if (!canEdit) return;
-    const imported = { id: "import-preview-course", title: "วิชาตัวอย่างจากหน้าตรวจนำเข้า", kind: "classroom", weekday: 0, validFrom: "2026-11-09", validTo: "2027-03-14", start: "08:00", end: "10:00", rooms: ["407"], teacher: "ผู้สอนตัวอย่าง", semester: "2/2569" };
-    if (data.rules.some(rule => rule.id === imported.id)) { setError({ message: "เพิ่มชุดตัวอย่างนี้แล้ว ใช้ Undo ก่อนทดลองซ้ำ" });return; }
-    const dates = calendarDates(imported.validFrom, imported.validTo).filter(day => calendarWeekday(day) === imported.weekday), existing = expandCalendar(data, { start: imported.validFrom, end: imported.validTo });
-    if (dates.some(day => calendarConflicts({ ...imported, date: day }, existing).length)) { setError({ message: "พบห้องชนกับชุดตัวอย่าง ยังไม่ได้เพิ่มตาราง" });return; }
-    commit({ ...data, rules: [...data.rules, imported] }, "เพิ่มตารางรายสัปดาห์ตัวอย่างแล้ว");selectDate(imported.validFrom);
+  function importClassrooms(rules) {
+    if (!canEdit || !rules.length) return;
+    const imported = rules.map(rule=>({...rule,id:`pdf-preview-${++counter.current}`}));
+    commit({ ...data, rules: [...data.rules, ...imported] }, `นำเข้า ${imported.length} ตารางรายสัปดาห์แล้ว`);
+    selectDate(imported.map(rule=>rule.validFrom).sort()[0]);
+    setFilters(previous=>({...previous,semester:imported[0].semester,kinds:[...new Set([...previous.kinds,"classroom"])]}));
   }
   function navigatePeriod(direction) { selectDate(mode === "month" ? addCalendarMonths(date, direction) : addCalendarDays(date, direction * (mode === "day" ? 1 : 7))); }
-  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: "ตรวจแบบการนำเข้าตาราง", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: "นำเข้าตารางเรียนจาก PDF", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
 
   return <WorkspaceFrame
     user={{ uid: "calendar-fixture", displayName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A", role }} pathname="/calendar"
@@ -197,7 +196,7 @@ export default function CalendarPreview() {
           />
           <FilterFields
             filters={filters} onChange={setFilters}
-            id="cal-side"
+            id="cal-side" semesters={data.rules.map(rule=>rule.semester)}
           />
           <button
             type="button" className="cal-text-button"
@@ -364,7 +363,7 @@ export default function CalendarPreview() {
     </p>
     <Dialog
       open={Boolean(dialog)} onClose={() => setDialog(null)}
-      title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""}`}
+      title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""} ${dialog === "import" ? "cal-import-dialog" : ""}`}
       description={dialog === "entry" || dialog === "import" ? "Development · ทดลองด้วยข้อมูลตัวอย่าง ยังไม่บันทึกไปยังระบบจริง" : undefined}
     >
       {dialog === "date" && <form onSubmit={event => { event.preventDefault();if (validCalendarDate(dateDraft)) { selectDate(dateDraft);setDialog(null); } }}>
@@ -400,7 +399,7 @@ export default function CalendarPreview() {
         </label>
         <FilterFields
           filters={filterDraft} onChange={setFilterDraft}
-          id="cal-dialog"
+          id="cal-dialog" semesters={data.rules.map(rule=>rule.semester)}
         />
         <div className="cal-dialog-actions">
           <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
@@ -502,40 +501,7 @@ export default function CalendarPreview() {
           </GlassButton>
         </div>
       </div>}
-      {dialog === "import" && <div>
-        <p className="cal-form-note">ตรวจหน้าทบทวนตารางก่อนนำเข้า เฟสนี้ยังไม่มีตัวอ่าน PDF/ภาพและไม่อ่านไฟล์จริง</p>
-        {!importReady ? <div className="cal-import-sample">
-          <Upload size={30} aria-hidden="true" />
-          <h3>ตัวอย่างการตรวจตารางเรียน</h3>
-          <p>แยกวัน เวลา ห้อง และช่วงภาคเรียน แล้วตรวจรายการก่อนบันทึก</p>
-          <GlassButton mode={glassMode} onClick={() => setImportReady(true)}>เปิดชุดตัวอย่าง</GlassButton>
-        </div> : <div>
-          <dl className="cal-detail-facts">
-            <div>
-              <dt>วิชา</dt>
-              <dd>วิชาตัวอย่างจากหน้าตรวจนำเข้า</dd>
-            </div>
-            <div>
-              <dt>ตาราง</dt>
-              <dd>จันทร์ 08:00–10:00 · ห้อง 407</dd>
-            </div>
-            <div>
-              <dt>ช่วงวันที่</dt>
-              <dd>9 พ.ย. 2569 – 14 มี.ค. 2570 · ทุกสัปดาห์</dd>
-            </div>
-          </dl>
-          {error && <p className="cal-form-error" role="alert">{error.message}</p>}
-          <div className="cal-dialog-actions">
-            <GlassButton mode={glassMode} onClick={() => setImportReady(false)}>กลับ</GlassButton>
-            <GlassButton
-              mode={glassMode} variant="prominent"
-              onClick={importExample}
-            >
-              เพิ่มชุดตัวอย่าง
-            </GlassButton>
-          </div>
-        </div>}
-      </div>}
+      {dialog === "import" && <ClassroomImport data={data} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>
   </WorkspaceFrame>;
