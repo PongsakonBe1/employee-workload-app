@@ -1,0 +1,5 @@
+{
+  "command": "node node_modules/eslint/bin/eslint.js --config scripts/ui-eslint.config.mjs frontend/app/dev/calendar/workspace.js",
+  "exitCode": 0,
+  "passed": true
+}

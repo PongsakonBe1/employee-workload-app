@@ -1,0 +1,247 @@
+{
+  "completed": true,
+  "url": "http://127.0.0.1:4310/dev/calendar",
+  "branch": "codex/calendar-form-feedback",
+  "data": "Synthetic tab-local preview plus demo-calendar-writer Emulator",
+  "cloudWrites": 0,
+  "physicalDevicesTested": false,
+  "checks": [
+    {
+      "name": "Desktop: required title reports and focuses the invalid field",
+      "passed": true,
+      "message": "ระบุชื่อวิชาหรือกิจกรรม",
+      "focus": {
+        "invalid": "true",
+        "name": "title"
+      }
+    },
+    {
+      "name": "Desktop: editing title clears the obsolete message and invalid state",
+      "passed": true
+    },
+    {
+      "name": "Desktop: resubmitting a conflicting draft revalidates and focuses rooms",
+      "passed": true,
+      "message": "ห้องชนกับ ทักษะดิจิทัล วันที่ 2 พฤศจิกายน 2569 08:00–10:00"
+    },
+    {
+      "name": "Desktop: an actual field edit clears a previous room-conflict message",
+      "passed": true
+    },
+    {
+      "name": "Desktop: clearing feedback does not bypass an unchanged room conflict",
+      "passed": true
+    },
+    {
+      "name": "Desktop: choosing a free room clears the stale conflict",
+      "passed": true
+    },
+    {
+      "name": "Desktop: corrected draft saves exactly once to the tab-local preview",
+      "passed": true
+    },
+    {
+      "name": "Desktop: focus without editing keeps the validation message",
+      "passed": true
+    },
+    {
+      "name": "Desktop: changing native time clears obsolete feedback",
+      "passed": true
+    },
+    {
+      "name": "Desktop: invalid time is still rejected and focused",
+      "passed": true,
+      "focus": {
+        "invalid": "true",
+        "name": "end"
+      },
+      "message": "เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มในวันเดียวกัน"
+    },
+    {
+      "name": "Desktop: correcting time rechecks the remaining room conflict",
+      "passed": true
+    },
+    {
+      "name": "Desktop: changing the native date clears the old-date conflict",
+      "passed": true
+    },
+    {
+      "name": "Desktop: corrected date saves to the preview",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390: required-field feedback focuses a visible title input",
+      "passed": true,
+      "focus": {
+        "bottom": 250.36404418945312,
+        "height": 844,
+        "invalid": "true",
+        "name": "title",
+        "top": 203.32403564453125,
+        "width": 390
+      }
+    },
+    {
+      "name": "Mobile 390: typing clears required-field feedback",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390: conflict focuses and scrolls to a visible room checkbox",
+      "passed": true,
+      "focus": {
+        "bottom": 579.154052734375,
+        "height": 844,
+        "left": 41.8599967956543,
+        "name": "rooms",
+        "right": 62.43999481201172,
+        "top": 558.5740356445312,
+        "width": 390
+      }
+    },
+    {
+      "name": "Mobile 390: editing clears conflict without moving focus back to rooms",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390: native date/time controls remain readable and within the viewport",
+      "passed": true,
+      "layout": {
+        "fields": [
+          {
+            "font": "16px",
+            "left": 27,
+            "right": 170
+          },
+          {
+            "font": "16px",
+            "left": 27,
+            "right": 170
+          },
+          {
+            "font": "16px",
+            "left": 184,
+            "right": 327
+          }
+        ],
+        "overflow": false,
+        "width": 390
+      }
+    },
+    {
+      "name": "Mobile 390: unchanged collision is rejected again on submit",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390: a room correction clears outdated feedback",
+      "passed": true
+    },
+    {
+      "name": "Mobile 390: corrected draft saves exactly once to the preview",
+      "passed": true
+    },
+    {
+      "name": "SIT: session A does not contain the blocker before session B saves",
+      "passed": true
+    },
+    {
+      "name": "SIT: session A keeps its older calendar snapshot after B commits",
+      "passed": true
+    },
+    {
+      "name": "SIT: writer rejects a collision found in fresh server data",
+      "passed": true,
+      "message": "ห้องหรือผู้คุมชนวันที่ 2035-02-05 10:00–11:00 ยังไม่ได้เพิ่มรายการใด"
+    },
+    {
+      "name": "SIT: editing clears a server-originated validation message",
+      "passed": true
+    },
+    {
+      "name": "SIT: resubmitting still validates against the latest server data",
+      "passed": true
+    }
+  ],
+  "viewportPreflight": {
+    "requestedWidth": 390,
+    "actualWidth": 1912,
+    "correctedBySettingViewportAfterTabCreation": true,
+    "checks": [
+      {
+        "name": "Desktop viewport preflight 1912: required-field feedback focuses a visible title input",
+        "passed": true,
+        "focus": {
+          "bottom": 213.85218811035156,
+          "height": 901,
+          "invalid": "true",
+          "name": "title",
+          "top": 169.75218200683594,
+          "width": 1912
+        }
+      },
+      {
+        "name": "Desktop viewport preflight 1912: typing clears required-field feedback",
+        "passed": true
+      },
+      {
+        "name": "Desktop viewport preflight 1912: conflict focuses and scrolls to a visible room checkbox",
+        "passed": true,
+        "focus": {
+          "bottom": 588.7021484375,
+          "height": 901,
+          "left": 663.8599853515625,
+          "name": "rooms",
+          "right": 684.4400024414062,
+          "top": 568.1221923828125,
+          "width": 1912
+        }
+      }
+    ]
+  },
+  "sit": {
+    "target": "demo-calendar-writer",
+    "date": "2035-02-05",
+    "cloudUsed": false,
+    "baseline": "Auth + Firestore Emulator · ข้อมูลสังเคราะห์ · เพิ่ม/นำเข้ารายการใหม่\n\nแยกจากบัญชีและฐานข้อมูลจริง · เพิ่มใหม่เฉพาะบัญชีทดสอบ Admin/Superadmin ที่เปิดสิทธิ์ writer ยังแก้ไข/ลบไม่ได้\n\nบัญชีทดสอบ\nAdmin จำลอง\nStaff จำลอง\nSuperadmin จำลอง\nบัญชีรออนุมัติจำลอง\nบัญชีหยุดใช้จำลอง\nออกจากระบบ\nโหลดใหม่\n\nก่อนบันทึกจะตรวจข้อมูลล่าสุดอีกครั้ง คำขอส่วนนี้ไม่รวมในตัวนับการอ่านปฏิทิน\n\nอ่านสำเร็จ · 137 ตารางเรียน / 0 รอบสอบ\n\nคำขออ่านปฏิทิน 5 ครั้ง · cache 2 เดือน · ไม่ใช่จำนวน billed reads",
+    "serverError": "ห้องหรือผู้คุมชนวันที่ 2035-02-05 10:00–11:00 ยังไม่ได้เพิ่มรายการใด",
+    "blockerCommitted": 1,
+    "rejectedDrafts": 2,
+    "blockerRetainedInEmulator": true
+  },
+  "viewportAfterReset": {
+    "desktop": {
+      "height": 844,
+      "width": 390
+    },
+    "mobile": {
+      "height": 901,
+      "width": 1912
+    }
+  },
+  "cloudUsed": false,
+  "userAcceptance": "Pending user review",
+  "checkCount": 26,
+  "completedAt": "2026-11-10T14:51:11.409Z",
+  "resizedTestTabsClosed": true,
+  "reviewUrl": "https://northwest-revised-domains-varies.trycloudflare.com/dev/calendar",
+  "reviewState": {
+    "viewport": {
+      "height": 901,
+      "width": 1912
+    },
+    "heading": "ตารางและการใช้ห้อง",
+    "sampleDataset": "ชุดตัวอย่าง\nพื้นที่ทดลองนำเข้า\nข้อมูลเดิมจำลอง\n\nชุดตัวอย่างสำหรับตรวจหน้าตาและการทำงาน · ทดลองไฟล์ของคุณได้ในพื้นที่แยก"
+  },
+  "finalReviewViewport": {
+    "height": 901,
+    "width": 1912
+  },
+  "visualQc": {
+    "desktopScreenshotReviewed": true,
+    "mobileScreenshotReviewed": true,
+    "mobileScreenshotCapturedAfterRender": true,
+    "screenshots": [
+      "desktop-error-cleared.jpg",
+      "mobile-error-cleared.jpg"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "project": "demo-calendar-writer",
+  "cloudUsed": false,
+  "readOnlyVerification": true,
+  "targets": [
+    {
+      "title": "QA-FEEDBACK-SERVER-BLOCKER",
+      "exists": true,
+      "receiptExists": true
+    },
+    {
+      "title": "QA-FEEDBACK-SERVER-DRAFT",
+      "exists": false,
+      "receiptExists": false
+    },
+    {
+      "title": "QA-FEEDBACK-SERVER-EDIT",
+      "exists": false,
+      "receiptExists": false
+    }
+  ],
+  "passed": true,
+  "syntheticBlockerRetained": 1,
+  "rejectedDraftTargetsAbsent": true
+}

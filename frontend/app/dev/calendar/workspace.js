@@ -132,6 +132,9 @@ export default function CalendarPreview({ externalCalendar = null }) {
     if (existing ? !canEdit : !canCreate) return;
     setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
   }
+  function updateEntry(change) {
+    setEntry(change);setError(null);
+  }
   function commit(next, message) { setUndo({ before: data, message });setData(next);setContractResult(null);setDialog(null);setStatus(message + " · " + datasetLabel); }
   async function createExternal(draft) {
     try {
@@ -144,6 +147,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
   }
   async function saveEntry(event) {
     event.preventDefault();if (!canCreate) return;
+    setError(null);
     const value = { ...entry, title: entry.title.trim(), rooms: entry.kind === "dl" ? Number(entry.participants) > 40 ? ["406", "407"] : ["406"] : entry.rooms, participants: Number(entry.participants) };
     const invalid = validateCalendarEntry(value);if (invalid) { setError(invalid);return; }
     const bounds = { start: value.date, end: value.repeat === "weekly" ? value.validTo : value.date };
@@ -520,7 +524,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
       </div>}
       {dialog === "entry" && <CalendarEntryForm people={people}
         writeTarget={externalCalendar?.writeTarget || ""}
-        {...{ entry, setEntry, editing, error, glassMode }} onSave={saveEntry}
+        {...{ entry, editing, error, glassMode }} setEntry={updateEntry} onSave={saveEntry}
         onCancel={() => setDialog(null)}
       />}
       {dialog === "detail" && selected && <div>
