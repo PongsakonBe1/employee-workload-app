@@ -5,8 +5,9 @@ import { initializeFirestore, terminate } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 import { createCalendarReadOnly } from "./calendarReadOnly.js";
 import { calendarSdkTransport } from "./calendarSdkTransport.js";
+import { createCalendarWriter } from "./calendarWriter.js";
 let sequence = 0;
-export function createCalendarStagingClient(config) {
+export function createCalendarStagingClient(config, { writer = false } = {}) {
   const approved = validateCalendarStagingConfig(config);
   const app = initializeApp(approved, "calendar-staging-" + ++sequence);
   const auth = initializeAuth(app, {
@@ -22,6 +23,7 @@ export function createCalendarStagingClient(config) {
     session = 0;
   return {
     reader,
+    ...(writer ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
     async login() {
       if (closed) throw new Error("Client closed");
       const current = ++session;

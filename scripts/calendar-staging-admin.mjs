@@ -241,6 +241,38 @@ const command = new Command("calendar-staging-internal").before(options => {
       productionRead: false
     };
   }
+  if (action === "provisionWriter" || action === "disableWriter" || action === "writerStatus") {
+    let provisionStep = "verify-google-account";
+    try {
+      const { Client } = require("./lib/apiv2");
+      const identity = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" });
+      const lookup = await identity.post(`/projects/${target}/accounts:lookup`, { email: [account] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+      const users = lookup.body.users || [];
+      if (users.length !== 1 || !users[0].emailVerified || !users[0].providerUserInfo?.some(provider => provider.providerId === "google.com")) throw new Error("Verified staging Google account required");
+      const store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+      const prefix = `/projects/${target}/databases/(default)/documents`;
+      const profilePath = `${prefix}/users/${users[0].localId}`;
+      provisionStep = "verify-profile-role";
+      const profile = await store.get(profilePath, { queryParams: { "mask.fieldPaths": "role" } });
+      const activeProfile = await store.get(profilePath, { queryParams: { "mask.fieldPaths": "active" } });
+      if (activeProfile.body.fields?.active?.booleanValue !== true || !["admin","superadmin"].includes(profile.body.fields?.role?.stringValue)) throw new Error("Active staging administrator required");
+      if (action === "writerStatus") {
+        provisionStep = "read-writer-status";
+        const capability = await store.get(profilePath, { queryParams: { "mask.fieldPaths": "calendarWriter" } });
+        const gate = await store.get(`${prefix}/calendarWriteState/main`, { resolveOnHTTPError: true, queryParams: { "mask.fieldPaths": "revision" } });
+        return { writerEnabled: capability.body.fields?.calendarWriter?.booleanValue === true, gateReady: gate.status === 200, revision: gate.status === 200 ? Number(gate.body.fields?.revision?.integerValue) : null, personalDetailsLogged: false };
+      }
+      if (action === "provisionWriter") {
+        provisionStep = "verify-revision-gate";
+        const gate = await store.get(`${prefix}/calendarWriteState/main`, { resolveOnHTTPError: true, queryParams: { "mask.fieldPaths": "revision" } });
+        if (gate.status === 404) await store.post(`${prefix}:commit`, { writes: [{ update: { name: `projects/${target}/databases/(default)/documents/calendarWriteState/main`, fields: { revision: { integerValue: "0" } } }, currentDocument: { exists: false } }] });
+        else if (gate.status !== 200 || !Number.isSafeInteger(Number(gate.body.fields?.revision?.integerValue))) throw new Error("Invalid revision gate");
+      }
+      provisionStep = "update-writer-capability";
+      await store.patch(profilePath, { fields: { calendarWriter: { booleanValue: action === "provisionWriter" } } }, { queryParams: { "updateMask.fieldPaths": "calendarWriter" } });
+      return { writerEnabled: action === "provisionWriter", profileDetailsLogged: false, existingProfileFieldsPreserved: true, existingGateNeverReset: true };
+    } catch { throw new Error(`Staging writer provisioning failed at ${provisionStep}; no credential or profile details logged`); }
+  }
   if (action === "provisionReader") {
     const {
         Client

@@ -1,0 +1,23 @@
+{
+  "checkedOn": "2026-11-10",
+  "projectId": "labboy-workload-app-staging",
+  "database": "(default)",
+  "edition": "STANDARD",
+  "mode": "FIRESTORE_NATIVE",
+  "location": "asia-southeast1",
+  "writerRulesDeployed": true,
+  "prototypeRules": true,
+  "operatorWriterEnabled": true,
+  "gateReady": true,
+  "revisionAtProvisionCheck": 0,
+  "billingEnabled": false,
+  "largeTestBatchSeededToCloud": false,
+  "cloudAnonymousReadsDenied": 4,
+  "cloudAnonymousWritesDenied": 3,
+  "authenticatedCloudWriteUat": "pending-user-test",
+  "productionAccessed": false,
+  "productionChanged": false,
+  "hostingFunctionsDeployed": false,
+  "personalDetailsLogged": false,
+  "remainingValidation": ["authenticated-cloud-write-uat", "cloud-role-and-concurrency-matrix", "trusted-server-business-invariants-before-production", "physical-device-browser-coverage"]
+}

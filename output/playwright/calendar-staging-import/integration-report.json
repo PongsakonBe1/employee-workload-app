@@ -1,0 +1,52 @@
+{
+  "completed": true,
+  "project": "demo-calendar-writer",
+  "checks": [
+    {
+      "name": "atomic create, receipt replay and cross-admin idempotency",
+      "passed": true
+    },
+    {
+      "name": "evening DL, 75 per round, two rooms and directory IDs round trip",
+      "passed": true
+    },
+    {
+      "name": "conflicting atomic batch leaves no partial rows; concurrent writers revalidate the revision gate",
+      "passed": true
+    },
+    {
+      "name": "same-batch concurrent retry and double-click suppression",
+      "passed": true
+    },
+    {
+      "name": "staff, pending and inactive cannot create despite calling the writer API",
+      "passed": true
+    },
+    {
+      "name": "rules deny overwrite/delete, profile escalation, protocol bypass and unauthorized gate creation",
+      "passed": true
+    },
+    {
+      "name": "malformed schema/ownership transactions rejected atomically without advancing the gate",
+      "passed": true
+    },
+    {
+      "name": "active admin without explicit writer capability denied by API and direct SDK transaction",
+      "passed": true
+    },
+    {
+      "name": "offline writer rejects server reads and never queues a later silent write",
+      "passed": true
+    },
+    {
+      "name": "100-record pilot limit commits atomically within actual emulator rules access budgets",
+      "passed": true
+    },
+    {
+      "name": "closing a client during preflight prevents the pending create",
+      "passed": true
+    }
+  ],
+  "deniedWrites": 14,
+  "cloudUsed": false
+}

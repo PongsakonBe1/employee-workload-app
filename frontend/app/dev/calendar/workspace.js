@@ -95,7 +95,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
   const [legacyUndo, setLegacyUndo] = usePreviewState("calendar.legacy.undo", null);
   const data = externalCalendar ? externalCalendar.data : dataset === "legacy" ? legacyData || { rules: [], events: [] } : dataset === "sandbox" ? sandboxData : sampleData, setData = dataset === "legacy" ? setLegacyData : dataset === "sandbox" ? setSandboxData : setSampleData;
   const undo = dataset === "legacy" ? legacyUndo : dataset === "sandbox" ? sandboxUndo : sampleUndo, setUndo = dataset === "legacy" ? setLegacyUndo : dataset === "sandbox" ? setSandboxUndo : setSampleUndo;
-  const datasetLabel = dataset === "legacy" ? "ข้อมูลเดิมจำลอง" : dataset === "sample" ? "ชุดตัวอย่าง" : "พื้นที่ทดลองนำเข้า";
+  const datasetLabel = externalCalendar ? externalCalendar.sourceName || "Staging" : dataset === "legacy" ? "ข้อมูลเดิมจำลอง" : dataset === "sample" ? "ชุดตัวอย่าง" : "พื้นที่ทดลองนำเข้า";
   const [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
   const [dialog, setDialog] = useState(null), [selected, setSelected] = useState(null), [selectedHoliday, setSelectedHoliday] = useState(null);
   const readOnly = Boolean(externalCalendar), externalIdentity = externalCalendar?.identity?.id;
@@ -115,6 +115,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
     return () => { active = false; };
   }, [externalCalendar, dataset, legacySnapshot, legacyData, setLegacySnapshot, setLegacyData]);
   const canEdit = !externalCalendar && role !== "staff" && (dataset !== "legacy" || Boolean(legacySnapshot?.complete)), range = calendarRange(date, mode), week = calendarRange(date, "week");
+  const canCreate = canEdit || Boolean(externalCalendar?.canCreate && !externalCalendar.saving);
   const renderRange = mode === "month" ? { start: monthCalendarDates(date)[0], end: monthCalendarDates(date).at(-1) } : range;
   const onRangeChange = externalCalendar?.onRangeChange;
   useEffect(() => { onRangeChange?.(renderRange.start, renderRange.end); }, [onRangeChange, renderRange.start, renderRange.end]);
@@ -125,12 +126,21 @@ export default function CalendarPreview({ externalCalendar = null }) {
   function selectDate(value) { setDate(value);setMiniMonth(value); }
   function open(value) { setError(null);setDialog(value);if (value === "filters") setFilterDraft({ ...filters });if (value === "date") setDateDraft(date);if (value === "copy") setCopyDate(addCalendarDays(week.start, 7)); }
   function startEntry(kind = "classroom", existing = null) {
-    if (!canEdit) return;
+    if (existing ? !canEdit : !canCreate) return;
     setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
   }
   function commit(next, message) { setUndo({ before: data, message });setData(next);setContractResult(null);setDialog(null);setStatus(message + " · " + datasetLabel); }
-  function saveEntry(event) {
-    event.preventDefault();if (!canEdit) return;
+  async function createExternal(draft) {
+    try {
+      const result = await externalCalendar.onCreate(draft);
+      setDialog(null);setStatus(`บันทึก ${result.created} รายการ · ข้ามรายการเดิม ${result.skipped} รายการ · ${datasetLabel}`);
+      return null;
+    } catch (failure) {
+      return failure.code === "calendar-write-validation" ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
+    }
+  }
+  async function saveEntry(event) {
+    event.preventDefault();if (!canCreate) return;
     const value = { ...entry, title: entry.title.trim(), rooms: entry.kind === "dl" ? Number(entry.participants) > 40 ? ["406", "407"] : ["406"] : entry.rooms, participants: Number(entry.participants) };
     const invalid = validateCalendarEntry(value);if (invalid) { setError(invalid);return; }
     const bounds = { start: value.date, end: value.repeat === "weekly" ? value.validTo : value.date };
@@ -138,6 +148,10 @@ export default function CalendarPreview({ externalCalendar = null }) {
     const existing = expandCalendar(data, bounds);
     for (const day of dates) { const conflicts = calendarConflicts({ ...value, date: day }, existing, editing?.sourceId);if (conflicts.length) { setError({ field: "rooms", message: `ห้องชนกับ ${conflicts[0].title} วันที่ ${calendarLabel(day)} ${conflicts[0].start}–${conflicts[0].end}` });return; } }
     const id = editing?.sourceId || `preview-calendar-${++counter.current}`;
+    if (externalCalendar) {
+      const draft = value.kind === "classroom" ? { rules: value.rooms.map(room => ({ ...value, id, rooms: [room], validFrom: value.date, validTo: value.repeat === "weekly" ? value.validTo : value.date, weekday: calendarWeekday(value.date) })), events: [] } : { rules: [], events: [{ ...value, id }] };
+      const failure = await createExternal(draft);if (failure) setError({ message: failure });else selectDate(value.date);return;
+    }
     const next = { rules: data.rules.filter(item => item.id !== id), events: data.events.filter(item => item.id !== id) };
     if (value.repeat === "weekly") next.rules = [...next.rules, { ...value, id, validFrom: value.date, weekday: calendarWeekday(value.date) }];else next.events = [...next.events, { ...value, id }];
     commit(next, editing ? "แก้ไขตารางแล้ว" : "เพิ่มตารางแล้ว");
@@ -152,22 +166,25 @@ export default function CalendarPreview({ externalCalendar = null }) {
     }
     commit({ ...data, events: [...data.events, ...additions] }, `คัดลอกรายการสอบ ${additions.length} รายการแล้ว`);selectDate(copyDate);
   }
-  function importClassrooms(rules) {
-    if (!canEdit || !rules.length) return;
+  async function importClassrooms(rules) {
+    if (!canCreate || !rules.length) return "ไม่มีสิทธิ์เพิ่มตาราง";
+    if (externalCalendar) { const failure = await createExternal({ rules, events: [] });if (!failure) selectDate(rules.map(row => row.validFrom).sort()[0]);return failure; }
     const imported = rules.map(rule=>({...rule,id:`pdf-preview-${++counter.current}`}));
     commit({ ...data, rules: [...data.rules, ...imported] }, `นำเข้า ${imported.length} ตารางรายสัปดาห์แล้ว`);
     selectDate(imported.map(rule=>rule.validFrom).sort()[0]);
     setFilters(previous=>({...previous,semester:imported[0].semester,kinds:[...new Set([...previous.kinds,"classroom"])]}));
   }
   function addPreviewPerson(name) {
+    if (externalCalendar) return { error: "เลือกผู้คุมจากรายชื่อในระบบ หากไม่มีรายชื่อให้ผู้ดูแลเตรียมรายชื่อก่อน" };
     if(!canEdit)return {error:"ไม่มีสิทธิ์เพิ่มผู้คุมทดลอง"};
     const next=addDlPreviewPerson(people,name,"dl-person-"+(++counter.current));
     if(next.error)return next;
     if (next.person.temporary && !previewPeople.some(person => person.id === next.person.id)) setPeople([...previewPeople, next.person]);
     return {person:next.person};
   }
-  function importDlRounds(events, options) {
-    if (!canEdit) return "ไม่มีสิทธิ์นำเข้าตารางสอบ";
+  async function importDlRounds(events, options) {
+    if (!canCreate) return "ไม่มีสิทธิ์นำเข้าตารางสอบ";
+    if (externalCalendar) { const failure = await createExternal({ rules: [], events: events.map(row => ({ ...row, examType: options.examType })) });if (!failure) selectDate(events.map(row => row.date).sort()[0]);return failure; }
     const candidate = events.map((row,index)=>({...row,id:"commit-"+index,selected:true,proctorKeys:[],manualProctors:row.proctors}));
     const checked = planDlImport(candidate,{...options,people},data);
     if(checked.issues.length) return checked.issues[0].message;
@@ -199,7 +216,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
       </div>
       <div className="cal-heading-actions">
         <GlassButton
-          mode={glassMode} disabled={!canEdit}
+          mode={glassMode} disabled={!canCreate}
           onClick={() => open("import")}
         >
           <Upload size={17} aria-hidden="true" />
@@ -207,7 +224,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
         </GlassButton>
         <GlassButton
           mode={glassMode} variant="prominent"
-          disabled={!canEdit} onClick={() => startEntry()}
+          disabled={!canCreate} onClick={() => startEntry()}
         >
           <Plus size={18} aria-hidden="true" />
           เพิ่มตาราง
@@ -323,7 +340,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
             </button>
             <MenuPopover
               glassMode={glassMode} label="คำสั่งปฏิทินเพิ่มเติม"
-              icon={<Ellipsis size={21} aria-hidden="true" />} items={[{ label: "ปฏิทินและตัวกรอง…", icon: <Filter size={17} aria-hidden="true" />, action: () => open("filters") }, { label: "เพิ่มรอบสอบ DL…", icon: <Plus size={17} aria-hidden="true" />, disabled: !canEdit, action: () => startEntry("dl") }, { label: "คัดลอกรายการสอบสัปดาห์นี้…", icon: <Copy size={17} aria-hidden="true" />, disabled: !canEdit, action: () => open("copy") }]}
+              icon={<Ellipsis size={21} aria-hidden="true" />} items={[{ label: "ปฏิทินและตัวกรอง…", icon: <Filter size={17} aria-hidden="true" />, action: () => open("filters") }, { label: "เพิ่มรอบสอบ DL…", icon: <Plus size={17} aria-hidden="true" />, disabled: !canCreate, action: () => startEntry("dl") }, { label: "คัดลอกรายการสอบสัปดาห์นี้…", icon: <Copy size={17} aria-hidden="true" />, disabled: !canEdit, action: () => open("copy") }]}
             />
           </div>
         </div>
@@ -425,7 +442,8 @@ export default function CalendarPreview({ externalCalendar = null }) {
     <Dialog
       open={Boolean(dialog)} onClose={() => setDialog(null)}
       title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""} ${dialog === "import" ? "cal-import-dialog" : ""}`}
-      description={dialog === "entry" || dialog === "import" ? "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
+      busy={Boolean(externalCalendar?.saving)}
+      description={dialog === "entry" || dialog === "import" ? externalCalendar?.saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : externalCalendar?.writeTarget ? `Development · เพิ่มรายการใหม่ไปยัง ${datasetLabel} แยกจาก production` : "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
     >
       {dialog === "date" && <form onSubmit={event => { event.preventDefault();if (validCalendarDate(dateDraft)) { selectDate(dateDraft);setDialog(null); } }}>
         <label className="ui-field">
@@ -473,6 +491,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
         </div>
       </div>}
       {dialog === "entry" && <CalendarEntryForm people={people}
+        writeTarget={externalCalendar?.writeTarget || ""}
         {...{ entry, setEntry, editing, error, glassMode }} onSave={saveEntry}
         onCancel={() => setDialog(null)}
       />}
@@ -564,7 +583,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
       </div>}
       {dialog === "import" && <>
         <GlassControlGroup mode={glassMode} label="ชนิดตารางที่นำเข้า"><button type="button" aria-pressed={importKind==="classroom"} onClick={()=>setImportKind("classroom")}>ตารางเรียน · PDF</button><button type="button" aria-pressed={importKind==="dl"} onClick={()=>setImportKind("dl")}>ตารางสอบ DL · รูปภาพ</button></GlassControlGroup>
-        {importKind === "dl" ? <DlImageImport people={people} onAddPerson={addPreviewPerson} data={data} dataset={dataset} datasetLabel={datasetLabel} canEdit={canEdit} glassMode={glassMode} onUseSandbox={()=>setDataset("sandbox")} onCancel={()=>setDialog(null)} onImport={importDlRounds}/> : <ClassroomImport data={data} dataset={dataset} datasetLabel={datasetLabel} onUseSandbox={()=>setDataset("sandbox")} canEdit={canEdit} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/> }
+        {importKind === "dl" ? <DlImageImport people={people} onAddPerson={addPreviewPerson} data={data} dataset={externalCalendar ? "external" : dataset} datasetLabel={datasetLabel} canEdit={canCreate} writeTarget={externalCalendar ? datasetLabel : ""} glassMode={glassMode} onUseSandbox={()=>setDataset("sandbox")} onCancel={()=>setDialog(null)} onImport={importDlRounds}/> : <ClassroomImport data={data} dataset={externalCalendar ? "external" : dataset} datasetLabel={datasetLabel} onUseSandbox={()=>setDataset("sandbox")} canEdit={canCreate} writeTarget={externalCalendar ? datasetLabel : ""} glassMode={glassMode} onCancel={()=>setDialog(null)} onImport={importClassrooms}/> }
       </>}
       {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
     </Dialog>

@@ -6,7 +6,7 @@ import { CALENDAR_KINDS, CALENDAR_ROOMS } from "../../../lib/calendarView";
 import { GlassButton } from "../../../components/ui/GlassControls";
 import { calendarPeople } from "./fixtures";
 
-export default function CalendarEntryForm({ entry, setEntry, editing, error, glassMode, onSave, onCancel, people = calendarPeople }) {
+export default function CalendarEntryForm({ entry, setEntry, editing, error, glassMode, onSave, onCancel, people = calendarPeople, writeTarget = "" }) {
   const form = useRef(null), errorRef = useRef(null);
   useEffect(() => {
     if (!error) return;
@@ -39,7 +39,7 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
             className="apple-input" name="kind"
             value={entry.kind} onChange={event => update({ kind: event.target.value, repeat: event.target.value === "classroom" ? "weekly" : "none" })}
           >
-            {Object.entries(CALENDAR_KINDS).map(([kind, label]) => <option value={kind} key={kind}>{label}</option>)}
+            {Object.entries(CALENDAR_KINDS).filter(([kind]) => !writeTarget || kind !== "exam").map(([kind, label]) => <option value={kind} key={kind}>{label}</option>)}
           </select>
         </label>
         <label className="ui-field">
@@ -89,6 +89,7 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
           aria-invalid={error?.field === "validTo"} onChange={event => update({ validTo: event.target.value })}
         />
       </label>}
+      {writeTarget && entry.kind === "dl" && <label className="ui-field"><span>ประเภทผู้เข้าสอบ</span><select className="apple-input" name="examType" value={entry.examType || ""} onChange={event => update({ examType: event.target.value })} required><option value="">เลือกประเภทผู้เข้าสอบ</option><option value="student">นักศึกษา</option><option value="staff">บุคลากร</option></select></label>}
       {entry.kind === "dl" && <label className="ui-field">
         <span>รอบสอบ</span>
         <select
@@ -165,7 +166,7 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
         type="submit"
       >
         <Check size={17} aria-hidden="true" />
-        บันทึกตัวอย่าง
+        {writeTarget ? `บันทึกไปยัง ${writeTarget}` : "บันทึกตัวอย่าง"}
       </GlassButton>
     </div>
   </form>;

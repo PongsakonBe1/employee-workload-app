@@ -2,6 +2,8 @@
 
 10 พฤศจิกายน 2569 · Branch `codex/calendar-staging-readonly` · ต่อจากแผน `22f617d`
 
+เอกสารและรายงาน JSON ในโฟลเดอร์เฟสนี้เป็นหลักฐานช่วง read-only ก่อนเปิด writer pilot สถานะ writer/rules ล่าสุดอยู่ใน [เฟสเพิ่ม/นำเข้า staging](../calendar-staging-import/README.md) หน้าอ่านเดิมยังไม่มี create API เปิดให้ UI
+
 ผู้ใช้อนุมัติการสร้าง staging แยก ตั้ง Auth/Firestore เตรียมข้อมูลสังเคราะห์ deploy rules/indexes เฉพาะ staging และทดสอบก่อนเลื่อนขั้น ตาม [แผนที่อนุมัติ](../calendar-staging-plan/README.md) เอกสารนี้รายงานผลดำเนินการจริง ส่วนแผนเดิมคงเป็นประวัติก่อน provision
 
 ## สิ่งที่ตั้งค่าแล้ว

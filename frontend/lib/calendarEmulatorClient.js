@@ -5,9 +5,10 @@ import { initializeFirestore, connectFirestoreEmulator, terminate } from "fireba
 import { calendarEmulator, calendarTestAccounts, calendarTestPassword } from "./calendarEmulatorConfig.js";
 import { createCalendarReadOnly } from "./calendarReadOnly.js";
 import { calendarSdkTransport } from "./calendarSdkTransport.js";
+import { createCalendarWriter } from "./calendarWriter.js";
 let sequence = 0;
 export function createCalendarEmulatorClient({
-  local = false
+  local = false, writer = false
 } = {}) {
   if (!local || typeof window !== "undefined" && !["127.0.0.1", "localhost"].includes(window.location.hostname)) throw new Error("Emulator client is restricted to localhost");
   const {
@@ -15,7 +16,7 @@ export function createCalendarEmulatorClient({
     host,
     firestorePort,
     authPort
-  } = calendarEmulator;
+  } = writer ? { ...calendarEmulator, projectId: "demo-calendar-writer" } : calendarEmulator;
   if (!projectId.startsWith("demo-") || host !== "127.0.0.1") throw new Error("Invalid emulator target");
   const app = initializeApp({
     projectId,
@@ -38,6 +39,7 @@ export function createCalendarEmulatorClient({
     closing = null;
   return {
     reader,
+    ...(writer ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
     async login(id) {
       if (closed || !calendarTestAccounts.some(account => account.id === id)) throw new Error("Invalid test account");
       const current = ++session;

@@ -5,7 +5,7 @@ import { GlassButton } from "../../../components/ui/GlassControls";
 import { IMPORT_WEEKDAYS, classroomTermDefaults, importTermIssues, planClassroomImport } from "../../../lib/classroomImport";
 import { readClassroomPdf } from "../../../lib/readClassroomPdf";
 
-export default function ClassroomImport({data,dataset="sample",datasetLabel,onUseSandbox,canEdit,glassMode,onCancel,onImport}) {
+export default function ClassroomImport({data,dataset="sample",datasetLabel,onUseSandbox,canEdit,glassMode,onCancel,onImport,writeTarget=""}) {
   const [result,setResult]=useState(null),[fileName,setFileName]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const [terms,setTerms]=useState(()=>classroomTermDefaults("2/2569")),[semester,setSemester]=useState("2/2569"),[confirmed,setConfirmed]=useState(false);
   const [roomFilter,setRoomFilter]=useState("all");
@@ -51,13 +51,14 @@ export default function ClassroomImport({data,dataset="sample",datasetLabel,onUs
       setFocusTarget({selector:selected===0?'.cal-import-row input[type="checkbox"]':plan.issues.some(issue=>issue.id)?'.cal-import-row[data-issue="true"]':'[name="import-semester"]'});
     } else setFocusTarget({selector:'[name="import-confirm"]'});
   }
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     // Re-plan against current state at commit time, including newly added exams.
     const current=planClassroomImport(result?.rows||[],terms,semester,data,existingLabel);
     if(!canEdit)return;
     if(!confirmed||current.issues.length){reviewNext();return;}
-    onImport(current.rules);
+    try { const failure=await onImport(current.rules);if(failure)setError(failure); }
+    catch { setError("ยังยืนยันผลการบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม"); }
   }
   return <form ref={formRef} className="cal-import-form" onSubmit={submit}>
     <ol className="cal-import-steps" aria-label="ขั้นตอนนำเข้า">
@@ -74,7 +75,7 @@ export default function ClassroomImport({data,dataset="sample",datasetLabel,onUs
     {result&&<>
       <section className="cal-import-dataset-note" aria-label="ข้อมูลที่ใช้ตรวจตารางชน">
         <strong>กำลังตรวจเทียบกับ{existingLabel}</strong>
-        <p>{dataset==="sample"?"ตารางตัวอย่างที่ใส่ไว้เพื่อดูหน้าตาอาจทับกับไฟล์ของคุณ ใช้พื้นที่แยกเพื่อนำเข้า โดยชุดตัวอย่างและรายการที่เคยเพิ่มยังเก็บไว้ให้สลับกลับได้":"ตรวจซ้ำและเวลาชนเฉพาะรายการในพื้นที่นี้ ข้อมูลยังอยู่เฉพาะแท็บนี้ ไม่เขียนระบบจริง"}</p>
+        <p>{writeTarget?`ไฟล์อ่านในอุปกรณ์นี้ เมื่อยืนยันจะบันทึกรายการที่เลือกไปยัง ${writeTarget} และตรวจชนกับข้อมูลล่าสุดอีกครั้ง`:dataset==="sample"?"ตารางตัวอย่างที่ใส่ไว้เพื่อดูหน้าตาอาจทับกับไฟล์ของคุณ ใช้พื้นที่แยกเพื่อนำเข้า โดยชุดตัวอย่างและรายการที่เคยเพิ่มยังเก็บไว้ให้สลับกลับได้":"ตรวจซ้ำและเวลาชนเฉพาะรายการในพื้นที่นี้ ข้อมูลยังอยู่เฉพาะแท็บนี้ ไม่เขียนระบบจริง"}</p>
         {canUseSandbox&&<GlassButton mode={glassMode} disabled={!canEdit} onClick={switchToSandbox}>ใช้พื้นที่ทดลองแยก</GlassButton>}
       </section>
       <section className="cal-import-terms" aria-label="กำหนดช่วงภาคเรียน">

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 
-export function Dialog({ open, onClose, title, description, children, footer, className = "", origin }) {
+export function Dialog({ open, onClose, title, description, children, footer, className = "", origin, busy = false }) {
   const ref = useRef(null), closeRef = useRef(onClose), titleId = useId(), descriptionId = useId();
   const originRef = useRef(origin);originRef.current = origin;
   closeRef.current = onClose;
@@ -30,22 +30,23 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
   }, [open]);
   return <dialog
     ref={ref} className={`ui-dialog ${className}`}
+    aria-busy={busy || undefined}
     aria-labelledby={titleId} aria-describedby={description ? descriptionId : undefined}
-    onCancel={event => { event.preventDefault();closeRef.current(); }} onPointerDown={event => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect();if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeRef.current(); } }}
+    onCancel={event => { event.preventDefault();if (!busy) closeRef.current(); }} onPointerDown={event => { if (!busy && event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect();if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeRef.current(); } }}
   >
     <div className="ui-dialog-header">
       <div>
         <h2 id={titleId}>{title}</h2>
-        {description && <p id={descriptionId}>{description}</p>}
+        {description && <p id={descriptionId} role={busy ? "status" : undefined}>{description}</p>}
       </div>
       <button
         type="button" className="ui-icon-button"
-        aria-label="ปิดหน้าต่าง" onClick={onClose}
+        aria-label="ปิดหน้าต่าง" onClick={onClose} disabled={busy}
       >
         <X size={20} aria-hidden="true" />
       </button>
     </div>
-    <div className="ui-dialog-body">{children}</div>
+    <div className="ui-dialog-body" inert={busy || undefined}>{children}</div>
     {footer && <div className="ui-dialog-footer">{footer}</div>}
   </dialog>;
 }

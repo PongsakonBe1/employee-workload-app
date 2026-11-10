@@ -22,7 +22,7 @@ async function bounded(task) {
     clearTimeout(timer);
   }
 }
-export default function StagingCalendar() {
+export default function StagingCalendar({ writable = false }) {
   const [config, setConfig] = useState(null),
     [signedIn, setSignedIn] = useState(false),
     [range, setRange] = useState(null),
@@ -30,6 +30,7 @@ export default function StagingCalendar() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0);
+  const [saving, setSaving] = useState(false);
   const client = useRef(null),
     operation = useRef(0);
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function StagingCalendar() {
     setSignedIn(false);
     try {
       await client.current?.close();
-      client.current = createCalendarStagingClient(config);
+      client.current = createCalendarStagingClient(config, { writer: writable });
       await client.current.login();
       if (current === operation.current) setSignedIn(true);
     } catch (failure) {
@@ -116,18 +117,30 @@ export default function StagingCalendar() {
       active = false;
     };
   }, [signedIn, range, revision]);
+  async function create(input) {
+    if (!writable || saving || !client.current?.create) throw Object.assign(new Error("ยังไม่พร้อมบันทึก"), { code: "calendar-write-validation" });
+    const current = operation.current;
+    setSaving(true);
+    try {
+      const result = await client.current.create(input);
+      if (current === operation.current) { setSnapshot(null);setRevision(value => value + 1); }
+      return result;
+    } finally { setSaving(false); }
+  }
   const stats = client.current?.reader.stats();
-  const controls = <section className="cal-import-dataset-note cal-emulator-controls" aria-label="เชื่อม staging อ่านอย่างเดียว"><strong>Staging · ข้อมูลสังเคราะห์ · อ่านอย่างเดียว</strong><p>{STAGING_PROJECT} · แยกจากระบบใช้งานจริง ใช้ Google ของผู้ทดสอบ ทุกบทบาทเพิ่ม แก้ไข ลบ หรือนำเข้าไม่ได้</p><div className="cal-dialog-actions">{signedIn ? <><GlassButton onClick={logout}>ออกจากระบบ staging</GlassButton><GlassButton disabled={busy} onClick={() => {
+  const controls = <section className="cal-import-dataset-note cal-emulator-controls" aria-label={writable ? "เชื่อม staging เพิ่มตาราง" : "เชื่อม staging อ่านอย่างเดียว"}><strong>Staging · ข้อมูลสังเคราะห์ · {writable ? "เพิ่ม/นำเข้ารายการใหม่" : "อ่านอย่างเดียว"}</strong><p>{STAGING_PROJECT} · แยกจากระบบใช้งานจริง · {writable ? "เพิ่มใหม่ได้เฉพาะ Admin/Superadmin ที่เปิดสิทธิ์ writer ยังแก้ไข/ลบไม่ได้" : "ใช้ Google ของผู้ทดสอบ ทุกบทบาทเพิ่ม แก้ไข ลบ หรือนำเข้าไม่ได้"}</p><div className="cal-dialog-actions">{signedIn ? <><GlassButton disabled={saving} onClick={logout}>ออกจากระบบ staging</GlassButton><GlassButton disabled={busy || saving} onClick={() => {
           client.current.reader.refresh();
           setRevision(value => value + 1);
-        }}>โหลดข้อมูล staging ใหม่</GlassButton></> : <GlassButton variant="prominent" disabled={!config || busy} onClick={login}>เข้าสู่ staging ด้วย Google</GlassButton>}</div><p role="status">{busy ? "กำลังเชื่อม staging…" : snapshot ? `อ่าน staging สำเร็จ · ${snapshot.data.rules.length} ตารางเรียน / ${snapshot.data.events.length} รอบสอบ` : signedIn ? "Google เข้าสู่ระบบแล้ว รออ่านข้อมูล" : "ยังไม่เข้าสู่ระบบ staging"}</p>{stats && <p className="ui-caption" data-staging-queries={stats.identity + stats.directory + stats.classrooms + stats.months}>คำขออ่าน {stats.identity + stats.directory + stats.classrooms + stats.months} ครั้ง · cache {stats.cachedMonths.length} เดือน · ไม่ใช่จำนวน billed reads</p>}{error && <p className="cal-form-error" role="alert">{error}</p>}{snapshot?.issues.length > 0 && <p role="alert">มี {snapshot.issues.length} รายการข้อมูลไม่ครบและยังไม่แสดง ปฏิทินนี้ยังใช้ยืนยันห้องว่างไม่ได้</p>}</section>;
+        }}>โหลดข้อมูล staging ใหม่</GlassButton></> : <GlassButton variant="prominent" disabled={!config || busy} onClick={login}>เข้าสู่ staging ด้วย Google</GlassButton>}</div>{writable && <p className="ui-caption">ก่อนบันทึกจะตรวจข้อมูลล่าสุดอีกครั้ง คำขอส่วนนี้ไม่รวมในตัวนับการอ่านปฏิทิน</p>}<p role="status">{saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : busy ? "กำลังเชื่อม staging…" : snapshot ? `อ่าน staging สำเร็จ · ${snapshot.data.rules.length} ตารางเรียน / ${snapshot.data.events.length} รอบสอบ` : signedIn ? "Google เข้าสู่ระบบแล้ว รออ่านข้อมูล" : "ยังไม่เข้าสู่ระบบ staging"}</p>{stats && <p className="ui-caption" data-staging-queries={stats.identity + stats.directory + stats.classrooms + stats.months}>คำขออ่านปฏิทิน {stats.identity + stats.directory + stats.classrooms + stats.months} ครั้ง · cache {stats.cachedMonths.length} เดือน · ไม่ใช่จำนวน billed reads</p>}{error && <p className="cal-form-error" role="alert">{error}</p>}{snapshot?.issues.length > 0 && <p role="alert">มี {snapshot.issues.length} รายการข้อมูลไม่ครบและยังไม่แสดง ปฏิทินนี้ยังใช้ยืนยันห้องว่างไม่ได้</p>}</section>;
   return <CalendarPreview externalCalendar={{
     data: snapshot?.data || empty,
+    canCreate: Boolean(writable && !busy && !saving && snapshot?.complete && snapshot.identity?.calendarWriter === true && ["admin", "superadmin"].includes(snapshot.identity.role)),
+    onCreate: create, saving, writeTarget: writable ? "Staging" : "",
     people: snapshot?.people || [],
     identity: snapshot?.identity,
     controls,
     onRangeChange: changeRange,
-    label: "Development · Staging อ่านอย่างเดียว",
+    label: writable ? "Development · Staging เพิ่ม/นำเข้ารายการใหม่" : "Development · Staging อ่านอย่างเดียว",
     sourceName: "Staging"
   }} />;
 }

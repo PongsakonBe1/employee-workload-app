@@ -17,6 +17,7 @@ const actions = {
   createWebApp: ["apps:create", "WEB", "labboy Workload Staging Web"],
   sdkConfig: ["apps:sdkconfig", "WEB", "1:299459134462:web:5f1bd25089a933cdf7b6af"],
   deployFirestore: ["deploy", "--config", path.join(root, "firebase/calendar-staging/firebase.json"), "--only", "firestore:rules,firestore:indexes"],
+  deployWriter: ["deploy", "--config", path.join(root, "firebase/calendar-writer/firebase.json"), "--only", "firestore:rules,firestore:indexes"],
   deployAuth: ["deploy", "--config", path.join(root, ".tools/calendar-staging/firebase.auth.json"), "--only", "auth"]
 };
 if (!actions[action]) throw new Error("Unknown staging operation");

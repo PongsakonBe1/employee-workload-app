@@ -5,11 +5,12 @@ import { GlassButton } from "../../../components/ui/GlassControls";
 import { planDlImport } from "../../../lib/dlImageImport";
 import { readDlImage, validateDlImageFile } from "../../../lib/readDlImage";
 
-export default function DlImageImport({data,dataset,datasetLabel,canEdit,glassMode,onUseSandbox,onCancel,onImport,people,onAddPerson}){
+export default function DlImageImport({data,dataset,datasetLabel,canEdit,glassMode,onUseSandbox,onCancel,onImport,people,onAddPerson,writeTarget=""}){
  const [file,setFile]=useState(null),[preview,setPreview]=useState(""),[result,setResult]=useState(null),[mapping,setMapping]=useState({});
  const [busy,setBusy]=useState(false),[progress,setProgress]=useState(null),[error,setError]=useState(""),[participants,setParticipants]=useState("75"),[semester,setSemester]=useState("2/2569");
  const [confirmed,setConfirmed]=useState(false),[dayFilter,setDayFilter]=useState("all"),[focus,setFocus]=useState(null);
  const [nameDrafts,setNameDrafts]=useState({}),[nameErrors,setNameErrors]=useState({});
+ const [examType,setExamType]=useState("");
  const request=useRef(null),form=useRef(null),errorRef=useRef(null),serial=useRef(0);
  useEffect(()=>()=>request.current?.abort(),[]);
  useEffect(()=>{if(!file){setPreview("");return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url);},[file]);
@@ -48,13 +49,16 @@ export default function DlImageImport({data,dataset,datasetLabel,canEdit,glassMo
   const target=issue?.field==="participants"?'[name="dl-import-participants"]':issue?.field==="semester"?'[name="dl-import-semester"]':issue?.id?`[data-dl-row="${issue.id}"] ${issue.field==="date"?'input[type=date]':issue.field==="end"?'input[name$="-end"]':issue.field==="start"?'input[name$="-start"]':issue.field==="proctors"?'select': 'input[type=date]'}`:issue?'[data-dl-row] input':'[name="dl-import-confirm"]';
   setFocus({selector:issue?.field==="proctors"&&form.current?.querySelector('[data-dl-map] select[data-unmapped=true]')?'[data-dl-map] select[data-unmapped=true]':target});
  }
- function submit(event){
+ async function submit(event){
   event.preventDefault();if(!canEdit||!result)return;
   const current=planDlImport(result.rows,options,data);if(current.issues.length||!confirmed){next();return;}
-  const failure=onImport(current.events,{participants,semester});if(failure){setError(failure);setConfirmed(false);}
+  if(writeTarget&&!examType){setError("เลือกประเภทผู้เข้าสอบก่อนบันทึก");return;}
+  try { const failure=await onImport(current.events,{participants,semester,examType});if(failure){setError(failure);setConfirmed(false);} }
+  catch {setError("ยังยืนยันผลการบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม");}
  }
  const personOptions=<><option value="">เลือกผู้คุมสอบ</option>{people.map(person=><option value={person.id} key={person.id}>{person.label}{person.temporary?" · ทดลอง":""}</option>)}<option value="none">ไม่มีชื่อในช่องนี้</option></>;
  return <form className="cal-import-form dl-import-form" ref={form} onSubmit={submit} noValidate>
+  {writeTarget&&<label className="ui-field"><span>ประเภทผู้เข้าสอบ</span><select className="apple-input" aria-label="ประเภทผู้เข้าสอบ" value={examType} onChange={event=>{setExamType(event.target.value);setConfirmed(false);}} required><option value="">เลือกประเภทผู้เข้าสอบ</option><option value="student">นักศึกษา</option><option value="staff">บุคลากร</option></select><small>ยืนยันรายการแล้วจะบันทึกไปยัง {writeTarget} และตรวจข้อมูลล่าสุดอีกครั้ง</small></label>}
   <ol className="cal-import-steps" aria-label="ขั้นตอนนำเข้า"><li aria-current={!result?"step":undefined}>1 · เลือกและอ่านภาพ</li><li aria-current={result?"step":undefined}>2 · ตรวจและจับคู่ผู้คุม</li><li>3 · เพิ่มลงปฏิทิน</li></ol>
   <div className="cal-import-file"><ImageIcon size={26} aria-hidden="true"/><div><strong>{file?.name||"ตารางสอบ Digital Literacy"}</strong><p>PNG/JPEG · ไม่เกิน 10 MB / 12 ล้านพิกเซล · ตารางแบบตัวอย่างที่มีผู้คุม 3 ช่อง</p></div><label className="cal-import-picker"><Upload size={17} aria-hidden="true"/><span>{file?"เปลี่ยนรูปภาพ":"เลือกรูปภาพ"}</span><input type="file" aria-label="เลือกรูปตารางสอบ DL" accept="image/png,image/jpeg,.png,.jpg,.jpeg" disabled={busy||!canEdit} onChange={event=>{choose(event.target.files?.[0]);event.target.value="";}}/></label></div>
   <p className="cal-form-note">อ่านในอุปกรณ์นี้ ไม่อัปโหลดรูป · ครั้งแรกต้องโหลดตัวอ่านและโมเดลภาษา · ตรวจข้อมูลก่อนเพิ่มทุกครั้ง</p>
@@ -64,7 +68,7 @@ export default function DlImageImport({data,dataset,datasetLabel,canEdit,glassMo
   {result&&<>
    <p className="dl-import-found" role="status">อ่านได้ {result.sourceRows} แถวต้นฉบับ · {result.rows.length} รอบสอบ — กรุณาตรวจวัน เวลา และผู้คุมตามภาพ</p>
    {result.warnings.map(message=><p key={message} className="cal-form-note">{message}</p>)}
-   <section className="cal-import-dataset-note"><strong>กำลังตรวจเทียบกับ{existingLabel}</strong><p>ตรวจตารางซ้ำและห้องชนในชุดที่เลือก ข้อมูลอยู่เฉพาะแท็บนี้ ยังไม่บันทึกระบบจริง</p>{dataset==="sample"&&<GlassButton mode={glassMode} onClick={()=>{setConfirmed(false);onUseSandbox();}}>ใช้พื้นที่ทดลองแยก</GlassButton>}</section>
+   <section className="cal-import-dataset-note"><strong>กำลังตรวจเทียบกับ{existingLabel}</strong><p>{writeTarget?`ตรวจเบื้องต้นจากปฏิทินที่โหลด และตรวจข้อมูลล่าสุดก่อนบันทึกไปยัง ${writeTarget}`:"ตรวจตารางซ้ำและห้องชนในชุดที่เลือก ข้อมูลอยู่เฉพาะแท็บนี้ ยังไม่บันทึกระบบจริง"}</p>{dataset==="sample"&&<GlassButton mode={glassMode} onClick={()=>{setConfirmed(false);onUseSandbox();}}>ใช้พื้นที่ทดลองแยก</GlassButton>}</section>
    <div className="cal-form-grid"><label className="ui-field"><span>จำนวนคนต่อรอบ</span><input name="dl-import-participants" aria-invalid={plan.issues.some(item=>item.field==="participants")} aria-describedby="dl-import-help" className="apple-input" inputMode="numeric" value={participants} onChange={event=>{setParticipants(event.target.value);setConfirmed(false);}}/></label><label className="ui-field"><span>ภาคเรียน</span><input name="dl-import-semester" aria-invalid={plan.issues.some(item=>item.field==="semester")} aria-describedby="dl-import-help" className="apple-input" value={semester} maxLength={6} onChange={event=>{setSemester(event.target.value);setConfirmed(false);}}/></label></div>
    <p className="cal-form-note">75 คนเป็นค่าตั้งต้นที่ทีมยืนยัน ใช้กับแต่ละรอบ · มากกว่า 40 คนใช้ห้อง 406 + 407 ตามเกณฑ์เดิม · ไม่สร้างรอบเย็นหากไม่มีในภาพ</p>
    {result.names.length>0&&<section className="dl-import-mappings" data-private="true" aria-label="จับคู่ผู้คุมจากภาพ"><h3>ตรวจชื่อและจับคู่ผู้คุม</h3><p className="cal-form-note">รายชื่อ A–H เป็นข้อมูลตัวอย่าง หากไม่มีชื่อที่ตรงกัน ให้แก้ชื่อจากภาพแล้วกด “ใช้ชื่อนี้ชั่วคราว” ใช้กับทุกรอบที่พบชื่อนั้น รายชื่ออยู่เฉพาะแท็บทดลอง รีเฟรชแล้วหาย ไม่สร้างบัญชีผู้ใช้จริง</p>{result.names.map((person,index)=><div className="dl-import-map-card" data-dl-map="true" key={person.key}>

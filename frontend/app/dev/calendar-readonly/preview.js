@@ -21,7 +21,7 @@ async function bounded(task) {
     clearTimeout(timer);
   }
 }
-export default function EmulatorCalendar() {
+export default function EmulatorCalendar({ writable = false }) {
   const [local, setLocal] = useState(false),
     [account, setAccount] = useState("directory-a"),
     [signedIn, setSignedIn] = useState(false);
@@ -30,6 +30,7 @@ export default function EmulatorCalendar() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0);
+  const [saving, setSaving] = useState(false);
   const client = useRef(null),
     operation = useRef(0);
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function EmulatorCalendar() {
     try {
       await client.current?.close();
       client.current = createCalendarEmulatorClient({
-        local: true
+        local: true, writer: writable
       });
       await bounded(client.current.login(account));
       if (current === operation.current) setSignedIn(true);
@@ -104,28 +105,41 @@ export default function EmulatorCalendar() {
       active = false;
     };
   }, [signedIn, range, revision]);
+  async function create(input) {
+    if (!writable || saving || !client.current?.create) throw Object.assign(new Error("ยังไม่พร้อมบันทึก"), { code: "calendar-write-validation" });
+    const current = operation.current;
+    setSaving(true);
+    try {
+      const result = await client.current.create(input);
+      if (current === operation.current) { setSnapshot(null);setRevision(value => value + 1); }
+      return result;
+    } finally { setSaving(false); }
+  }
   const stats = client.current?.reader.stats();
-  const controls = <section className="cal-import-dataset-note cal-emulator-controls" aria-label="เชื่อม Emulator อ่านอย่างเดียว">
-    <strong>Auth + Firestore Emulator · ข้อมูลสังเคราะห์ · อ่านอย่างเดียว</strong>
-    <p>แยกจากบัญชีและฐานข้อมูลจริง ทุกบทบาทไม่สามารถเพิ่ม แก้ไข ลบ หรือนำเข้าข้อมูลในโหมดนี้</p>
+  const controls = <section className="cal-import-dataset-note cal-emulator-controls" aria-label={writable ? "เชื่อม Emulator เพิ่มตาราง" : "เชื่อม Emulator อ่านอย่างเดียว"}>
+    <strong>Auth + Firestore Emulator · ข้อมูลสังเคราะห์ · {writable ? "เพิ่ม/นำเข้ารายการใหม่" : "อ่านอย่างเดียว"}</strong>
+    <p>แยกจากบัญชีและฐานข้อมูลจริง · {writable ? "เพิ่มใหม่เฉพาะบัญชีทดสอบ Admin/Superadmin ที่เปิดสิทธิ์ writer ยังแก้ไข/ลบไม่ได้" : "ทุกบทบาทไม่สามารถเพิ่ม แก้ไข ลบ หรือนำเข้าข้อมูลในโหมดนี้"}</p>
     {!local ? <p role="status">โหมดนี้ใช้ได้เฉพาะ localhost บนเครื่องพัฒนา ลิงก์ภายนอกยังใช้ปฏิทินตัวอย่างเดิมได้</p> : <>
       <div className="cal-form-grid"><label className="ui-field"><span>บัญชีทดสอบ</span><select className="apple-input" value={account} disabled={busy || signedIn} onChange={event => setAccount(event.target.value)}>{calendarTestAccounts.map(person => <option key={person.id} value={person.id}>{person.label}</option>)}</select></label><div className="cal-dialog-actions">
-        {!signedIn ? <GlassButton disabled={busy} onClick={login}>เข้าสู่ระบบจำลอง</GlassButton> : <><GlassButton aria-label="ออกจากระบบจำลอง" onClick={logout}>ออกจากระบบ</GlassButton><GlassButton aria-label="โหลดข้อมูลใหม่" disabled={busy} onClick={() => {
+        {!signedIn ? <GlassButton disabled={busy} onClick={login}>เข้าสู่ระบบจำลอง</GlassButton> : <><GlassButton aria-label="ออกจากระบบจำลอง" disabled={saving} onClick={logout}>ออกจากระบบ</GlassButton><GlassButton aria-label="โหลดข้อมูลใหม่" disabled={busy || saving} onClick={() => {
               client.current.reader.refresh();
               setRevision(value => value + 1);
             }}>โหลดใหม่</GlassButton></>}
       </div></div>
-      <p role="status">{busy ? "กำลังอ่าน Emulator…" : snapshot ? `อ่านสำเร็จ · ${snapshot.data.rules.length} ตารางเรียน / ${snapshot.data.events.length} รอบสอบ` : signedIn ? "รอโหลดข้อมูล" : "ยังไม่เข้าสู่ระบบจำลอง"}</p>
-      {stats && <p className="ui-caption" data-read-queries={stats.identity + stats.directory + stats.classrooms + stats.months}>คำขออ่าน {stats.identity + stats.directory + stats.classrooms + stats.months} ครั้ง · cache {stats.cachedMonths.length} เดือน · ไม่ใช่จำนวน billed reads</p>}
+      {writable && <p className="ui-caption">ก่อนบันทึกจะตรวจข้อมูลล่าสุดอีกครั้ง คำขอส่วนนี้ไม่รวมในตัวนับการอ่านปฏิทิน</p>}<p role="status">{saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : busy ? "กำลังอ่าน Emulator…" : snapshot ? `อ่านสำเร็จ · ${snapshot.data.rules.length} ตารางเรียน / ${snapshot.data.events.length} รอบสอบ` : signedIn ? "รอโหลดข้อมูล" : "ยังไม่เข้าสู่ระบบจำลอง"}</p>
+      {stats && <p className="ui-caption" data-read-queries={stats.identity + stats.directory + stats.classrooms + stats.months}>คำขออ่านปฏิทิน {stats.identity + stats.directory + stats.classrooms + stats.months} ครั้ง · cache {stats.cachedMonths.length} เดือน · ไม่ใช่จำนวน billed reads</p>}
     </>}
     {error && <p className="cal-form-error" role="alert">{error}</p>}
     {snapshot?.issues.length > 0 && <p role="alert">มี {snapshot.issues.length} รายการที่ข้อมูลไม่ครบและยังไม่แสดง ปฏิทินนี้อาจไม่ครบสำหรับตัดสินใจเรื่องห้องว่าง</p>}
   </section>;
   return <CalendarPreview externalCalendar={{
     data: snapshot?.data || empty,
+    canCreate: Boolean(writable && !busy && !saving && snapshot?.complete && snapshot.identity?.calendarWriter === true && ["admin", "superadmin"].includes(snapshot.identity.role)),
+    onCreate: create, saving, writeTarget: writable ? "Emulator" : "",
     people: snapshot?.people || [],
     identity: snapshot?.identity,
     controls,
+    sourceName: "Emulator", label: writable ? "Development · Emulator เพิ่ม/นำเข้ารายการใหม่" : "Development · Emulator อ่านอย่างเดียว",
     onRangeChange: changeRange
   }} />;
 }
