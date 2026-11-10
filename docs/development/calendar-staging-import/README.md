@@ -80,6 +80,10 @@ Writer เปิดเฉพาะบัญชี active Admin/Superadmin ที
 
 ไม่ได้เปิดอ่านข้อมูลตารางหรือทำ automation ด้วย session ผู้ใช้ในขั้นบันทึกผลนี้ ไม่อนุมานจำนวนรายการจากไฟล์ ผล full reload/login ใหม่ หรือการนำเข้ารูป DL ว่าผ่านด้วย ขั้นถัดไปที่ยังต้อง UAT คือ DL image import โดยจับคู่ผู้คุมกับรายชื่อในระบบ
 
+## เตรียม DL image UAT — 10 พฤศจิกายน 2569
+
+Branch `codex/dl-staging-import-uat` ปรับหน้าจับคู่ให้โหมดเชื่อม writer เลือกเฉพาะ directory และไม่แสดงตัวเลือกชื่อชั่วคราวแล้ว ผล OCR → review → บันทึก 4 รอบ → hard reload/login ใหม่ → กันนำเข้าซ้ำ ผ่านใน Emulator ทั้ง desktop และ mobile emulation ดูรายละเอียดใน `docs/development/dl-staging-import-uat/README.md` ผลนี้ไม่เปลี่ยนสถานะ UAT บน cloud: ยังรอยืนยันรายชื่อสำหรับภาพจริงและผลจากผู้ทดสอบ
+
 แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
 
 ## Rules เป็น prototype และข้อจำกัด

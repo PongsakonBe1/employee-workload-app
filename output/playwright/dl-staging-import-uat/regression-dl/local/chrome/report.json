@@ -1,0 +1,37 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "lazy self-hosted real OCR of anonymous image; evening rounds, actionable focus, explicit review and four-round sandbox import",
+      "passed": true
+    },
+    {
+      "name": "duplicate import blocked atomically; Undo preserves original sample dataset",
+      "passed": true
+    },
+    {
+      "name": "Staff cannot import",
+      "passed": true
+    },
+    {
+      "name": "touch 390px real OCR review/import; date/time containment and 16px inputs",
+      "passed": true
+    },
+    {
+      "name": "touch 768px real OCR review/import; date/time containment and 16px inputs",
+      "passed": true
+    },
+    {
+      "name": "cancel during delayed startup leaves no stale results; wrong file rejected",
+      "passed": true
+    },
+    {
+      "name": "cancel during active recognition terminates worker; subsequent OCR succeeds without stale results",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "writeRequests": [],
+  "physicalIOS": false
+}

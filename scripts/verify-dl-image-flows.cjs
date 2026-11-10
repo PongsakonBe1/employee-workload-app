@@ -1,7 +1,7 @@
 /* Synthetic, anonymous ruled-image UI flows including actual OCR and cancellation. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.argv[2]),origin=process.argv[4]||'http://127.0.0.1:4310',name=/chrome.exe$/i.test(process.argv[3])?'chrome':'edge';
-const out=path.resolve(process.argv[5]==='calendar-data-adapter'?'output/playwright/calendar-data-adapter/regression-dl':'output/playwright/dl-image-import/flows',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(process.argv[5]==='dl-staging-import-uat'?'output/playwright/dl-staging-import-uat/regression-dl':process.argv[5]==='calendar-data-adapter'?'output/playwright/calendar-data-adapter/regression-dl':'output/playwright/dl-image-import/flows',origin.includes('127.0.0.1')?'local':'public',name);fs.mkdirSync(out,{recursive:true});
 const report={completed:false,checks:[],errors:[],externalOrigins:[],writeRequests:[],physicalIOS:false};
 async function main(){
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});

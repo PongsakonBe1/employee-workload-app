@@ -1,0 +1,7 @@
+{
+  "command": "npm test",
+  "passed": true,
+  "tests": 518,
+  "files": 31,
+  "note": "Summary of observed Vitest run; no new pure-logic tests for conditional UI"
+}
