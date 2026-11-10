@@ -1,0 +1,95 @@
+{
+  "checkedAt": "2026-11-10T14:05:34.423Z",
+  "target": "labboy-workload-app-staging",
+  "manifestSHA256": "43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f",
+  "label": "after",
+  "schedules": [
+    {
+      "title": "QA-CLOUD-OVERLAP-A",
+      "exists": false,
+      "exactFieldsMatched": null,
+      "operationMatches": null
+    },
+    {
+      "title": "QA-CLOUD-OVERLAP-B",
+      "exists": true,
+      "exactFieldsMatched": true,
+      "operationMatches": true
+    },
+    {
+      "title": "QA-CLOUD-IDENTICAL",
+      "exists": true,
+      "exactFieldsMatched": true,
+      "operationMatches": true
+    },
+    {
+      "title": "QA-CLOUD-ROOM-401",
+      "exists": true,
+      "exactFieldsMatched": true,
+      "operationMatches": true
+    },
+    {
+      "title": "QA-CLOUD-ROOM-402",
+      "exists": true,
+      "exactFieldsMatched": true,
+      "operationMatches": true
+    },
+    {
+      "title": "QA-CLOUD-ATOMIC-COLLISION",
+      "exists": false,
+      "exactFieldsMatched": null,
+      "operationMatches": null
+    },
+    {
+      "title": "QA-CLOUD-ATOMIC-GOOD",
+      "exists": false,
+      "exactFieldsMatched": null,
+      "operationMatches": null
+    }
+  ],
+  "receipts": [
+    {
+      "case": "overlap",
+      "exists": false,
+      "count": null,
+      "countMatches": null
+    },
+    {
+      "case": "overlap",
+      "exists": true,
+      "count": 1,
+      "countMatches": true
+    },
+    {
+      "case": "identical",
+      "exists": true,
+      "count": 1,
+      "countMatches": true
+    },
+    {
+      "case": "different-rooms",
+      "exists": true,
+      "count": 1,
+      "countMatches": true
+    },
+    {
+      "case": "different-rooms",
+      "exists": true,
+      "count": 1,
+      "countMatches": true
+    },
+    {
+      "case": "atomic-rejection",
+      "exists": false,
+      "count": null,
+      "countMatches": null
+    }
+  ],
+  "schedulesFound": 4,
+  "receiptsFound": 4,
+  "revision": 9,
+  "queryRequests": 14,
+  "recordsWritten": 0,
+  "personalDetailsSelected": false,
+  "privilegedReadIsNotRulesEvidence": true
+}

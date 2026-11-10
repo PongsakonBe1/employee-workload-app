@@ -1,6 +1,6 @@
 # ตาราง UAT สิทธิ์/การเพิ่มพร้อมกันบน staging
 
-สถานะ: ผู้ใช้อนุมัติชุด QA ที่ระบุแล้วเมื่อ 10 พฤศจิกายน 2569 ผ่าน read-only preflight และตรวจ SDK ผู้ไม่เข้าสู่ระบบบน cloud แล้ว ยังไม่รัน authenticated writes/concurrency และไม่ได้สร้างบัญชีหรือเปลี่ยนสิทธิ์ cloud
+สถานะล่าสุด: ผู้ใช้อนุมัติชุด QA แล้ว และทดสอบ concurrent writes ผ่าน Google ของบัญชีผู้ทดสอบเดิมใน Edge สองแท็บสำเร็จ 3 กรณี เพิ่มจริง 4 ตาราง / 4 receipts / revision 5 → 9 เหลือ PDF negative batch ที่ยังเลือกไฟล์ไม่ได้เพราะ extension file-URL permission ดู [ผล cloud](cloud-uat-results.md) ไม่มีการสร้างบัญชี เปลี่ยนสิทธิ์ หรือ deploy
 
 ## เงื่อนไขก่อนเริ่ม
 

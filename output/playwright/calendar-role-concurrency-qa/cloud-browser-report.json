@@ -1,0 +1,197 @@
+{
+  "project": "labboy-workload-app-staging",
+  "manifestSHA256": "43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f",
+  "transport": "Normal Google-authenticated Edge UI in two independent tabs; no tokens extracted",
+  "startedAt": "2026-11-10T13:56:20.610Z",
+  "cases": [
+    {
+      "id": "input-method-check",
+      "requests": [
+        {
+          "session": "A",
+          "clickIssuedAt": "2026-11-10T13:56:20.613Z",
+          "clickReturnedAt": "2026-11-10T13:56:21.738Z"
+        },
+        {
+          "session": "B",
+          "clickIssuedAt": "2026-11-10T13:56:20.613Z",
+          "clickReturnedAt": "2026-11-10T13:56:20.942Z"
+        }
+      ],
+      "clickResults": [
+        {
+          "session": "A",
+          "status": "fulfilled",
+          "error": null
+        },
+        {
+          "session": "B",
+          "status": "fulfilled",
+          "error": null
+        }
+      ],
+      "outcome": "Date/time fill did not persist in controlled inputs; existing-date client conflict blocked both submissions. Replaced with keyboard entry and verified after rerender."
+    },
+    {
+      "id": "overlap",
+      "requests": [
+        {
+          "session": "A",
+          "clickIssuedAt": "2026-11-10T13:58:47.028Z",
+          "clickReturnedAt": "2026-11-10T13:58:47.326Z"
+        },
+        {
+          "session": "B",
+          "clickIssuedAt": "2026-11-10T13:58:47.028Z",
+          "clickReturnedAt": "2026-11-10T13:58:47.409Z"
+        }
+      ],
+      "clickResults": [
+        {
+          "session": "A",
+          "status": "fulfilled"
+        },
+        {
+          "session": "B",
+          "status": "fulfilled"
+        }
+      ],
+      "ui": {
+        "A": {
+          "statuses": [
+            "อ่าน staging สำเร็จ · 25 ตารางเรียน / 18 รอบสอบ",
+            ""
+          ],
+          "dialog": 1,
+          "message": "ห้องหรือผู้คุมชนวันที่ 2027-04-19 10:00–11:00 ยังไม่ได้เพิ่มรายการใด"
+        },
+        "B": {
+          "statuses": [
+            "อ่าน staging สำเร็จ · 26 ตารางเรียน / 0 รอบสอบ",
+            "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+          ],
+          "dialog": 0
+        }
+      },
+      "storage": {
+        "created": 1,
+        "receipts": 1,
+        "revision": 6,
+        "winner": "QA-CLOUD-OVERLAP-B",
+        "exactFieldsMatched": true
+      }
+    },
+    {
+      "id": "identical",
+      "requests": [
+        {
+          "session": "A",
+          "clickIssuedAt": "2026-11-10T14:00:08.041Z",
+          "clickReturnedAt": "2026-11-10T14:00:09.159Z"
+        },
+        {
+          "session": "B",
+          "clickIssuedAt": "2026-11-10T14:00:08.041Z",
+          "clickReturnedAt": "2026-11-10T14:00:08.378Z"
+        }
+      ],
+      "clickResults": [
+        {
+          "session": "A",
+          "status": "fulfilled"
+        },
+        {
+          "session": "B",
+          "status": "fulfilled"
+        }
+      ],
+      "ui": {
+        "A": {
+          "statuses": [
+            "อ่าน staging สำเร็จ · 27 ตารางเรียน / 0 รอบสอบ",
+            "บันทึก 0 รายการ · ข้ามรายการเดิม 1 รายการ · Staging"
+          ],
+          "dialog": 0
+        },
+        "B": {
+          "statuses": [
+            "อ่าน staging สำเร็จ · 27 ตารางเรียน / 0 รอบสอบ",
+            "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+          ],
+          "dialog": 0
+        }
+      },
+      "storage": {
+        "newSchedules": 1,
+        "newReceipts": 1,
+        "totalQaSchedules": 2,
+        "totalQaReceipts": 2,
+        "revision": 7,
+        "exactFieldsMatched": true
+      }
+    },
+    {
+      "id": "different-rooms",
+      "requests": [
+        {
+          "session": "A",
+          "clickIssuedAt": "2026-11-10T14:00:59.341Z",
+          "clickReturnedAt": "2026-11-10T14:01:00.480Z"
+        },
+        {
+          "session": "B",
+          "clickIssuedAt": "2026-11-10T14:00:59.341Z",
+          "clickReturnedAt": "2026-11-10T14:00:59.677Z"
+        }
+      ],
+      "clickResults": [
+        {
+          "session": "A",
+          "status": "fulfilled"
+        },
+        {
+          "session": "B",
+          "status": "fulfilled"
+        }
+      ],
+      "ui": {
+        "A": [
+          "อ่าน staging สำเร็จ · 29 ตารางเรียน / 0 รอบสอบ",
+          "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+        ],
+        "B": [
+          "อ่าน staging สำเร็จ · 28 ตารางเรียน / 0 รอบสอบ",
+          "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+        ]
+      },
+      "storage": {
+        "newSchedules": 2,
+        "newReceipts": 2,
+        "totalQaSchedules": 4,
+        "totalQaReceipts": 4,
+        "revision": 9,
+        "exactFieldsMatched": true
+      }
+    }
+  ],
+  "initialValidationCheck": {
+    "qaSchedulesFound": 0,
+    "qaReceiptsFound": 0,
+    "revision": 5,
+    "cloudWritesObserved": 0
+  },
+  "freshServerReload": {
+    "session": "B",
+    "qaEntries": [
+      "401QA-CLOUD-OVERLAP-B10:30–11:30",
+      "402QA-CLOUD-IDENTICAL10:00–11:00",
+      "401QA-CLOUD-ROOM-40110:00–11:00",
+      "402QA-CLOUD-ROOM-40210:00–11:00"
+    ],
+    "status": "Staging · ข้อมูลสังเคราะห์ · เพิ่ม/นำเข้ารายการใหม่\n\nlabboy-workload-app-staging · แยกจากระบบใช้งานจริง · เพิ่มใหม่ได้เฉพาะ Admin/Superadmin ที่เปิดสิทธิ์ writer ยังแก้ไข/ลบไม่ได้\n\nออกจากระบบ staging\nโหลดข้อมูล staging ใหม่\n\nก่อนบันทึกจะตรวจข้อมูลล่าสุดอีกครั้ง คำขอส่วนนี้ไม่รวมในตัวนับการอ่านปฏิทิน\n\nอ่าน staging สำเร็จ · 29 ตารางเรียน / 0 รอบสอบ\n\nคำขออ่านปฏิทิน 21 ครั้ง · cache 1 เดือน · ไม่ใช่จำนวน billed reads",
+    "fullPageReloadOrFreshSignInPerformed": false
+  },
+  "completed": false,
+  "atomicPdfStatus": "Awaiting extension file-URL permission or user-selected synthetic PDF",
+  "pendingAction": "Select the approved synthetic PDF in the existing import dialog, or explicitly enable extension file-URL access"
+}

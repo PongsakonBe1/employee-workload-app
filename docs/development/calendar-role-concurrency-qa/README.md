@@ -2,6 +2,8 @@
 
 10 พฤศจิกายน 2569 · Branch `codex/calendar-role-concurrency-qa`
 
+ผลล่าสุด: [Cloud QA](cloud-uat-results.md) ผ่าน concurrent writes 3 กรณีด้วย Google ผู้ทดสอบเดิมใน Edge สองแท็บ เพิ่มจริง 4 ตาราง / 4 receipts / revision 5 → 9 ตรวจรายละเอียดและโหลดกลับจาก server แล้ว เหลือการเลือก PDF สังเคราะห์เพื่อทดสอบ negative import review และยังไม่ถือว่าผ่าน cloud role matrix ทั้งชุด
+
 ## ขอบเขต
 
 ตรวจ calendar pilot ผ่าน Web SDK, Auth Emulator และ Firestore Emulator จริงบน `demo-calendar-writer` รวม UI ที่ `/dev/calendar-write` ไม่มีการเปลี่ยน application runtime, rules, providers, สิทธิ์บัญชี cloud หรือ production ไม่ reset namespace หรือรัน seed เดิมทับข้อมูล

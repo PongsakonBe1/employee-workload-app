@@ -100,7 +100,7 @@ Branch `codex/calendar-role-concurrency-qa` เพิ่มตัวตรวจ
 
 ผลนี้เป็นหลักฐาน Emulator เท่านั้น Cloud role/concurrency matrix ยัง `not-run` รอยืนยันบัญชีผู้ทดสอบและชุดรายการสังเคราะห์ที่อนุมัติ โดยไม่เปลี่ยนสถานะรายการรอ cloud ใน `staging-setup-report.json`
 
-ขั้นเตรียม cloud ต่อมา ตรวจ writer/gate ได้ revision 5 และ preflight แบบ field projection พบช่วง QA 19–22 เม.ย. 2570 ว่าง ณ เวลาที่อ่าน SDK ที่ไม่เข้าสู่ระบบถูกปฏิเสธ 4 QA references ไม่มีการเขียน cloud เตรียม manifest คาดว่าจะเพิ่ม 4 ตารางและ PDF negative batch ซึ่ง parser ตรวจแล้ว แต่ authenticated session/concurrency ยังรอ browser เชื่อมต่อใหม่และอนุมัติชุดข้อมูล ดูสถานะล่าสุดใน `output/playwright/calendar-role-concurrency-qa/cloud-qa-status.json`
+Cloud QA ถัดมาผ่าน concurrent writes 3 กรณีด้วย Google ผู้ทดสอบเดิมใน Edge สองแท็บ: เวลาชนเพิ่มได้หนึ่ง ส่งซ้ำเพิ่มครั้งเดียว และคนละห้องเพิ่มได้ทั้งคู่ รวม 4 ตาราง / 4 receipts / revision 5 → 9 ตรงกับชุดที่อนุมัติและโหลดกลับจาก server แล้ว เหลือ PDF negative batch ที่รอเลือกไฟล์ และยังไม่ผ่าน cloud role matrix หลายบัญชี ดู [ผล cloud](../calendar-role-concurrency-qa/cloud-uat-results.md) และ `output/playwright/calendar-role-concurrency-qa/cloud-qa-status.json`
 
 แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
 

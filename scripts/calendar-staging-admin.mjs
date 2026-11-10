@@ -91,7 +91,7 @@ const command = new Command("calendar-staging-internal").before(options => {
       cursor += request.length;
       const prepared = await prepareCalendarCreate(draft, []);
       operations.set(prepared.operationId, { case: item.id, expectedCount: prepared.entries.length });
-      for (const entry of prepared.entries) targets.set(entry.id, entry);
+      for (const entry of prepared.entries) targets.set(entry.id, { ...entry, operationId: prepared.operationId });
     }
     async function projected(reference, selected) {
       queryRequests++;
@@ -106,7 +106,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     const schedules = [];
     for (const [id, entry] of targets) {
       const value = await projected(`classroomSchedules/${id}`, [...Object.keys(entry.value), "operationId"]);
-      schedules.push({ title: entry.value.subject, exists: value !== null, exactFieldsMatched: value === null ? null : Object.entries(entry.value).every(([key, expected]) => value[key] === expected), operationMatches: value === null ? null : operations.has(value.operationId) });
+      schedules.push({ title: entry.value.subject, exists: value !== null, exactFieldsMatched: value === null ? null : Object.entries(entry.value).every(([key, expected]) => value[key] === expected), operationMatches: value === null ? null : value.operationId === entry.operationId });
     }
     const receipts = [];
     for (const [id, expected] of operations) {

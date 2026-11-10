@@ -1,0 +1,10 @@
+{
+  "threeConcurrencyCasesPassed": true,
+  "actualNewSchedules": 4,
+  "actualNewReceipts": 4,
+  "revisionDelta": 4,
+  "exactFieldsAndOperationReferencesMatched": true,
+  "freshServerReloadPassed": true,
+  "atomicImportReview": "pending-file-selection",
+  "phaseComplete": false
+}
