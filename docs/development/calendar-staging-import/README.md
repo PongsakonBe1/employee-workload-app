@@ -74,6 +74,14 @@ Writer เปิดเฉพาะบัญชี active Admin/Superadmin ที
 
 ขั้นนี้แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff โดยตรง ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
 
+## UAT นำเข้า PDF หลัง cleanup — 10 พฤศจิกายน 2569
+
+ผู้ใช้ยืนยันว่า **“นำเข้าได้แล้ว อ่านตารางถูกต้อง สลับเดือนสลับวันก็ถูกต้อง”** จึงบันทึกว่าการนำเข้า PDF บน staging, ความถูกต้องของตารางที่ผู้ใช้ตรวจ และการเปลี่ยนมุมมองเดือน/วันผ่าน UAT ตามขอบเขตที่รายงาน
+
+ไม่ได้เปิดอ่านข้อมูลตารางหรือทำ automation ด้วย session ผู้ใช้ในขั้นบันทึกผลนี้ ไม่อนุมานจำนวนรายการจากไฟล์ ผล full reload/login ใหม่ หรือการนำเข้ารูป DL ว่าผ่านด้วย ขั้นถัดไปที่ยังต้อง UAT คือ DL image import โดยจับคู่ผู้คุมกับรายชื่อในระบบ
+
+แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
+
 ## Rules เป็น prototype และข้อจำกัด
 
 I've set up prototype Security Rules to keep the data in Firestore safe. They are designed to be secure for this restricted staging pilot because only explicitly enabled administrators can create schedules through the revision protocol, while profile writes and schedule updates/deletes are denied. However, you should review and verify them before broadly sharing your app. If you'd like, I can help you harden these rules.

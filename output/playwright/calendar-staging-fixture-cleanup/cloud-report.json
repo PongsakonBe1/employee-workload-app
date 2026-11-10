@@ -16,5 +16,6 @@
   "productionAccessed": false,
   "rulesOrPermissionsChanged": false,
   "personalDetailsLogged": false,
-  "pdfReimportUat": "pending-user-refresh-and-retry"
+  "pdfReimportUat": "passed-user-confirmed-import-and-navigation",
+  "userConfirmed": { "pdfImportSucceeded": true, "timetableCorrect": true, "monthNavigationCorrect": true, "dayNavigationCorrect": true }
 }

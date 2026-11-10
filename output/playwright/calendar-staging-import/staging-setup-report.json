@@ -14,13 +14,14 @@
   "largeTestBatchSeededToCloud": false,
   "cloudAnonymousReadsDenied": 4,
   "cloudAnonymousWritesDenied": 3,
-  "authenticatedCloudWriteUat": "basic-create-and-display-confirmed-by-user",
+  "authenticatedCloudWriteUat": "manual-create-and-pdf-import-confirmed-by-user",
+  "authenticatedCloudPdfImportUat": "passed-user-confirmed",
   "revisionAfterUserCreate": 1,
-  "userConfirmed": { "createSucceeded": true, "visibleInCalendar": true },
+  "userConfirmed": { "createSucceeded": true, "visibleInCalendar": true, "pdfImportSucceeded": true, "importedTimetableCorrect": true, "monthNavigationCorrect": true, "dayNavigationCorrect": true },
   "fullReloadPersistenceExplicitlyConfirmed": false,
   "productionAccessed": false,
   "productionChanged": false,
   "hostingFunctionsDeployed": false,
   "personalDetailsLogged": false,
-  "remainingValidation": ["authenticated-cloud-import-uat", "user-full-reload-persistence", "cloud-role-and-concurrency-matrix", "trusted-server-business-invariants-before-production", "physical-device-browser-coverage"]
+  "remainingValidation": ["authenticated-cloud-dl-import-uat", "user-full-reload-persistence", "cloud-role-and-concurrency-matrix", "trusted-server-business-invariants-before-production", "physical-device-browser-coverage"]
 }
