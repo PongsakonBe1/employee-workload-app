@@ -9,7 +9,13 @@
   "readOnlyOccupancyPreflightPassed": true,
   "manifestSHA256": "43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f",
   "expectedNewSchedules": 4,
-  "authenticatedUserSessionConfirmed": false,
+  "authenticatedUserSessionConfirmed": true,
+  "firstSessionEvidence": "Edge writer page showed successful staging read and enabled create/import controls",
+  "secondAuthenticatedSessionConfirmed": false,
+  "browserDisconnectedWhileOpeningSecondGoogleSession": true,
+  "storageAuditBaseline": "cloud-storage-audit-before.json",
+  "qaSchedulesAtBaseline": 0,
+  "qaReceiptsAtBaseline": 0,
   "browserConnectionLostDuringGoogleSignIn": true,
   "cloudAccountsChanged": false,
   "authProvidersChanged": false,
@@ -21,7 +27,7 @@
   "readinessRecheckedAt": "2026-11-10T09:35:33.178Z",
   "selectedBrowserConnectedAtReadinessCheck": false,
   "awaiting": [
-    "Working browser connection and normal Google sign-in"
+    "Finish normal Google sign-in in session B and reconnect Edge; keep session A open"
   ],
   "emulatorEvidence": "sdk-report.json and ui-report.json"
 }

@@ -4,7 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { validateStagingQaPlan, stagingQaOccupancy } from "./calendar-staging-qa-plan.mjs";
+import { validateStagingQaPlan, stagingQaOccupancy, stagingQaRowsToRules } from "./calendar-staging-qa-plan.mjs";
+import { prepareCalendarCreate } from "../frontend/lib/calendarCreatePlan.js";
 import { calendarEmulatorFixtures } from "../firebase/calendar-emulator/fixtures.mjs";
 import { adaptCalendarDocuments } from "../frontend/lib/calendarDataAdapter.js";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
@@ -75,6 +76,50 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
+  if (action === "qaAudit") {
+    const label = process.argv[4];
+    if (!["before", "after"].includes(label)) throw new Error("Explicit QA audit label required");
+    const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
+    const plan = JSON.parse(bytes);
+    const rules = stagingQaRowsToRules(plan);
+    const { Client } = require("./lib/apiv2"), client = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const prefix = `/projects/${target}/databases/(default)/documents`;
+    let queryRequests = 0, cursor = 0;
+    const targets = new Map(), operations = new Map();
+    for (const item of plan.cases) for (const request of item.requests) {
+      const draft = { rules: rules.slice(cursor, cursor + request.length), events: [] };
+      cursor += request.length;
+      const prepared = await prepareCalendarCreate(draft, []);
+      operations.set(prepared.operationId, { case: item.id, expectedCount: prepared.entries.length });
+      for (const entry of prepared.entries) targets.set(entry.id, entry);
+    }
+    async function projected(reference, selected) {
+      queryRequests++;
+      const response = await client.post(`${prefix}:batchGet`, { documents: [`projects/${target}/databases/(default)/documents/${reference}`], mask: { fieldPaths: selected } });
+      const rows = response.body;
+      if (!Array.isArray(rows) || rows.length !== 1) throw new Error("QA audit returned an unexpected reference count");
+      if (rows[0].missing) return null;
+      if (!rows[0].found) throw new Error("QA audit could not read an expected reference");
+      const decode = value => value.stringValue ?? value.booleanValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : null);
+      return Object.fromEntries(Object.entries(rows[0].found.fields || {}).map(([key, value]) => [key, decode(value)]));
+    }
+    const schedules = [];
+    for (const [id, entry] of targets) {
+      const value = await projected(`classroomSchedules/${id}`, [...Object.keys(entry.value), "operationId"]);
+      schedules.push({ title: entry.value.subject, exists: value !== null, exactFieldsMatched: value === null ? null : Object.entries(entry.value).every(([key, expected]) => value[key] === expected), operationMatches: value === null ? null : operations.has(value.operationId) });
+    }
+    const receipts = [];
+    for (const [id, expected] of operations) {
+      const value = await projected(`calendarWriteOperations/${id}`, ["count", "skipped", "schemaVersion"]);
+      receipts.push({ case: expected.case, exists: value !== null, count: value?.count ?? null, countMatches: value === null ? null : value.count === expected.expectedCount });
+    }
+    const gate = await projected("calendarWriteState/main", ["revision"]);
+    const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), label, schedules, receipts, schedulesFound: schedules.filter(row => row.exists).length, receiptsFound: receipts.filter(row => row.exists).length, revision: gate?.revision ?? null, queryRequests, recordsWritten: 0, personalDetailsSelected: false, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-role-concurrency-qa");
+    fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, `cloud-storage-audit-${label}.json`), JSON.stringify(result, null, 2) + "\n");
+    return result;
+  }
   if (action === "qaPreflight") {
     const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
     const plan = JSON.parse(bytes), { range } = validateStagingQaPlan(plan);

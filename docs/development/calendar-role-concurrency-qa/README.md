@@ -69,4 +69,6 @@ SDK ที่ไม่เข้าสู่ระบบจริงบน cloud 
 
 ผู้ใช้อนุมัติชุดรายการสังเคราะห์ที่ระบุแล้วเมื่อ 10 พฤศจิกายน 2569 ตรวจซ้ำช่วง QA ยังว่างและ revision 5 แต่ browser ยังไม่เชื่อมต่อ จึงเหลือการเชื่อมต่อ browser/เข้าสู่ระบบตามปกติก่อนเริ่ม ไม่ต้องขออนุมัติชุดเดิมซ้ำ ไม่ใช้ Admin SDK หรือ CLI ที่ bypass rules แทนหลักฐานการบังคับสิทธิ์ของผู้ใช้ ไม่มีการเปิด Auth providers หรือเปลี่ยนบัญชี cloud ในขั้นนี้
 
+ความคืบหน้าถัดมา: ยืนยัน Edge session A ของ writer แล้ว อ่าน staging สำเร็จและปุ่มเพิ่ม/นำเข้าเปิด แต่ Edge หลุดตอนเริ่ม Google ของ session B จึงยังไม่รัน concurrent writes ตัวตรวจ `qaAudit before` อ่านเฉพาะ references ที่คำนวณจากชุด QA พบ schedules 0 / receipts 0 / revision 5 ไม่มีคำขอเขียน ดูรายละเอียดใน `cloud-uat-plan.md` และ `cloud-storage-audit-before.json`
+
 Rules ของ pilot ยังเป็น prototype ที่ไม่ได้บังคับ aggregate room/proctor conflicts และ business invariants ทั้งหมดแทน trusted server การที่ sanctioned clients ผ่าน concurrency QA ไม่ได้พิสูจน์ว่า custom client ที่มี writer capability จะข้าม business validation ไม่ได้ ไม่ถือว่าผ่าน production gate จากผลนี้ และยังไม่ยืนยันทุกอุปกรณ์จริงหรือ cloud batch 100 รายการ

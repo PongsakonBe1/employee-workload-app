@@ -59,3 +59,9 @@
 ผู้ใช้อนุมัติชุดรายการข้างต้นแล้วเมื่อ 10 พฤศจิกายน 2569 โดยผูกกับ SHA-256 `43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f` ของ manifest ไม่ต้องขออนุมัติชุดเดิมซ้ำ การตรวจซ้ำเวลา 16:35 น. (Asia/Bangkok) พบช่วง QA ว่าง writer enabled และ revision 5 แต่ Edge/Chrome ยังไม่ปรากฏใน browser inventory จึงยังไม่ส่งคำขอเขียนหรืออ้างว่าทดสอบ concurrency แล้ว
 
 หลังเชื่อมต่อและเข้าสู่ระบบตามปกติได้ จึงเปิดสอง session ตรวจแบบฟอร์มและส่งพร้อมกัน เก็บหลักฐานผล UI/จำนวนรายการที่สร้าง/สถานะ reload โดยไม่อ้างว่าเห็นการ retry ภายใน SDK หากมีเพียงหลักฐานจาก UI และไม่ใช้ CLI ที่ bypass rules มาแทนผู้ทดสอบ
+
+### ยืนยัน session A และ baseline แล้ว
+
+ต่อมา Edge เชื่อมต่อได้จริง และหน้า `/dev/calendar-staging-write` ของ session A แสดงอ่านสำเร็จ 25 ตารางเรียน / 18 รอบสอบ พร้อมเปิดปุ่มเพิ่ม/นำเข้า จากนั้นเปิดแท็บ session B แยกและเริ่ม Google sign-in ตามปกติ แต่การเชื่อมต่อ Edge หลุดหลังเปิด Google จึงรอผู้ใช้เลือกบัญชีเดิมและเชื่อม Edge กลับมา ยังไม่กรอกหรือส่งรายการ QA ใด
+
+เพิ่ม `qaAudit before|after` ในเครื่องมือตรวจ staging เพื่อคำนวณ document/receipt IDs จาก manifest ที่อนุมัติ แล้วใช้ read-only `batchGet` พร้อม field mask เฉพาะข้อมูล QA ไม่มี fields ชื่อผู้ใช้/UID/tokens ผล `cloud-storage-audit-before.json` ยืนยัน QA schedules 0, QA receipts 0 และ revision 5 ผ่าน 14 คำขออ่าน ต้องเก็บ baseline ใหม่ก่อนเริ่มจริงหากมีงานเขียนอื่นระหว่างรอ การตรวจแบบ privileged นี้ยืนยันเฉพาะสถานะที่จัดเก็บ ไม่ใช้แทนหลักฐานสิทธิ์หรือ concurrency ของ browser
