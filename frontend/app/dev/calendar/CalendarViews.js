@@ -3,10 +3,10 @@
 import { CalendarDays, ChevronRight } from "lucide-react";
 import { CALENDAR_KINDS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarDates, calendarHolidays, calendarLabel, calendarRoomColor, calendarWeekday, layoutCalendarDay, monthCalendarDates, timeMinutes } from "../../../lib/calendarView";
 
-export function RoomLabels({ rooms }) {
+export function RoomLabels({ rooms, colorBy = "room" }) {
   return <span className="cal-room-labels" aria-label={`ห้อง ${rooms.join(" + ")}`}>
-    {rooms.map(room => <span className="cal-room-label" data-room-color={CALENDAR_ROOM_COLORS[room] || "shared"} key={room}>
-      <i aria-hidden="true" />{room}
+    {rooms.map(room => <span className="cal-room-label" data-room-color={colorBy === "room" ? CALENDAR_ROOM_COLORS[room] || "shared" : "shared"} key={room}>
+      {colorBy === "room" && <i aria-hidden="true" />}{room}
     </span>)}
   </span>;
 }
@@ -98,7 +98,7 @@ export function CalendarTimeline({ rows, range, holidays, holidayOptions, onEven
           style={{ top: `${(timeMinutes(row.start) - start * 60) / 60 * hourSize}px`, height: `${Math.max(42, (timeMinutes(row.end) - timeMinutes(row.start)) / 60 * hourSize - 3)}px`, left: `calc(${row.lane / row.lanes * 100}% + 3px)`, width: `calc(${100 / row.lanes}% - 6px)` }} aria-label={`${row.title} ${calendarLabel(row.date)} ${row.start} ถึง ${row.end} ห้อง ${row.rooms.join(" + ")}`}
           onClick={() => onEvent(row)}
         >
-          <RoomLabels rooms={row.rooms} />
+          <RoomLabels rooms={row.rooms} colorBy={colorBy} />
           <strong>{row.kind === "dl" ? "สอบ DL" : row.title}</strong>
           <span>{`${row.start}–${row.end}`}</span>
         </button>)}
@@ -132,7 +132,7 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
               aria-label={`${CALENDAR_KINDS[row.kind]} ${row.title} ${row.start}–${row.end} ห้อง ${row.rooms.join(" + ")}`}
               onClick={() => onEvent(row)}
             >
-              <span className="cal-month-event-meta"><RoomLabels rooms={row.rooms} />{row.start}</span>
+              <span className="cal-month-event-meta"><RoomLabels rooms={row.rooms} colorBy={colorBy} />{row.start}</span>
               <strong>{row.title}</strong>
             </button>)}
             {events.length > 2 && <button
@@ -174,7 +174,7 @@ export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent,
         <i aria-hidden="true" />
         <span className="cal-agenda-text">
           <strong>{row.title}</strong>
-          <RoomLabels rooms={row.rooms} />
+          <RoomLabels rooms={row.rooms} colorBy={colorBy} />
           <small>{`${CALENDAR_KINDS[row.kind]}${row.teacher ? ` · ${row.teacher}` : ""}`}</small>
         </span>
         <ChevronRight size={16} aria-hidden="true" />

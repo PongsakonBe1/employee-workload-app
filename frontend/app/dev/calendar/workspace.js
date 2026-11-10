@@ -36,7 +36,7 @@ function FilterFields({ filters, onChange, id, semesters = [] }) {
           className="ui-checkbox" type="checkbox"
           checked={filters.kinds.includes(kind)} onChange={event => onChange({ ...filters, kinds: event.target.checked ? [...filters.kinds, kind] : filters.kinds.filter(value => value !== kind) })}
         />
-        <i aria-hidden="true" />
+        {filters.colorBy === "kind" && <i aria-hidden="true" />}
         <span>{label}</span>
       </label>)}
     </fieldset>
@@ -361,14 +361,14 @@ export default function CalendarPreview({ externalCalendar = null }) {
         <div className="cal-room-toolbar">
           <fieldset className="cal-room-filter">
             <legend>กรองห้องที่มีคาบ</legend>
-            <div className="cal-room-chips">
+            <div className="cal-room-chips" data-color-by={colorBy}>
               {["all", ...CALENDAR_ROOMS].map(room => <button
                 type="button" key={room} aria-pressed={filters.room === room}
                 aria-label={room === "all" ? "ทุกห้อง" : `ห้อง ${room}`}
-                data-room-color={room === "all" ? undefined : CALENDAR_ROOM_COLORS[room]}
+                data-room-color={colorBy === "room" && room !== "all" ? CALENDAR_ROOM_COLORS[room] : undefined}
                 onClick={() => setFilters({ ...filters, room })}
               >
-                {room !== "all" && <i aria-hidden="true" />}
+                {colorBy === "room" && room !== "all" && <i aria-hidden="true" />}
                 {room === "all" ? "ทุกห้อง" : room}
               </button>)}
             </div>
@@ -524,7 +524,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
         onCancel={() => setDialog(null)}
       />}
       {dialog === "detail" && selected && <div>
-        <span className="cal-kind-badge" data-kind={selected.kind}>{CALENDAR_KINDS[selected.kind]}</span>
+        <span className="cal-kind-badge" data-kind={selected.kind} data-room-color={colorBy === "room" ? "shared" : undefined}>{CALENDAR_KINDS[selected.kind]}</span>
         <dl className="cal-detail-facts">
           <div>
             <dt>วันที่</dt>
@@ -536,7 +536,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
           </div>
           <div>
             <dt>ห้อง</dt>
-            <dd><RoomLabels rooms={selected.rooms} /></dd>
+            <dd><RoomLabels rooms={selected.rooms} colorBy={colorBy} /></dd>
           </div>
           {selected.kind === "dl" ? <>
             <div>

@@ -41,6 +41,7 @@
 .cal-room-chips>button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 8px 12px; border: 1px solid var(--ui-line); border-radius: 13px; background: var(--ui-surface); color: var(--ui-ink); font-size: .8125rem; font-weight: 550; transition: background-color 120ms ease,border-color 120ms ease; }
 .cal-room-chips>button:hover { background: var(--ui-soft); }
 .cal-room-chips>button[aria-pressed=true] { background: var(--cal-event-fill,var(--ui-blue)); color: var(--cal-event-ink,var(--ui-blue-ink)); border-color: var(--cal-event-ink,var(--ui-blue-ink)); box-shadow: inset 0 0 0 1px var(--cal-event-ink,var(--ui-blue-ink)); }
+.cal-room-chips[data-color-by=kind]>button { --cal-event-fill: var(--ui-soft); --cal-event-ink: var(--ui-ink); }
 .cal-room-chips i,.cal-room-label i { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--cal-event-ink); }
 .cal-color-choice { display: grid; gap: 0; min-width: 130px; }
 .cal-color-choice select { min-height: 44px; font-size: .8125rem; padding: 8px 10px; }

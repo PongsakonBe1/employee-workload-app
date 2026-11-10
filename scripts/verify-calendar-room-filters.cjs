@@ -10,10 +10,23 @@ const report = { completed: false, checks: [], errors: [], unexpectedOrigins: []
 const dialog = page => page.locator('dialog.cal-dialog[open]');
 const chips = page => page.getByRole('group', { name: 'กรองห้องที่มีคาบ', exact: true });
 const view = (page, name) => page.getByRole('group', { name: 'มุมมองปฏิทิน', exact: true }).getByRole('button', { name, exact: true }).click();
+const selectedChipColors = page => chips(page).locator('[aria-pressed=true]').evaluate(async element => {
+  // Sample the final palette, not a frame within the CSS selection transition.
+  getComputedStyle(element).backgroundColor;
+  await Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {})));
+  return { background: getComputedStyle(element).backgroundColor, color: getComputedStyle(element).color };
+});
 async function date(page, value) {
   await page.getByRole('button', { name: 'เลือกวันที่', exact: true }).click();
   await dialog(page).locator('input[type=date]').fill(value);
   await dialog(page).getByRole('button', { name: 'ไปยังวันที่นี้', exact: true }).click();
+}
+async function openFilters(page) {
+  // Use the persistent filter control. The anchored More menu dismisses on page scroll.
+  const mobile = page.getByRole('button', { name: 'ตัวกรอง', exact: true });
+  if (await mobile.isVisible()) await mobile.click();
+  else await page.getByRole('button', { name: 'ค้นหาหรือกรองตาราง', exact: true }).click();
+  await dialog(page).waitFor();
 }
 async function shot(page, name) {
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
@@ -45,6 +58,8 @@ async function main() {
       await page.waitForFunction(() => document.documentElement.dataset.uiReady === 'true');
       await view(page, 'สัปดาห์');
       assert.equal(await page.locator('#cal-color-by').inputValue(), 'room');
+      assert.equal(await page.locator('.cal-sidebar .cal-filter-check[data-kind]>i').count(), 0);
+      assert.equal(await chips(page).locator('button>i').count(), 4);
       assert.equal(await page.locator('.cal-timed-event[data-room-color=blue]').count(), 2);
       assert.equal(await page.locator('.cal-timed-event[data-room-color=amber]').count(), 2);
       assert.equal(await page.locator('.cal-timed-event[data-room-color=shared]').count(), 7);
@@ -78,15 +93,47 @@ async function main() {
       await page.locator('#cal-color-by').selectOption('kind');
       assert.equal(await page.locator('.cal-timed-event[data-room-color]').count(), 0);
       assert.equal(await page.locator('.cal-legend [data-kind=dl]').textContent(), 'Digital Literacy');
+      assert.equal(await page.locator('.cal-sidebar .cal-filter-check[data-kind]>i').count(), 3);
+      assert.equal(await chips(page).locator('button>i,button[data-room-color]').count(), 0);
+      assert.equal(await page.locator('.cal-room-label:not([data-room-color=shared]),.cal-room-label>i').count(), 0);
+      const neutral = await selectedChipColors(page);
+      await chips(page).getByRole('button', { name: 'ห้อง 406', exact: true }).click();
+      assert.deepEqual(await selectedChipColors(page), neutral);
+      await chips(page).getByRole('button', { name: 'ห้อง 407', exact: true }).click();
+      await page.locator('.cal-timed-event').first().click();
+      assert.equal(await dialog(page).locator('.cal-kind-badge').getAttribute('data-room-color'), null);
+      assert.equal(await dialog(page).locator('.cal-room-label:not([data-room-color=shared]),.cal-room-label>i').count(), 0);
+      await page.keyboard.press('Escape');
+      await openFilters(page);
+      assert.equal(await dialog(page).locator('.cal-filter-check[data-kind]>i').count(), 3);
+      await dialog(page).getByRole('checkbox', { name: 'Digital Literacy', exact: true }).uncheck();
+      await dialog(page).getByRole('button', { name: 'ยกเลิก', exact: true }).click();
+      assert.equal(await page.locator('.cal-timed-event').count(), 7);
       await page.locator('#cal-color-by').selectOption('room');
+      assert.equal(await page.locator('.cal-sidebar .cal-filter-check[data-kind]>i').count(), 0);
+      await page.locator('.cal-timed-event').first().click();
+      assert.equal(await dialog(page).locator('.cal-kind-badge').getAttribute('data-room-color'), 'shared');
+      assert.deepEqual(await dialog(page).locator('.cal-room-label').evaluateAll(elements => elements.map(element => element.dataset.roomColor)), ['purple', 'green']);
+      await page.keyboard.press('Escape');
       await chips(page).getByRole('button', { name: 'ทุกห้อง', exact: true }).click();
+      if ([390, 1440].includes(width)) {
+        await page.locator('#cal-color-by').selectOption('kind');
+        if (width === 390) await view(page, 'วัน');
+        await shot(page, `kinds-${width}-${theme}`);
+        await view(page, 'สัปดาห์');
+        await page.locator('#cal-color-by').selectOption('room');
+      }
       for (const name of ['วัน', 'เดือน', 'รายการ', 'สัปดาห์']) {
         await view(page, name);
         const event = page.locator(name === 'รายการ' ? '.cal-agenda-event' : name === 'เดือน' ? '.cal-month-event' : '.cal-timed-event').first();
         assert.ok(await event.getAttribute('data-room-color'));
+        await page.locator('#cal-color-by').selectOption('kind');
+        assert.equal(await event.getAttribute('data-room-color'), null);
+        assert.equal(await page.locator('.cal-room-label:not([data-room-color=shared]),.cal-room-label>i').count(), 0);
+        await page.locator('#cal-color-by').selectOption('room');
       }
-      await page.getByRole('button', { name: 'คำสั่งปฏิทินเพิ่มเติม', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'ปฏิทินและตัวกรอง…', exact: true }).click();
+      await openFilters(page);
+      assert.equal(await dialog(page).locator('.cal-filter-check[data-kind]>i').count(), 0);
       await dialog(page).locator('#cal-dialog-room').selectOption('402');
       await dialog(page).getByRole('button', { name: 'ยกเลิก', exact: true }).click();
       assert.equal(await chips(page).getByRole('button', { name: 'ทุกห้อง', exact: true }).getAttribute('aria-pressed'), 'true');
@@ -119,7 +166,7 @@ async function main() {
       assert.equal(await chips(page).locator('[aria-pressed=true]').evaluate(element => getComputedStyle(element).outlineStyle), 'solid');
       await page.emulateMedia({ forcedColors: 'none', reducedMotion: 'reduce' });
       assert.equal(await chips(page).getByRole('button').first().evaluate(element => getComputedStyle(element).transitionDuration), '0s');
-      report.checks.push({ width, theme, roomFilter: true, sharedRooms: true, fourViews: true, cancelDraft: true, minimumHitTarget44: true, noHorizontalOverflow: true, selectedPaletteContrastAA: true, forcedColors: true, reducedMotion: true, semesterCreateFilter: width === 1440 });
+      report.checks.push({ width, theme, roomFilter: true, sharedRooms: true, fourViews: true, cancelDraft: true, minimumHitTarget44: true, noHorizontalOverflow: true, selectedPaletteContrastAA: true, exclusiveColorEncoding: true, filterDialogColorMode: true, detailColorMode: true, forcedColors: true, reducedMotion: true, semesterCreateFilter: width === 1440 });
       console.log(`PASS ${width} ${theme}`);
       await context.close();
     }

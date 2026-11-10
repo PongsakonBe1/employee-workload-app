@@ -11,6 +11,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -25,6 +28,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -39,6 +45,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -53,6 +62,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -67,6 +79,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -81,6 +96,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": false
@@ -95,6 +113,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": true
@@ -109,6 +130,9 @@
       "minimumHitTarget44": true,
       "noHorizontalOverflow": true,
       "selectedPaletteContrastAA": true,
+      "exclusiveColorEncoding": true,
+      "filterDialogColorMode": true,
+      "detailColorMode": true,
       "forcedColors": true,
       "reducedMotion": true,
       "semesterCreateFilter": true

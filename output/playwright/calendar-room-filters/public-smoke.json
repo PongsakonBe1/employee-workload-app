@@ -3,6 +3,7 @@
   "status": 200,
   "roomButtons": 5,
   "colorBy": "room",
+  "exclusiveColorEncoding": true,
   "syntheticPreviewOnly": true,
   "errors": []
 }
