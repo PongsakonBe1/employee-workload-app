@@ -3,15 +3,19 @@
   "environment": "staging",
   "evidenceSource": "user-confirmation",
   "userStatement": "ได้แล้ว ทำได้แล้ว",
-  "authenticatedCloudDlImportUat": "passed-basic-user-confirmed",
+  "authenticatedCloudDlImportUat": "passed-user-confirmed",
   "dlImportSucceeded": true,
   "sourceFileExplicitlyConfirmed": false,
   "importedRoundCountExplicitlyConfirmed": false,
   "allProctorAssignmentsExplicitlyConfirmed": false,
-  "fullReloadPersistenceExplicitlyConfirmed": false,
+  "persistenceUserStatement": "ยังอยู่ ถูกต้อง",
+  "persistenceEvidenceContext": "User response to full reload and fresh staging sign-in check for imported classroom and DL schedules",
+  "fullReloadPersistenceExplicitlyConfirmed": true,
+  "freshSignInPersistenceExplicitlyConfirmed": true,
+  "importedClassroomAndDlDetailsAfterReloadCorrect": true,
   "deviceBrowserExplicitlyConfirmed": false,
   "cloudReadByAgentDuringThisStep": false,
   "cloudWrittenByAgentDuringThisStep": false,
   "productionChanged": false,
-  "nextUserValidation": "Verify imported schedules after full reload and a fresh staging sign-in"
+  "nextPhaseRecommendation": "Validate cloud role permissions and concurrent writes before broader access"
 }

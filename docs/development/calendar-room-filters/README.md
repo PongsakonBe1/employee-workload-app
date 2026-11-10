@@ -60,4 +60,4 @@ node scripts/check-ui-build.mjs calendar-room-filters
 
 - Browser automation เป็น Chromium ที่จำลองขนาดจอ ยังต้องให้ผู้ใช้ตรวจ Safari/iPhone และอุปกรณ์จริง โดยเฉพาะสี ป้ายห้อง และการกดกรองบนลิงก์ staging เดิม
 - รอบนี้ไม่เข้าสู่บัญชี Google หรืออ่าน/เขียน cloud เพิ่ม การยืนยัน PDF import และการสลับวัน/เดือนบน staging จากผู้ใช้ในเฟสก่อนยังคงเดิม
-- ตอนจบเฟสสีห้องยังรอ UAT รูป DL บน cloud ต่อมาผู้ใช้ยืนยันนำเข้าได้แล้วในเฟส `dl-staging-import-uat` ดูรายงานของเฟสนั้น ส่วนผล hard reload/login ใหม่บน staging ยังรอยืนยัน ไม่ถือว่าผ่านจากการทดสอบ UI หรือ Emulator
+- ตอนจบเฟสสีห้องยังรอ UAT รูป DL บน cloud ต่อมาผู้ใช้ยืนยันทั้งนำเข้าได้และข้อมูลยังอยู่ถูกต้องหลัง reload/เข้าสู่ staging ใหม่ในเฟส `dl-staging-import-uat` ดูรายงานของเฟสนั้น หลักฐานนี้มาจากผู้ใช้ ไม่ได้อนุมานจากผล UI automation หรือ Emulator
