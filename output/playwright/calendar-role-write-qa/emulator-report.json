@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "project": "labboy-workload-app-staging",
+  "endpoint": "http://127.0.0.1:18080",
+  "authEndpoint": "http://127.0.0.1:19099",
+  "cloudUsed": false,
+  "syntheticIdentitiesOnly": true,
+  "namespaceReset": false,
+  "checks": [
+    "actual Staff SDK raw batch denied atomically; duplicate attempt blocked",
+    "same raw payload accepted by rules for actual Superadmin",
+    "Superadmin ordinary writer creates exactly one fixed fixture",
+    "repeat-only writer reuses receipt without any document change",
+    "pinned revision rejects stale requests inside transaction",
+    "repeat-only mode refuses to recreate a missing receipt"
+  ],
+  "ownedFixtureCleanupPassed": true,
+  "preexistingRecordsChanged": false
+}

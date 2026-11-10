@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-11-10T23:41:15.825Z",
+  "target": "labboy-workload-app-staging",
+  "manifestSHA256": "cc046d34339f6a02bee2c5af99b5036c24dbfae8624baee2f2db3e2f8354ff55",
+  "stage": "created",
+  "schedule": {
+    "exists": true,
+    "digest": "e06374536116a405e9552e3e0a54345c9f35abc56a84a49f92f403aa04cec9f1",
+    "operationMatches": true,
+    "exactBusinessFieldsMatched": true,
+    "expectedActorMatched": true,
+    "timestampPresent": true,
+    "schemaVersion": 1
+  },
+  "receipt": {
+    "exists": true,
+    "digest": "ab94a8b7e809ae499aca565b8d1d373b22100d6e8d681d46d567b9ab2d490c2d",
+    "operationMatches": true,
+    "expectedActorMatched": true,
+    "timestampPresent": true,
+    "schemaVersion": 1,
+    "count": 1,
+    "skipped": 0
+  },
+  "gate": {
+    "exists": true,
+    "digest": "e03a0ea4120c1882edf592b7d5a3c82d0b4036c78e40e10d750a1750fd894a1a",
+    "operationMatches": true,
+    "revision": 10,
+    "expectedActorMatched": true,
+    "timestampPresent": true
+  },
+  "recordsWritten": 0,
+  "actorIdentifiersLogged": false,
+  "privilegedReadIsNotRulesEvidence": true
+}

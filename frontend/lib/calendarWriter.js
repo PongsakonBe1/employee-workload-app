@@ -4,8 +4,9 @@ import { calendarSdkTransport } from "./calendarSdkTransport.js";
 import { adaptCalendarDocuments } from "./calendarDataAdapter.js";
 import { CALENDAR_READ_LIMIT } from "./calendarReadOnly.js";
 import { prepareCalendarCreate, validateCalendarCreateAgainst, calendarWriteError } from "./calendarCreatePlan.js";
-export function createCalendarWriter(db, getUid, onCommitted) {
+export function createCalendarWriter(db, getUid, onCommitted, { expectedRevision, requireExistingReceipt = false } = {}) {
   if (!["labboy-workload-app-staging", "demo-calendar-writer"].includes(db.app.options.projectId)) throw new Error("Calendar writer is restricted to the approved staging/emulator project");
+  if (expectedRevision !== undefined && (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0)) throw new Error("Invalid pinned QA revision");
   let pending = false;
   return async input => {
     if (pending) throw calendarWriteError("กำลังบันทึกชุดก่อนหน้า กรุณารอผลก่อน");
@@ -35,12 +36,14 @@ export function createCalendarWriter(db, getUid, onCommitted) {
           receiptRef = doc(db, "calendarWriteOperations", plan.operationId);
         const gate = await tx.get(gateRef),
           receipt = await tx.get(receiptRef);
+        if (expectedRevision !== undefined && (!gate.exists() || gate.data().revision !== expectedRevision)) throw calendarWriteError("QA revision เปลี่ยน กรุณาหยุดและตรวจ audit ก่อนส่งอีกครั้ง");
         if (receipt.exists()) return {
           created: 0,
           skipped: plan.entries.length,
           operationId: plan.operationId,
           repeated: true
         };
+        if (requireExistingReceipt) throw calendarWriteError("ไม่พบ receipt เดิม จึงหยุดการทดสอบส่งซ้ำ");
         if (!gate.exists() || !Number.isSafeInteger(gate.data().revision)) throw calendarWriteError("ยังไม่ได้เตรียม revision ของ staging");
         observedRevision = gate.data().revision;
         // Queries use fresh server reads inside each callback attempt. The transactional gate

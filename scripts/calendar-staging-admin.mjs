@@ -160,7 +160,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     const label = process.argv[4];
     if (!["before", "after"].includes(label)) throw new Error("Explicit QA audit label required");
     const reportScope = process.argv[5];
-    if (reportScope !== undefined && !["role-qa", "role-write-plan"].includes(reportScope)) throw new Error("Unsupported QA audit report scope");
+    if (reportScope !== undefined && !["role-qa", "role-write-plan", "role-write-qa"].includes(reportScope)) throw new Error("Unsupported QA audit report scope");
     const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
     const plan = JSON.parse(bytes);
     const rules = stagingQaRowsToRules(plan);
@@ -197,12 +197,43 @@ const command = new Command("calendar-staging-internal").before(options => {
     }
     const gate = await projected("calendarWriteState/main", ["revision"]);
     const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), label, schedules, receipts, schedulesFound: schedules.filter(row => row.exists).length, receiptsFound: receipts.filter(row => row.exists).length, revision: gate?.revision ?? null, queryRequests, recordsWritten: 0, personalDetailsSelected: false, privilegedReadIsNotRulesEvidence: true };
-    const output = path.join(root, reportScope === "role-qa" ? "output/playwright/calendar-staging-role-qa" : reportScope === "role-write-plan" ? "output/playwright/calendar-role-write-plan" : "output/playwright/calendar-role-concurrency-qa");
+    const output = path.join(root, reportScope === "role-qa" ? "output/playwright/calendar-staging-role-qa" : reportScope === "role-write-plan" ? "output/playwright/calendar-role-write-plan" : reportScope === "role-write-qa" ? "output/playwright/calendar-role-write-qa" : "output/playwright/calendar-role-concurrency-qa");
     fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(path.join(output, `cloud-storage-audit-${label}.json`), JSON.stringify(result, null, 2) + "\n");
     return result;
   }
+  if (action === "qaRoleWriteAudit") {
+    const label = process.argv[4], expectedActor = process.argv[5];
+    if (!["before", "staff-denied", "created", "repeated", "final"].includes(label) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(expectedActor || "")) throw new Error("Explicit QA audit stage and approved actor required");
+    const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-write-plan/staging-fixture.json"));
+    const manifestSHA256 = createHash("sha256").update(bytes).digest("hex");
+    if (manifestSHA256 !== "cc046d34339f6a02bee2c5af99b5036c24dbfae8624baee2f2db3e2f8354ff55") throw new Error("Approved role-write manifest changed");
+    const prepared = await prepareRoleWriteFixture(JSON.parse(bytes));
+    const { Client } = require("./lib/apiv2"), store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" }), identity = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" });
+    const lookup = await identity.post(`/projects/${target}/accounts:lookup`, { email: [expectedActor] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+    const users = lookup.body.users || [];
+    if (users.length !== 1 || users[0].emailVerified !== true || !users[0].providerUserInfo?.some(value => value.providerId === "google.com")) throw new Error("Verified approved QA actor required");
+    const actorUid = users[0].localId, prefix = `projects/${target}/databases/(default)/documents`;
+    const references = { schedule: `${prefix}/classroomSchedules/${prepared.entries[0].id}`, receipt: `${prefix}/calendarWriteOperations/${prepared.operationId}`, gate: `${prefix}/calendarWriteState/main` };
+    const response = await store.post(`/${prefix}:batchGet`, { documents: Object.values(references), mask: { fieldPaths: [...Object.keys(prepared.entries[0].value), "operationId", "createdBy", "createdAt", "count", "skipped", "schemaVersion", "revision", "updatedBy", "updatedAt"] } });
+    if (!Array.isArray(response.body) || response.body.length !== 3) throw new Error("Unexpected QA write audit response");
+    const rows = Object.fromEntries(response.body.map(value => [value.found?.name || value.missing, value.found?.fields || null]));
+    if (Object.values(references).some(reference => !(reference in rows))) throw new Error("Incomplete QA write audit");
+    const decode = value => value.stringValue ?? value.booleanValue ?? value.timestampValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : null);
+    const canonical = value => value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    const records = Object.fromEntries(Object.entries(references).map(([alias, reference]) => {
+      const fields = rows[reference];
+      if (!fields) return [alias, { exists: false }];
+      const data = Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, decode(value)]));
+      return [alias, { exists: true, digest: createHash("sha256").update(JSON.stringify(canonical(fields))).digest("hex"), operationMatches: alias === "receipt" ? reference === `${prefix}/calendarWriteOperations/${prepared.operationId}` : data.operationId === prepared.operationId, ...(alias === "schedule" ? { exactBusinessFieldsMatched: Object.entries(prepared.entries[0].value).every(([key, value]) => data[key] === value) } : {}), ...(alias === "gate" ? { revision: data.revision, expectedActorMatched: data.updatedBy === actorUid, timestampPresent: Boolean(data.updatedAt) } : { expectedActorMatched: data.createdBy === actorUid, timestampPresent: Boolean(data.createdAt), schemaVersion: data.schemaVersion, ...(alias === "receipt" ? { count: data.count, skipped: data.skipped } : {}) }) }];
+    }));
+    const result = { checkedAt: new Date().toISOString(), target, manifestSHA256, stage: label, ...records, recordsWritten: 0, actorIdentifiersLogged: false, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-role-write-qa");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, `cloud-audit-${label}.json`), JSON.stringify(result, null, 2) + "\n");return result;
+  }
   if (action === "qaRoleWritePreflight") {
+    const reportScope = process.argv[4];
+    if (reportScope !== undefined && reportScope !== "role-write-qa") throw new Error("Unsupported role-write preflight report scope");
     const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-write-plan/staging-fixture.json"));
     const proposal = JSON.parse(bytes);validateRoleWritePlan(proposal);
     const prepared = await prepareRoleWriteFixture(proposal);
@@ -227,7 +258,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     if (Object.values(references).some(reference => !projected[reference])) throw new Error("Incomplete role-write reference audit");
     const occupancy = roleWriteOccupancy(proposal, classrooms, exams), gate = projected[references.gate];
     const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), candidateDate: proposal.fixture.date, candidateRoom: proposal.fixture.room, activeClassroomsConsidered: classrooms.length, examsInRangeConsidered: exams.length, ...occupancy, candidateScheduleExists: projected[references.schedule].exists, candidateReceiptExists: projected[references.receipt].exists, revision: gate.exists ? gate.revision : null, readyAtReadTime: occupancy.candidateClearAtReadTime && gate.revision === proposal.expectedBefore.revision && !projected[references.schedule].exists && !projected[references.receipt].exists, queryRequests: 3, namesOrProctorsSelected: false, recordsWritten: 0, privilegedReadIsNotRulesEvidence: true };
-    const output = path.join(root, "output/playwright/calendar-role-write-plan");fs.mkdirSync(output, { recursive: true });
+    const output = path.join(root, reportScope === "role-write-qa" ? "output/playwright/calendar-role-write-qa" : "output/playwright/calendar-role-write-plan");fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(path.join(output, "cloud-preflight.json"), JSON.stringify(result, null, 2) + "\n");
     return result;
   }

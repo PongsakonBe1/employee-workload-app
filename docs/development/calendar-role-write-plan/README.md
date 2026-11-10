@@ -1,6 +1,6 @@
 # แผนตรวจการสร้างตารางบน cloud ด้วย Staff/Superadmin
 
-11 พฤศจิกายน 2569 · Branch `codex/calendar-role-write-plan` · สถานะ: เตรียมพร้อมตรวจ รออนุมัติคำขอเขียน cloud รอบใหม่
+11 พฤศจิกายน 2569 · Branch `codex/calendar-role-write-plan` · ผู้ใช้อนุมัติ manifest แล้วด้วยคำตอบ “approve” ดำเนินการต่อบน `codex/calendar-role-write-qa` ตาม [รายงาน executor และผลทดสอบ](../calendar-role-write-qa/README.md) ข้อความแผนด้านล่างคงไว้เป็นฉบับที่เสนอ
 
 ผู้ใช้รับเฟสอ่าน/controls แล้วและให้เตรียมเฟสต่อ รวมอนุญาตให้เลือกบัญชี Google ที่ระบุผ่าน browser ได้ ขั้นนี้สร้าง manifest, pure validator, tests และเครื่องมือ preflight แบบอ่านอย่างเดียว ยังไม่เปิดปุ่มยิงคำขอเขียน QA หรือเขียนตาราง cloud
 

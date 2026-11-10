@@ -1,0 +1,141 @@
+{
+  "target": "labboy-workload-app-staging",
+  "manifestSHA256": "cc046d34339f6a02bee2c5af99b5036c24dbfae8624baee2f2db3e2f8354ff55",
+  "approval": "user-approved-2026-11-11",
+  "staff": {
+    "checkedAt": "2026-11-10T23:35:03.458Z",
+    "role": "staff",
+    "uiCreateEnabled": false,
+    "result": {
+      "step": "staff",
+      "outcome": "permission-denied",
+      "stop": false
+    },
+    "repeatActionEnabled": false
+  },
+  "cloudScheduleBudget": 1,
+  "cloudReceiptBudget": 1,
+  "productionAccessed": false,
+  "tokensExtracted": false,
+  "superadminCreate": {
+    "checkedAt": "2026-11-10T23:41:37.358Z",
+    "role": "superadmin",
+    "reviewedForm": [
+      {
+        "checked": false,
+        "label": "ชื่อวิชาหรือกิจกรรม",
+        "type": "text",
+        "value": "QA-ROLE-CLOUD-CREATE"
+      },
+      {
+        "checked": false,
+        "label": "ประเภทตารางเรียนDigital Literacy",
+        "type": "select-one",
+        "value": "classroom"
+      },
+      {
+        "checked": false,
+        "label": "ภาคเรียน2/25691/2570",
+        "type": "select-one",
+        "value": "2/2569"
+      },
+      {
+        "checked": false,
+        "label": "วันที่",
+        "type": "date",
+        "value": "2027-04-23"
+      },
+      {
+        "checked": false,
+        "label": "การเกิดซ้ำครั้งเดียวทุกสัปดาห์ในวันเดียวกัน",
+        "type": "select-one",
+        "value": "none"
+      },
+      {
+        "checked": false,
+        "label": "เวลาเริ่ม",
+        "type": "time",
+        "value": "10:00"
+      },
+      {
+        "checked": false,
+        "label": "เวลาสิ้นสุด",
+        "type": "time",
+        "value": "11:00"
+      },
+      {
+        "checked": false,
+        "label": "ห้อง 401",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "checked": true,
+        "label": "ห้อง 402",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "checked": false,
+        "label": "ห้อง 406",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "checked": false,
+        "label": "ห้อง 407",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "checked": false,
+        "label": "ผู้สอน / ผู้รับผิดชอบ",
+        "type": "text",
+        "value": ""
+      }
+    ],
+    "result": {
+      "step": "superadmin-create",
+      "created": 1,
+      "skipped": 0,
+      "repeated": false
+    },
+    "visibleEntryNames": [
+      "402QA-ROLE-CLOUD-CREATE10:00–11:00"
+    ],
+    "statuses": [
+      "อ่าน staging สำเร็จ · 30 ตารางเรียน / 0 รอบสอบ",
+      "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+    ]
+  },
+  "superadminRepeat": {
+    "checkedAt": "2026-11-10T23:42:40.934Z",
+    "result": {
+      "step": "repeat",
+      "created": 0,
+      "skipped": 1,
+      "operationId": "op-57422db8927fa8837edcec92e053da75827c9f21a477ffe608987b40be725fe2",
+      "repeated": true
+    },
+    "repeatButtonEnabled": false
+  },
+  "freshRead": {
+    "statuses": [
+      "อ่าน staging สำเร็จ · 30 ตารางเรียน / 0 รอบสอบ",
+      "บันทึก 1 รายการ · ข้ามรายการเดิม 0 รายการ · Staging"
+    ],
+    "qaEntryNames": [
+      "401QA-CLOUD-OVERLAP-B10:30–11:30",
+      "402QA-CLOUD-IDENTICAL10:00–11:00",
+      "401QA-CLOUD-ROOM-40110:00–11:00",
+      "402QA-CLOUD-ROOM-40210:00–11:00",
+      "402QA-ROLE-CLOUD-CREATE10:00–11:00"
+    ],
+    "detailText": "QA-ROLE-CLOUD-CREATE\nตารางเรียน\nวันที่\n23 เมษายน 2570\nเวลา\n10:00–11:00\nห้อง\n402\nผู้สอน\nไม่ระบุ\nตารางรายสัปดาห์\n23 เมษายน 2570 – 23 เมษายน 2570"
+  },
+  "completed": true,
+  "completedAt": "2026-11-10T23:43:22.488Z",
+  "uiNotes": [
+    "Classroom detail labels a one-day bounded rule as ตารางรายสัปดาห์; actual bounds both 2027-04-23"
+  ]
+}

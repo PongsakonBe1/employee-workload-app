@@ -1,4 +1,4 @@
-// Cloud staging only. No production configuration, shared test passwords or database writes.
+// Cloud staging only. No production configuration or shared test passwords; write APIs require explicit opt-in.
 import { initializeApp, deleteApp } from "firebase/app";
 import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { initializeFirestore, terminate, getDocFromServer, doc } from "firebase/firestore";
@@ -7,8 +7,10 @@ import { createCalendarReadOnly } from "./calendarReadOnly.js";
 import { calendarSdkTransport } from "./calendarSdkTransport.js";
 import { createCalendarWriter } from "./calendarWriter.js";
 import { probeCalendarWriterReads } from "./calendarRoleProbe.js";
+import { calendarRoleWriteSdk } from "./calendarRoleWriteSdk.js";
+import roleWriteProposal from "../../docs/development/calendar-role-write-plan/staging-fixture.json";
 let sequence = 0;
-export function createCalendarStagingClient(config, { writer = false, roleQa = false } = {}) {
+export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false } = {}) {
   const approved = validateCalendarStagingConfig(config);
   const app = initializeApp(approved, "calendar-staging-" + ++sequence);
   const auth = initializeAuth(app, {
@@ -28,7 +30,8 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
       const current = session;
       return probeCalendarWriterReads((collection, id) => getDocFromServer(doc(db, collection, id)), () => !closed && current === session && Boolean(auth.currentUser?.uid));
     } } : {}),
-    ...(writer ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
+    ...(writer && !roleWriteQa ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
+    ...(writer && roleWriteQa ? { roleWriteQa: calendarRoleWriteSdk(db, () => closed ? null : auth.currentUser?.uid, roleWriteProposal, () => reader.refresh()) } : {}),
     async login() {
       if (closed) throw new Error("Client closed");
       const current = ++session;

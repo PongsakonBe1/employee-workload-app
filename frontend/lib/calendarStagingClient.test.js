@@ -73,6 +73,7 @@ describe("staging client session lifecycle with mocked SDK boundaries", () => {
   it("does not expose developer role probes on ordinary staging clients", async () => {
     const client = createCalendarStagingClient(config);
     expect(client.probeWriterReads).toBeUndefined();
+    expect(client.roleWriteQa).toBeUndefined();
     await client.close();
   });
   it("limits role probes to an active QA client's session, never reusing a closed session", async () => {
