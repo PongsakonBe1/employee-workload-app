@@ -36,14 +36,31 @@
     "expectedInMemoryAuthCleared": true
   },
   "signInAfterFullReload": {
-    "status": "awaiting-user-account-selection",
+    "status": "passed-user-and-browser-confirmed",
     "googlePopupOpened": true,
     "toolAccountSelectionCompleted": false,
-    "persistenceReadVerified": false
+    "userCompletedAccountSelection": true,
+    "userConfirmation": "แสดงตารางครบ 4 รายการเหมือนกัน",
+    "persistenceReadVerified": true,
+    "verificationSource": [
+      "user-UAT",
+      "Edge DOM after explicit staging reload"
+    ],
+    "viewRange": "2027-04-19/2027-04-25",
+    "serverReadStatus": "อ่าน staging สำเร็จ · 29 ตารางเรียน / 0 รอบสอบ",
+    "visibleQaLabels": [
+      "401QA-CLOUD-OVERLAP-B10:30–11:30",
+      "402QA-CLOUD-IDENTICAL10:00–11:00",
+      "401QA-CLOUD-ROOM-40110:00–11:00",
+      "402QA-CLOUD-ROOM-40210:00–11:00"
+    ],
+    "qaDetailsMatchBeforeReload": true,
+    "screenshot": "fresh-signin-calendar.jpg"
   },
   "cloudCalendarWrites": 0,
   "authAccountsProvisioned": 0,
   "profilesChanged": 0,
   "productionAccessed": false,
-  "physicalMobileTested": false
+  "physicalMobileTested": false,
+  "completedAt": "2026-11-10T22:51:03.507Z"
 }

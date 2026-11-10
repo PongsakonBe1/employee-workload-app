@@ -23,15 +23,17 @@ Cloudflare hostname เดิมตอบ `ERR_NAME_NOT_RESOLVED` และ proc
 
 เปิด Edge หน้า `/dev/calendar-staging-write` ใหม่ เข้าสู่ Google สำเร็จ อ่าน 29 ตารางเรียน และเลือก 19–25 เม.ย. 2570 เห็น QA ทั้ง 4 รายการเดิม เวลา/ห้องตรงกับ manifest ก่อนหน้า (เดือนเมษายนอ่าน 0 รอบสอบ) จากนั้น F5 พบสถานะยังไม่เข้าสู่ระบบ ปุ่มเพิ่ม/นำเข้าปิด และไม่มี QA ค้างในหน้า สอดคล้องกับ Auth แบบ in-memory
 
-หลัง F5 เปิด Google sign-in ได้ แต่เครื่องมือเลือกบัญชีใน popup ไม่สำเร็จ จึงส่งให้ผู้ใช้เลือกบัญชี ICIT เดิม ขั้นอ่านหลัง sign-in รอบนี้ยังรอผลจริง ไม่ถือว่าผ่านจากรอบก่อนหน้า
+หลัง F5 เปิด Google sign-in ได้ แต่เครื่องมือเลือกบัญชีใน popup ไม่สำเร็จ จึงส่งให้ผู้ใช้เลือกบัญชี ICIT เดิม ผู้ใช้ยืนยันว่า “แสดงตารางครบ 4 รายการเหมือนกัน” จากนั้นตรวจผ่าน Edge อีกครั้ง เลือกสัปดาห์ 19–25 เม.ย. 2570 และกดโหลดข้อมูล staging ใหม่ เห็นสถานะอ่านสำเร็จ 29 ตารางเรียน / 0 รอบสอบ และ QA ทั้ง 4 รายการ ชื่อ เวลา และห้องตรงกับก่อน F5 จึงยืนยันผ่านทั้งผลผู้ทดสอบและผล browser หลัง reload/sign-in รอบนี้ ไม่ได้เขียนตารางเพิ่ม
 
-หลักฐาน session ล่าสุดให้ดู `output/playwright/calendar-cloud-session-qa/session-report.json` เมื่อบันทึกผล ไม่ใช้คำว่า session persistence เพื่ออ้างว่า Google session ต้องคงอยู่หลัง F5 เพราะ client นี้ตั้งใจใช้ in-memory persistence
+หลักฐาน session ล่าสุดอยู่ใน `output/playwright/calendar-cloud-session-qa/session-report.json` และ `fresh-signin-calendar.jpg`; ภาพ `reload-awaiting-signin.jpg` คงเป็นหลักฐานช่วงรอผู้ใช้ก่อนหน้า ไม่ใช้คำว่า session persistence เพื่ออ้างว่า Google session ต้องคงอยู่หลัง F5 เพราะ client นี้ตั้งใจใช้ in-memory persistence
+
+ตรวจ JSON ของรายงานว่า QA มี 4 รายการตรงกับ baseline, หลัง reload ปุ่มเขียนปิด, หลัง sign-in อ่านผ่าน และไม่มีการ provision/เปลี่ยน profile/เขียน calendar/เข้าถึง production ไม่รัน application test suite ซ้ำเพราะรอบนี้เปลี่ยนเฉพาะเอกสารและหลักฐาน UAT ไม่มี runtime changes
 
 ## แผนเฟสบทบาท — รออนุมัติ ยังไม่ดำเนินการ
 
 ### 1. ทำอะไร ตามลำดับ
 
-1. จบการอ่านหลัง F5 และยืนยัน QA เดิม 4 รายการก่อนเปลี่ยนสิทธิ์
+1. การอ่านหลัง F5 และ sign-in ยืนยัน QA เดิม 4 รายการแล้ว ส่วนขั้นเปลี่ยนสิทธิ์ต่อจากนี้ยังรออนุมัติ
 2. พัฒนาเครื่องมือ provision เฉพาะบัญชีสองรายการที่ผู้ใช้ระบุ บังคับ staging และตรวจ identity จริง ไม่รับการเดา UID ไม่คัดลอกโปรไฟล์ production
 3. ให้ผู้ใช้เข้าสู่ Google ด้วยบัญชี Superadmin ที่ระบุใน staging เป็นครั้งแรก เมื่อมี Auth account และ verified Google แล้วจึงสร้าง profile แบบ create-only ด้วยชื่อแสดงสังเคราะห์, `role=superadmin`, `active=true`, `calendarWriter=true` หากพบ profile มีอยู่ให้หยุดและเทียบแผนก่อน ไม่เขียนทับ
 4. เปลี่ยนเฉพาะ profile ของบัญชี ICIT เดิมจาก `admin/active=true/calendarWriter=true` เป็น `staff/active=true/calendarWriter=false` โดยใช้ field mask และ update-time precondition เก็บ baseline ขั้นต่ำใน ignored local artifact เพื่อย้อนกลับ ไม่เปลี่ยน fields อื่น
