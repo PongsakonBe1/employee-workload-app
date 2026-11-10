@@ -1,0 +1,27 @@
+{
+  "completed": true,
+  "project": "labboy-workload-app-staging",
+  "authenticated": false,
+  "deniedReads": 4,
+  "realDocumentReferencesUsed": false,
+  "writeCalls": 0,
+  "productionUsed": false,
+  "checks": [
+    {
+      "collection": "users",
+      "denied": true
+    },
+    {
+      "collection": "classroomSchedules",
+      "denied": true
+    },
+    {
+      "collection": "dlExamSchedules",
+      "denied": true
+    },
+    {
+      "collection": "calendarWriteState",
+      "denied": true
+    }
+  ]
+}

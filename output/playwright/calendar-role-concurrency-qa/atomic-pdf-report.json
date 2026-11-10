@@ -1,0 +1,8 @@
+{
+  "syntheticOnly": true,
+  "pages": 1,
+  "parsedRows": 2,
+  "exactPlanFieldsMatched": true,
+  "eitherOverlapWinnerBlocksWholeBatch": true,
+  "cloudUsed": false
+}

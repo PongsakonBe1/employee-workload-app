@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-10T09:04:05.606Z",
+  "target": "labboy-workload-app-staging",
+  "manifestSHA256": "43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f",
+  "dateRange": {
+    "start": "2027-04-19",
+    "end": "2027-04-22"
+  },
+  "activeClassroomsConsidered": 25,
+  "examsInRangeConsidered": 0,
+  "queryRequests": 2,
+  "candidateClearAtReadTime": true,
+  "conflictingQaTitles": [],
+  "namesOrProctorsSelected": false,
+  "recordsWritten": 0,
+  "privilegedReadIsNotRulesEvidence": true
+}

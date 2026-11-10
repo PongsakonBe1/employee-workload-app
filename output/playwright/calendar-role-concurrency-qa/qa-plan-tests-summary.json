@@ -1,0 +1,6 @@
+{
+  "command": "node --test scripts/calendar-staging-qa-plan.test.mjs",
+  "passed": true,
+  "tests": 11,
+  "note": "Observed Node test output; separate from the existing 518 Vitest tests"
+}

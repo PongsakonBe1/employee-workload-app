@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "targetProject": "labboy-workload-app-staging",
+  "database": "(default)",
+  "dateRange": {
+    "start": "2027-04-19",
+    "end": "2027-04-22"
+  },
+  "semester": "2/2569",
+  "teacher": "",
+  "expectedCreatedSchedules": 4,
+  "sessions": "Two independent Google sign-ins using the existing approved tester account",
+  "cases": [
+    {
+      "id": "overlap",
+      "expectedCreated": 1,
+      "requests": [
+        [
+          {
+            "title": "QA-CLOUD-OVERLAP-A",
+            "date": "2027-04-19",
+            "room": "401",
+            "start": "10:00",
+            "end": "11:00"
+          }
+        ],
+        [
+          {
+            "title": "QA-CLOUD-OVERLAP-B",
+            "date": "2027-04-19",
+            "room": "401",
+            "start": "10:30",
+            "end": "11:30"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "identical",
+      "expectedCreated": 1,
+      "requests": [
+        [
+          {
+            "title": "QA-CLOUD-IDENTICAL",
+            "date": "2027-04-20",
+            "room": "402",
+            "start": "10:00",
+            "end": "11:00"
+          }
+        ],
+        [
+          {
+            "title": "QA-CLOUD-IDENTICAL",
+            "date": "2027-04-20",
+            "room": "402",
+            "start": "10:00",
+            "end": "11:00"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "different-rooms",
+      "expectedCreated": 2,
+      "requests": [
+        [
+          {
+            "title": "QA-CLOUD-ROOM-401",
+            "date": "2027-04-21",
+            "room": "401",
+            "start": "10:00",
+            "end": "11:00"
+          }
+        ],
+        [
+          {
+            "title": "QA-CLOUD-ROOM-402",
+            "date": "2027-04-21",
+            "room": "402",
+            "start": "10:00",
+            "end": "11:00"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "atomic-rejection",
+      "expectedCreated": 0,
+      "requests": [
+        [
+          {
+            "title": "QA-CLOUD-ATOMIC-COLLISION",
+            "date": "2027-04-19",
+            "room": "401",
+            "start": "10:00",
+            "end": "11:30",
+            "validTo": "2027-04-22"
+          },
+          {
+            "title": "QA-CLOUD-ATOMIC-GOOD",
+            "date": "2027-04-22",
+            "room": "402",
+            "start": "14:00",
+            "end": "15:00",
+            "validTo": "2027-04-22"
+          }
+        ]
+      ]
+    }
+  ],
+  "atomicImportTerm": {
+    "start": "2027-04-19",
+    "end": "2027-04-22"
+  }
+}

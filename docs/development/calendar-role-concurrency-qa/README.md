@@ -59,8 +59,14 @@ node scripts/verify-calendar-role-ui.cjs $playwrightModule $chromeExecutable
 
 ## ส่วน staging ที่ยังรอ
 
-ผล Emulator ไม่ใช่ผล cloud matrix ยังรอคำตอบว่ามี Google ของผู้ทดสอบหลายบทบาทพร้อมหรือมีเฉพาะ Admin เดิม ไม่ขอรหัสผ่าน/token และไม่เปลี่ยนบทบาทผู้ใช้จริงเพื่อจำลองผลโดยไม่อนุมัติ
+ผล Emulator ไม่ใช่ผล cloud matrix ยังไม่ยืนยันว่ามี Google ของผู้ทดสอบหลายบทบาทพร้อม จึงเสนอทดสอบสอง session ของบัญชีผู้ทดสอบเดิมก่อน ไม่ขอรหัสผ่าน/token และไม่เปลี่ยนบทบาทผู้ใช้จริงเพื่อจำลองผลโดยไม่อนุมัติ
 
-เตรียมตาราง UAT แยกไว้ใน [cloud-uat-plan.md](cloud-uat-plan.md) และสถานะ `cloud-qa-status.json` ยังเป็น `not-run` ก่อนทดสอบจริงต้องยืนยันบัญชี/บทบาทและข้อมูลสังเคราะห์ที่จะเพิ่มบน staging ไม่ใช้ Admin SDK หรือ CLI ที่ bypass rules แทนหลักฐานการบังคับสิทธิ์ของผู้ใช้
+เตรียมตาราง UAT แยกไว้ใน [cloud-uat-plan.md](cloud-uat-plan.md) พร้อม manifest เจาะจง 19–22 เม.ย. 2570 ซึ่งคาดว่าจะเพิ่ม 4 ตาราง และ PDF สังเคราะห์สำหรับ negative atomic batch ผ่าน pure plan tests 11 tests และตรวจ parser/ภาพ PDF แล้ว
+
+อ่านสถานะ staging ได้ว่า writer enabled, gate ready, revision 5 และ read-only preflight แบบเลือกเฉพาะข้อมูลห้อง/เวลาไม่พบ conflict ในช่วงที่เสนอ ไม่ได้อ่านชื่อผู้สอนหรือผู้คุมเพื่อเตรียมชุดนี้ CLI read มีสิทธิ์จัดการจึงใช้เป็น occupancy check เท่านั้น
+
+SDK ที่ไม่เข้าสู่ระบบจริงบน cloud ปฏิเสธ 4 nonexistent QA references ตามคาด ไม่มี write calls ส่วน browser เปิด writer ได้และปุ่มปิดก่อน login แต่ขาดการเชื่อมต่อระหว่าง Google flow จึงยังไม่ยืนยัน session หรือ authenticated cloud matrix สถานะอยู่ใน `cloud-qa-status.json` เป็น partial read-only checks ผ่าน/การเขียนยังรอ
+
+ก่อนทดสอบจริงต้องเชื่อมต่อ browser/เข้าสู่ระบบตามปกติและอนุมัติชุดรายการสังเคราะห์ที่ระบุ ไม่ใช้ Admin SDK หรือ CLI ที่ bypass rules แทนหลักฐานการบังคับสิทธิ์ของผู้ใช้ ไม่มีการเปิด Auth providers หรือเปลี่ยนบัญชี cloud ในขั้นนี้
 
 Rules ของ pilot ยังเป็น prototype ที่ไม่ได้บังคับ aggregate room/proctor conflicts และ business invariants ทั้งหมดแทน trusted server การที่ sanctioned clients ผ่าน concurrency QA ไม่ได้พิสูจน์ว่า custom client ที่มี writer capability จะข้าม business validation ไม่ได้ ไม่ถือว่าผ่าน production gate จากผลนี้ และยังไม่ยืนยันทุกอุปกรณ์จริงหรือ cloud batch 100 รายการ

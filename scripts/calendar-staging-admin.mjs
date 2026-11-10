@@ -3,6 +3,8 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { validateStagingQaPlan, stagingQaOccupancy } from "./calendar-staging-qa-plan.mjs";
 import { calendarEmulatorFixtures } from "../firebase/calendar-emulator/fixtures.mjs";
 import { adaptCalendarDocuments } from "../frontend/lib/calendarDataAdapter.js";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
@@ -73,6 +75,27 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
+  if (action === "qaPreflight") {
+    const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
+    const plan = JSON.parse(bytes), { range } = validateStagingQaPlan(plan);
+    const { Client } = require("./lib/apiv2"), client = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const decode = value => value.stringValue ?? value.booleanValue ?? (value.arrayValue ? value.arrayValue.values?.map(decode) || [] : null);
+    const condition = (fieldPath, op, value) => ({ fieldFilter: { field: { fieldPath }, op, value: field(value) } });
+    async function selectedQuery(collection, selected, filters, orderBy) {
+      const structuredQuery = { from: [{ collectionId: collection }], select: { fields: selected.map(fieldPath => ({ fieldPath })) }, where: filters.length === 1 ? filters[0] : { compositeFilter: { op: "AND", filters } }, limit: 201 };
+      if (orderBy) structuredQuery.orderBy = orderBy;
+      const response = await client.post(`/projects/${target}/databases/(default)/documents:runQuery`, { structuredQuery });
+      const rows = response.body.filter(row => row.document).map(row => Object.fromEntries(Object.entries(row.document.fields || {}).map(([key, value]) => [key, decode(value)])));
+      if (rows.length > 200) throw new Error("QA preflight exceeded bounded read limit");
+      return rows;
+    }
+    const classrooms = await selectedQuery("classroomSchedules", ["room", "dayOfWeek", "startTime", "endTime", "validFrom", "validTo"], [condition("isActive", "EQUAL", true)]);
+    const exams = await selectedQuery("dlExamSchedules", ["date", "locations", "startTime", "endTime"], [condition("isActive", "EQUAL", true), condition("date", "GREATER_THAN_OR_EQUAL", range.start), condition("date", "LESS_THAN_OR_EQUAL", range.end)], [{ field: { fieldPath: "date" }, direction: "ASCENDING" }]);
+    const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), dateRange: range, activeClassroomsConsidered: classrooms.length, examsInRangeConsidered: exams.length, queryRequests: 2, ...stagingQaOccupancy(plan, classrooms, exams), namesOrProctorsSelected: false, recordsWritten: 0, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-role-concurrency-qa");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, "cloud-preflight.json"), JSON.stringify(result, null, 2) + "\n");
+    return result;
+  }
   if (action === "billing") return {
     billingEnabled: await require("./lib/gcp/cloudbilling").checkBillingEnabled(target)
   };
