@@ -15,10 +15,13 @@
   "authProvidersChanged": false,
   "cloudDataWritten": false,
   "productionAccessed": false,
-  "qaFixtureApproval": "pending",
+  "qaFixtureApproval": "approved-by-user-2026-11-10",
+  "approvedManifestSHA256": "43dfd0c8723f74dd84c549d9794b8504ed696d8c2b9f6dad6f6281ec8173191f",
+  "approvalScope": "Existing tester in two sessions; exact staging-fixtures.json; at most four new QA schedules; no cleanup, role changes, deploy or production writes",
+  "readinessRecheckedAt": "2026-11-10T09:35:33.178Z",
+  "selectedBrowserConnectedAtReadinessCheck": false,
   "awaiting": [
-    "Working browser connection and normal Google sign-in",
-    "Approval of the exact staging-fixtures.json proposal"
+    "Working browser connection and normal Google sign-in"
   ],
   "emulatorEvidence": "sdk-report.json and ui-report.json"
 }
