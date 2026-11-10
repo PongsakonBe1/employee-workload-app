@@ -9,6 +9,7 @@ import { prepareCalendarCreate } from "../frontend/lib/calendarCreatePlan.js";
 import { calendarEmulatorFixtures } from "../firebase/calendar-emulator/fixtures.mjs";
 import { adaptCalendarDocuments } from "../frontend/lib/calendarDataAdapter.js";
 import { prepareQaRoleBaseline, planQaRoleWrites } from "./calendar-staging-role-plan.mjs";
+import { validateRoleWritePlan, prepareRoleWriteFixture, roleWriteOccupancy } from "./calendar-role-write-plan.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
   target = "labboy-workload-app-staging";
 const account = process.argv[2],
@@ -159,7 +160,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     const label = process.argv[4];
     if (!["before", "after"].includes(label)) throw new Error("Explicit QA audit label required");
     const reportScope = process.argv[5];
-    if (reportScope !== undefined && reportScope !== "role-qa") throw new Error("Unsupported QA audit report scope");
+    if (reportScope !== undefined && !["role-qa", "role-write-plan"].includes(reportScope)) throw new Error("Unsupported QA audit report scope");
     const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
     const plan = JSON.parse(bytes);
     const rules = stagingQaRowsToRules(plan);
@@ -196,9 +197,38 @@ const command = new Command("calendar-staging-internal").before(options => {
     }
     const gate = await projected("calendarWriteState/main", ["revision"]);
     const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), label, schedules, receipts, schedulesFound: schedules.filter(row => row.exists).length, receiptsFound: receipts.filter(row => row.exists).length, revision: gate?.revision ?? null, queryRequests, recordsWritten: 0, personalDetailsSelected: false, privilegedReadIsNotRulesEvidence: true };
-    const output = path.join(root, reportScope === "role-qa" ? "output/playwright/calendar-staging-role-qa" : "output/playwright/calendar-role-concurrency-qa");
+    const output = path.join(root, reportScope === "role-qa" ? "output/playwright/calendar-staging-role-qa" : reportScope === "role-write-plan" ? "output/playwright/calendar-role-write-plan" : "output/playwright/calendar-role-concurrency-qa");
     fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(path.join(output, `cloud-storage-audit-${label}.json`), JSON.stringify(result, null, 2) + "\n");
+    return result;
+  }
+  if (action === "qaRoleWritePreflight") {
+    const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-write-plan/staging-fixture.json"));
+    const proposal = JSON.parse(bytes);validateRoleWritePlan(proposal);
+    const prepared = await prepareRoleWriteFixture(proposal);
+    const { Client } = require("./lib/apiv2"), store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const prefix = `projects/${target}/databases/(default)/documents`;
+    const decode = value => value.stringValue ?? value.booleanValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : value.arrayValue ? (value.arrayValue.values || []).map(decode) : null);
+    const condition = (name, op, value) => ({ fieldFilter: { field: { fieldPath: name }, op, value: field(value) } });
+    async function projectedQuery(collection, selected, filters, ordered = false) {
+      const structuredQuery = { from: [{ collectionId: collection }], select: { fields: selected.map(fieldPath => ({ fieldPath })) }, where: filters.length === 1 ? filters[0] : { compositeFilter: { op: "AND", filters } }, limit: 201, ...(ordered ? { orderBy: [{ field: { fieldPath: "date" }, direction: "ASCENDING" }] } : {}) };
+      const result = await store.post(`/${prefix}:runQuery`, { structuredQuery });
+      if (!Array.isArray(result.body)) throw new Error("Unexpected role-write query response");
+      const records = result.body.filter(value => value.document).map(value => Object.fromEntries(Object.entries(value.document.fields || {}).map(([key, item]) => [key, decode(item)])));
+      if (records.length > 200) throw new Error("Role-write read limit exceeded");
+      return records;
+    }
+    const classrooms = await projectedQuery("classroomSchedules", ["room", "dayOfWeek", "startTime", "endTime", "validFrom", "validTo"], [condition("isActive", "EQUAL", true)]);
+    const exams = await projectedQuery("dlExamSchedules", ["date", "locations", "startTime", "endTime"], [condition("isActive", "EQUAL", true), condition("date", "GREATER_THAN_OR_EQUAL", proposal.fixture.date), condition("date", "LESS_THAN_OR_EQUAL", proposal.fixture.date)], true);
+    const references = { gate: `${prefix}/calendarWriteState/main`, schedule: `${prefix}/classroomSchedules/${prepared.entries[0].id}`, receipt: `${prefix}/calendarWriteOperations/${prepared.operationId}` };
+    const response = await store.post(`/${prefix}:batchGet`, { documents: Object.values(references), mask: { fieldPaths: ["revision", "schemaVersion"] } });
+    if (!Array.isArray(response.body) || response.body.length !== 3) throw new Error("Unexpected role-write reference audit");
+    const projected = Object.fromEntries(response.body.map(value => [value.found?.name || value.missing, value.found ? { exists: true, revision: decode(value.found.fields?.revision || {}) } : { exists: false }]));
+    if (Object.values(references).some(reference => !projected[reference])) throw new Error("Incomplete role-write reference audit");
+    const occupancy = roleWriteOccupancy(proposal, classrooms, exams), gate = projected[references.gate];
+    const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), candidateDate: proposal.fixture.date, candidateRoom: proposal.fixture.room, activeClassroomsConsidered: classrooms.length, examsInRangeConsidered: exams.length, ...occupancy, candidateScheduleExists: projected[references.schedule].exists, candidateReceiptExists: projected[references.receipt].exists, revision: gate.exists ? gate.revision : null, readyAtReadTime: occupancy.candidateClearAtReadTime && gate.revision === proposal.expectedBefore.revision && !projected[references.schedule].exists && !projected[references.receipt].exists, queryRequests: 3, namesOrProctorsSelected: false, recordsWritten: 0, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-role-write-plan");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, "cloud-preflight.json"), JSON.stringify(result, null, 2) + "\n");
     return result;
   }
   if (action === "qaPreflight") {

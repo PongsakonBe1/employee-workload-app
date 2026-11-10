@@ -1,0 +1,21 @@
+{
+  "prepared": true,
+  "manifestSHA256": "cc046d34339f6a02bee2c5af99b5036c24dbfae8624baee2f2db3e2f8354ff55",
+  "cloudWriteApproval": "pending",
+  "writeExecutorImplemented": false,
+  "cloudWriteAttempts": 0,
+  "cloudProfilesChanged": 0,
+  "productionAccessed": false,
+  "preflightReadyAtReadTime": true,
+  "priorQaSchedules": 4,
+  "priorQaReceipts": 4,
+  "priorRevision": 9,
+  "maxNewSchedules": 1,
+  "maxNewReceipts": 1,
+  "maxRevisionDelta": 1,
+  "sameFixtureForBothRoles": true,
+  "stopOnUnexpectedStaffWrite": true,
+  "nodeTestsPassed": 46,
+  "syntaxCheckPassed": true,
+  "applicationRuntimeChanged": false
+}
