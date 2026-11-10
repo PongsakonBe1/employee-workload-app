@@ -1,0 +1,20 @@
+{
+  "checkedOn": "2026-11-10",
+  "projectId": "labboy-workload-app-staging",
+  "baselineFingerprintMatched": true,
+  "classroomFixturesDeactivated": 1,
+  "dlFixturesDeactivated": 4,
+  "retainedFixtureDocuments": 5,
+  "activeFixtureQueryMatches": 0,
+  "revisionBefore": 2,
+  "revisionAfter": 3,
+  "maintenanceAuditPresentAndVerified": true,
+  "atomicWrites": 7,
+  "usersModified": false,
+  "userCreatedRecordsModified": false,
+  "alreadyInactiveFixtureModified": false,
+  "productionAccessed": false,
+  "rulesOrPermissionsChanged": false,
+  "personalDetailsLogged": false,
+  "pdfReimportUat": "pending-user-refresh-and-retry"
+}

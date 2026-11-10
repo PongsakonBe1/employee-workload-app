@@ -1,0 +1,23 @@
+{
+  "completed": true,
+  "projectId": "demo-calendar-fixture-cleanup",
+  "checks": [
+    {
+      "name": "a changed fixture version rejects all seven writes without partial deactivation",
+      "passed": true
+    },
+    {
+      "name": "a concurrent gate revision rejects the complete maintenance batch",
+      "passed": true
+    },
+    {
+      "name": "exactly five flags, revision and audit committed; user-created data, directory, inactive fixture and receipt unchanged",
+      "passed": true
+    },
+    {
+      "name": "repeat execution is a verified no-op",
+      "passed": true
+    }
+  ],
+  "cloudUsed": false
+}

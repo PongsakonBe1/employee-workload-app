@@ -2,6 +2,8 @@
 
 10 พฤศจิกายน 2569 · Branch `codex/calendar-staging-import` จาก `dacc24b`
 
+สถานะข้อมูลสาธิตล่าสุด: ผู้ใช้อนุมัติให้ปิดชุดตารางตั้งต้นแล้วตาม [รายงาน fixture cleanup](../calendar-staging-fixture-cleanup/README.md) เพื่อทดสอบนำเข้าจากไฟล์ ข้อมูลและผลทดสอบก่อน cleanup ในเอกสารนี้คงไว้เป็นประวัติ
+
 ผู้ใช้อนุมัติเฟสเพิ่ม/นำเข้าข้อมูลต่อจากการตรวจ cache/session ใช้ UI ที่ตรวจรับแล้วและ Firebase project แยก `labboy-workload-app-staging` ไม่เชื่อม writer เข้ากับ production
 
 ## ขอบเขตที่เปิด
