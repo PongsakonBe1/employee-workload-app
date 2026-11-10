@@ -1,6 +1,6 @@
 # ตาราง UAT สิทธิ์/การเพิ่มพร้อมกันบน staging
 
-สถานะล่าสุด: ผู้ใช้อนุมัติชุด QA แล้ว และทดสอบ concurrent writes ผ่าน Google ของบัญชีผู้ทดสอบเดิมใน Edge สองแท็บสำเร็จ 3 กรณี เพิ่มจริง 4 ตาราง / 4 receipts / revision 5 → 9 เหลือ PDF negative batch ที่ยังเลือกไฟล์ไม่ได้เพราะ extension file-URL permission ดู [ผล cloud](cloud-uat-results.md) ไม่มีการสร้างบัญชี เปลี่ยนสิทธิ์ หรือ deploy
+สถานะล่าสุด: ผ่านชุดที่อนุมัติครบ 4 กรณี: concurrent writes 3 กรณีผ่าน Google ของบัญชีผู้ทดสอบเดิมใน Edge สองแท็บ และ PDF negative import review ที่มีทั้งรายการชน/รายการว่างถูกหยุดก่อน commit ทั้งชุด เพิ่มจริงรวม 4 ตาราง / 4 receipts / revision 5 → 9 ดู [ผล cloud](cloud-uat-results.md) ไม่ถือว่าผ่าน cloud role matrix หลายบัญชี ไม่มีการสร้างบัญชี เปลี่ยนสิทธิ์ หรือ deploy
 
 ## เงื่อนไขก่อนเริ่ม
 
@@ -52,7 +52,7 @@
 
 `qaPreflight` อ่านแบบ field projection เฉพาะห้อง วัน และเวลาจาก 25 ตารางเรียน active และรอบสอบ 0 รายการในช่วงนี้ พบว่าง ณ เวลาที่ตรวจ ดู `cloud-preflight.json` ซึ่งผูก SHA-256 ของ manifest ไว้ ผลนี้ไม่ใช่การจองช่วงเวลาและไม่ใช่หลักฐาน rules เพราะใช้ CLI ที่มีสิทธิ์จัดการ ก่อน commit จริง writer ยังต้องตรวจข้อมูลล่าสุดตาม protocol
 
-## การเข้าสู่ระบบที่ต้องดำเนินต่อ
+## ประวัติเตรียมการเข้าสู่ระบบก่อนรัน QA
 
 เปิด writer staging ใน browser แยกแล้ว ก่อน Google login เห็นปุ่มเพิ่ม/นำเข้าปิดอยู่ แต่การเชื่อมต่อ Edge หลุดหลังเริ่ม Google flow จึงยังไม่ยืนยัน authenticated session และไม่เขียน cloud ขอให้ผู้ใช้เปิดการเชื่อมต่อ browser อีกครั้งและเข้าสู่ staging ตามปกติ ไม่มีการอ่านหรือคัดลอก token เพื่อข้ามขั้นนี้
 

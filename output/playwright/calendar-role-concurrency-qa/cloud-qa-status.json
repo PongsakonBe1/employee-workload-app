@@ -1,10 +1,16 @@
 {
-  "status": "cloud-concurrency-passed-pdf-negative-case-pending",
+  "status": "approved-cloud-scenario-set-passed",
+  "approvedScenarioSetComplete": true,
   "cloudRoleMatrixExecuted": false,
   "cloudConcurrencyExecuted": true,
   "passedCloudConcurrencyCases": ["overlap", "identical", "different-rooms"],
   "cloudConcurrencyScope": "Existing approved Google tester in two independent Edge tabs; UI click requests dispatched together, internal SDK retries not inspected",
-  "atomicPdfNegativeCaseExecuted": false,
+  "atomicPdfNegativeCaseExecuted": true,
+  "atomicPdfRejectionLayer": "Import review before commit",
+  "atomicPdfServerTransactionExercised": false,
+  "negativeBatchCreatedSchedules": 0,
+  "negativeBatchCreatedReceipts": 0,
+  "revisionAfterNegativeBatch": 9,
   "freshServerReloadAfterWritesPassed": true,
   "fullPageReloadAfterTheseWritesExecuted": false,
   "freshSignInAfterTheseWritesExecuted": false,
@@ -37,9 +43,8 @@
   "approvalScope": "Existing tester in two sessions; exact staging-fixtures.json; at most four new QA schedules; no cleanup, role changes, deploy or production writes",
   "readinessRecheckedAt": "2026-11-10T13:55:06.638Z",
   "selectedBrowserConnectedAtReadinessCheck": true,
-  "awaiting": [
-    "Select approved synthetic PDF manually or allow extension file-URL access for the negative import review"
-  ],
+  "awaiting": [],
+  "notCovered": ["Full multi-role cloud matrix", "F5 or fresh Google sign-in after these four QA writes", "Server-side business invariant hardening"],
   "cloudEvidence": "cloud-browser-report.json and cloud-storage-audit-*.json",
   "emulatorEvidence": "sdk-report.json and ui-report.json"
 }

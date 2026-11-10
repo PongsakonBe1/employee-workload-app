@@ -2,7 +2,7 @@
 
 10 พฤศจิกายน 2569 · Branch `codex/calendar-role-concurrency-qa`
 
-ผลล่าสุด: [Cloud QA](cloud-uat-results.md) ผ่าน concurrent writes 3 กรณีด้วย Google ผู้ทดสอบเดิมใน Edge สองแท็บ เพิ่มจริง 4 ตาราง / 4 receipts / revision 5 → 9 ตรวจรายละเอียดและโหลดกลับจาก server แล้ว เหลือการเลือก PDF สังเคราะห์เพื่อทดสอบ negative import review และยังไม่ถือว่าผ่าน cloud role matrix ทั้งชุด
+ผลล่าสุด: [Cloud QA](cloud-uat-results.md) ผ่านครบชุดที่อนุมัติ: concurrent writes 3 กรณี และ PDF negative import review 1 กรณีด้วย Google ผู้ทดสอบเดิม เพิ่มจริงรวม 4 ตาราง / 4 receipts / revision 5 → 9 ส่วน PDF ที่มีรายการชนถูกหยุดก่อน commit ทั้งชุด ไม่เพิ่มข้อมูลบางส่วน ตรวจรายละเอียดและโหลดกลับจาก server แล้ว ยังไม่ถือว่าผ่าน cloud role matrix ทั้งชุด
 
 ## ขอบเขต
 
@@ -59,18 +59,18 @@ node scripts/verify-calendar-role-ui.cjs $playwrightModule $chromeExecutable
 
 ใช้ Emulator ที่มี writer fixtures/rules เดิมอยู่บน Auth 19099 / Firestore 18080 และ dev server 4310 สคริปต์นี้ไม่เตรียมหรือ reset namespace ให้เอง การรัน SDK suite ซ้ำจะเก็บ schedules/receipts QA ไว้อีก 8 รายการต่อรอบ แต่เก็บกวาดเฉพาะบัญชี/โปรไฟล์ชั่วคราวของรอบนั้น
 
-## ส่วน staging ที่ยังรอ
+## ผล staging และขอบเขตที่ยังรอ
 
-ผล Emulator ไม่ใช่ผล cloud matrix ยังไม่ยืนยันว่ามี Google ของผู้ทดสอบหลายบทบาทพร้อม จึงเสนอทดสอบสอง session ของบัญชีผู้ทดสอบเดิมก่อน ไม่ขอรหัสผ่าน/token และไม่เปลี่ยนบทบาทผู้ใช้จริงเพื่อจำลองผลโดยไม่อนุมัติ
+ผล Emulator ไม่ใช่ผล cloud matrix รอบ cloud นี้ใช้ Google ของผู้ทดสอบเดิมใน Edge สองแท็บโดยเข้าสู่ระบบตามปกติ ไม่มีการขอรหัสผ่าน/token หรือเปลี่ยนบทบาทผู้ใช้จริงเพื่อจำลองผล
 
-เตรียมตาราง UAT แยกไว้ใน [cloud-uat-plan.md](cloud-uat-plan.md) พร้อม manifest เจาะจง 19–22 เม.ย. 2570 ซึ่งคาดว่าจะเพิ่ม 4 ตาราง และ PDF สังเคราะห์สำหรับ negative atomic batch ผ่าน pure plan tests 11 tests และตรวจ parser/ภาพ PDF แล้ว
+ชุดที่ผู้ใช้อนุมัติอยู่ใน [cloud-uat-plan.md](cloud-uat-plan.md) และ manifest เจาะจง 19–22 เม.ย. 2570 ผ่าน pure plan tests 11 tests และตรวจ parser/ภาพ PDF แล้ว ผลจริง: เวลาชนเพิ่มได้หนึ่ง ส่งซ้ำเพิ่มครั้งเดียว คนละห้องเพิ่มได้ทั้งคู่ และ PDF ที่มีทั้งรายการชน/รายการว่างถูกหยุดก่อน commit ทั้งชุด
 
-อ่านสถานะ staging ได้ว่า writer enabled, gate ready, revision 5 และ read-only preflight แบบเลือกเฉพาะข้อมูลห้อง/เวลาไม่พบ conflict ในช่วงที่เสนอ ไม่ได้อ่านชื่อผู้สอนหรือผู้คุมเพื่อเตรียมชุดนี้ CLI read มีสิทธิ์จัดการจึงใช้เป็น occupancy check เท่านั้น
+ก่อนเริ่ม writer enabled, gate ready, revision 5 และ preflight แบบเลือกเฉพาะห้อง/เวลาไม่พบ conflict ในช่วง QA ผลปลายทางมี 4 ตาราง / 4 receipts / revision 9 รายละเอียดและ operation reference ตรงตามแผน ไม่มีเอกสารหรือ receipt ของ negative PDF เพิ่ม อ่านข้อมูลกลับจาก server แล้วพบ QA ครบ 4 รายการ ตัวตรวจ CLI มีสิทธิ์จัดการจึงใช้ยืนยันข้อมูลที่เก็บเท่านั้น ไม่ใช้แทนหลักฐานสิทธิ์ของผู้ใช้
 
-SDK ที่ไม่เข้าสู่ระบบจริงบน cloud ปฏิเสธ 4 nonexistent QA references ตามคาด ไม่มี write calls ส่วน browser เปิด writer ได้และปุ่มปิดก่อน login แต่ขาดการเชื่อมต่อระหว่าง Google flow จึงยังไม่ยืนยัน session หรือ authenticated cloud matrix สถานะอยู่ใน `cloud-qa-status.json` เป็น partial read-only checks ผ่าน/การเขียนยังรอ
+SDK ที่ไม่เข้าสู่ระบบจริงบน cloud ปฏิเสธ 4 nonexistent QA references ตามคาด ไม่มี write calls จากการตรวจ anonymous ส่วน cloud หลายบทบาทยังไม่ได้รัน ไม่อ้างผลของผู้ทดสอบเดิมบัญชีเดียวแทน Staff/Superadmin/pending/inactive
 
-ผู้ใช้อนุมัติชุดรายการสังเคราะห์ที่ระบุแล้วเมื่อ 10 พฤศจิกายน 2569 ตรวจซ้ำช่วง QA ยังว่างและ revision 5 แต่ browser ยังไม่เชื่อมต่อ จึงเหลือการเชื่อมต่อ browser/เข้าสู่ระบบตามปกติก่อนเริ่ม ไม่ต้องขออนุมัติชุดเดิมซ้ำ ไม่ใช้ Admin SDK หรือ CLI ที่ bypass rules แทนหลักฐานการบังคับสิทธิ์ของผู้ใช้ ไม่มีการเปิด Auth providers หรือเปลี่ยนบัญชี cloud ในขั้นนี้
+PDF negative case ตรวจด้วยไฟล์สังเคราะห์ที่อนุมัติผ่าน Windows file picker ตามปกติ เครื่องมือ extension เลือกไฟล์ยังไม่ผ่าน แต่ไม่ต้องแก้การตั้งค่าความปลอดภัยเพิ่ม การปฏิเสธเกิดที่ import review ก่อน commit จึงไม่ถือว่าได้ทดสอบ server transaction atomicity ของกรณีนี้
 
-ความคืบหน้าถัดมา: ยืนยัน Edge session A ของ writer แล้ว อ่าน staging สำเร็จและปุ่มเพิ่ม/นำเข้าเปิด แต่ Edge หลุดตอนเริ่ม Google ของ session B จึงยังไม่รัน concurrent writes ตัวตรวจ `qaAudit before` อ่านเฉพาะ references ที่คำนวณจากชุด QA พบ schedules 0 / receipts 0 / revision 5 ไม่มีคำขอเขียน ดูรายละเอียดใน `cloud-uat-plan.md` และ `cloud-storage-audit-before.json`
+ไม่มีการเปิด Auth providers เปลี่ยนบัญชี cloud ลบ QA push หรือ deploy ในรอบนี้ หลักฐานและข้อจำกัดเรื่อง F5/fresh sign-in หลัง QA ใหม่อยู่ใน [cloud-uat-results.md](cloud-uat-results.md) ข้อความ conflict ค้างหลังแก้ฟอร์มเป็นงาน UX ที่บันทึกไว้รอเฟสถัดไป
 
 Rules ของ pilot ยังเป็น prototype ที่ไม่ได้บังคับ aggregate room/proctor conflicts และ business invariants ทั้งหมดแทน trusted server การที่ sanctioned clients ผ่าน concurrency QA ไม่ได้พิสูจน์ว่า custom client ที่มี writer capability จะข้าม business validation ไม่ได้ ไม่ถือว่าผ่าน production gate จากผลนี้ และยังไม่ยืนยันทุกอุปกรณ์จริงหรือ cloud batch 100 รายการ
