@@ -13,7 +13,7 @@
 | Billing | ตรวจหลังตั้งค่าแล้ว `billingEnabled=false` ไม่มีการผูก billing account |
 | Web App | `1:299459134462:web:5f1bd25089a933cdf7b6af` |
 | Auth | Google Sign-in เปิดแล้ว แยกจาก production; ไม่คัดลอกบัญชี/รหัสผ่าน Emulator |
-| ข้อมูล | 11 documents สังเคราะห์จาก fixture เดิม: users 5, classroomSchedules 1, dlExamSchedules 5 |
+| ข้อมูล | 11 documents สังเคราะห์จาก fixture เดิม: users 5, classroomSchedules 1, dlExamSchedules 5 และ profile ขั้นต่ำของผู้ทดสอบที่อนุมัติอีก 1 document |
 | Indexes | users(active, role) และ dlExamSchedules(isActive, date) สถานะ `READY` ทั้งคู่ |
 | Deployment | เฉพาะ Auth, rules และ indexes ของ staging ไม่มี Hosting/Functions/UI deployment |
 
@@ -51,7 +51,7 @@ I've set up prototype Security Rules to keep the data in Firestore safe. They ar
 - Chrome local และ Edge ผ่าน Cloudflare หน้า signed-out **1440 light / 390 dark ผ่าน** config พร้อมใช้ ไม่มี horizontal overflow และ mutation controls ปิดอยู่ ไม่ให้ automation เข้าสู่บัญชี Google
 - Calendar regression เดิม **11 กลุ่มผ่าน**, compatibility build ผ่านและไม่เปลี่ยน production output
 - ตรวจ syntax ของ scripts และ JSON, `git diff --check` ผ่าน; จัดรูปแบบ staging scripts 4 ไฟล์ด้วย Babel ที่ติดตั้งอยู่และตรวจ AST ว่าไม่เปลี่ยน
-- **ยังรอ:** ผู้ใช้ Google sign-in, bootstrap reader profile, การโหลดข้อมูลด้วยบัญชีจริงของผู้ทดสอบ และ UAT บน Safari/iPhone/Android เครื่องจริง ยังไม่ยืนยัน cloud authenticated allow/deny matrix, latency/quota หรือการทำงานของ production
+- **สถานะล่าสุด:** ผู้ใช้ Google sign-in สำเร็จ ผูก reader profile แล้วและยืนยันว่าเห็นตารางเรียน/รอบสอบตามบันทึก UAT ด้านล่าง ยังไม่ยืนยัน cloud authenticated allow/deny matrix, range/cache/logout จากผู้ใช้, browser coverage บนเครื่องจริง, latency/quota หรือการทำงานของ production
 
 ## วิธีตรวจงาน
 
@@ -87,4 +87,13 @@ node scripts/check-ui-build.mjs calendar-staging-readonly
 - Chrome local และ Edge ผ่าน Cloudflare **อย่างละ 2 viewports: 1440/390** ใช้ SDK จริงเปิด popup ไปถึง `accounts.google.com` ได้ ไม่พบ redirect/client rejection ที่ตรวจในหน้า Google ปิด popup แล้วหน้าเดิมแจ้ง `auth/popup-closed-by-user` และเพิ่ม/นำเข้าตารางยัง disabled
 - การทดสอบใช้ browser context ใหม่ที่ไม่มีบัญชี Google ไม่กรอก credentials ไม่บันทึก OAuth URL/payload/token หลักฐานคือ `auth-unit-report.json` และ `local/popup-report.json`, `public/popup-report.json`
 - การรัน Vitest ครั้งแรกใน sandbox ถูก Windows ปฏิเสธ rename cache (`EPERM`) และยังไม่ได้รัน tests จึงรันซ้ำด้วยสิทธิ์เครื่องมือที่อนุมัติแล้วได้ผล 24 ผ่าน ไม่มีการเปลี่ยนโค้ดเพื่อเลี่ยงข้อจำกัดนี้
-- ยังรอผู้ใช้ Google sign-in และ UAT การอ่านด้วยบัญชีที่ผูกสิทธิ์จริง; popup smoke test ไม่ใช่ authenticated read test หรือ physical Safari UAT
+- popup smoke test นี้ไม่ใช่ authenticated read test หรือ physical Safari UAT; ผลการอ่านด้วยบัญชีผู้ทดสอบบันทึกแยกด้านล่าง
+
+## UAT การอ่าน staging เบื้องต้น — 10 พฤศจิกายน 2569
+
+1. ผู้ใช้ยืนยันว่า Google sign-in สำเร็จและรอสิทธิ์อ่าน staging
+2. เครื่องมือ provisioning ตรวจบัญชีที่อนุมัติว่ามี verified Google provider แล้วสร้าง profile ขั้นต่ำใน staging สำเร็จ (`active=true`, `role=admin`, ชื่อแสดงทั่วไป) ไม่มีการเปิดสิทธิ์ client writes หรือบันทึกอีเมล/UID/token ลง repo
+3. ตรวจ query ด้วยสิทธิ์เครื่องมืออีกครั้งพบ active directory 4 (staff สังเคราะห์ 3 และ profile ผู้ทดสอบ 1), ตารางเรียน 1, รอบสอบพฤศจิกายน 3, adapter issues 0
+4. ให้ผู้ใช้กด **โหลดข้อมูล staging ใหม่** ใน session เดิม ผู้ใช้ตอบว่า **“อ่านสำเร็จ เห็นตารางและรอบสอบแล้ว”** จึงบันทึกว่าการอ่านด้วยบัญชีผู้ทดสอบผ่าน UAT เบื้องต้น ไม่ได้อ้างว่ารัน authenticated browser automation หรือ cloud role matrix ครบแล้ว
+
+ไม่มีการเปลี่ยน runtime code ในขั้นผูกสิทธิ์/บันทึก UAT นี้ ตรวจ JSON syntax และ diff ของรายงานโดยตรง ไม่รัน Unit/build ซ้ำเพราะไม่มีพฤติกรรมโปรแกรมเปลี่ยน ขั้นต่อไปคือทบทวน range/cache/logout และกรณีสิทธิ์บน cloud ที่ยังไม่ครบ ก่อนเสนอเฟส writer/import ให้ผู้ใช้อนุมัติแยก ไม่มีการเปิดใช้ production หรือเปิด client writes จากผล UAT นี้
