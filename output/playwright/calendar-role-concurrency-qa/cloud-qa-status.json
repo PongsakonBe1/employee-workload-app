@@ -1,0 +1,11 @@
+{
+  "status": "not-run",
+  "cloudRoleMatrixExecuted": false,
+  "cloudConcurrencyExecuted": false,
+  "cloudAccountsChanged": false,
+  "authProvidersChanged": false,
+  "cloudDataWritten": false,
+  "productionAccessed": false,
+  "awaiting": "Test account availability and a concrete approved staging fixture set",
+  "emulatorEvidence": "sdk-report.json and ui-report.json"
+}

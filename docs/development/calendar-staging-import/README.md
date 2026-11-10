@@ -94,6 +94,12 @@ Branch `codex/dl-staging-import-uat` ปรับหน้าจับคู่�
 
 ขอบเขต UAT นำเข้า PDF/DL และตรวจข้อมูลหลังเข้าสู่ staging ใหม่จึงได้รับการยืนยันแล้ว ขั้นถัดไปที่เสนอคือทดสอบสิทธิ์แต่ละบทบาทและการเพิ่มพร้อมกัน ก่อนขยายผู้ทดสอบหรือเตรียม production โดยยังคงข้อจำกัดของ rules prototype ด้านล่าง
 
+## Role/concurrency QA บน Emulator — 10 พฤศจิกายน 2569
+
+Branch `codex/calendar-role-concurrency-qa` เพิ่มตัวตรวจแบบไม่ reset namespace ผ่าน SDK/SIT 7 กลุ่ม ครอบคลุม 9 สถานะบัญชี และ Browser UI 12 กรณี ข้อมูลเดิมคงอยู่และคืน profile baseline หลังเก็บกวาดบัญชี/โปรไฟล์ QA ชั่วคราวได้ ตรวจพบเฉพาะปัญหาลำดับใน test teardown และแก้แล้ว ไม่เปลี่ยน application runtime หรือ rules ดู `docs/development/calendar-role-concurrency-qa/README.md`
+
+ผลนี้เป็นหลักฐาน Emulator เท่านั้น Cloud role/concurrency matrix ยัง `not-run` รอยืนยันบัญชีผู้ทดสอบและชุดรายการสังเคราะห์ที่อนุมัติ โดยไม่เปลี่ยนสถานะรายการรอ cloud ใน `staging-setup-report.json`
+
 แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
 
 ## Rules เป็น prototype และข้อจำกัด

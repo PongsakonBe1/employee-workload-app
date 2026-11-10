@@ -1,0 +1,116 @@
+{
+  "completed": true,
+  "project": "demo-calendar-writer",
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "preexistingProfilesChanged": false,
+  "roleMatrix": [
+    {
+      "actor": "admin",
+      "readAllowed": true,
+      "writeAllowed": true,
+      "directAtomicWriteDenied": false
+    },
+    {
+      "actor": "superadmin",
+      "readAllowed": true,
+      "writeAllowed": true,
+      "directAtomicWriteDenied": false
+    },
+    {
+      "actor": "staff",
+      "readAllowed": true,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "admin-without-capability",
+      "readAllowed": true,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "superadmin-without-capability",
+      "readAllowed": true,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "staff-with-writer-flag",
+      "readAllowed": true,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "pending",
+      "readAllowed": false,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "inactive",
+      "readAllowed": false,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    },
+    {
+      "actor": "anonymous",
+      "readAllowed": false,
+      "writeAllowed": false,
+      "directAtomicWriteDenied": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "read/write role matrix through real Web SDK and direct atomic requests",
+      "passed": true
+    },
+    {
+      "name": "Admin and Superadmin capability-enabled writes advance revision and persist",
+      "passed": true
+    },
+    {
+      "name": "conflicting concurrent actors commit one winner with a fresh conflict for the loser",
+      "passed": true
+    },
+    {
+      "name": "independent sessions of the same Admin replay an identical concurrent batch exactly once",
+      "passed": true
+    },
+    {
+      "name": "different rooms and touching time boundaries both commit without a false conflict",
+      "passed": true
+    },
+    {
+      "name": "mixed valid/conflicting batch leaves no partial schedule or receipt",
+      "passed": true
+    },
+    {
+      "name": "rules deny update/delete and self-service profile escalation for enabled writers",
+      "passed": true
+    }
+  ],
+  "deniedSdkOperations": 16,
+  "cleanup": {
+    "errors": [],
+    "temporaryProfiles": 3,
+    "onlyRunOwnedProfilesRemoved": true
+  },
+  "limitations": [
+    "Emulator results do not establish cloud role/concurrency behavior",
+    "Sanctioned writer protocol only; aggregate business invariants are not fully enforced by prototype rules",
+    "No new 100-record stress batch; previously tested separately"
+  ],
+  "testRange": {
+    "start": "2032-03-08",
+    "end": "2032-03-22"
+  },
+  "baselineCounts": {
+    "users": 5,
+    "classrooms": 129,
+    "exams": 22
+  },
+  "preexistingDocumentsPreserved": true,
+  "createdScheduleCount": 8,
+  "postCleanupProfileBaselinePreserved": true
+}

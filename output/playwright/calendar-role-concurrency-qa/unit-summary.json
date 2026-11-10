@@ -1,0 +1,7 @@
+{
+  "command": "npm test",
+  "passed": true,
+  "tests": 518,
+  "files": 31,
+  "note": "Observed existing Vitest suite; no runtime code changed"
+}

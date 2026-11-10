@@ -1,0 +1,106 @@
+{
+  "completed": true,
+  "cloudUsed": false,
+  "cases": [
+    {
+      "width": 1440,
+      "role": "anonymous",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 1440,
+      "role": "Admin",
+      "readAllowed": true,
+      "createImportEnabled": true,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 1440,
+      "role": "Superadmin",
+      "readAllowed": true,
+      "createImportEnabled": true,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 1440,
+      "role": "Staff",
+      "readAllowed": true,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 1440,
+      "role": "pending",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 1440,
+      "role": "inactive",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "anonymous",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "Admin",
+      "readAllowed": true,
+      "createImportEnabled": true,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "Superadmin",
+      "readAllowed": true,
+      "createImportEnabled": true,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "Staff",
+      "readAllowed": true,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "pending",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    },
+    {
+      "width": 390,
+      "role": "inactive",
+      "readAllowed": false,
+      "createImportEnabled": false,
+      "legacyLocalStorageClaimIgnored": true,
+      "editDeleteNotExposed": true
+    }
+  ],
+  "errors": [],
+  "outsideOrigins": [],
+  "firestoreWrites": 0,
+  "physicalDeviceTested": false
+}
