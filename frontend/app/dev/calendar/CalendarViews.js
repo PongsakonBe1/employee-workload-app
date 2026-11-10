@@ -1,7 +1,19 @@
 "use client";
 
 import { CalendarDays, ChevronRight } from "lucide-react";
-import { addCalendarDays, addCalendarMonths, calendarDates, calendarHolidays, calendarLabel, calendarWeekday, layoutCalendarDay, monthCalendarDates, timeMinutes } from "../../../lib/calendarView";
+import { CALENDAR_KINDS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarDates, calendarHolidays, calendarLabel, calendarRoomColor, calendarWeekday, layoutCalendarDay, monthCalendarDates, timeMinutes } from "../../../lib/calendarView";
+
+export function RoomLabels({ rooms }) {
+  return <span className="cal-room-labels" aria-label={`ห้อง ${rooms.join(" + ")}`}>
+    {rooms.map(room => <span className="cal-room-label" data-room-color={CALENDAR_ROOM_COLORS[room] || "shared"} key={room}>
+      <i aria-hidden="true" />{room}
+    </span>)}
+  </span>;
+}
+
+function eventColor(row, colorBy, selectedRoom) {
+  return colorBy === "room" ? calendarRoomColor(row.rooms, selectedRoom) : undefined;
+}
 
 export function HolidayLabels({ date, holidays, holidayOptions, onHoliday }) {
   return calendarHolidays(holidays, date, holidayOptions).map(item => <button
@@ -51,7 +63,7 @@ export function DayStrip({ range, selected, today, onSelect, holidays, holidayOp
     </button>)}
   </nav>;
 }
-export function CalendarTimeline({ rows, range, holidays, holidayOptions, onEvent, onHoliday, today }) {
+export function CalendarTimeline({ rows, range, holidays, holidayOptions, onEvent, onHoliday, today, colorBy = "room", selectedRoom = "all" }) {
   const days = calendarDates(range.start, range.end), hourSize = 74;
   const start = Math.min(8, ...rows.map(row => Math.floor(timeMinutes(row.start) / 60))), end = Math.max(20, ...rows.map(row => Math.ceil(timeMinutes(row.end) / 60)));
   const height = (end - start) * hourSize;
@@ -82,19 +94,19 @@ export function CalendarTimeline({ rows, range, holidays, holidayOptions, onEven
       {days.map(date => <div className="cal-timeline-day" key={date}>
         {layoutCalendarDay(rows.filter(row => row.date === date)).map(row => <button
           type="button" key={row.id}
-          className="cal-timed-event" data-kind={row.kind}
+          className="cal-timed-event" data-kind={row.kind} data-room-color={eventColor(row, colorBy, selectedRoom)}
           style={{ top: `${(timeMinutes(row.start) - start * 60) / 60 * hourSize}px`, height: `${Math.max(42, (timeMinutes(row.end) - timeMinutes(row.start)) / 60 * hourSize - 3)}px`, left: `calc(${row.lane / row.lanes * 100}% + 3px)`, width: `calc(${100 / row.lanes}% - 6px)` }} aria-label={`${row.title} ${calendarLabel(row.date)} ${row.start} ถึง ${row.end} ห้อง ${row.rooms.join(" + ")}`}
           onClick={() => onEvent(row)}
         >
+          <RoomLabels rooms={row.rooms} />
           <strong>{row.kind === "dl" ? "สอบ DL" : row.title}</strong>
           <span>{`${row.start}–${row.end}`}</span>
-          <small>{`ห้อง ${row.rooms.join(" + ")}`}</small>
         </button>)}
       </div>)}
     </div>
   </div>;
 }
-export function CalendarMonth({ anchor, selected, today, rows, holidays, holidayOptions, onDate, onEvent, onHoliday }) {
+export function CalendarMonth({ anchor, selected, today, rows, holidays, holidayOptions, onDate, onEvent, onHoliday, colorBy = "room", selectedRoom = "all" }) {
   return <section className="cal-month" aria-label={calendarLabel(anchor, { month: "long", year: "numeric" })}>
     <div className="cal-month-grid">
       {["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map(day => <div className="cal-weekday" key={day}>{day}</div>)}
@@ -107,7 +119,7 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
           <button
             type="button" className="cal-month-date"
             data-date={date}
-            aria-label={`${calendarLabel(date)} ${events.length} กิจกรรม${dayHolidays.length ? " มีวันหยุดหรือวันสำคัญ" : ""}`} aria-current={today === date ? "date" : undefined}
+            aria-label={`${calendarLabel(date)} ${events.length} กิจกรรม${events.length ? ` ห้อง ${[...new Set(events.flatMap(row => row.rooms))].join(", ")}` : ""}${dayHolidays.length ? " มีวันหยุดหรือวันสำคัญ" : ""}`} aria-current={today === date ? "date" : undefined}
             aria-pressed={date === selected} onClick={() => onDate(date)}
           >
             {Number(date.slice(-2))}
@@ -116,10 +128,11 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
             <HolidayLabels {...{ date, holidays, holidayOptions, onHoliday }} />
             {events.slice(0, 2).map(row => <button
               type="button" className="cal-month-event"
-              data-kind={row.kind} key={row.id}
+              data-kind={row.kind} data-room-color={eventColor(row, colorBy, selectedRoom)} key={row.id}
+              aria-label={`${CALENDAR_KINDS[row.kind]} ${row.title} ${row.start}–${row.end} ห้อง ${row.rooms.join(" + ")}`}
               onClick={() => onEvent(row)}
             >
-              <span>{row.start}</span>
+              <span className="cal-month-event-meta"><RoomLabels rooms={row.rooms} />{row.start}</span>
               <strong>{row.title}</strong>
             </button>)}
             {events.length > 2 && <button
@@ -130,7 +143,7 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
             </button>}
           </div>
           <span className="cal-month-dots" aria-hidden="true">
-            {[...new Set(events.map(row => row.kind))].map(kind => <i key={kind} data-kind={kind} />)}
+            {colorBy === "room" ? [...new Set(events.flatMap(row => row.rooms))].map(room => <i key={room} data-room-color={CALENDAR_ROOM_COLORS[room] || "shared"} />) : [...new Set(events.map(row => row.kind))].map(kind => <i key={kind} data-kind={kind} />)}
             {dayHolidays.length > 0 && <i data-kind="holiday" />}
           </span>
         </div>;
@@ -138,7 +151,7 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
     </div>
   </section>;
 }
-export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent, onHoliday, emptyText = "ไม่มีตารางตรงกับตัวกรอง" }) {
+export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent, onHoliday, colorBy = "room", selectedRoom = "all", emptyText = "ไม่มีตารางตรงกับตัวกรอง" }) {
   const days = calendarDates(range.start, range.end).filter(date => rows.some(row => row.date === date) || calendarHolidays(holidays, date, holidayOptions).length);
   if (!days.length) return <div className="cal-empty">
     <CalendarDays size={28} aria-hidden="true" />
@@ -151,7 +164,7 @@ export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent,
       <HolidayLabels {...{ date, holidays, holidayOptions, onHoliday }} />
       {rows.filter(row => row.date === date).map(row => <button
         type="button" className="cal-agenda-event"
-        data-kind={row.kind} key={row.id}
+        data-kind={row.kind} data-room-color={eventColor(row, colorBy, selectedRoom)} key={row.id}
         onClick={() => onEvent(row)}
       >
         <span className="cal-event-time">
@@ -161,7 +174,8 @@ export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent,
         <i aria-hidden="true" />
         <span className="cal-agenda-text">
           <strong>{row.title}</strong>
-          <small>{`ห้อง ${row.rooms.join(" + ")}${row.teacher ? ` · ${row.teacher}` : ""}`}</small>
+          <RoomLabels rooms={row.rooms} />
+          <small>{`${CALENDAR_KINDS[row.kind]}${row.teacher ? ` · ${row.teacher}` : ""}`}</small>
         </span>
         <ChevronRight size={16} aria-hidden="true" />
       </button>)}

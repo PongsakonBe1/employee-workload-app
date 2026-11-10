@@ -1,0 +1,8 @@
+{
+  "command": "npm test",
+  "passed": true,
+  "tests": 518,
+  "files": 31,
+  "calendarViewTests": 13,
+  "note": "Summary of the observed Vitest run; not raw reporter output"
+}

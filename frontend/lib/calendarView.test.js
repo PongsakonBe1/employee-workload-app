@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarHolidays, calendarRange, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
+import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarHolidays, calendarRange, calendarRoomColor, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
 const event = { id: "one", sourceId: "one", date: "2026-11-03", start: "09:00", end: "10:30", rooms: ["406"], title: "กิจกรรมตัวอย่าง", kind: "dl", participants: 75, proctors: ["fixture-a"], repeat: "none" };
 describe("calendar date-only and occurrence behavior", () => {
   it("rejects rollover dates and keeps Monday weeks across month/year boundaries", () => {
@@ -24,6 +24,37 @@ describe("calendar date-only and occurrence behavior", () => {
   });
   it("filters room IDs exactly and honors empty type selection and text search", () => {
     const base = { kinds: ["dl"], room: "406", query: "ตัวอย่าง" };expect(filterCalendar([event], base)).toHaveLength(1);expect(filterCalendar([event], { ...base, kinds: [] })).toHaveLength(0);expect(filterCalendar([event], { ...base, room: "40" })).toHaveLength(0);
+  });
+  it("filters dated exams by their declared semester and preserves unassigned legacy exams", () => {
+    const events = [event, { ...event, id: "blank", semester: " " }, { ...event, id: "matching", semester: "2/2569" }, { ...event, id: "other", semester: "1/2570" }];
+    const bounds = { start: event.date, end: event.date };
+    const rows = expandCalendar({ events, rules: [] }, bounds, "2/2569");
+    expect(rows.map(row => row.id)).toEqual(["one", "blank", "matching"]);
+    expect(expandCalendar({ events, rules: [] }, bounds, "all")).toHaveLength(4);
+    // The copy workflow filters already-expanded events, so it needs the same semantics.
+    expect(filterCalendar(events, { kinds: ["dl"], room: "all", query: "", semester: "2/2569" }).map(row => row.id)).toEqual(["one", "blank", "matching"]);
+  });
+  it("keeps real term boundaries inclusive without hiding future dates relative to today", () => {
+    const rule = { id: "term", title: "Synthetic class", weekday: 2, semester: "2/2569", validFrom: "2026-11-25", validTo: "2027-03-14", start: "08:00", end: "12:00", rooms: ["407"], kind: "classroom" };
+    const count = date => expandCalendar({ rules: [rule], events: [] }, { start: date, end: date }, "2/2569").length;
+    expect(count("2026-11-18")).toBe(0);expect(count("2026-11-25")).toBe(1);
+    expect(count("2026-12-02")).toBe(1);expect(count("2027-03-17")).toBe(0);
+    expect(expandCalendar({ rules: [{ ...rule, weekday: 6 }], events: [] }, { start: "2027-03-14", end: "2027-03-14" }, "2/2569")).toHaveLength(1);
+  });
+  it("includes a shared-room exam in either room filter without changing its room list", () => {
+    const shared = { ...event, rooms: ["406", "407"] };
+    const filters = { kinds: ["dl"], room: "406", query: "", semester: "all" };
+    expect(filterCalendar([shared], filters)).toEqual([shared]);
+    expect(filterCalendar([shared], { ...filters, room: "407" })).toEqual([shared]);
+    expect(filterCalendar([shared], { ...filters, room: "401" })).toEqual([]);
+    expect(shared.rooms).toEqual(["406", "407"]);
+  });
+  it("assigns stable room tones and shows a neutral shared surface unless a room is selected", () => {
+    expect(["401", "402", "406", "407"].map(room => calendarRoomColor([room]))).toEqual(["blue", "amber", "purple", "green"]);
+    expect(calendarRoomColor(["406", "407"])).toBe("shared");
+    expect(calendarRoomColor(["406", "407"], "407")).toBe("green");
+    expect(calendarRoomColor(["406", "407"], "401")).toBe("shared");
+    expect(calendarRoomColor([])).toBe("shared");expect(calendarRoomColor(["unknown"])).toBe("shared");
   });
   it("lays out overlapping chains into lanes and resets width at a touching boundary", () => {
     const rows = layoutCalendarDay([event, { ...event, id: "two", start: "10:00", end: "11:00" }, { ...event, id: "three", start: "11:00", end: "12:00" }]);expect(rows.map(x => [x.lane, x.lanes])).toEqual([[0, 2], [1, 2], [0, 1]]);

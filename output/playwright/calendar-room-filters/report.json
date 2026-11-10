@@ -1,0 +1,130 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "width": 375,
+      "theme": "light",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 375,
+      "theme": "dark",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": false
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": true
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "roomFilter": true,
+      "sharedRooms": true,
+      "fourViews": true,
+      "cancelDraft": true,
+      "minimumHitTarget44": true,
+      "noHorizontalOverflow": true,
+      "selectedPaletteContrastAA": true,
+      "forcedColors": true,
+      "reducedMotion": true,
+      "semesterCreateFilter": true
+    }
+  ],
+  "errors": [],
+  "unexpectedOrigins": [],
+  "limitations": [
+    "Synthetic preview only; no cloud sign-in or writes",
+    "Chromium emulation; physical Safari/iPhone UAT pending"
+  ],
+  "emulator": {
+    "syntheticOnly": true,
+    "queriesBefore": 4,
+    "queriesAfter": 4,
+    "additionalFirestoreRequests": 0,
+    "firestoreWrites": 0
+  }
+}

@@ -1,6 +1,16 @@
 // Date-only UI logic; it never reads a service, account, or Firestore collection.
 export const CALENDAR_ROOMS = ["401", "402", "406", "407"];
 export const CALENDAR_KINDS = { classroom: "ตารางเรียน", dl: "Digital Literacy", exam: "สอบรายวิชา" };
+// Stable room identities across views; colors resolve through light/dark UI tokens.
+export const CALENDAR_ROOM_COLORS = { "401": "blue", "402": "amber", "406": "purple", "407": "green" };
+export function calendarRoomColor(rooms, selectedRoom = "all") {
+  if (selectedRoom !== "all" && rooms.includes(selectedRoom)) return CALENDAR_ROOM_COLORS[selectedRoom] || "shared";
+  return rooms.length === 1 ? CALENDAR_ROOM_COLORS[rooms[0]] || "shared" : "shared";
+}
+export function calendarSemesterMatches(row, semester = "all") {
+  // Legacy dated events can have no semester. Keep them visible instead of guessing a term.
+  return semester === "all" || !row.semester?.trim() || row.semester === semester;
+}
 const iso = value => value.toISOString().slice(0, 10);
 export function validCalendarDate(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value + "T12:00:00Z")) && iso(new Date(value + "T12:00:00Z")) === value;
@@ -33,7 +43,7 @@ export function calendarToday(now = new Date()) {
 export const calendarLabel = (value, options = { dateStyle: "long" }) => new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", ...options }).format(utc(value));
 export function timeMinutes(value) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value || "")) return NaN;return Number(value.slice(0, 2)) * 60 + Number(value.slice(3)); }
 export function expandCalendar(data, range, semester = "all") {
-  const rows = data.events.filter(item => item.date >= range.start && item.date <= range.end).map(item => ({ ...item, sourceId: item.id, recurring: false }));
+  const rows = data.events.filter(item => item.date >= range.start && item.date <= range.end && calendarSemesterMatches(item, semester)).map(item => ({ ...item, sourceId: item.id, recurring: false }));
   for (const date of calendarDates(range.start, range.end)) for (const rule of data.rules) {
     if (date >= rule.validFrom && date <= rule.validTo && calendarWeekday(date) === rule.weekday && (semester === "all" || rule.semester === semester)) rows.push({ ...rule, id: `${rule.id}:${date}`, sourceId: rule.id, date, recurring: true });
   }
@@ -41,7 +51,7 @@ export function expandCalendar(data, range, semester = "all") {
 }
 export function filterCalendar(rows, filters) {
   const term = filters.query.trim().toLocaleLowerCase("th-TH");
-  return rows.filter(row => filters.kinds.includes(row.kind) && (filters.room === "all" || row.rooms.includes(filters.room)) && (!term || `${row.title} ${row.teacher || ""} ${row.rooms.join(" ")}`.toLocaleLowerCase("th-TH").includes(term)));
+  return rows.filter(row => calendarSemesterMatches(row, filters.semester) && filters.kinds.includes(row.kind) && (filters.room === "all" || row.rooms.includes(filters.room)) && (!term || `${row.title} ${row.teacher || ""} ${row.rooms.join(" ")}`.toLocaleLowerCase("th-TH").includes(term)));
 }
 export function calendarHolidays(data, date, options = { public: true, observance: false }) {
   return data.events.filter(item => item.start <= date && date < item.endExclusive && options[item.kind]);

@@ -1,0 +1,52 @@
+# ตัวกรองและสีประจำห้องในปฏิทิน Development
+
+วันที่ 10 พฤศจิกายน 2569 · Branch `codex/calendar-room-filters`
+
+ผู้ใช้ยืนยันว่ากรณีวันเริ่มในภาพเกิดจากการดูคนละวัน จึงคงการแสดงตารางอนาคตและช่วงวันเริ่ม–สิ้นสุดเดิมไว้ รอบนี้ปรับเฉพาะสี ตัวกรอง และข้อผิดพลาดการกรองภาคเรียนที่ตรวจพบ
+
+## พฤติกรรมที่เปลี่ยน
+
+- มีปุ่มกรองทุกห้อง / 401 / 402 / 406 / 407 บนพื้นที่ปฏิทิน ใช้งานได้เมื่อ sidebar ถูกซ่อนและบนมือถือ ปุ่มกับ dropdown ห้องเดิมใช้ state เดียวกัน
+- ค่าเริ่มต้นใช้สีตามห้อง: 401 ฟ้า, 402 ส้ม, 406 ม่วง, 407 เขียว จาก semantic tokens ของ UI เดิมที่ปรับตาม light/dark ได้
+- เลือก “สีตาม → ประเภทกิจกรรม” เพื่อกลับไปใช้สีตารางเรียน / DL / สอบรายวิชาแบบเดิมได้
+- กิจกรรมที่ใช้หลายห้องแสดงป้ายเลขห้องครบทุกห้อง พื้นการ์ดเป็นกลางเมื่อดูทุกห้อง และใช้สีห้องที่เลือกเมื่อกรอง ป้ายห้องยังคงครบ เช่น 406 + 407 ไม่มีการแยกหรือแก้เอกสารในฐานข้อมูล
+- สีและป้ายใช้ร่วมกันในมุมมองวัน สัปดาห์ เดือน รายการ และรายละเอียด เดือนบนมือถือยังมี agenda ของวันที่เลือกและชื่อห้องใน accessible label ของวัน
+- ภาคเรียนกรอง dated events ที่ระบุภาคเรียนด้วย จากเดิมที่ใช้กับ weekly rules เท่านั้น รายการสอบเก่าที่ไม่ระบุภาคเรียนยังแสดงในทุกภาคเรียน พร้อมข้อความอธิบายที่ตัวกรอง ไม่คาดเดาภาคเรียนจากวันที่
+- รายการภาคเรียนใน dropdown รวมค่าจากทั้งตารางเรียนและรอบสอบ การยกเลิก dialog ไม่เปลี่ยนตัวกรองที่ใช้อยู่ และปุ่มล้างตัวกรองคืนสีตามห้องด้วย
+
+ชุดสีนี้เป็นการออกแบบสำหรับห้องของระบบ ตามหลัก [Apple HIG: Color](https://developer.apple.com/design/human-interface-guidelines/color) ที่ใช้สีอย่างสม่ำเสมอและแสดงข้อมูลด้วยวิธีอื่นร่วมด้วย ไม่ได้หมายถึงสถานะเปิด–ปิดห้องจริง ปฏิทินบอกห้องที่มีตารางใช้งาน ส่วนสถานะห้องจริงยังอยู่ในระบบทรัพยากร
+
+## ขอบเขตข้อมูลและการย้อนกลับ
+
+ตัวกรองและโหมดสีประมวลผลข้อมูลในหน่วยความจำ ไม่เปลี่ยนช่วง query ที่ใช้โหลดข้อมูล ไม่มีการเปลี่ยน Auth, Firestore rules, schema, import payload หรือข้อมูล cloud การตรวจ conflict ก่อนบันทึกยังดูทุกรายการโดยไม่ใช้ตัวกรองหน้าจอ
+
+ย้อนกลับได้ด้วยการ revert commit ของเฟสนี้บน branch พัฒนา ไม่ต้อง migrate หรือแก้เอกสารใดในฐานข้อมูล ไม่มีการ push, merge หรือ deploy production ในเฟสนี้
+
+## การตรวจสอบ
+
+- `npm test` ผ่าน **518 tests / 31 files** รวม 13 tests ของ `calendarView.test.js`: ภาคเรียนของ dated exams, รายการไม่ระบุภาคเรียน, ห้องร่วม, ชุดสี และวันก่อน/ตรง/หลังช่วงภาคเรียน
+- Targeted ESLint ของ `workspace.js`, `CalendarViews.js`, `calendarView.js` ผ่าน; Node syntax check ของ browser verifier และ `git diff --check` ผ่าน
+- `verify-calendar-room-filters.cjs`: ผ่าน **8 กรณี** ที่ความกว้าง 375 / 390 / 768 / 1440 px × light/dark ตรวจสี่มุมมอง, การยกเลิกตัวกรอง, เลขห้องร่วม, ปุ่มอย่างน้อย 44×44 px, ไม่ล้นหน้าจอ, สีข้อความปุ่มห้องที่เลือกมี contrast อย่างน้อย 4.5:1, forced colors และ reduced motion
+- ผ่านการเพิ่มรอบสอบต่างภาคเรียนด้วยข้อมูลสังเคราะห์ใน preview แล้วกรองซ่อน/แสดง รวม “ทุกภาคเรียน” และล้างตัวกรอง
+- ทดสอบกับ Firebase Emulator ที่มีข้อมูลสังเคราะห์เดิม: กดกรองห้อง/ประเภท/ภาคเรียนและสลับสี ไม่เพิ่มคำขออ่าน Firestore และไม่มี Firestore writes ดูตัวเลขใน `output/playwright/calendar-room-filters/report.json`
+- Regression เดิม `verify-calendar-glass.cjs` ผ่าน **11 กลุ่ม** รวม create/edit/delete/undo/copy, การตรวจ conflict, เปิดนำเข้า, สิทธิ์ Staff, การนำทาง และฟอร์มบน touch widths ทั้งสี่ ค่า assert สีตามประเภทเลือกโหมดนั้นอย่างชัดเจนแล้ว
+- Compatibility build ผ่าน ใช้ configuration สังเคราะห์และ output แยกใน `frontend/.ui-build-check` ไม่แตะ production export
+- Cloudflare smoke ของ `/dev/calendar` แบบไม่เข้าสู่ระบบผ่าน HTTP 200 เห็นปุ่มห้อง 5 ปุ่มและค่าเริ่มต้นสีตามห้อง ไม่มี page errors
+
+คำสั่งทำซ้ำบนเครื่องพัฒนา (ใช้ Playwright ที่ติดตั้งอยู่แล้ว):
+
+```powershell
+npm test
+node node_modules/eslint/bin/eslint.js -c scripts/ui-eslint.config.mjs frontend/app/dev/calendar/workspace.js frontend/app/dev/calendar/CalendarViews.js frontend/lib/calendarView.js
+node scripts/verify-calendar-room-filters.cjs $playwrightModule $chromeExecutable http://127.0.0.1:4310 --emulator
+node scripts/verify-calendar-glass.cjs $playwrightModule $chromeExecutable http://127.0.0.1:4310 calendar-room-filters
+node scripts/check-ui-build.mjs calendar-room-filters
+```
+
+`$playwrightModule` คือ path ของโมดูล Playwright ที่ติดตั้งอยู่ และ `$chromeExecutable` คือ path ของ Chrome ต้องมี dev server ที่พอร์ต 4310 และ Emulator สังเคราะห์เดิมที่พอร์ต 19099/18080 สำหรับ `--emulator` verifier นี้ไม่ seed/reset ข้อมูล
+
+## ข้อจำกัดและงานถัดไป
+
+- Browser automation เป็น Chromium ที่จำลองขนาดจอ ยังต้องให้ผู้ใช้ตรวจ Safari/iPhone และอุปกรณ์จริง โดยเฉพาะสี ป้ายห้อง และการกดกรองบนลิงก์ staging เดิม
+- รอบนี้ไม่เข้าสู่บัญชี Google หรืออ่าน/เขียน cloud เพิ่ม การยืนยัน PDF import และการสลับวัน/เดือนบน staging จากผู้ใช้ในเฟสก่อนยังคงเดิม
+- UAT นำเข้ารูปตาราง DL บน cloud และการยืนยันข้อมูลหลัง hard reload/login ใหม่ยังเป็นงานที่ต้องตรวจต่อ ไม่ถือว่าผ่านจากการทดสอบ UI เฟสนี้

@@ -9,19 +9,19 @@ import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassCont
 import { GlassSurface } from "../../../components/ui/GlassSurface";
 import { MenuPopover } from "../../../components/ui/MenuPopover";
 import { Dialog } from "../../../components/ui/Dialog";
-import { CALENDAR_KINDS, CALENDAR_ROOMS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
+import { CALENDAR_KINDS, CALENDAR_ROOMS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
 import CalendarEntryForm from "./CalendarEntryForm";
 import ClassroomImport from "./ClassroomImport";
 import DlImageImport from "./DlImageImport";
 import { addDlPreviewPerson, planDlImport } from "../../../lib/dlImageImport";
 import { planCalendarDocumentChanges } from "../../../lib/calendarDataAdapter";
 import { legacyCalendarCache } from "./adapterFixtures";
-import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar } from "./CalendarViews";
+import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar, RoomLabels } from "./CalendarViews";
 import { calendarPeople, initialCalendar } from "./fixtures";
 import holidays from "./holidays.json";
 import { hasPreviewState, usePreviewState } from "../previewState";
 
-const defaults = { kinds: Object.keys(CALENDAR_KINDS), room: "all", semester: "2/2569", query: "", public: true, observance: false };
+const defaults = { kinds: Object.keys(CALENDAR_KINDS), room: "all", semester: "2/2569", query: "", public: true, observance: false, colorBy: "room" };
 const newEntry = (date, kind = "classroom") => ({ title: kind === "dl" ? "สอบ Digital Literacy" : "", kind, date, start: "09:00", end: "10:30", repeat: kind === "classroom" ? "weekly" : "none", validTo: addCalendarMonths(date, 3), rooms: ["401"], semester: "2/2569", teacher: "", participants: "75", proctors: [] });
 
 function FilterFields({ filters, onChange, id, semesters = [] }) {
@@ -54,12 +54,13 @@ function FilterFields({ filters, onChange, id, semesters = [] }) {
       <span>ภาคเรียน</span>
       <select
         className="apple-input" id={`${id}-semester`}
-        value={filters.semester} onChange={event => onChange({ ...filters, semester: event.target.value })}
+        value={filters.semester} aria-describedby={`${id}-semester-note`} onChange={event => onChange({ ...filters, semester: event.target.value })}
       >
         <option value="all">ทุกภาคเรียน</option>
         {[...new Set(["2/2569","1/2570",...semesters,filters.semester])].filter(value=>value&&value!=="all").map(value=><option key={value}>{value}</option>)}
       </select>
     </label>
+    <p className="cal-filter-note" id={`${id}-semester-note`}>รายการสอบที่ไม่ระบุภาคเรียนจะแสดงในทุกภาคเรียน</p>
     <fieldset>
       <legend>ปฏิทินเพิ่มเติม</legend>
       <label className="cal-filter-check">
@@ -120,7 +121,9 @@ export default function CalendarPreview({ externalCalendar = null }) {
   const onRangeChange = externalCalendar?.onRangeChange;
   useEffect(() => { onRangeChange?.(renderRange.start, renderRange.end); }, [onRangeChange, renderRange.start, renderRange.end]);
   const rows = filterCalendar(expandCalendar(data, renderRange, filters.semester), filters);
-  const shared = { rows, range, holidays, holidayOptions: filters, onEvent: row => { setSelected(row);setDialog("detail"); }, onHoliday: item => { setSelectedHoliday(item);setDialog("holiday"); } };
+  const colorBy = filters.colorBy || "room";
+  const semesters = [...data.rules, ...data.events].map(row => row.semester);
+  const shared = { rows, range, holidays, holidayOptions: filters, colorBy, selectedRoom: filters.room, onEvent: row => { setSelected(row);setDialog("detail"); }, onHoliday: item => { setSelectedHoliday(item);setDialog("holiday"); } };
   const monthEvents = rows.filter(row => row.date === date), copyRows = filterCalendar(expandCalendar({ events: data.events, rules: [] }, week), filters);
   const coverage = holidays.coverageYears.includes(date.slice(0, 4));
   function selectDate(value) { setDate(value);setMiniMonth(value); }
@@ -269,7 +272,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
           />
           <FilterFields
             filters={filters} onChange={setFilters}
-            id="cal-side" semesters={data.rules.map(rule=>rule.semester)}
+            id="cal-side" semesters={semesters}
           />
           <button
             type="button" className="cal-text-button"
@@ -355,6 +358,29 @@ export default function CalendarPreview({ externalCalendar = null }) {
             ตัวกรอง
           </button>
         </div>
+        <div className="cal-room-toolbar">
+          <fieldset className="cal-room-filter">
+            <legend>กรองห้องที่มีคาบ</legend>
+            <div className="cal-room-chips">
+              {["all", ...CALENDAR_ROOMS].map(room => <button
+                type="button" key={room} aria-pressed={filters.room === room}
+                aria-label={room === "all" ? "ทุกห้อง" : `ห้อง ${room}`}
+                data-room-color={room === "all" ? undefined : CALENDAR_ROOM_COLORS[room]}
+                onClick={() => setFilters({ ...filters, room })}
+              >
+                {room !== "all" && <i aria-hidden="true" />}
+                {room === "all" ? "ทุกห้อง" : room}
+              </button>)}
+            </div>
+          </fieldset>
+          <label className="cal-color-choice" htmlFor="cal-color-by">
+            <span>สีตาม</span>
+            <select id="cal-color-by" className="apple-input" value={colorBy} onChange={event => setFilters({ ...filters, colorBy: event.target.value })}>
+              <option value="room">ห้อง</option>
+              <option value="kind">ประเภทกิจกรรม</option>
+            </select>
+          </label>
+        </div>
         {!coverage && (filters.public || filters.observance) && <p className="cal-coverage-note">ไม่มีชุดข้อมูลวันหยุดของปีนี้ใน preview ไม่ได้หมายความว่าปีนี้ไม่มีวันหยุด</p>}
         {mode === "day" && <DayStrip
           range={week} selected={date}
@@ -377,7 +403,9 @@ export default function CalendarPreview({ externalCalendar = null }) {
           </> : mode === "agenda" ? <CalendarAgenda {...shared} /> : <CalendarTimeline {...shared} today={today} />}
         </div>
         <div className="cal-legend" aria-label="คำอธิบายสี">
-          {Object.entries(CALENDAR_KINDS).map(([kind, label]) => <span key={kind} data-kind={kind}>
+          {colorBy === "room" ? CALENDAR_ROOMS.map(room => <span key={room} data-room-color={CALENDAR_ROOM_COLORS[room]}>
+            <i aria-hidden="true" />{`ห้อง ${room}`}
+          </span>) : Object.entries(CALENDAR_KINDS).map(([kind, label]) => <span key={kind} data-kind={kind}>
             <i aria-hidden="true" />
             {label}
           </span>)}
@@ -478,7 +506,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
         </label>
         <FilterFields
           filters={filterDraft} onChange={setFilterDraft}
-          id="cal-dialog" semesters={data.rules.map(rule=>rule.semester)}
+          id="cal-dialog" semesters={semesters}
         />
         <div className="cal-dialog-actions">
           <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
@@ -508,7 +536,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
           </div>
           <div>
             <dt>ห้อง</dt>
-            <dd>{selected.rooms.join(" + ")}</dd>
+            <dd><RoomLabels rooms={selected.rooms} /></dd>
           </div>
           {selected.kind === "dl" ? <>
             <div>
