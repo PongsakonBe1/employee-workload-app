@@ -40,9 +40,15 @@ export function createCalendarStagingClient(config) {
       session++;
       reader.clear();
       closing = (async () => {
-        await signOut(auth);
-        await terminate(db);
-        await deleteApp(app);
+        try {
+          await signOut(auth);
+        } finally {
+          try {
+            await terminate(db);
+          } finally {
+            await deleteApp(app);
+          }
+        }
       })();
       return closing;
     }

@@ -7,7 +7,7 @@ const {
   } = require(process.argv[2]),
   origin = process.argv[4] || 'http://127.0.0.1:4310';
 const publicPreview = !origin.includes('127.0.0.1'),
-  out = path.resolve('output/playwright/calendar-emulator-readonly', publicPreview ? 'public' : 'local');
+  out = path.resolve(process.argv[5] === 'session' ? 'output/playwright/calendar-staging-readonly/session-browser' : 'output/playwright/calendar-emulator-readonly', publicPreview ? 'public' : 'local');
 fs.mkdirSync(out, {
   recursive: true
 });
@@ -18,15 +18,24 @@ const report = {
   externalOrigins: [],
   firestoreWriteRPCs: [],
   legacyLoginWrites: [],
+  cacheMetrics: [],
+  anonymousRedirects: [],
   physicalIOS: false
 };
 async function main() {
+  const progress = step => {
+    fs.writeFileSync(path.join(out, 'progress.json'), JSON.stringify({
+      step,
+      completedChecks: report.checks.length
+    }));
+  };
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.argv[3]
   });
   try {
     for (const width of publicPreview ? [390] : [1440, 390]) {
+      progress('calendar-' + width);
       const ctx = await browser.newContext({
         viewport: {
           width,
@@ -51,6 +60,10 @@ async function main() {
         return r.abort();
       });
       const p = await ctx.newPage();
+      // Install before the reader captures Date.now; later clock changes must reach its TTL clock.
+      await p.clock.install({
+        time: new Date()
+      });
       p.on('pageerror', e => report.errors.push(e.message));
       await p.goto(origin + '/dev/calendar-readonly', {
         timeout: 90000
@@ -60,6 +73,15 @@ async function main() {
           name: 'เชื่อม Emulator อ่านอย่างเดียว'
         }),
         dialog = p.locator('dialog.cal-dialog[open]');
+      const heldRequests = new Set();
+      const blockReads = () => ctx.route('http://127.0.0.1:18080/**', request => {
+        heldRequests.add(request);
+      });
+      const resumeReads = async () => {
+        await ctx.unroute('http://127.0.0.1:18080/**');
+        await Promise.all([...heldRequests].map(request => request.abort().catch(() => {})));
+        heldRequests.clear();
+      };
       assert.ok(await p.getByRole('button', {
         name: 'นำเข้าตาราง',
         exact: true
@@ -150,6 +172,32 @@ async function main() {
       await p.screenshot({
         path: path.join(out, `readonly-${width}.png`)
       });
+      const beforeRefresh = Number(await source.locator('[data-read-queries]').getAttribute('data-read-queries'));
+      await source.getByRole('button', {
+        name: 'โหลดข้อมูลใหม่',
+        exact: true
+      }).click();
+      await loaded();
+      const afterRefresh = Number(await source.locator('[data-read-queries]').getAttribute('data-read-queries'));
+      assert.equal(afterRefresh, beforeRefresh + 4);
+      assert.equal(await p.locator('.cal-agenda-event[data-kind=dl]').count(), 3);
+      await p.clock.setFixedTime(new Date((await p.evaluate(() => Date.now())) + 120001));
+      await view('วัน');
+      await loaded();
+      const afterTtl = Number(await source.locator('[data-read-queries]').getAttribute('data-read-queries'));
+      assert.equal(afterTtl, afterRefresh + 4);
+      await view('รายการ');
+      await loaded();
+      assert.equal(Number(await source.locator('[data-read-queries]').getAttribute('data-read-queries')), afterTtl);
+      report.cacheMetrics.push({
+        width,
+        initial: 4,
+        afterViewChanges: beforeRefresh,
+        afterRefresh,
+        afterTtl,
+        repeatedViewAddedQueries: 0
+      });
+      progress('cache-confirmed-' + width);
       await p.locator('.cal-agenda-event[data-kind=dl]').first().click();
       await p.keyboard.press('Escape');
       await source.getByRole('button', {
@@ -188,11 +236,36 @@ async function main() {
       assert.equal(await p.locator('.cal-agenda-event[data-kind=dl]').count(), 3);
       assert.equal(await source.locator('[data-read-queries]').getAttribute('data-read-queries'), '4');
       report.checks.push({
-        name: `${width}px: real Emulator Auth/query/adapter/details, all edits disabled, bounded month cache reuse, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass`,
+        name: `${width}px: real Emulator Auth/query/adapter/details, edits disabled, month cache reuse, explicit refresh, TTL revalidation, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass`,
         passed: true
       });
       if (width === 1440) {
-        await ctx.route('http://127.0.0.1:18080/**', r => r.abort());
+        await blockReads();
+        await source.getByRole('button', {
+          name: 'โหลดข้อมูลใหม่',
+          exact: true
+        }).click();
+        await source.getByRole('status').filter({
+          hasText: 'กำลังอ่าน'
+        }).waitFor();
+        await source.getByRole('button', {
+          name: 'ออกจากระบบจำลอง',
+          exact: true
+        }).click();
+        await source.getByText('ยังไม่เข้าสู่ระบบจำลอง', {
+          exact: true
+        }).waitFor();
+        assert.equal(await p.locator('.cal-agenda-event').count(), 0);
+        await resumeReads();
+        await login('directory-b');
+        await loaded();
+        assert.equal(await p.locator('.cal-agenda-event[data-kind=dl]').count(), 3);
+        assert.equal(await source.locator('[data-read-queries]').getAttribute('data-read-queries'), '4');
+        report.checks.push({
+          name: 'logout during a blocked read clears the UI and the next login loads a fresh session',
+          passed: true
+        });
+        await blockReads();
         await source.getByRole('button', {
           name: 'โหลดข้อมูลใหม่',
           exact: true
@@ -203,7 +276,7 @@ async function main() {
           timeout: 15000
         });
         assert.equal(await p.locator('.cal-agenda-event').count(), 0);
-        await ctx.unroute('http://127.0.0.1:18080/**');
+        await resumeReads();
         await login('directory-b');
         await loaded();
         assert.equal(await p.locator('.cal-agenda-event[data-kind=dl]').count(), 3);
@@ -222,7 +295,9 @@ async function main() {
       }));
       assert.ok(!storage.includes('directory-'));
       assert.ok(!storage.includes('Synthetic-fixture-only'));
+      progress('closing-calendar-' + width);
       await ctx.close();
+      progress('closed-calendar-' + width);
     }
     if (!publicPreview) {
       const routes = [];
@@ -237,31 +312,50 @@ async function main() {
         }
       }
       walk(path.resolve('frontend/app'));
-      const guards = await browser.newContext({
-        serviceWorkers: 'block'
-      });
-      await guards.route('**/*', r => new URL(r.request().url()).origin === origin ? r.continue() : r.abort());
-      const page = await guards.newPage();
       for (const route of routes) {
-        await page.goto(origin + route, {
-          timeout: 90000
+        progress('anonymous-entry-' + route);
+        const guards = await browser.newContext({
+          serviceWorkers: 'block'
         });
-        await page.waitForURL('**/login', {
-          timeout: 10000
-        });
+        await guards.route('**/*', r => new URL(r.request().url()).origin === origin ? r.continue() : r.abort());
+        // Isolate storage and pending authentication initialization for each cold entry.
+        const page = await guards.newPage();
+        page.on('pageerror', error => report.errors.push(error.message));
+        try {
+          await page.goto(origin + route, {
+            timeout: 90000
+          });
+          await page.waitForURL('**/login', {
+            timeout: 10000,
+            waitUntil: 'domcontentloaded'
+          });
+          report.anonymousRedirects.push({
+            route,
+            passed: true
+          });
+        } catch {
+          report.anonymousRedirects.push({
+            route,
+            passed: false,
+            actualPath: new URL(page.url()).pathname
+          });
+          throw new Error('Anonymous route did not redirect: ' + route);
+        } finally {
+          await guards.close();
+        }
       }
       report.checks.push({
         name: 'legacy anonymous routes still redirect to login after development Auth isolation',
         routes: routes.length,
         passed: true
       });
-      await guards.close();
     }
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report.externalOrigins, []);
     assert.deepEqual(report.firestoreWriteRPCs, []);
     assert.deepEqual(report.legacyLoginWrites, []);
     report.completed = true;
+    progress('complete');
   } finally {
     await browser.close();
     fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2));

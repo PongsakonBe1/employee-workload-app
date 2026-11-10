@@ -98,3 +98,45 @@ node scripts/check-ui-build.mjs calendar-staging-readonly
 5. ผู้ใช้ยืนยันเพิ่มเติมว่า **“ปรับโหมดก็อ่านได้ปกติ”** บันทึกว่าสลับโหมดการแสดงผลแล้วอ่านข้อมูลได้ตามที่ผู้ใช้ตรวจ โดยไม่ได้ระบุว่าทดสอบทุกโหมดหรือทุกช่วงวันที่ จึงยังไม่ถือว่ายืนยัน cache/logout หรือ browser coverage ครบแล้ว
 
 ไม่มีการเปลี่ยน runtime code ในขั้นผูกสิทธิ์/บันทึก UAT นี้ ตรวจ JSON syntax และ diff ของรายงานโดยตรง ไม่รัน Unit/build ซ้ำเพราะไม่มีพฤติกรรมโปรแกรมเปลี่ยน ขั้นต่อไปคือทบทวน range/cache/logout และกรณีสิทธิ์บน cloud ที่ยังไม่ครบ ก่อนเสนอเฟส writer/import ให้ผู้ใช้อนุมัติแยก ไม่มีการเปิดใช้ production หรือเปิด client writes จากผล UAT นี้
+
+## ตรวจ cache/session และแก้ cleanup — 10 พฤศจิกายน 2569
+
+ผู้ใช้สั่งให้ดำเนินการตรวจ cache/session ต่อในเฟสอ่านอย่างเดียว ใช้ branch เดิมและข้อมูลสังเคราะห์ ไม่เปลี่ยน rules, cloud data, Google Auth config หรือเปิด client writes
+
+### ข้อผิดพลาดที่แก้
+
+`close()` ของ staging/Emulator เดิมเรียก sign-out → terminate Firestore → delete named app ต่อกัน เมื่อขั้นก่อน reject จะข้าม cleanup ที่เหลือ พบจาก regression tests ที่ fail ก่อนแก้ 2 ข้อ แก้ด้วย `try/finally` ให้พยายาม cleanup ทุกขั้น แม้ขั้นก่อนล้มเหลว โดยยังปฏิเสธ reads/login ทันทีที่เริ่ม close และคืน promise เดียวเมื่อเรียก close ซ้ำ
+
+เพิ่ม tests สำหรับ late popup หลังปิด session, คำขอเดือนตอบกลับหลัง logout/refresh, cache ของ client คนละตัว, TTL boundary/บัญชีถูก deactivate, partial month failure/retry และ cleanup failure ทั้ง staging/Emulator ไม่มีการเปลี่ยนนโยบาย TTL หรือบังคับให้โหลดทั้งประวัติ
+
+### ผลตรวจจริง
+
+- Full Unit **482/482 ผ่าน** รวม regression เพิ่ม 12 ข้อจากชุดก่อนหน้า; targeted ESLint, script syntax, JSON syntax, diff check และ isolated compatibility build ผ่าน
+- SDK/Rules/SIT บน Emulator **3 กลุ่มผ่าน / 15 writes ถูกปฏิเสธ** ใช้ query transport เดียวกับ staging
+- E2E Chrome **5 กลุ่มผ่าน**: PC 1440/mobile 390, cache/refresh/TTL, logout ระหว่างคำขอค้าง, timeout → ล้าง UI → login ใหม่ และ anonymous redirects **21/21** ไม่มี page errors, origin ภายนอก หรือ Firestore write RPC
+- Edge ผ่าน Cloudflare เปิด Google popup และปิดกลับมาได้ **2 viewports** ใช้ context ที่ไม่ได้ล็อกอิน ไม่กรอก credentials หรือบันทึก OAuth URL/token
+- จัดรูปแบบ test/harness 3 ไฟล์ด้วย Babel ที่ติดตั้งอยู่และตรวจ AST ว่าไม่เปลี่ยน
+
+จำนวน transport requests ที่วัดใน E2E ทั้งสองขนาด:
+
+| ขั้น | จำนวนสะสม |
+|---|---:|
+| อ่านเดือนเริ่มต้น | 4 |
+| เปลี่ยน day/week/agenda และ month grid ที่ครอบคลุมเดือนข้างเคียง | 6 |
+| explicit refresh กลับมาอ่านเดือนปัจจุบัน | 10 |
+| เลื่อน browser clock เกิน TTL แล้วเปลี่ยนมุมมอง | 14 |
+| เปลี่ยนมุมมองซ้ำในเดือนเดิมหลังจากนั้น | 14 |
+
+จำนวนเหล่านี้ไม่ใช่ billed reads; TTL ยังเป็น 2 นาที และข้อมูลสิทธิ์/ตารางที่อยู่ใน cache ไม่รับประกันความสดตลอดช่วง TTL
+
+### การตรวจ harness
+
+รอบเริ่มต้นผ่าน flow ปฏิทิน แต่ anonymous routing ค้างเมื่อใช้หน้า/context เดิมวนหลายเส้นทาง เปิด `/admin` แยกแล้ว redirect ปกติ จึงเปลี่ยนเป็น cold entry แยก context ต่อ route และตรวจผ่านครบ 21 เส้นทางโดยไม่ได้แก้ guard ของ production ไม่สรุปสาเหตุเชิงลึกของ browser/navigation จากอาการนี้เพียงอย่างเดียว
+
+ทดสอบ TTL โดยติดตั้ง clock ก่อนสร้าง reader เพื่อให้ตัวอ่านที่เก็บ `Date.now` ไว้ใช้ clock จำลองจริง ส่วนการทดสอบ timeout พักคำขอไว้แล้วปล่อยหลัง logout แยกจาก network error ที่อาจ reject ทันที หลักฐานรอบแรกอยู่ใน `session-initial-browser-report.json`; ผลสุดท้ายอยู่ใน `session-browser/local/report.json` และ `session-unit-full.json` ไม่เขียนทับหลักฐาน UAT เฟส Emulator เดิม
+
+### ขอบเขตที่ยังไม่อ้างว่าผ่าน
+
+การทดสอบ session client ใช้ mocked SDK boundaries และ E2E อ่านจริงผ่าน Emulator ส่วน Google popup เป็น smoke test ที่ไม่เข้าสู่บัญชีจริง จึงยังไม่ใช่ authenticated cloud role-denial/session-edge-case matrix หรือ UAT ครบทุก browser บนอุปกรณ์จริง การอ่าน staging และสลับมุมมองด้วยบัญชีจริงผ่านเฉพาะที่ผู้ใช้ยืนยันไว้ก่อนหน้า ไม่มีการอ่าน credentials หรือใช้ session ของผู้ใช้ทำ automation
+
+ขั้นถัดไปที่เสนอคือจัดแผน writer/import บน staging แยก: เลือกใช้ draft ที่ตรวจแล้ว, ตรวจสิทธิ์/ข้อมูล/การชนซ้ำก่อนบันทึก, วาง idempotency/ขอบเขต batch และผลลัพธ์การบันทึกให้ตรวจได้ แล้วทดสอบ Emulator → staging ด้วยข้อมูลสังเคราะห์ก่อนขอเปิด production ต้องให้ผู้ใช้ตรวจเฟสนี้และอนุมัติขอบเขต writer ใหม่ก่อนลงมือ

@@ -176,4 +176,98 @@ describe("read-only calendar windows", () => {
     expect(reader.write).toBeUndefined();
     expect(reader.commit).toBeUndefined();
   });
+  it("discards a delayed month response after logout without reviving its cache", async () => {
+    let release, entered;
+    const started = new Promise(resolve => {
+      entered = resolve;
+    });
+    const transport = ports();
+    transport.exams.mockImplementationOnce(() => new Promise(resolve => {
+      release = resolve;
+      entered();
+    }));
+    const reader = createCalendarReadOnly(transport);
+    reader.setSession("a");
+    const pending = reader.read("2026-11-03", "2026-11-03");
+    await started;
+    reader.clear();
+    release([exam]);
+    await expect(pending).rejects.toMatchObject({
+      code: "session-changed"
+    });
+    expect(reader.stats().cachedMonths).toEqual([]);
+    await expect(reader.read("2026-11-03", "2026-11-03")).rejects.toMatchObject({
+      code: "unauthenticated"
+    });
+  });
+  it("keeps a fresh cache when a pre-refresh month request finishes later", async () => {
+    let release, entered;
+    const started = new Promise(resolve => {
+      entered = resolve;
+    });
+    const transport = ports();
+    transport.exams.mockImplementationOnce(() => new Promise(resolve => {
+      release = resolve;
+      entered();
+    }));
+    const reader = createCalendarReadOnly(transport);
+    reader.setSession("a");
+    const previous = reader.read("2026-11-03", "2026-11-03");
+    await started;
+    reader.refresh();
+    await expect(reader.read("2026-11-03", "2026-11-03")).resolves.toMatchObject({
+      complete: true
+    });
+    release([{
+      ...exam,
+      startTime: "09:00",
+      endTime: "10:30"
+    }]);
+    await expect(previous).rejects.toMatchObject({
+      code: "session-changed"
+    });
+    expect((await reader.read("2026-11-03", "2026-11-03")).data.events[0].start).toBe("17:00");
+    expect(transport.exams).toHaveBeenCalledTimes(2);
+  });
+  it("revalidates access at the exact TTL boundary and denies a deactivated reader", async () => {
+    let now = 0;
+    const transport = ports();
+    const reader = createCalendarReadOnly(transport, {
+      now: () => now,
+      ttl: 100
+    });
+    reader.setSession("a");
+    await reader.read("2026-11-03", "2026-11-03");
+    transport.identity.mockResolvedValue({
+      ...identity,
+      active: false
+    });
+    now = 99;
+    await reader.read("2026-11-03", "2026-11-03");
+    expect(transport.identity).toHaveBeenCalledTimes(1);
+    now = 100;
+    await expect(reader.read("2026-11-03", "2026-11-03")).rejects.toMatchObject({
+      code: "permission-denied"
+    });
+    expect(transport.identity).toHaveBeenCalledTimes(2);
+    expect(transport.exams).toHaveBeenCalledTimes(1);
+  });
+  it("retries a failed month without querying successful month buckets again", async () => {
+    const transport = ports();
+    let firstDecember = true;
+    transport.exams.mockImplementation(async start => {
+      if (start === "2026-12-01" && firstDecember) {
+        firstDecember = false;
+        throw new Error("temporary connection failure");
+      }
+      return start === "2026-11-01" ? [exam] : [];
+    });
+    const reader = createCalendarReadOnly(transport);
+    reader.setSession("a");
+    await expect(reader.read("2026-11-30", "2026-12-06")).rejects.toThrow("temporary connection failure");
+    await expect(reader.read("2026-11-30", "2026-12-06")).resolves.toMatchObject({
+      complete: true
+    });
+    expect(transport.exams.mock.calls.map(([start]) => start)).toEqual(["2026-11-01", "2026-12-01", "2026-12-01"]);
+  });
 });

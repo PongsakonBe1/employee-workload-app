@@ -1,0 +1,135 @@
+{
+  "completed": true,
+  "checks": [
+    {
+      "name": "1440px: real Emulator Auth/query/adapter/details, edits disabled, month cache reuse, explicit refresh, TTL revalidation, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass",
+      "passed": true
+    },
+    {
+      "name": "logout during a blocked read clears the UI and the next login loads a fresh session",
+      "passed": true
+    },
+    {
+      "name": "connection failure times out, removes stale rows and recovers with a fresh session",
+      "passed": true
+    },
+    {
+      "name": "390px: real Emulator Auth/query/adapter/details, edits disabled, month cache reuse, explicit refresh, TTL revalidation, logout clears UI, pending/inactive denied, account isolation and legacy AuthProvider bypass",
+      "passed": true
+    },
+    {
+      "name": "legacy anonymous routes still redirect to login after development Auth isolation",
+      "routes": 21,
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "externalOrigins": [],
+  "firestoreWriteRPCs": [],
+  "legacyLoginWrites": [],
+  "cacheMetrics": [
+    {
+      "width": 1440,
+      "initial": 4,
+      "afterViewChanges": 6,
+      "afterRefresh": 10,
+      "afterTtl": 14,
+      "repeatedViewAddedQueries": 0
+    },
+    {
+      "width": 390,
+      "initial": 4,
+      "afterViewChanges": 6,
+      "afterRefresh": 10,
+      "afterTtl": 14,
+      "repeatedViewAddedQueries": 0
+    }
+  ],
+  "anonymousRedirects": [
+    {
+      "route": "/admin/audit-logs",
+      "passed": true
+    },
+    {
+      "route": "/admin/classroom-schedules",
+      "passed": true
+    },
+    {
+      "route": "/admin/cleanup",
+      "passed": true
+    },
+    {
+      "route": "/admin/dl-exam-schedules",
+      "passed": true
+    },
+    {
+      "route": "/admin/equipment-health",
+      "passed": true
+    },
+    {
+      "route": "/admin/equipment-items",
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "passed": true
+    },
+    {
+      "route": "/admin/record",
+      "passed": true
+    },
+    {
+      "route": "/admin/settings",
+      "passed": true
+    },
+    {
+      "route": "/admin/staff-analytics",
+      "passed": true
+    },
+    {
+      "route": "/admin/system",
+      "passed": true
+    },
+    {
+      "route": "/admin/templates",
+      "passed": true
+    },
+    {
+      "route": "/admin/users",
+      "passed": true
+    },
+    {
+      "route": "/calendar",
+      "passed": true
+    },
+    {
+      "route": "/dashboard",
+      "passed": true
+    },
+    {
+      "route": "/export",
+      "passed": true
+    },
+    {
+      "route": "/help",
+      "passed": true
+    },
+    {
+      "route": "/profile",
+      "passed": true
+    },
+    {
+      "route": "/resources",
+      "passed": true
+    },
+    {
+      "route": "/worklogs/new",
+      "passed": true
+    },
+    {
+      "route": "/worklogs",
+      "passed": true
+    }
+  ],
+  "physicalIOS": false
+}
