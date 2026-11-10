@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-11-10T22:42:43.107Z",
+  "target": "labboy-workload-app-staging",
+  "origin": "http://127.0.0.1:4310",
+  "browser": "Edge",
+  "previousTunnel": {
+    "host": "northwest-revised-domains-varies.trycloudflare.com",
+    "result": "ERR_NAME_NOT_RESOLVED",
+    "replacementCreated": false
+  },
+  "freshPageGoogleSignIn": {
+    "passed": true,
+    "aprilRead": {
+      "classrooms": 29,
+      "exams": 0
+    },
+    "visibleQaLabels": [
+      "401QA-CLOUD-OVERLAP-B10:30–11:30",
+      "402QA-CLOUD-IDENTICAL10:00–11:00",
+      "401QA-CLOUD-ROOM-40110:00–11:00",
+      "402QA-CLOUD-ROOM-40210:00–11:00"
+    ],
+    "expectedQaCount": 4
+  },
+  "fullPageReload": {
+    "executed": true,
+    "observed": {
+      "statuses": [
+        "ยังไม่เข้าสู่ระบบ staging",
+        ""
+      ],
+      "addEnabled": false,
+      "importEnabled": false,
+      "qaVisible": 0
+    },
+    "expectedInMemoryAuthCleared": true
+  },
+  "signInAfterFullReload": {
+    "status": "awaiting-user-account-selection",
+    "googlePopupOpened": true,
+    "toolAccountSelectionCompleted": false,
+    "persistenceReadVerified": false
+  },
+  "cloudCalendarWrites": 0,
+  "authAccountsProvisioned": 0,
+  "profilesChanged": 0,
+  "productionAccessed": false,
+  "physicalMobileTested": false
+}

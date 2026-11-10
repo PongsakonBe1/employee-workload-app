@@ -76,6 +76,34 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
+  if (action === "qaRolePreflight") {
+    const requested = process.argv.slice(4).map(value => {
+      const separator = value.indexOf("="), role = value.slice(0, separator), email = value.slice(separator + 1).trim().toLowerCase();
+      if (separator < 1 || !["staff", "superadmin"].includes(role) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Explicit staging QA role/email pairs required");
+      return { role, email };
+    });
+    if (requested.length !== 2 || new Set(requested.map(row => row.role)).size !== 2 || new Set(requested.map(row => row.email)).size !== 2) throw new Error("Exactly two distinct approved QA candidates required");
+    const { Client } = require("./lib/apiv2");
+    const identity = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" });
+    const store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const candidates = [];
+    for (const candidate of requested) {
+      const lookup = await identity.post(`/projects/${target}/accounts:lookup`, { email: [candidate.email] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+      const users = lookup.body.users || [];
+      if (users.length > 1) throw new Error("Ambiguous staging QA identity");
+      if (!users.length) { candidates.push({ requestedRole: candidate.role, authAccountPresent: false, profilePresent: null, currentRole: null, roleMatchesRequested: false });continue; }
+      const user = users[0];
+      if (!/^[A-Za-z0-9:_-]{1,128}$/.test(user.localId)) throw new Error("Unsupported staging QA identity reference");
+      const response = await store.post(`/projects/${target}/databases/(default)/documents:batchGet`, { documents: [`projects/${target}/databases/(default)/documents/users/${user.localId}`], mask: { fieldPaths: ["role", "active", "calendarWriter"] } });
+      if (!Array.isArray(response.body) || response.body.length !== 1 || !response.body[0].found && !response.body[0].missing) throw new Error("Unexpected staging QA profile response");
+      const profile = response.body[0].found, fields = profile?.fields || {};
+      candidates.push({ requestedRole: candidate.role, authAccountPresent: true, verifiedGoogle: user.emailVerified === true && user.providerUserInfo?.some(provider => provider.providerId === "google.com") === true, profilePresent: Boolean(profile), currentRole: fields.role?.stringValue || null, active: fields.active?.booleanValue ?? null, calendarWriter: fields.calendarWriter?.booleanValue === true, roleMatchesRequested: fields.role?.stringValue === candidate.role });
+    }
+    const result = { checkedAt: new Date().toISOString(), target, candidates, authAccountsChanged: false, firestoreDocumentsWritten: 0, productionAccessed: false, emailsAndUidsLogged: false, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-cloud-session-qa");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, "role-preflight.json"), JSON.stringify(result, null, 2) + "\n");
+    return result;
+  }
   if (action === "qaAudit") {
     const label = process.argv[4];
     if (!["before", "after"].includes(label)) throw new Error("Explicit QA audit label required");

@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-11-10T22:34:41.224Z",
+  "target": "labboy-workload-app-staging",
+  "candidates": [
+    {
+      "requestedRole": "staff",
+      "authAccountPresent": true,
+      "verifiedGoogle": true,
+      "profilePresent": true,
+      "currentRole": "admin",
+      "active": true,
+      "calendarWriter": true,
+      "roleMatchesRequested": false
+    },
+    {
+      "requestedRole": "superadmin",
+      "authAccountPresent": false,
+      "profilePresent": null,
+      "currentRole": null,
+      "roleMatchesRequested": false
+    }
+  ],
+  "authAccountsChanged": false,
+  "firestoreDocumentsWritten": 0,
+  "productionAccessed": false,
+  "emailsAndUidsLogged": false,
+  "privilegedReadIsNotRulesEvidence": true
+}
