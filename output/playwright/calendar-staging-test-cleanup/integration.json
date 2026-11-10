@@ -1,0 +1,19 @@
+{
+  "completed": true,
+  "projectId": "demo-calendar-test-cleanup",
+  "checks": [
+    {
+      "name": "concurrent gate mutation prevents the whole commit with no partial schedule/audit write",
+      "passed": true
+    },
+    {
+      "name": "one inactive field, gate revision and maintenance audit commit together; unrelated data and original receipt retained",
+      "passed": true
+    },
+    {
+      "name": "repeated cleanup is a verified no-op",
+      "passed": true
+    }
+  ],
+  "cloudUsed": false
+}

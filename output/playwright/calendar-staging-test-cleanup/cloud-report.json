@@ -1,0 +1,20 @@
+{
+  "checkedOn": "2026-11-10",
+  "projectId": "labboy-workload-app-staging",
+  "approvedTest": { "room": "402", "date": "2026-11-20", "start": "10:00", "end": "11:00" },
+  "matchedApprovedIdentityAndVersion": true,
+  "deactivatedSchedules": 1,
+  "scheduleDocumentRetained": true,
+  "activeAfterCleanup": false,
+  "activeQueryMatches": 0,
+  "revisionBefore": 1,
+  "revisionAfter": 2,
+  "maintenanceAuditPresentAndVerified": true,
+  "originalCreationReceiptRetained": true,
+  "atomicWriteCount": 3,
+  "productionAccessed": false,
+  "rulesOrPermissionsChanged": false,
+  "personalDetailsLogged": false,
+  "frontendRefreshedByAutomation": false,
+  "pdfReimportUat": "pending-user-refresh-and-retry"
+}
