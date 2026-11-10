@@ -95,5 +95,6 @@ node scripts/check-ui-build.mjs calendar-staging-readonly
 2. เครื่องมือ provisioning ตรวจบัญชีที่อนุมัติว่ามี verified Google provider แล้วสร้าง profile ขั้นต่ำใน staging สำเร็จ (`active=true`, `role=admin`, ชื่อแสดงทั่วไป) ไม่มีการเปิดสิทธิ์ client writes หรือบันทึกอีเมล/UID/token ลง repo
 3. ตรวจ query ด้วยสิทธิ์เครื่องมืออีกครั้งพบ active directory 4 (staff สังเคราะห์ 3 และ profile ผู้ทดสอบ 1), ตารางเรียน 1, รอบสอบพฤศจิกายน 3, adapter issues 0
 4. ให้ผู้ใช้กด **โหลดข้อมูล staging ใหม่** ใน session เดิม ผู้ใช้ตอบว่า **“อ่านสำเร็จ เห็นตารางและรอบสอบแล้ว”** จึงบันทึกว่าการอ่านด้วยบัญชีผู้ทดสอบผ่าน UAT เบื้องต้น ไม่ได้อ้างว่ารัน authenticated browser automation หรือ cloud role matrix ครบแล้ว
+5. ผู้ใช้ยืนยันเพิ่มเติมว่า **“ปรับโหมดก็อ่านได้ปกติ”** บันทึกว่าสลับโหมดการแสดงผลแล้วอ่านข้อมูลได้ตามที่ผู้ใช้ตรวจ โดยไม่ได้ระบุว่าทดสอบทุกโหมดหรือทุกช่วงวันที่ จึงยังไม่ถือว่ายืนยัน cache/logout หรือ browser coverage ครบแล้ว
 
 ไม่มีการเปลี่ยน runtime code ในขั้นผูกสิทธิ์/บันทึก UAT นี้ ตรวจ JSON syntax และ diff ของรายงานโดยตรง ไม่รัน Unit/build ซ้ำเพราะไม่มีพฤติกรรมโปรแกรมเปลี่ยน ขั้นต่อไปคือทบทวน range/cache/logout และกรณีสิทธิ์บน cloud ที่ยังไม่ครบ ก่อนเสนอเฟส writer/import ให้ผู้ใช้อนุมัติแยก ไม่มีการเปิดใช้ production หรือเปิด client writes จากผล UAT นี้
