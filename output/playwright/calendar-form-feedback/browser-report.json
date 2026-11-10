@@ -218,7 +218,7 @@
     }
   },
   "cloudUsed": false,
-  "userAcceptance": "Pending user review",
+  "userAcceptance": "passed-user-confirmed",
   "checkCount": 26,
   "completedAt": "2026-11-10T14:51:11.409Z",
   "resizedTestTabsClosed": true,
@@ -243,5 +243,10 @@
       "desktop-error-cleared.jpg",
       "mobile-error-cleared.jpg"
     ]
+  },
+  "userAcceptanceDetails": {
+    "date": "2026-11-10",
+    "confirmation": "ได้แล้วๆ จัดการต่อเลย",
+    "scope": "Overall form feedback fix accepted; device and individual test cases not specified"
   }
 }

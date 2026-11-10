@@ -36,7 +36,7 @@ Unit รอบแรกใน sandbox หยุดก่อนรัน tests �
 
 Viewport ของแท็บใหม่ต้องกำหนดหลังสร้างแท็บ ตรวจ `innerWidth === 390` ก่อนนับผล mobile แล้ว เก็บ preflight ที่ยังเป็น 1912 px แยกไว้ในรายงาน ไม่นับรวม 26 assertions ปิดแท็บที่ปรับขนาดและคืนหน้าตรวจรับเป็นขนาดปกติแล้ว
 
-Mobile เป็น responsive viewport ของ Edge desktop ไม่ใช่ physical iPhone/Safari หรือ Android และการตรวจรับ UAT โดยผู้ใช้ยังรออยู่ ผล cloud QA เดิมไม่ถือว่าเป็นการตรวจรับการแก้ครั้งนี้
+Mobile ในการตรวจของ agent เป็น responsive viewport ของ Edge desktop ไม่ใช่ physical iPhone/Safari หรือ Android ผู้ใช้ยืนยันรับการแก้ฟอร์มแล้วเมื่อ 10 พฤศจิกายน 2569 ด้วยข้อความ “ได้แล้วๆ จัดการต่อเลย” ไม่ได้ระบุอุปกรณ์หรือผลราย testcase จึงบันทึกเป็นผลตรวจรับโดยรวม ไม่อ้างว่าได้ทดสอบครบทุก physical browser ผล cloud QA เดิมเป็นหลักฐานแยกจากการแก้ครั้งนี้
 
 ## ขั้นตรวจรับ UAT
 
