@@ -1,0 +1,17 @@
+{
+  "recordedOn": "2026-11-10",
+  "environment": "staging",
+  "evidenceSource": "user-confirmation",
+  "userStatement": "ได้แล้ว ทำได้แล้ว",
+  "authenticatedCloudDlImportUat": "passed-basic-user-confirmed",
+  "dlImportSucceeded": true,
+  "sourceFileExplicitlyConfirmed": false,
+  "importedRoundCountExplicitlyConfirmed": false,
+  "allProctorAssignmentsExplicitlyConfirmed": false,
+  "fullReloadPersistenceExplicitlyConfirmed": false,
+  "deviceBrowserExplicitlyConfirmed": false,
+  "cloudReadByAgentDuringThisStep": false,
+  "cloudWrittenByAgentDuringThisStep": false,
+  "productionChanged": false,
+  "nextUserValidation": "Verify imported schedules after full reload and a fresh staging sign-in"
+}

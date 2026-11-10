@@ -84,6 +84,10 @@ Writer เปิดเฉพาะบัญชี active Admin/Superadmin ที
 
 Branch `codex/dl-staging-import-uat` ปรับหน้าจับคู่ให้โหมดเชื่อม writer เลือกเฉพาะ directory และไม่แสดงตัวเลือกชื่อชั่วคราวแล้ว ผล OCR → review → บันทึก 4 รอบ → hard reload/login ใหม่ → กันนำเข้าซ้ำ ผ่านใน Emulator ทั้ง desktop และ mobile emulation ดูรายละเอียดใน `docs/development/dl-staging-import-uat/README.md` ผลนี้ไม่เปลี่ยนสถานะ UAT บน cloud: ยังรอยืนยันรายชื่อสำหรับภาพจริงและผลจากผู้ทดสอบ
 
+## ผู้ใช้ยืนยัน DL image import — 10 พฤศจิกายน 2569
+
+ผู้ใช้แจ้ง **“ได้แล้ว ทำได้แล้ว”** หลังส่งเฟสเตรียม DL image UAT จึงบันทึกว่าการนำเข้า DL บน staging ผ่าน UAT เบื้องต้นตามการยืนยันของผู้ใช้ ไม่อนุมานจำนวนรอบ ไฟล์ รายชื่อครบทุกคน หรือผล reload/login ใหม่จากข้อความนี้ ดู `output/playwright/dl-staging-import-uat/cloud-uat-report.json` ขั้นถัดไปคือยืนยัน persistence บน staging; ยังไม่เปิดสิทธิ์ writer เพิ่มหรือ deploy production
+
 แก้เฉพาะเอกสาร/รายงาน ตรวจ JSON syntax และ diff ไม่รัน Unit/build ซ้ำเพราะ runtime ไม่เปลี่ยน
 
 ## Rules เป็น prototype และข้อจำกัด
