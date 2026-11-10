@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "endpoint": "http://127.0.0.1:18080",
+  "project": "demo-calendar-role-provision",
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "calendarDocumentsWritten": 0,
+  "checks": [
+    "Superadmin create-only rejects duplicate without overwrite",
+    "server rejects stale updateTime and preserves Staff baseline",
+    "masked Staff update preserves unrelated fields",
+    "atomic rollback restores Staff and revokes only the newly created Superadmin"
+  ],
+  "temporaryProfilesRemoved": true,
+  "userRulesTested": false
+}

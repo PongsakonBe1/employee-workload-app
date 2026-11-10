@@ -1,0 +1,26 @@
+{
+  "completed": true,
+  "scope": "Staff/Superadmin calendar reads, writer-resource reads and UI controls",
+  "cloudFullRoleMatrixPassed": false,
+  "calendarWriteAttempts": 0,
+  "cloudProfilesCreated": 1,
+  "cloudProfilesUpdated": 1,
+  "cloudQaSchedules": 4,
+  "cloudQaReceipts": 4,
+  "revision": 9,
+  "beforeAfterQaMatched": true,
+  "vitest": {
+    "success": true,
+    "passed": 525,
+    "failed": 0,
+    "testFiles": 32
+  },
+  "provisionUnitTests": 20,
+  "emulatorIntegrationChecks": 4,
+  "targetedEslintPassed": true,
+  "syntaxChecksPassed": true,
+  "compatibilityBuildPassed": true,
+  "productionAccessed": false,
+  "deployed": false,
+  "pushed": false
+}

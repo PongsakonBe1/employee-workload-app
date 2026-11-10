@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-10T23:04:17.544Z",
+  "target": "labboy-workload-app-staging",
+  "action": "qaSetStaff",
+  "documentsWritten": 1,
+  "profiles": [
+    {
+      "alias": "staff",
+      "profilePresent": true,
+      "role": "staff",
+      "active": true,
+      "calendarWriter": false
+    },
+    {
+      "alias": "superadmin",
+      "profilePresent": true,
+      "role": "superadmin",
+      "active": true,
+      "calendarWriter": true
+    }
+  ],
+  "accountsCreatedByCli": 0,
+  "calendarDocumentsWritten": 0,
+  "productionAccessed": false,
+  "personalDetailsLogged": false
+}

@@ -29,7 +29,9 @@ Cloudflare hostname เดิมตอบ `ERR_NAME_NOT_RESOLVED` และ proc
 
 ตรวจ JSON ของรายงานว่า QA มี 4 รายการตรงกับ baseline, หลัง reload ปุ่มเขียนปิด, หลัง sign-in อ่านผ่าน และไม่มีการ provision/เปลี่ยน profile/เขียน calendar/เข้าถึง production ไม่รัน application test suite ซ้ำเพราะรอบนี้เปลี่ยนเฉพาะเอกสารและหลักฐาน UAT ไม่มี runtime changes
 
-## แผนเฟสบทบาท — รออนุมัติ ยังไม่ดำเนินการ
+## แผนเฟสบทบาท — อนุมัติและดำเนินการต่อแล้ว
+
+ผู้ใช้ให้ดำเนินการต่อ และยืนยันรายการเปลี่ยนสิทธิ์เฉพาะบัญชี/resource อีกครั้งด้วยคำตอบ “ok” หลัง automatic approval review ขอคำอนุมัติที่ชัดเจน ดำเนินการบน branch `codex/calendar-staging-role-qa`; ผลจริงและขอบเขตที่ยังไม่ตรวจอยู่ใน [รายงานเฟสบทบาท](../calendar-staging-role-qa/README.md) รายการด้านล่างคงไว้เป็นแผนต้นทาง
 
 ### 1. ทำอะไร ตามลำดับ
 

@@ -8,6 +8,7 @@ import { validateStagingQaPlan, stagingQaOccupancy, stagingQaRowsToRules } from 
 import { prepareCalendarCreate } from "../frontend/lib/calendarCreatePlan.js";
 import { calendarEmulatorFixtures } from "../firebase/calendar-emulator/fixtures.mjs";
 import { adaptCalendarDocuments } from "../frontend/lib/calendarDataAdapter.js";
+import { prepareQaRoleBaseline, planQaRoleWrites } from "./calendar-staging-role-plan.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
   target = "labboy-workload-app-staging";
 const account = process.argv[2],
@@ -76,6 +77,56 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
+  if (["qaRolePrepare", "qaProvisionSuper", "qaSetStaff", "qaRollbackRoles", "qaRolesStatus"].includes(action)) {
+    const values = process.argv.slice(4).map(value => {
+      const index = value.indexOf("="), role = value.slice(0, index), email = value.slice(index + 1).trim().toLowerCase();
+      if (index < 1 || !["staff", "superadmin"].includes(role) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Explicit staging QA role/email pairs required");
+      return { role, email };
+    });
+    if (values.length !== 2 || new Set(values.map(value => value.role)).size !== 2 || new Set(values.map(value => value.email)).size !== 2) throw new Error("Exactly two distinct approved QA candidates required");
+    const { Client } = require("./lib/apiv2");
+    const identity = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" });
+    const store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const prefix = `projects/${target}/databases/(default)/documents`;
+    async function candidates() {
+      const result = {};
+      for (const value of values) {
+        const lookup = await identity.post(`/projects/${target}/accounts:lookup`, { email: [value.email] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+        const users = lookup.body.users || [];
+        if (users.length !== 1 || users[0].emailVerified !== true || !users[0].providerUserInfo?.some(provider => provider.providerId === "google.com") || !/^[A-Za-z0-9:_-]{1,128}$/.test(users[0].localId)) throw new Error("Both approved candidates must complete verified Google staging sign-in first");
+        const uid = users[0].localId;
+        const read = await store.post(`/projects/${target}/databases/(default)/documents:batchGet`, { documents: [`${prefix}/users/${uid}`], mask: { fieldPaths: value.role === "superadmin" ? ["role", "active", "calendarWriter", "displayName"] : ["role", "active", "calendarWriter"] } });
+        if (!Array.isArray(read.body) || read.body.length !== 1 || !read.body[0].found && !read.body[0].missing) throw new Error("Unexpected staging profile response");
+        const found = read.body[0].found;
+        result[value.role] = { uid, verifiedGoogle: true, profile: found ? { updateTime: found.updateTime, fields: Object.fromEntries(Object.entries(found.fields || {}).map(([key, field]) => [key, field.stringValue ?? field.booleanValue])) } : null };
+      }
+      return result;
+    }
+    const baselinePath = path.join(directory, "role-qa-baseline.json"), checkpointPath = path.join(directory, "role-qa-checkpoint.json");
+    const current = await candidates();
+    let documentsWritten = 0;
+    if (action === "qaRolePrepare") {
+      const baseline = prepareQaRoleBaseline(target, current);
+      fs.writeFileSync(baselinePath, JSON.stringify(baseline, null, 2) + "\n", { flag: "wx" });
+    } else if (action !== "qaRolesStatus") {
+      const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+      const baselineSha = createHash("sha256").update(fs.readFileSync(baselinePath)).digest("hex");
+      const checkpoint = fs.existsSync(checkpointPath) ? JSON.parse(fs.readFileSync(checkpointPath, "utf8")) : {};
+      if (checkpoint.baselineSha && checkpoint.baselineSha !== baselineSha) throw new Error("Staging QA role baseline changed; stop before writing");
+      const planAction = { qaProvisionSuper: "provision-superadmin", qaSetStaff: "set-staff", qaRollbackRoles: "rollback" }[action];
+      const writes = planQaRoleWrites(baseline, planAction, current, checkpoint);
+      const response = await store.post(`/projects/${target}/databases/(default)/documents:commit`, { writes });
+      if (!Array.isArray(response.body.writeResults) || response.body.writeResults.length !== writes.length || response.body.writeResults.some(value => !value.updateTime)) throw new Error("Ambiguous staging commit result; inspect before retrying");
+      documentsWritten = writes.length;
+      const next = { ...checkpoint, baselineSha, ...(action === "qaProvisionSuper" ? { superadminUpdateTime: response.body.writeResults[0].updateTime } : action === "qaSetStaff" ? { staffUpdateTime: response.body.writeResults[0].updateTime } : { rolledBack: true }), action, updatedAt: new Date().toISOString() };
+      fs.writeFileSync(checkpointPath, JSON.stringify(next, null, 2) + "\n");
+    }
+    const after = documentsWritten ? await candidates() : current;
+    const result = { checkedAt: new Date().toISOString(), target, action, documentsWritten, profiles: Object.entries(after).map(([alias, value]) => ({ alias, profilePresent: Boolean(value.profile), role: value.profile?.fields.role ?? null, active: value.profile?.fields.active ?? null, calendarWriter: value.profile?.fields.calendarWriter ?? null })), accountsCreatedByCli: 0, calendarDocumentsWritten: 0, productionAccessed: false, personalDetailsLogged: false };
+    const output = path.join(root, "output/playwright/calendar-staging-role-qa");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, action + ".json"), JSON.stringify(result, null, 2) + "\n");
+    return result;
+  }
   if (action === "qaRolePreflight") {
     const requested = process.argv.slice(4).map(value => {
       const separator = value.indexOf("="), role = value.slice(0, separator), email = value.slice(separator + 1).trim().toLowerCase();
@@ -107,6 +158,8 @@ const command = new Command("calendar-staging-internal").before(options => {
   if (action === "qaAudit") {
     const label = process.argv[4];
     if (!["before", "after"].includes(label)) throw new Error("Explicit QA audit label required");
+    const reportScope = process.argv[5];
+    if (reportScope !== undefined && reportScope !== "role-qa") throw new Error("Unsupported QA audit report scope");
     const bytes = fs.readFileSync(path.join(root, "docs/development/calendar-role-concurrency-qa/staging-fixtures.json"));
     const plan = JSON.parse(bytes);
     const rules = stagingQaRowsToRules(plan);
@@ -143,7 +196,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     }
     const gate = await projected("calendarWriteState/main", ["revision"]);
     const result = { checkedAt: new Date().toISOString(), target, manifestSHA256: createHash("sha256").update(bytes).digest("hex"), label, schedules, receipts, schedulesFound: schedules.filter(row => row.exists).length, receiptsFound: receipts.filter(row => row.exists).length, revision: gate?.revision ?? null, queryRequests, recordsWritten: 0, personalDetailsSelected: false, privilegedReadIsNotRulesEvidence: true };
-    const output = path.join(root, "output/playwright/calendar-role-concurrency-qa");
+    const output = path.join(root, reportScope === "role-qa" ? "output/playwright/calendar-staging-role-qa" : "output/playwright/calendar-role-concurrency-qa");
     fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(path.join(output, `cloud-storage-audit-${label}.json`), JSON.stringify(result, null, 2) + "\n");
     return result;

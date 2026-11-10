@@ -10,6 +10,8 @@ const sdk = vi.hoisted(() => ({
   signOut: vi.fn(async () => {}),
   initializeFirestore: vi.fn(() => ({})),
   terminate: vi.fn(async () => {}),
+  getDocFromServer: vi.fn(async () => ({ exists: () => true, data: () => ({ revision: 9 }) })),
+  doc: vi.fn((_db, collection, id) => ({ collection, id })),
   transport: {
     identity: vi.fn(),
     directory: vi.fn(async () => []),
@@ -36,6 +38,8 @@ vi.mock("firebase/auth", () => ({
 vi.mock("firebase/firestore", () => ({
   initializeFirestore: sdk.initializeFirestore,
   terminate: sdk.terminate,
+  getDocFromServer: sdk.getDocFromServer,
+  doc: sdk.doc,
   connectFirestoreEmulator: vi.fn()
 }));
 vi.mock("./calendarSdkTransport.js", () => ({
@@ -66,6 +70,21 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("does not expose developer role probes on ordinary staging clients", async () => {
+    const client = createCalendarStagingClient(config);
+    expect(client.probeWriterReads).toBeUndefined();
+    await client.close();
+  });
+  it("limits role probes to an active QA client's session, never reusing a closed session", async () => {
+    sdk.initializeAuth.mockReturnValueOnce({ currentUser: { uid: "synthetic-reader" } });
+    const client = createCalendarStagingClient(config, { roleQa: true });
+    await client.login();
+    expect(await client.probeWriterReads()).toEqual({ gate: { outcome: "found", revision: 9 }, receipt: { outcome: "found" } });
+    expect(sdk.getDocFromServer).toHaveBeenCalledTimes(2);
+    await client.close();
+    await expect(client.probeWriterReads()).rejects.toMatchObject({ code: "unauthenticated" });
+    expect(sdk.getDocFromServer).toHaveBeenCalledTimes(2);
+  });
   it("activates scoped reads only after login, then invalidates them immediately on close", async () => {
     const client = createCalendarStagingClient(config);
     await expect(read(client)).rejects.toMatchObject({
