@@ -1,14 +1,10 @@
 "use client";
 
-import { AppShell } from "../../components/AppShell";
-import RoomUsageCalendar from "../../components/RoomUsageCalendar";
+import dynamic from "next/dynamic";
+import { calendarStagingEntryEnabled } from "../../lib/calendarStagingEntry";
+const StagingCalendar = dynamic(() => import("../staging/CalendarEntry"), { ssr: false });
+const LegacyCalendar = dynamic(() => import("./legacy"));
 
 export default function CalendarPage() {
-  return <AppShell>
-    <div className="ui-page-heading">
-      <h1>ตารางและการใช้ห้อง</h1>
-      <p>ตารางเรียนและการสอบ จากข้อมูลตารางเดิม</p>
-    </div>
-    <section className="apple-panel p-4 sm:p-6"><RoomUsageCalendar /></section>
-  </AppShell>;
+  return calendarStagingEntryEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_ENTRY) ? <StagingCalendar /> : <LegacyCalendar />;
 }

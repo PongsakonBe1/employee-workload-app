@@ -70,6 +70,13 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("reads only its own authenticated active profile and rejects late identity results", async () => {
+    sdk.initializeAuth.mockReturnValueOnce({ currentUser: { uid: "synthetic-reader" } });
+    const client = createCalendarStagingClient(config);await client.login();expect((await client.identity()).id).toBe("synthetic-reader");
+    let release;sdk.transport.identity.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const pending = client.identity();await client.close();release({ id: "synthetic-reader", active: true, role: "staff" });
+    await expect(pending).rejects.toMatchObject({ code: "session-changed" });
+  });
   it("does not expose developer role probes on ordinary staging clients", async () => {
     const client = createCalendarStagingClient(config);
     expect(client.probeWriterReads).toBeUndefined();

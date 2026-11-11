@@ -1,0 +1,30 @@
+{
+  "phase": "calendar-staging-entry",
+  "branch": "codex/calendar-staging-entry",
+  "unit": {
+    "passed": 562,
+    "files": 36
+  },
+  "targetedLint": "passed",
+  "compatibilityBuild": "passed with public staging flag on in production mode; staging entry not rendered",
+  "browser": {
+    "completed": true,
+    "passed": 18,
+    "physicalDevicesTested": false,
+    "hydrationMismatchCount": 0,
+    "consoleMessageChannelErrors": 2,
+    "consoleListenerOrigin": "not confirmed"
+  },
+  "cloud": {
+    "writesAttempted": 0,
+    "profileOrRulesChanges": 0,
+    "profileVersionsUnchanged": true,
+    "gateUnchanged": true,
+    "revision": 10,
+    "fullCollectionDiff": false
+  },
+  "productionAccessed": false,
+  "pushed": false,
+  "deployed": false,
+  "userAcceptance": "pending"
+}

@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "tests": 562,
+  "passed": 562,
+  "failed": 0,
+  "files": 36,
+  "scope": "Vitest pure logic; not browser or cloud rules evidence"
+}

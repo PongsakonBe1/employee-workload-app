@@ -19,6 +19,7 @@ export const uiDevelopmentEnvironment = {
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: "",
   NEXT_PUBLIC_API_URL: "http://127.0.0.1:4310/__ui-test-api",
   NEXT_PUBLIC_UI_BRANCH: uiBranch,
+  NEXT_PUBLIC_CALENDAR_STAGING_ENTRY: "0",
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if(!prepareClassroomPdfAssets()) console.warn("Classroom PDF assets are not installed yet; the rest of the development UI remains available.");

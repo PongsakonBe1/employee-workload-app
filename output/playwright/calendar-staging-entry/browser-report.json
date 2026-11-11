@@ -1,0 +1,97 @@
+{
+  "target": "labboy-workload-app-staging",
+  "origin": "http://127.0.0.1:4311",
+  "checks": [
+    {
+      "name": "unsupported deep link redirects into staging before authentication",
+      "passed": true
+    },
+    {
+      "name": "flag off uses legacy AppShell and redirects to legacy login",
+      "passed": true
+    },
+    {
+      "name": "Staff authenticated; main /calendar reads staging 30 classrooms / 18 exams",
+      "passed": true
+    },
+    {
+      "name": "Staff add/import disabled",
+      "passed": true
+    },
+    {
+      "name": "day filter room402 shows only one QA occurrence",
+      "passed": true
+    },
+    {
+      "name": "resources navigation reaches staging placeholder and returns without another sign-in",
+      "passed": true
+    },
+    {
+      "name": "date/view/room filter and calendar request count preserved across navigation",
+      "passed": true
+    },
+    {
+      "name": "desktop one-off detail shows once and no edit actions",
+      "passed": true
+    },
+    {
+      "name": "mobile 390x844 detail and month no horizontal document overflow",
+      "passed": true,
+      "metrics": {
+        "innerWidth": 390,
+        "clientWidth": 380,
+        "scrollWidth": 380,
+        "dialog": {
+          "x": 8,
+          "right": 372,
+          "width": 364
+        }
+      }
+    },
+    {
+      "name": "mobile filter dialog changes room",
+      "passed": true
+    },
+    {
+      "name": "Staff role verified in actual account menu",
+      "passed": true
+    },
+    {
+      "name": "logout removes calendar and identity immediately",
+      "passed": true
+    },
+    {
+      "name": "reload after logout stays signed out without calendar data",
+      "passed": true
+    },
+    {
+      "name": "Superadmin actual role reads staging 30 classrooms / 18 exams with add/import disabled",
+      "passed": true
+    },
+    {
+      "name": "Superadmin starts with separate date/view state rather than Staff April filter",
+      "passed": true
+    },
+    {
+      "name": "Superadmin launcher users destination remains staging placeholder",
+      "passed": true
+    },
+    {
+      "name": "Superadmin detail remains read-only with correct once label",
+      "passed": true
+    },
+    {
+      "name": "full reload of authenticated Superadmin clears in-memory session and calendar",
+      "passed": true
+    }
+  ],
+  "cloudWriteAttempts": 0,
+  "completed": true,
+  "console": {
+    "hydrationMismatchCount": 0,
+    "totalErrors": 2,
+    "message": "Two asynchronous listener message-channel errors; origin not confirmed; no observed flow failure"
+  },
+  "finishedAt": "2026-11-11T00:46:45.489Z",
+  "scope": "Edge desktop and responsive viewport; no physical Safari/Android, no cloud writes attempted, no full Rules matrix"
+}

@@ -15,7 +15,7 @@ import { canUndoPreview } from "../../../lib/equipmentPreview";
 import { canManagePreviewLog, canViewPreviewLog } from "../../../lib/previewLedger";
 import { historyRows, historyInitialRange, historyCSV } from "../../../lib/historyPreview";
 import { calendarLabel, monthCalendarDates, addCalendarMonths, calendarRange, validCalendarDate, calendarToday } from "../../../lib/calendarView";
-import holidays from "../calendar/holidays.json";
+import holidays from "../../../data/calendar-holidays.json";
 function Details({
   row,
   actor,

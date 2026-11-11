@@ -20,12 +20,21 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true
   });
-  const reader = createCalendarReadOnly(calendarSdkTransport(db));
+  const transport = calendarSdkTransport(db);
+  const reader = createCalendarReadOnly(transport);
   let closed = false,
     closing = null,
     session = 0;
   return {
     reader,
+    async identity() {
+      const current = session, uid = closed ? null : auth.currentUser?.uid;
+      if (!uid) throw Object.assign(new Error("Staging sign-in required"), { code: "unauthenticated" });
+      const user = await transport.identity(uid);
+      if (closed || current !== session || auth.currentUser?.uid !== uid) throw Object.assign(new Error("Session changed"), { code: "session-changed" });
+      if (!user || user.id !== uid || user.active !== true || !["staff", "admin", "superadmin"].includes(user.role)) throw Object.assign(new Error("Staging reader unavailable"), { code: "permission-denied" });
+      return user;
+    },
     ...(roleQa ? { probeWriterReads() {
       const current = session;
       return probeCalendarWriterReads((collection, id) => getDocFromServer(doc(db, collection, id)), () => !closed && current === session && Boolean(auth.currentUser?.uid));

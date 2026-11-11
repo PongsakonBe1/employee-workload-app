@@ -1,4 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
+import { selectDefaultFirebaseApp } from "./firebaseAppSelection.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -21,8 +22,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent duplicate initialization in Next.js)
-const app =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app = selectDefaultFirebaseApp(getApps(), () => initializeApp(firebaseConfig));
 
 export const auth = getAuth(app);
 

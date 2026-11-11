@@ -78,6 +78,34 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
+  if (action === "qaStagingEntryAudit") {
+    const label = process.argv[4];
+    if (!["before", "after"].includes(label)) throw new Error("Explicit staging entry audit stage required");
+    const requested = process.argv.slice(5).map(value => {
+      const index = value.indexOf("="), alias = value.slice(0, index), email = value.slice(index + 1);
+      if (!["staff", "superadmin"].includes(alias) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Approved staging QA identity pairs required");
+      return { alias, email };
+    });
+    if (requested.length !== 2 || new Set(requested.map(value => value.alias)).size !== 2 || new Set(requested.map(value => value.email)).size !== 2) throw new Error("Two distinct approved staging identities required");
+    const { Client } = require("./lib/apiv2"), identity = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" }), store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const prefix = `projects/${target}/databases/(default)/documents`, profiles = [];
+    const canonical = value => value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    const digest = value => createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
+    for (const candidate of requested) {
+      const lookup = await identity.post(`/projects/${target}/accounts:lookup`, { email: [candidate.email] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+      const users = lookup.body.users || [];
+      if (users.length !== 1 || users[0].emailVerified !== true || !users[0].providerUserInfo?.some(value => value.providerId === "google.com") || !/^[A-Za-z0-9:_-]{1,128}$/.test(users[0].localId)) throw new Error("Verified approved staging identity required");
+      const profile = await store.post(`/${prefix}:batchGet`, { documents: [`${prefix}/users/${users[0].localId}`], mask: { fieldPaths: ["role", "active", "calendarWriter"] } });
+      const row = profile.body?.[0]?.found;if (!row || !row.updateTime) throw new Error("Staging QA profile unavailable");
+      profiles.push({ alias: candidate.alias, role: row.fields.role?.stringValue || null, active: row.fields.active?.booleanValue === true, calendarWriter: row.fields.calendarWriter?.booleanValue === true, versionDigest: digest({ fields: row.fields, updateTime: row.updateTime }) });
+    }
+    const gate = await store.post(`/${prefix}:batchGet`, { documents: [`${prefix}/calendarWriteState/main`], mask: { fieldPaths: ["revision", "operationId", "updatedBy", "updatedAt"] } });
+    const fields = gate.body?.[0]?.found?.fields;if (!fields) throw new Error("Staging gate unavailable");
+    const result = { checkedAt: new Date().toISOString(), target, stage: label, profiles, revision: Number(fields.revision?.integerValue), gateDigest: digest(fields), recordsWritten: 0, identifiersLogged: false, productionAccessed: false, privilegedReadIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-staging-entry");fs.mkdirSync(output, { recursive: true });
+    const filename = path.join(output, `cloud-audit-${label}.json`);
+    fs.writeFileSync(filename, JSON.stringify(result, null, 2) + "\n", label === "before" ? { flag: "wx" } : undefined);return result;
+  }
   if (["qaRolePrepare", "qaProvisionSuper", "qaSetStaff", "qaRollbackRoles", "qaRolesStatus"].includes(action)) {
     const values = process.argv.slice(4).map(value => {
       const index = value.indexOf("="), role = value.slice(0, index), email = value.slice(index + 1).trim().toLowerCase();

@@ -17,11 +17,13 @@ import { WorkspaceLauncher } from "./WorkspaceLauncher";
 import { useAppearance } from "./AppearanceProvider";
 
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
+const directHref = href => href;
 
-export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, glassMode = "css" }) {
+export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, resolveHref = directHref, glassMode = "css" }) {
   const { preferences } = useAppearance();
   const dock = process.env.NODE_ENV === "development" && preferences.navigation !== "sidebar";
-  const groups = getWorkspaceNavigation(user.role), all = groups.flatMap(group => group.items), current = activeNavigation(pathname, groups);
+  const logicalGroups = getWorkspaceNavigation(user.role), current = activeNavigation(pathname, logicalGroups);
+  const groups = logicalGroups.map(group => ({ ...group, items: group.items.map(entry => ({ ...entry, href: resolveHref(entry.href) })) })), all = groups.flatMap(group => group.items);
   const [collapsed, setCollapsed] = useState(false), [wide, setWide] = useState(false), [scrolled, setScrolled] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(() => groups.find(group => group.id === "tools")?.items.some(entry => entry.id === current));
   const [dialog, setDialog] = useState(null), [search, setSearch] = useState("");
@@ -69,7 +71,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       {link}
     </Tooltip> : link;
   }
-  const launcherItems = [...all, { id: "profile", href: "/profile", label: "โปรไฟล์", icon: "staff", tone: "blue" }, { id: "help", href: "/help", label: "คู่มือการใช้งาน", icon: "audit", tone: "blue" }];
+  const launcherItems = [...all, { id: "profile", href: resolveHref("/profile"), label: "โปรไฟล์", icon: "staff", tone: "blue" }, { id: "help", href: resolveHref("/help"), label: "คู่มือการใช้งาน", icon: "audit", tone: "blue" }];
   const menuItems = launcherItems.filter(entry => entry.label.toLocaleLowerCase("th").includes(search.trim().toLocaleLowerCase("th")));
   return <div
     className="ui-workspace" data-workspace
@@ -190,13 +192,13 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           <strong>กรุณาตั้งชื่อที่ใช้ลงงาน</strong>
           <p>ใช้ชื่อภาษาไทยที่ทีมแยกแยะได้ เพื่อให้อ่านรายการและรายงานได้ถูกต้อง</p>
         </div>
-        <Link href="/profile" onClick={event => navigate(event, "/profile")}>ตั้งชื่อ</Link>
+        <Link href={resolveHref("/profile")} onClick={event => navigate(event, resolveHref("/profile"))}>ตั้งชื่อ</Link>
       </section>}
       {children}
       <footer className="ui-footer">
         <Link
-          href="/help" prefetch={false}
-          onClick={event => navigate(event, "/help")}
+          href={resolveHref("/help")} prefetch={false}
+          onClick={event => navigate(event, resolveHref("/help"))}
         >
           <HelpCircle size={14} aria-hidden="true" />
           คู่มือการใช้งาน
@@ -245,11 +247,11 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
       title="บัญชีและพื้นที่ทำงาน" description={`${displayName} · ${roleLabels[user.role]}`}
     >
       <nav className="ui-account-menu" aria-label="บัญชีและเครื่องมือ">
-        <Link href="/profile" onClick={event => navigate(event, "/profile")}>
+        <Link href={resolveHref("/profile")} onClick={event => navigate(event, resolveHref("/profile"))}>
           <User size={20} aria-hidden="true" />
           โปรไฟล์
         </Link>
-        <Link href="/worklogs" onClick={event => navigate(event, "/worklogs")}>
+        <Link href={resolveHref("/worklogs")} onClick={event => navigate(event, resolveHref("/worklogs"))}>
           <ClipboardList size={20} aria-hidden="true" />
           ประวัติงาน
         </Link>
@@ -261,7 +263,7 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
           <ReviewSymbol name="settings" size={20} />
           รูปแบบการแสดงผล
         </button>
-        <Link href="/help" onClick={event => navigate(event, "/help")}>
+        <Link href={resolveHref("/help")} onClick={event => navigate(event, resolveHref("/help"))}>
           <HelpCircle size={20} aria-hidden="true" />
           คู่มือการใช้งาน
         </Link>

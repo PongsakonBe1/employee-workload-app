@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-11T00:46:38.199Z",
+  "target": "labboy-workload-app-staging",
+  "stage": "after",
+  "profiles": [
+    {
+      "alias": "staff",
+      "role": "staff",
+      "active": true,
+      "calendarWriter": false,
+      "versionDigest": "b6a346ef02adbb7c40a05f9ac3595344ac47186df0cddcdb6cf7815235570bbf"
+    },
+    {
+      "alias": "superadmin",
+      "role": "superadmin",
+      "active": true,
+      "calendarWriter": true,
+      "versionDigest": "14517e4eb781c59cc2acb40575cfffeee9b4a3189f3eef12a1661cfbff99e5cb"
+    }
+  ],
+  "revision": 10,
+  "gateDigest": "e03a0ea4120c1882edf592b7d5a3c82d0b4036c78e40e10d750a1750fd894a1a",
+  "recordsWritten": 0,
+  "identifiersLogged": false,
+  "productionAccessed": false,
+  "privilegedReadIsNotRulesEvidence": true
+}
