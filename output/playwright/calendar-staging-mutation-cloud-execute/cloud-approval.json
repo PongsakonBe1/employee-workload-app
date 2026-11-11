@@ -1,0 +1,25 @@
+{
+  "approved": true,
+  "userApprovalDate": "2026-11-12",
+  "scope": "Temporary bounded staging Rules, four reviewed mutations, receipt replay and return to append-only Rules",
+  "target": "labboy-workload-app-staging",
+  "database": "(default)",
+  "actorAlias": "superadmin",
+  "explicitConfirmations": {
+    "localFrozenPacketSelection": true,
+    "temporaryRulesInstallAndRestore": true,
+    "fourBrowserCloudSubmissionsAndReceiptReplay": true
+  },
+  "manifestHash": "d0ebac68d1b06fc2cf12753ea46e53a9f48421a98a84c64ed4465866272dbd17",
+  "candidateRulesHash": "b5a7546749f4ecd32a194e809d72ea2656ba11c3c422a243935d3a3c8e6c3ace",
+  "rollbackRulesHash": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+  "limits": {
+    "distinctTargets": 2,
+    "mutationOperations": 4,
+    "physicalDeletes": 0,
+    "profileWrites": 0,
+    "newSchedules": 0
+  },
+  "productionAllowed": false,
+  "applicationDeploymentAllowed": false
+}

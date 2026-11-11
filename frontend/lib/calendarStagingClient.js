@@ -12,6 +12,7 @@ import { probeCalendarWriterReads } from "./calendarRoleProbe.js";
 import { calendarRoleWriteSdk } from "./calendarRoleWriteSdk.js";
 import roleWriteProposal from "../../docs/development/calendar-role-write-plan/staging-fixture.json";
 import { calendarTestPassword } from "./calendarEmulatorConfig.js";
+import { createMutationReceiptReplay, validateMutationReplayPacket } from "./calendarMutationReplayQa.js";
 let sequence = 0;
 export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null } = {}) {
   if (mutations && (!writer || roleWriteQa)) throw new Error("Mutations require the ordinary writer client");
@@ -31,6 +32,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   let closed = false,
     closing = null,
     session = 0;
+  const mutate = writer && mutations ? createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) : null;
   return {
     reader,
     async identity() {
@@ -46,7 +48,11 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
       return probeCalendarWriterReads((collection, id) => getDocFromServer(doc(db, collection, id)), () => !closed && current === session && Boolean(auth.currentUser?.uid));
     } } : {}),
     ...(writer && !roleWriteQa ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
-    ...(writer && mutations ? { mutate: createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
+    ...(mutate ? { mutate } : {}),
+    ...(mutate && process.env.NODE_ENV === "development" && !emulatorAccount ? { async replayQa({ text, index }) {
+      const packet = await validateMutationReplayPacket(text), uid = closed ? null : auth.currentUser?.uid;
+      return createMutationReceiptReplay({ projectId: db.app.options.projectId, getUid: () => closed ? null : auth.currentUser?.uid, identity: () => transport.identity(uid), read: async (collection, id) => { const row = await getDocFromServer(doc(db, collection, id));return row.exists() ? row.data() : null; }, mutate })(packet, index);
+    } } : {}),
     ...(writer && roleWriteQa ? { roleWriteQa: calendarRoleWriteSdk(db, () => closed ? null : auth.currentUser?.uid, roleWriteProposal, () => reader.refresh()) } : {}),
     async login() {
       if (closed) throw new Error("Client closed");

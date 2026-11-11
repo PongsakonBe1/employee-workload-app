@@ -33,6 +33,7 @@ export function StagingWorkspaceProvider({ children }) {
   const logout = useCallback(() => session.logout(), [session]);
   const create = useCallback(input => session.create(input), [session]);
   const mutate = useCallback(input => session.mutate(input), [session]);
+  const replayQa = useCallback(input => session.replayQa(input), [session]);
   const retryCreate = useCallback(() => session.retryCreate(), [session]);
   const read = useCallback((start, end) => session.read(start, end), [session]);
   const refresh = useCallback(() => session.refresh(), [session]);
@@ -43,7 +44,7 @@ export function StagingWorkspaceProvider({ children }) {
     const warn = event => { event.preventDefault();event.returnValue = ""; };
     window.addEventListener("beforeunload", warn);return () => window.removeEventListener("beforeunload", warn);
   }, [state.saving, state.writeOutcome]);
-  const value = useMemo(() => ({ ...state, writeEnabled, mutationEnabled, emulatorMode, emulatorAccount, setEmulatorAccount, mutate: state.canEdit ? mutate : undefined, configReady: Boolean(config), configError, login, logout, read, refresh, stats, retryConfig, create: state.canCreate ? create : undefined, retryCreate: state.canCreate ? retryCreate : undefined }), [state, writeEnabled, mutationEnabled, emulatorAccount, mutate, config, configError, login, logout, read, refresh, stats, retryConfig, create, retryCreate]);
+  const value = useMemo(() => ({ ...state, writeEnabled, mutationEnabled, emulatorMode, emulatorAccount, setEmulatorAccount, mutate: state.canEdit ? mutate : undefined, replayQa: state.canEdit ? replayQa : undefined, configReady: Boolean(config), configError, login, logout, read, refresh, stats, retryConfig, create: state.canCreate ? create : undefined, retryCreate: state.canCreate ? retryCreate : undefined }), [state, writeEnabled, mutationEnabled, emulatorAccount, mutate, replayQa, config, configError, login, logout, read, refresh, stats, retryConfig, create, retryCreate]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useStagingWorkspace() {
@@ -56,7 +57,7 @@ export function StagingSessionGate({ children }) {
 }
 export function StagingRouteGuard({ children }) {
   const pathname = usePathname(), router = useRouter();
-  const allowed = calendarStagingEntryPath(pathname) || pathname === "/dev/calendar-staging";
+  const allowed = calendarStagingEntryPath(pathname) || pathname === "/dev/calendar-staging" || process.env.NODE_ENV === "development" && pathname === "/dev/calendar-mutation-replay";
   useEffect(() => { if (!allowed) router.replace(resolveStagingHref(pathname)); }, [allowed, pathname, router]);
   return allowed ? children : <main className="ui-loading" role="status">กำลังเปิดพื้นที่ staging…</main>;
 }

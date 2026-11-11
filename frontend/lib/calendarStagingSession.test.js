@@ -148,6 +148,37 @@ describe("opt-in staging session writes", () => {
 const mutationDraft = () => ({ action: "cancel", original: { id: "synthetic", title: "Synthetic fixture" } });
 const mutationSaved = { action: "cancel", changed: 1, repeated: false, operationId: "op-" + "c".repeat(64) };
 function mutationClient() { const value = writerClient();value.sdk.mutate = vi.fn(async () => ({ ...mutationSaved }));return value; }
+describe("mutation receipt replay session boundary", () => {
+  const packet = { text: "synthetic-reviewed-packet", index: 0 };
+  const repeated = { action: "replay", changed: 0, repeated: true, operationId: "synthetic-receipt" };
+  it("never forwards replay from default, create-only or Staff sessions", async () => {
+    for (const options of [{}, { writable: true }, { writable: true, mutable: true }]) {
+      const { sdk, profile } = writerClient(options.mutable ? "staff" : "superadmin");
+      if (!options.writable) delete sdk.create;
+      if (options.mutable) sdk.mutate = vi.fn();
+      sdk.replayQa = vi.fn();sdk.identity.mockResolvedValue(profile);
+      const session = createCalendarStagingSession(() => sdk, options);await session.login(config);
+      await expect(session.replayQa(packet)).rejects.toHaveProperty("code", "permission-denied");
+      expect(sdk.replayQa).not.toHaveBeenCalled();
+    }
+  });
+  it("requires an available QA API and rechecks a revoked writer before replay", async () => {
+    const { sdk, profile } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);
+    await expect(session.replayQa(packet)).rejects.toHaveProperty("code", "calendar-write-validation");
+    sdk.replayQa = vi.fn();sdk.identity.mockResolvedValueOnce({ ...profile, calendarWriter: false });
+    await expect(session.replayQa(packet)).rejects.toHaveProperty("code", "permission-denied");
+    expect(sdk.replayQa).not.toHaveBeenCalled();expect(session.getState().canEdit).toBe(false);
+  });
+  it("shares double-submit protection and refreshes cached reads after receipt replay", async () => {
+    const { sdk } = mutationClient();let release;sdk.replayQa = vi.fn(() => new Promise(resolve => { release = resolve; }));
+    const session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);await session.read("2027-05-17", "2027-05-17");
+    const pending = session.replayQa(packet);await vi.waitFor(() => expect(sdk.replayQa).toHaveBeenCalledOnce());
+    await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "calendar-write-validation");
+    release(repeated);await expect(pending).resolves.toEqual(repeated);
+    expect(session.stats().cachedMonths).toEqual([]);expect(session.getState()).toMatchObject({ saving: false, writeOutcome: { action: "replay", changed: 0, repeated: true } });
+  });
+});
+
 describe("opt-in calendar mutations share the session write boundary", () => {
   it("requires both writable and mutable, rejecting accidentally exposed mutation clients", async () => {
     const regular = writerClient(), session = createCalendarStagingSession(() => regular.sdk, { writable: true });await session.login(config);

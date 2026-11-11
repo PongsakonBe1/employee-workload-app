@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-11T23:50:29.796Z",
+  "target": "labboy-workload-app-staging",
+  "database": "(default)",
+  "action": "restore",
+  "manifestHash": "d0ebac68d1b06fc2cf12753ea46e53a9f48421a98a84c64ed4465866272dbd17",
+  "before": "b5a7546749f4ecd32a194e809d72ea2656ba11c3c422a243935d3a3c8e6c3ace",
+  "after": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+  "observedDesiredRules": true,
+  "cliExitCode": 0,
+  "cloudRecordsWritten": 0,
+  "productionAccessed": false,
+  "applicationDeployed": false
+}

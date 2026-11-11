@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-11-11T23:51:09.326Z",
+  "target": "labboy-workload-app-staging",
+  "manifestHash": "d0ebac68d1b06fc2cf12753ea46e53a9f48421a98a84c64ed4465866272dbd17",
+  "completed": 4,
+  "revision": 17,
+  "schedules": [
+    {
+      "reference": "classroomSchedules/cal-63606f89933a0f100aa10c02372bbb2c8c4afd1f912e7d13c0a23e409196efb5",
+      "version": 2,
+      "active": false,
+      "digest": "3913aea3b281fbafdc748e7a1a1712d1cd227d89e58c9bbae223d19c0de9196c"
+    },
+    {
+      "reference": "dlExamSchedules/cal-0c219ad0f6c33100e57ec2d695d19eeb4374fba4b6a00d96a58fb3f1a2c31e0d",
+      "version": 2,
+      "active": false,
+      "digest": "92f3282ba460d6f7b5995067dc6ee6261a437733fdb896baefb263bfecfcad4a"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "op-2e900d64c5cbecdb04810a2a915b75fab64e29b710c9c93e261d6167973928b6",
+      "digest": "a289b8591b8954dcdd10a62fbd3388de21997162651967ca08f3e9898cc5550e"
+    },
+    {
+      "id": "op-a04ae2ccb812169ce44a4c1d288f8032bde844e4200ff1f9924714e9e9e63e2c",
+      "digest": "2689e75020e4747d8b5e9a81f76637dedffb02dc9270a5224adcfe5e6009059e"
+    },
+    {
+      "id": "op-4e4e964e32716bb2f2ca3a96ac2b4879cbfda1113d3c55dcb13c6e3e1b9c7a72",
+      "digest": "fcf00f5f14e5604f6fa7825e3e8c29c76ebde814f2122c165dc6815dff01f667"
+    },
+    {
+      "id": "op-832ad77fc70d58fca7fe016e15ed9e3b8bfe311dbdd88badb1e4dfdd8e98e9dc",
+      "digest": "614b3f1ca1493cf178804f2ddb91349d6d6eb1d9de86dbd22112dd5729dc21ce"
+    }
+  ],
+  "profileDigestsUnchanged": true,
+  "protectedDocumentsUnchanged": true,
+  "cloudRecordsWritten": 0,
+  "deployedRulesHash": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+  "privilegedAuditIsNotRulesEvidence": true,
+  "productionAccessed": false
+}

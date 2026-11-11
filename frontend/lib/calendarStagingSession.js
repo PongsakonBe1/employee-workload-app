@@ -20,11 +20,12 @@ export function createCalendarStagingSession(createClient, { writable = false, m
   };
   async function submit(kind, input) {
     if (!client || state.status !== "ready") throw failed("unauthenticated");
-    if (!(kind === "mutate" ? state.canEdit : state.canCreate)) throw failed("permission-denied");
+    if (!(kind === "create" ? state.canCreate : state.canEdit)) throw failed("permission-denied");
     if (state.saving) throw failed("calendar-write-validation", "กำลังบันทึกชุดก่อนหน้า กรุณารอผลก่อน");
     const draft = structuredClone(input);
     if (uncertainDraft && (kind !== uncertainDraft.kind || (kind === "create" ? fingerprint(draft) !== fingerprint(uncertainDraft.input) : JSON.stringify(canonical(draft)) !== JSON.stringify(canonical(uncertainDraft.input))))) throw failed("calendar-write-validation", "ยังยืนยันผลชุดก่อนหน้าไม่ได้ กรุณาตรวจผลหรือส่งชุดเดิมอีกครั้งก่อนเพิ่มชุดใหม่");
     const activeClient = client, current = generation;
+    if (typeof activeClient[kind] !== "function") throw failed("calendar-write-validation", "เครื่องมือ QA นี้ยังไม่เปิดใช้");
     let submitted = false;
     emit({ ...state, saving: true });
     try {
@@ -108,6 +109,7 @@ export function createCalendarStagingSession(createClient, { writable = false, m
     },
     create: input => submit("create", input),
     mutate: input => submit("mutate", input),
+    replayQa: input => submit("replayQa", input),
     retryCreate() { return uncertainDraft ? submit(uncertainDraft.kind, uncertainDraft.input) : Promise.reject(failed("calendar-write-validation", "ไม่มีชุดที่รอยืนยันผล")); },
     refresh() { client?.reader.refresh(); },
     stats: () => client?.reader.stats() || null

@@ -1,0 +1,95 @@
+{
+  "phase": "calendar-staging-mutation-cloud-execute",
+  "localDate": "2026-11-12",
+  "target": "labboy-workload-app-staging",
+  "cloudOperations": {
+    "edited": 2,
+    "softCancelled": 2,
+    "distinctTargets": 2,
+    "createdSchedules": 0,
+    "physicalDeletes": 0,
+    "profileWrites": 0
+  },
+  "gate": {
+    "before": 13,
+    "after": 17,
+    "unchangedAfterReplay": true
+  },
+  "replay": {
+    "browserGoogleSdk": true,
+    "operations": 4,
+    "repeated": true,
+    "changed": 0,
+    "afterAppendOnlyRestoration": true
+  },
+  "rules": {
+    "restored": true,
+    "finalHash": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+    "installRestoreCycles": 2,
+    "applicationDeployed": false,
+    "productionAccessed": false
+  },
+  "baseline": {
+    "profilesUnchanged": true,
+    "protectedDocumentsUnchanged": true,
+    "wholeDatabaseAudit": false
+  },
+  "browser": {
+    "engine": "Edge Chromium",
+    "superadmin": "4 mutations and 4 receipt replays passed",
+    "staff": "reads verified; create/import disabled; edit/cancel/replay absent",
+    "staffDeniedRawCloudWriteTested": false,
+    "mobile": {
+      "viewportWidth": 390,
+      "viewportHeight": 844,
+      "dialogWidth": 364,
+      "dialogLeft": 8,
+      "dialogRight": 372,
+      "overrideReset": true,
+      "physicalDevice": false
+    },
+    "reloadRegressionThisPhase": false,
+    "console": "Staff no observed errors; Superadmin async message-channel listener errors observed, source not isolated"
+  },
+  "checks": {
+    "fullUnit": {
+      "success": true,
+      "tests": 612,
+      "passed": 612,
+      "failed": 0,
+      "files": 38
+    },
+    "planTests": {
+      "passed": 9,
+      "failed": 0
+    },
+    "targetedLint": true,
+    "rulesRunnerSyntax": true,
+    "compatibilityBuild": true,
+    "diffCheck": true
+  },
+  "finalRuntime": {
+    "port": 4311,
+    "stagingEntry": true,
+    "writer": false,
+    "mutations": false
+  },
+  "readiness": {
+    "boundedCloudQaPassed": true,
+    "productionApproved": false,
+    "userAcceptancePending": true,
+    "trustedServerBusinessInvariantsRequired": true
+  },
+  "evidence": [
+    "cloud-audit-before.json",
+    "cloud-audit-1.json",
+    "cloud-audit-2.json",
+    "cloud-audit-3.json",
+    "cloud-audit-4.json",
+    "cloud-audit-after-replay.json",
+    "replay-superadmin.jpg",
+    "staff-readonly-detail.jpg",
+    "staff-mobile-detail.jpg",
+    "staff-calendar-final.jpg"
+  ]
+}
