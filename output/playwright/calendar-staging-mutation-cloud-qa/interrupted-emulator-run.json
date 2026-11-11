@@ -1,0 +1,10 @@
+{
+  "interruptedRun": true,
+  "passed": false,
+  "revisionAtInterruption": 13,
+  "ownedAuthRemoved": 4,
+  "cleanupPassed": true,
+  "originalRulesRestored": true,
+  "cloudUsed": false,
+  "limitation": "Initial SDK run stalled before the first mutation. Shared Auth Emulator default project was demo-calendar-readonly, different from the Firestore QA namespace. No pass claimed; use dedicated aligned Emulator endpoints for the bounded rerun."
+}

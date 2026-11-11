@@ -1,0 +1,64 @@
+{
+  "branch": "codex/calendar-staging-mutation-cloud-qa",
+  "baseCommit": "554f432",
+  "preparationComplete": true,
+  "cloudExecutionApproved": false,
+  "manifestHash": "d0ebac68d1b06fc2cf12753ea46e53a9f48421a98a84c64ed4465866272dbd17",
+  "candidateRulesHash": "b5a7546749f4ecd32a194e809d72ea2656ba11c3c422a243935d3a3c8e6c3ace",
+  "rollbackRulesHash": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+  "reviewedOperationsHash": "35aa3d85c2761161fb02fe6f76d672d865b028b66abd051e96eca25f5a1dd25b",
+  "unit": {
+    "tests": 601,
+    "files": 37,
+    "passed": true
+  },
+  "planTests": {
+    "passed": true,
+    "tests": 9,
+    "passedTests": 9
+  },
+  "emulator": {
+    "groups": 14,
+    "passed": true,
+    "qaFinalRevision": 17,
+    "cleanupPassed": true,
+    "originalRulesRestored": true
+  },
+  "resolvedRulesCompiled": true,
+  "lint": {
+    "passed": true,
+    "files": 5,
+    "errors": 0
+  },
+  "syntaxFiles": 5,
+  "cloudReadOnlyPreflight": {
+    "revision": 13,
+    "existingSchedulesUnchanged": 5,
+    "existingReceiptsUnchanged": 3,
+    "profileDigestsUnchanged": true,
+    "conflicts": 0,
+    "newMutationReceipts": 0
+  },
+  "applicationRuntimeFilesChanged": false,
+  "compatibilityBuild": "Not rerun: no application or package changes; previous phase build passed",
+  "googleCloudMutationQaExecuted": false,
+  "productionTouched": false,
+  "cloudRecordsWritten": 0,
+  "cloudRulesChanged": false,
+  "newPackagesInstalled": false,
+  "pushed": false,
+  "deployed": false,
+  "dedicatedQaRuntimeStopped": true,
+  "sharedEmulatorsNotStopped": true,
+  "limitations": [
+    "Rules are a bounded staging prototype; not a production authorization design",
+    "Projected privileged cloud reads are not Google session/Rules enforcement evidence",
+    "Cloud execution and deployment require separate approval of the final artifacts",
+    "Restore requires a fresh candidate-hash check; check and deploy are not atomic"
+  ],
+  "failureHistory": [
+    "Initial unbounded SDK run interrupted and owned shared-Emulator fixtures cleaned",
+    "Aligned run reproduced Emulator ternary evaluation exception; replaced by boolean dispatch",
+    "Next run hit 1000-expression Rules limit; exact business checks factored into full-map diff; final positive/negative SDK cases all passed"
+  ]
+}

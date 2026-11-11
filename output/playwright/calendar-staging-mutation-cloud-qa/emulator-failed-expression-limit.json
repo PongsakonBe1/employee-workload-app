@@ -1,0 +1,22 @@
+{
+  "passed": false,
+  "checks": [
+    "generated bounded Rules compile on actual Firestore Emulator",
+    "Staff and non-allowlisted Admin/Superadmin denied by actual raw SDK, despite other writers having capability",
+    "reviewed DL operation cannot run before the manual operation advances the exact gate",
+    "exact reviewed values, fields, actor, count and operation allowlist are enforced atomically",
+    "orphan v2 receipts and v1 preemption of reviewed operation IDs are denied",
+    "an extra create cannot piggyback on a valid v2 mutation receipt",
+    "unreviewed documents, physical delete and profile escalation remain denied",
+    "manual-edit commits exactly once; replay preserves receipts and gate",
+    "dl-edit commits exactly once; replay preserves receipts and gate",
+    "manual-cancel commits exactly once; replay preserves receipts and gate"
+  ],
+  "qaFinalRevision": null,
+  "reviewedMutationOperations": 0,
+  "cleanupPassed": true,
+  "originalRulesRestored": true,
+  "cloudUsed": false,
+  "candidateIdentity": "Synthetic Emulator UIDs only",
+  "error": "7 PERMISSION_DENIED: \nUnable to evaluate the expression as the maximum of 1000 expressions to evaluate has been reached. for 'update' @ L272, Unable to evaluate the expression as the maximum of 1000 expressions to evaluate has been reached. for 'update' @ L277, evaluation error at L276:84 for 'create' @ L276, false for 'create' @ L277, evaluation error at L275:93 for 'update' @ L275, false for 'update' @ L277, evaluation error at L262:41 for 'get' @ L262, false for 'get' @ L277, false for 'update' @ L275, false for 'update' @ L277, false for 'get' @ L262, false for 'get' @ L277, Unable to evaluate the expression as the maximum of 1000 expressions to evaluate has been reached. for 'update' @ L272, Unable to evaluate the expression as the maximum of 1000 expressions to evaluate has been reached. for 'update' @ L277"
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "prepared-for-review-not-authorized-for-cloud-writes",
+  "targetProject": "labboy-workload-app-staging",
+  "database": "(default)",
+  "actorAlias": "superadmin",
+  "identityAliases": ["staff", "superadmin"],
+  "baselineRevision": 13,
+  "limits": {
+    "newSchedules": 0,
+    "distinctSchedulesUpdated": 2,
+    "mutationOperations": 4,
+    "newMutationReceipts": 4,
+    "profileWrites": 0,
+    "physicalDeletes": 0
+  },
+  "targets": [
+    {
+      "alias": "manual",
+      "collection": "classroomSchedules",
+      "id": "cal-63606f89933a0f100aa10c02372bbb2c8c4afd1f912e7d13c0a23e409196efb5",
+      "creationOperationId": "op-f66773027317813dfdefe8afc796d32d9c8cdd02dc9f0a00f25da5c5e0981ea1",
+      "initial": {
+        "subject": "QA-ENTRY-MANUAL",
+        "room": "401",
+        "dayOfWeek": "monday",
+        "startTime": "09:00",
+        "endTime": "10:00",
+        "teacher": "",
+        "note": "",
+        "semester": "1/2570",
+        "validFrom": "2027-05-17",
+        "validTo": "2027-05-17",
+        "isActive": true
+      }
+    },
+    {
+      "alias": "dl",
+      "collection": "dlExamSchedules",
+      "id": "cal-0c219ad0f6c33100e57ec2d695d19eeb4374fba4b6a00d96a58fb3f1a2c31e0d",
+      "creationOperationId": "op-c3e45bb603be23ebe1bcc98d1aa9d8b2ea577b2741b90e401972d18295db5f80",
+      "initial": {
+        "subject": "สอบ Digital Literacy",
+        "date": "2027-05-19",
+        "startTime": "17:00",
+        "endTime": "18:30",
+        "timeSlot": "custom",
+        "locations": ["ห้อง 406", "ห้อง 407"],
+        "proctorAliases": ["staff", "superadmin"],
+        "studentCount": 75,
+        "examType": "student",
+        "semester": "1/2570",
+        "notes": "",
+        "isActive": true
+      }
+    }
+  ],
+  "operations": [
+    { "id": "manual-edit", "target": "manual", "action": "edit", "expectedVersion": 0, "patch": { "startTime": "10:00", "endTime": "11:00" } },
+    { "id": "dl-edit", "target": "dl", "action": "edit", "expectedVersion": 0, "patch": { "subject": "QA-MUTATION-DL" } },
+    { "id": "manual-cancel", "target": "manual", "action": "cancel", "expectedVersion": 1, "patch": {} },
+    { "id": "dl-cancel", "target": "dl", "action": "cancel", "expectedVersion": 1, "patch": {} }
+  ],
+  "rulesPolicy": {
+    "scope": "Only the verified superadmin alias, exact target IDs, exact reviewed before/after business fields, operation IDs, versions and gate revisions",
+    "existingCreatePolicy": "Preserve append-only create/read policy; never broaden other mutations",
+    "rollback": "Restore the exact captured append-only source only while the deployed candidate still matches this QA rules hash",
+    "productionAllowed": false
+  },
+  "executionPolicy": "Preparation approval does not authorize deployment or cloud writes. Require review of this manifest, resolved rules and hashes before execution. Audit after each operation; stop on unexpected revision, conflict, actor, receipt or digest. Replay must not advance the gate or create documents. Cancellation preserves documents and creation metadata. No cleanup deletion or profile change on cloud."
+}

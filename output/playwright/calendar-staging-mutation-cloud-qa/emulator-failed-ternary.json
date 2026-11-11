@@ -1,0 +1,14 @@
+{
+  "passed": false,
+  "checks": [
+    "generated bounded Rules compile on actual Firestore Emulator",
+    "Staff and non-allowlisted Admin/Superadmin denied by actual raw SDK, despite other writers having capability"
+  ],
+  "qaFinalRevision": null,
+  "reviewedMutationOperations": 0,
+  "cleanupPassed": true,
+  "originalRulesRestored": true,
+  "cloudUsed": false,
+  "candidateIdentity": "Synthetic Emulator UIDs only",
+  "error": "The validation function is expected to return \"true\". Received false\n\nCaught error:\n\nError: SDK deadline: raw super/dl-edit"
+}

@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": [
+    "generated bounded Rules compile on actual Firestore Emulator",
+    "Staff and non-allowlisted Admin/Superadmin denied by actual raw SDK, despite other writers having capability",
+    "reviewed DL operation cannot run before the manual operation advances the exact gate",
+    "exact reviewed values, fields, actor, count and operation allowlist are enforced atomically",
+    "orphan v2 receipts and v1 preemption of reviewed operation IDs are denied",
+    "an extra create cannot piggyback on a valid v2 mutation receipt",
+    "unreviewed documents, physical delete and profile escalation remain denied",
+    "manual-edit commits exactly once; replay preserves receipts and gate",
+    "dl-edit commits exactly once; replay preserves receipts and gate",
+    "manual-cancel commits exactly once; replay preserves receipts and gate",
+    "dl-cancel commits exactly once; replay preserves receipts and gate",
+    "both documents remain inactive with creation metadata, protected data and profiles unchanged",
+    "existing v1 append-only creation remains compatible under the bounded candidate",
+    "rollback source compiles and append-only Rules deny further schedule updates"
+  ],
+  "qaFinalRevision": 17,
+  "reviewedMutationOperations": 4,
+  "cleanupPassed": true,
+  "originalRulesRestored": true,
+  "cloudUsed": false,
+  "candidateIdentity": "Synthetic Emulator UIDs only",
+  "error": null
+}

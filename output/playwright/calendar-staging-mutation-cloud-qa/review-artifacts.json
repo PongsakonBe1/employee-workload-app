@@ -1,0 +1,15 @@
+{
+  "paths": {
+    "manifest": "docs/development/calendar-staging-mutation-cloud-qa/staging-manifest.json",
+    "candidate": ".tools/calendar-staging/mutation-cloud-qa/firestore.rules",
+    "rollback": ".tools/calendar-staging/mutation-cloud-qa/rollback.rules",
+    "packet": ".tools/calendar-staging/mutation-cloud-qa/reviewed-operations.json"
+  },
+  "hashes": {
+    "manifest": "d0ebac68d1b06fc2cf12753ea46e53a9f48421a98a84c64ed4465866272dbd17",
+    "candidate": "b5a7546749f4ecd32a194e809d72ea2656ba11c3c422a243935d3a3c8e6c3ace",
+    "rollback": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+    "packet": "35aa3d85c2761161fb02fe6f76d672d865b028b66abd051e96eca25f5a1dd25b"
+  },
+  "cloudExecutionApproved": false
+}
