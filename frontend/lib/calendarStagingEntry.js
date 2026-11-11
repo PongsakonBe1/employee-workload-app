@@ -1,6 +1,7 @@
 import { getWorkspaceNavigation } from "./navigation.js";
 export const calendarStagingEntryEnabled = (environment, flag) => environment === "development" && flag === "1";
 export const calendarStagingWriteEnabled = (environment, entryFlag, writeFlag) => calendarStagingEntryEnabled(environment, entryFlag) && writeFlag === "1";
+export const calendarStagingMutationEnabled = (environment, entryFlag, writeFlag, mutationFlag) => calendarStagingWriteEnabled(environment, entryFlag, writeFlag) && mutationFlag === "1";
 export const calendarStagingEntryPath = pathname => pathname === "/calendar" || pathname === "/staging";
 const extra = [{ id: "profile", href: "/profile", label: "โปรไฟล์" }, { id: "help", href: "/help", label: "คู่มือการใช้งาน" }];
 export function stagingEntryLinks(role) { return [...getWorkspaceNavigation(role).flatMap(group => group.items), ...extra]; }

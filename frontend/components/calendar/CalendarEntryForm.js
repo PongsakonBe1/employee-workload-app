@@ -14,13 +14,13 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
     (control || errorRef.current)?.focus({ preventScroll: true });(control || errorRef.current)?.scrollIntoView({ block: "nearest" });
   }, [error]);
   const update = patch => setEntry(current => ({ ...current, ...patch }));
-  const toggle = (key, value, checked) => update({ [key]: checked ? [...entry[key], value] : entry[key].filter(item => item !== value) });
+  const toggle = (key, value, checked) => update({ [key]: key === "rooms" && editing && writeTarget ? checked ? [value] : entry[key] : checked ? [...entry[key], value] : entry[key].filter(item => item !== value) });
   const round = [["09:00", "10:30"], ["13:30", "15:00"], ["17:00", "18:30"]].findIndex(([start, end]) => start === entry.start && end === entry.end);
   return <form
     className="cal-entry-form" ref={form}
     onSubmit={onSave} noValidate
   >
-    {editing?.recurring && <p className="cal-form-note">กำลังแก้ตารางรายสัปดาห์ การบันทึกมีผลกับทุกครั้งในช่วงวันที่ของตารางนี้</p>}
+    {editing?.recurring && editing.validFrom !== editing.validTo && <p className="cal-form-note">กำลังแก้ตารางรายสัปดาห์ การบันทึกมีผลกับทุกครั้งในช่วงวันที่ของตารางนี้</p>}
     <fieldset>
       <legend>กิจกรรม</legend>
       <label className="ui-field">
@@ -36,7 +36,7 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
         <label className="ui-field">
           <span>ประเภท</span>
           <select
-            className="apple-input" name="kind"
+            className="apple-input" name="kind" disabled={Boolean(writeTarget && editing)}
             value={entry.kind} onChange={event => update({ kind: event.target.value, repeat: event.target.value === "classroom" ? "weekly" : "none" })}
           >
             {Object.entries(CALENDAR_KINDS).filter(([kind]) => !writeTarget || kind !== "exam").map(([kind, label]) => <option value={kind} key={kind}>{label}</option>)}
@@ -81,6 +81,12 @@ export default function CalendarEntryForm({ entry, setEntry, editing, error, gla
           </select>
         </label>
       </div>
+      {editing && writeTarget && entry.kind === "classroom" && entry.repeat === "weekly" && <label className="ui-field">
+        <span>วันเรียนประจำสัปดาห์</span>
+        <select className="apple-input" name="weekday" value={entry.weekday} onChange={event => update({ weekday: Number(event.target.value) })}>
+          {["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"].map((label, weekday) => <option key={weekday} value={weekday}>{label}</option>)}
+        </select>
+      </label>}
       {entry.repeat === "weekly" && <label className="ui-field">
         <span>สิ้นสุดวันที่</span>
         <input

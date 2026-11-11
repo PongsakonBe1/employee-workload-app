@@ -1,0 +1,31 @@
+{
+  "source": "Projected fields observed in the first UI fixture cleanup output; separate weekday regression uses ui-emulator-audit.json",
+  "loopback": true,
+  "cloudUsed": false,
+  "revision": 7,
+  "receiptCount": 7,
+  "schedules": [
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-7166d2b4495b9e3ba27a0c93ee14fe5619a0d6cde378039e396ec36f7de15bd3",
+      "title": "QA-UI-OTHER-WRITER",
+      "active": false,
+      "version": 3
+    },
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-cf755542c95143050304294afa51f9a82dd2ce7019eb67d9fb2b6be4b6bc3393",
+      "title": "QA-UI-BLOCK",
+      "active": true,
+      "version": 0
+    },
+    {
+      "collection": "dlExamSchedules",
+      "id": "cal-8422b47fd587639d7b694a3f224f3dd0b2f24088ceec1bd1497dbaeab6cce217",
+      "title": "QA-UI-DL-MOBILE",
+      "active": false,
+      "version": 2
+    }
+  ],
+  "ownedFixtureCleanupPassed": true
+}

@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    "whole-series edit retains identity, bounds and creation metadata with version +1",
+    "edit receipt replay does not advance revision",
+    "stale edit or cancel cannot overwrite another writer",
+    "room collision aborts edit atomically",
+    "DL evening edit retains 75 people and actual directory IDs",
+    "proctor-only conflict is rejected across disjoint rooms",
+    "concurrent editors have exactly one winner and a stale loser",
+    "lost cancel reply retries its receipt; original document remains inactive and disappears from reads",
+    "DL cancellation also preserves its document and invalidates month cache",
+    "Staff/Admin without writer capability denied by session and actual raw SDK Rules",
+    "permanent delete and profile escalation remain denied",
+    "Rules reject cancellation content edits, ownership/timestamp hijacking, version forgery, invalid fields and orphan receipts atomically",
+    "offline preflight never queues a mutation",
+    "revoked capability is detected before mutation"
+  ],
+  "cleanupPassed": true,
+  "cloudUsed": false,
+  "permanentDeletesAllowed": false,
+  "originalAppendOnlyRulesRestored": true,
+  "error": null
+}

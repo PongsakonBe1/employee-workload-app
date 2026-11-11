@@ -85,7 +85,8 @@ export function adaptCalendarDocuments(documents, {
     }
     const source = {
       collection,
-      documentId: id
+      documentId: id,
+      ...(record.schemaVersion === 1 && /^op-[0-9a-f]{64}$/.test(record.operationId || "") && Number.isSafeInteger(record.mutationVersion ?? 0) && (record.mutationVersion ?? 0) >= 0 ? { operationId: record.operationId, version: record.mutationVersion ?? 0 } : {})
     };
     if (collection === "classroomSchedules") {
       const weekday = weekdays.indexOf(text(record.dayOfWeek).toLowerCase()),

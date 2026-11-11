@@ -144,3 +144,49 @@ describe("opt-in staging session writes", () => {
     expect(session.getState()).toMatchObject({ canCreate: false, saving: false, writeRevision: 0, writeOutcome: null });
   });
 });
+
+const mutationDraft = () => ({ action: "cancel", original: { id: "synthetic", title: "Synthetic fixture" } });
+const mutationSaved = { action: "cancel", changed: 1, repeated: false, operationId: "op-" + "c".repeat(64) };
+function mutationClient() { const value = writerClient();value.sdk.mutate = vi.fn(async () => ({ ...mutationSaved }));return value; }
+describe("opt-in calendar mutations share the session write boundary", () => {
+  it("requires both writable and mutable, rejecting accidentally exposed mutation clients", async () => {
+    const regular = writerClient(), session = createCalendarStagingSession(() => regular.sdk, { writable: true });await session.login(config);
+    expect(session.getState().canEdit).toBe(false);await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "permission-denied");
+    const value = mutationClient(), unsafe = createCalendarStagingSession(() => value.sdk, { writable: true });await expect(unsafe.login(config)).rejects.toHaveProperty("code", "read-only-client-required");
+    const missing = createCalendarStagingSession(() => writerClient().sdk, { writable: true, mutable: true });await expect(missing.login(config)).rejects.toHaveProperty("code", "mutation-client-required");
+  });
+  it("freezes the original version and blocks both mutation and create double submits", async () => {
+    const { sdk } = mutationClient(), factory = vi.fn(() => sdk), session = createCalendarStagingSession(factory, { writable: true, mutable: true });await session.login(config);
+    expect(factory.mock.calls[0][1].mutations).toBe(true);let release;sdk.mutate.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const input = mutationDraft(), before = structuredClone(input), pending = session.mutate(input);await vi.waitFor(() => expect(sdk.mutate).toHaveBeenCalledOnce());input.original.title = "Changed";
+    await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "calendar-write-validation");await expect(session.create(draft())).rejects.toHaveProperty("code", "calendar-write-validation");
+    expect(sdk.mutate).toHaveBeenCalledWith(before);release(mutationSaved);await pending;expect(session.getState().writeOutcome.action).toBe("cancel");
+  });
+  it("retains uncertainty across operation types and retries exactly the original mutation", async () => {
+    const { sdk } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);
+    sdk.mutate.mockRejectedValueOnce({ code: "unavailable" });await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "calendar-write-uncertain");
+    await expect(session.create(draft())).rejects.toHaveProperty("code", "calendar-write-validation");
+    await expect(session.mutate({ ...mutationDraft(), action: "edit" })).rejects.toHaveProperty("code", "calendar-write-validation");
+    await session.retryCreate();expect(sdk.mutate).toHaveBeenCalledTimes(2);expect(sdk.mutate.mock.calls[1][0]).toEqual(mutationDraft());expect(sdk.create).not.toHaveBeenCalled();
+  });
+  it("treats a stale mutation as a definite failure and leaves the draft available for review", async () => {
+    const { sdk } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);
+    sdk.mutate.mockRejectedValueOnce({ code: "calendar-write-stale" });await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "calendar-write-stale");expect(session.getState().writeOutcome).toBeNull();expect(session.getState().saving).toBe(false);
+    await session.create(draft());expect(sdk.create).toHaveBeenCalledOnce();
+  });
+  it("never reports cancellation when the account changes while a mutation is in flight", async () => {
+    const { sdk } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);let release;sdk.mutate.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const pending = session.mutate(mutationDraft());await vi.waitFor(() => expect(sdk.mutate).toHaveBeenCalledOnce());await session.logout();release(mutationSaved);
+    await expect(pending).rejects.toHaveProperty("code", "calendar-write-uncertain");expect(session.getState()).toMatchObject({ canEdit: false, user: null, writeOutcome: null });
+  });
+  it("invalidates caches after mutation and distinguishes commit from read-back failure", async () => {
+    const { sdk } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);await session.read("2027-05-17", "2027-05-17");
+    await session.mutate(mutationDraft());expect(session.stats().cachedMonths).toEqual([]);sdk.transport.classrooms.mockRejectedValueOnce({ code: "unavailable" });
+    await expect(session.read("2027-05-17", "2027-05-17")).rejects.toHaveProperty("code", "unavailable");expect(session.getState().writeOutcome).toMatchObject({ action: "cancel", status: "committed", readBack: "failed" });
+    await session.read("2027-05-17", "2027-05-17");expect(session.getState().writeOutcome.readBack).toBe("verified");
+  });
+  it("checks revocation before forwarding mutation", async () => {
+    const { sdk, profile } = mutationClient(), session = createCalendarStagingSession(() => sdk, { writable: true, mutable: true });await session.login(config);
+    sdk.identity.mockResolvedValueOnce({ ...profile, calendarWriter: false });await expect(session.mutate(mutationDraft())).rejects.toHaveProperty("code", "permission-denied");expect(sdk.mutate).not.toHaveBeenCalled();expect(session.getState().canEdit).toBe(false);
+  });
+});

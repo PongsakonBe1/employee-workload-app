@@ -15,6 +15,7 @@ import ClassroomImport from "./ClassroomImport";
 import DlImageImport from "./DlImageImport";
 import { addDlPreviewPerson, planDlImport } from "../../lib/dlImageImport";
 import { planCalendarDocumentChanges } from "../../lib/calendarDataAdapter";
+import { calendarMutationReplacement } from "../../lib/calendarMutationPlan";
 
 import { CalendarAgenda, CalendarMonth, CalendarTimeline, DayStrip, MiniCalendar, RoomLabels } from "./CalendarViews";
 
@@ -103,6 +104,8 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
   const readOnly = Boolean(externalCalendar), externalIdentity = externalCalendar?.identity?.id;
   useEffect(() => { if (readOnly) { setDialog(null);setSelected(null);setSelectedHoliday(null); } }, [readOnly, externalIdentity]);
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
+  const mutationError = useRef(null);
+  useEffect(() => { if (dialog === "delete" && error) mutationError.current?.focus(); }, [dialog, error]);
   const [dateDraft, setDateDraft] = useState(date), [copyDate, setCopyDate] = useState("2026-11-09");
   const [status, setStatus] = useState("");
   const [importKind, setImportKind] = useState("classroom");
@@ -117,6 +120,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
     return () => { active = false; };
   }, [externalCalendar, dataset, legacySnapshot, legacyData, setLegacySnapshot, setLegacyData, legacyCalendarCache]);
   const canEdit = !externalCalendar && role !== "staff" && (dataset !== "legacy" || Boolean(legacySnapshot?.complete)), range = calendarRange(date, mode), week = calendarRange(date, "week");
+  const canModify = canEdit || Boolean(externalCalendar?.canEdit && !externalCalendar.saving);
   const canCreate = canEdit || Boolean(externalCalendar?.canCreate && !externalCalendar.saving);
   const renderRange = mode === "month" ? { start: monthCalendarDates(date)[0], end: monthCalendarDates(date).at(-1) } : range;
   const onRangeChange = externalCalendar?.onRangeChange;
@@ -130,8 +134,8 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
   function selectDate(value) { setDate(value);setMiniMonth(value); }
   function open(value) { setError(null);setDialog(value);if (value === "filters") setFilterDraft({ ...filters });if (value === "date") setDateDraft(date);if (value === "copy") setCopyDate(addCalendarDays(week.start, 7)); }
   function startEntry(kind = "classroom", existing = null) {
-    if (existing ? !canEdit : !canCreate) return;
-    setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
+    if (existing ? !canModify : !canCreate) return;
+    setEditing(existing);setEntry(existing ? { ...newEntry(existing.date, existing.kind), ...existing, date: existing.recurring ? existing.validFrom : existing.date, participants: String(existing.participants || 75), proctors: existing.proctors || [], repeat: existing.recurring && existing.validFrom !== existing.validTo ? "weekly" : "none" } : newEntry(date, kind));setError(null);setDialog("entry");
   }
   function updateEntry(change) {
     setEntry(change);setError(null);
@@ -147,17 +151,35 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       return ["calendar-write-validation", "calendar-write-preflight", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
     }
   }
+  async function mutateExternal(input) {
+    try {
+      const result = await externalCalendar.onMutate(input);
+      setDialog(null);setStatus(`${result.action === "cancel" ? "ยกเลิก" : "แก้ไข"}ตารางแล้ว · ${datasetLabel}`);return null;
+    } catch (failure) {
+      return ["calendar-write-validation", "calendar-write-stale", "calendar-write-preflight", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เปลี่ยนตาราง หรือ Rules staging ยังไม่เปิดใช้งาน" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาตรวจผลก่อนส่งคำสั่งใหม่";
+    }
+  }
+  async function cancelSelected() {
+    if (!canModify || !selected) return;setError(null);
+    if (!externalCalendar) { commit({ rules: data.rules.filter(row => row.id !== selected.sourceId), events: data.events.filter(row => row.id !== selected.sourceId) }, "ลบตารางแล้ว");return; }
+    const failure = await mutateExternal({ action: "cancel", original: { ...selected, id: selected.sourceId } });if (failure) setError({ message: failure });
+  }
   async function saveEntry(event) {
-    event.preventDefault();if (!canCreate) return;
+    event.preventDefault();if (editing ? !canModify : !canCreate) return;
     setError(null);
     const value = { ...entry, title: entry.title.trim(), rooms: entry.kind === "dl" ? Number(entry.participants) > 40 ? ["406", "407"] : ["406"] : entry.rooms, participants: Number(entry.participants) };
     const invalid = validateCalendarEntry(value);if (invalid) { setError(invalid);return; }
     const bounds = { start: value.date, end: value.repeat === "weekly" ? value.validTo : value.date };
-    const dates = value.repeat === "weekly" ? calendarDates(bounds.start, bounds.end).filter(day => calendarWeekday(day) === calendarWeekday(value.date)) : [value.date];
+    const dates = value.repeat === "weekly" ? calendarDates(bounds.start, bounds.end).filter(day => calendarWeekday(day) === (externalCalendar && editing ? value.weekday : calendarWeekday(value.date))) : [value.date];
     const existing = expandCalendar(data, bounds);
     for (const day of dates) { const conflicts = calendarConflicts({ ...value, date: day }, existing, editing?.sourceId);if (conflicts.length) { setError({ field: "rooms", message: `ห้องชนกับ ${conflicts[0].title} วันที่ ${calendarLabel(day)} ${conflicts[0].start}–${conflicts[0].end}` });return; } }
     const id = editing?.sourceId || `preview-calendar-${++counter.current}`;
     if (externalCalendar) {
+      if (editing) {
+        const replacement = calendarMutationReplacement(value);
+        const failure = await mutateExternal({ action: "edit", original: { ...editing, id: editing.sourceId }, replacement });
+        if (failure) setError({ message: failure });else revealCreated([value], value.kind, value.date);return;
+      }
       const draft = value.kind === "classroom" ? { rules: value.rooms.map(room => ({ ...value, id, rooms: [room], validFrom: value.date, validTo: value.repeat === "weekly" ? value.validTo : value.date, weekday: calendarWeekday(value.date) })), events: [] } : { rules: [], events: [{ ...value, id }] };
       const failure = await createExternal(draft);if (failure) setError({ message: failure });else revealCreated([value], value.kind, value.date);return;
     }
@@ -205,7 +227,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
     return null;
   }
   function navigatePeriod(direction) { selectDate(mode === "month" ? addCalendarMonths(date, direction) : addCalendarDays(date, direction * (mode === "day" ? 1 : 7))); }
-  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: importKind === "dl" ? "นำเข้าตารางสอบ DL จากรูปภาพ" : "นำเข้าตารางเรียนจาก PDF", delete: "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const title = ({ date: "ไปยังวันที่", filters: "ปฏิทินและตัวกรอง", detail: selected?.title, entry: editing ? "แก้ไขตาราง" : "เพิ่มตาราง", holiday: selectedHoliday?.title, copy: "คัดลอกรายการสอบในสัปดาห์นี้", import: importKind === "dl" ? "นำเข้าตารางสอบ DL จากรูปภาพ" : "นำเข้าตารางเรียนจาก PDF", delete: externalCalendar ? "ยกเลิกตาราง staging" : "ลบตารางตัวอย่าง", notifications: "การแจ้งเตือน" }[dialog] || "");
 
   return <WorkspaceFrame
     user={frame.user || (externalCalendar ? { uid: externalIdentity || "calendar-signed-out", displayName: externalCalendar.identity?.displayName || externalCalendar.sourceName || "Emulator", initial: "E", role: externalCalendar.identity?.role || "staff" } : { uid: "calendar-fixture", displayName: "เจ้าหน้าที่ตัวอย่าง A", initial: "A", role })} pathname={frame.pathname || "/calendar"} onLogout={frame.onLogout} resolveHref={frame.resolveHref}
@@ -477,7 +499,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       open={Boolean(dialog)} onClose={() => setDialog(null)}
       title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""} ${dialog === "import" ? "cal-import-dialog" : ""}`}
       busy={Boolean(externalCalendar?.saving)}
-      description={dialog === "entry" || dialog === "import" ? externalCalendar?.saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : externalCalendar?.writeTarget ? `Development · เพิ่มรายการใหม่ไปยัง ${datasetLabel} แยกจาก production` : "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
+      description={dialog === "entry" || dialog === "import" ? externalCalendar?.saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : externalCalendar?.writeTarget ? `Development · ${editing && dialog === "entry" ? "แก้ไขตารางใน" : "เพิ่มรายการใหม่ไปยัง"} ${datasetLabel} แยกจาก production` : "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
     >
       {dialog === "date" && <form onSubmit={event => { event.preventDefault();if (validCalendarDate(dateDraft)) { selectDate(dateDraft);setDialog(null); } }}>
         <label className="ui-field">
@@ -562,25 +584,26 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
             <dd>{selectedPeriod.value}</dd>
           </div>}
         </dl>
-        {canEdit && <div className="cal-dialog-actions">
+        {canModify && (!externalCalendar || selected.source?.version !== undefined) && <div className="cal-dialog-actions">
           <GlassButton mode={glassMode} variant="destructive"
             type="button" className="cal-delete-action"
-            onClick={() => setDialog("delete")}
+            onClick={() => { setError(null);setDialog("delete"); }}
           >
-            ลบตาราง…
+            {externalCalendar ? "ยกเลิกตาราง…" : "ลบตาราง…"}
           </GlassButton>
           <GlassButton mode={glassMode} onClick={() => startEntry(selected.kind, selected)}>แก้ไขตาราง</GlassButton>
         </div>}
       </div>}
       {dialog === "delete" && selected && <div>
-        <p className="cal-form-note">{selected.recurring ? "ลบตารางรายสัปดาห์นี้ทุกครั้งในช่วงที่กำหนด หลังลบยังเลิกทำได้" : "ลบรายการนี้จากข้อมูลตัวอย่าง หลังลบยังเลิกทำได้"}</p>
+        <p className="cal-form-note">{externalCalendar ? `ยกเลิก${selected.recurring && selected.validFrom !== selected.validTo ? "ตารางรายสัปดาห์ทุกครั้งในช่วงที่กำหนด" : "รายการนี้"}ใน staging โดยเก็บเอกสารและประวัติไว้ ยังไม่มีการเลิกทำ` : selected.recurring ? "ลบตารางรายสัปดาห์นี้ทุกครั้งในช่วงที่กำหนด หลังลบยังเลิกทำได้" : "ลบรายการนี้จากข้อมูลตัวอย่าง หลังลบยังเลิกทำได้"}</p>
+        {error && <p role="alert" tabIndex={-1} ref={mutationError}>{error.message}</p>}
         <div className="cal-dialog-actions">
-          <GlassButton mode={glassMode} onClick={() => setDialog("detail")}>ยกเลิก</GlassButton>
+          <GlassButton mode={glassMode} onClick={() => setDialog("detail")}>กลับ</GlassButton>
           <GlassButton mode={glassMode} variant="destructive"
             type="button" className="cal-delete-action"
-            onClick={() => { if (canEdit) commit({ rules: data.rules.filter(row => row.id !== selected.sourceId), events: data.events.filter(row => row.id !== selected.sourceId) }, "ลบตารางแล้ว"); }}
+            onClick={cancelSelected}
           >
-            ลบตารางตัวอย่าง
+            {externalCalendar ? "ยืนยันยกเลิกตาราง" : "ลบตารางตัวอย่าง"}
           </GlassButton>
         </div>
       </div>}

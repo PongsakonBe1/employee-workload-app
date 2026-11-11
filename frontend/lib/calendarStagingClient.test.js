@@ -70,6 +70,19 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("rejects mutation exposure without the ordinary writer and rejects Emulator login outside development localhost", () => {
+    expect(() => createCalendarStagingClient(config, { mutations: true })).toThrow("ordinary writer");
+    expect(() => createCalendarStagingClient(config, { writer: true, mutations: true, roleWriteQa: true })).toThrow("ordinary writer");
+    const previous = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = "production";
+      expect(() => createCalendarStagingClient(config, { emulatorAccount: "admin" })).toThrow("localhost");
+      process.env.NODE_ENV = "development";
+      vi.stubGlobal("window", { location: { hostname: "example.test" } });
+      expect(() => createCalendarStagingClient(config, { emulatorAccount: "admin" })).toThrow("localhost");
+      expect(sdk.initializeApp).not.toHaveBeenCalled();
+    } finally { process.env.NODE_ENV = previous;vi.unstubAllGlobals(); }
+  });
   it("reads only its own authenticated active profile and rejects late identity results", async () => {
     sdk.initializeAuth.mockReturnValueOnce({ currentUser: { uid: "synthetic-reader" } });
     const client = createCalendarStagingClient(config);await client.login();expect((await client.identity()).id).toBe("synthetic-reader");

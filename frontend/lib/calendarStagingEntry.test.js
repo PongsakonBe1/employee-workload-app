@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { calendarStagingEntryEnabled, calendarStagingWriteEnabled, calendarStagingEntryPath, resolveStagingHref, stagingEntryLinks, stagingEntrySection } from "./calendarStagingEntry.js";
+import { calendarStagingEntryEnabled, calendarStagingMutationEnabled, calendarStagingWriteEnabled, calendarStagingEntryPath, resolveStagingHref, stagingEntryLinks, stagingEntrySection } from "./calendarStagingEntry.js";
 import { selectDefaultFirebaseApp } from "./firebaseAppSelection.js";
 describe("isolated staging entry policy", () => {
   it("requires a separate exact write flag and a development staging entry", () => {
@@ -31,3 +31,5 @@ describe("isolated staging entry policy", () => {
     initialize.mockClear();expect(selectDefaultFirebaseApp([named, normal], initialize)).toBe(normal);expect(initialize).not.toHaveBeenCalled();
   });
 });
+
+it("requires explicit development entry/write/mutation flags together", () => { expect(calendarStagingMutationEnabled("development","1","1","1")).toBe(true);for (const args of [["production","1","1","1"],["development","1","1",undefined],["development","1","0","1"],["development","0","1","1"],["development","1","1","true"]]) expect(calendarStagingMutationEnabled(...args)).toBe(false); });

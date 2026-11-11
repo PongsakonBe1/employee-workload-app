@@ -1,0 +1,56 @@
+{
+  "loopback": true,
+  "cloudUsed": false,
+  "revision": 4,
+  "schedules": [
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-8363338dcaea8c7ae371fa9d21ec79bfb966c52f4edb984cc4040fac4f36d073",
+      "title": "QA-UI-WEDNESDAY-KEPT",
+      "active": true,
+      "version": 2,
+      "start": "09:00",
+      "end": "10:00"
+    },
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-86730378b362113db1b81087c48512eafb6ba03942619fcbfecde34c82c3f825",
+      "title": "QA-UI-BLOCK",
+      "active": true,
+      "version": 0,
+      "start": "09:00",
+      "end": "10:00"
+    },
+    {
+      "collection": "dlExamSchedules",
+      "id": "cal-a1c7f4ec2085bf41e0e4691f148572a3e322d2fa43ab4c01b60a5eebdbf3f34d",
+      "title": "QA-UI-DL",
+      "active": true,
+      "version": 0,
+      "start": "17:00",
+      "end": "18:30"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "op-8610e2b22142ca60245ae330ca1b29bfe7ae453ee08889a676276671ac5b362d",
+      "action": "create",
+      "count": 1
+    },
+    {
+      "id": "op-9b07ac0eff41b9c57954750f3853e854fb54b579137ae760d8a59e4f3049f0ee",
+      "action": "edit",
+      "count": 1
+    },
+    {
+      "id": "op-ac93055d132ddde7e5c65e074005882165dbec967e4c2978dc6cc3676707b4ff",
+      "action": "edit",
+      "count": 1
+    },
+    {
+      "id": "op-b602b3cccd5a2afb713f8dd998a506f9c81941e8ff3c4a9186263048c1abb492",
+      "action": "create",
+      "count": 2
+    }
+  ]
+}

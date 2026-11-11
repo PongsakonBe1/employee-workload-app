@@ -1,16 +1,21 @@
-// Cloud staging only. No production configuration or shared test passwords; write APIs require explicit opt-in.
+// Isolated staging client, with synthetic localhost-only QA login and no production fallback.
+/* global process */
 import { initializeApp, deleteApp } from "firebase/app";
-import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { initializeFirestore, terminate, getDocFromServer, doc } from "firebase/firestore";
+import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut, connectAuthEmulator, signInWithEmailAndPassword } from "firebase/auth";
+import { initializeFirestore, terminate, getDocFromServer, doc, connectFirestoreEmulator } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 import { createCalendarReadOnly } from "./calendarReadOnly.js";
 import { calendarSdkTransport } from "./calendarSdkTransport.js";
 import { createCalendarWriter } from "./calendarWriter.js";
+import { createCalendarMutationWriter } from "./calendarMutationWriter.js";
 import { probeCalendarWriterReads } from "./calendarRoleProbe.js";
 import { calendarRoleWriteSdk } from "./calendarRoleWriteSdk.js";
 import roleWriteProposal from "../../docs/development/calendar-role-write-plan/staging-fixture.json";
+import { calendarTestPassword } from "./calendarEmulatorConfig.js";
 let sequence = 0;
-export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false } = {}) {
+export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null } = {}) {
+  if (mutations && (!writer || roleWriteQa)) throw new Error("Mutations require the ordinary writer client");
+  if (emulatorAccount && (process.env.NODE_ENV !== "development" || typeof window === "undefined" || !["127.0.0.1", "localhost"].includes(window.location.hostname) || !["admin", "staff", "superadmin"].includes(emulatorAccount))) throw new Error("Synthetic Emulator login requires development on localhost");
   const approved = validateCalendarStagingConfig(config);
   const app = initializeApp(approved, "calendar-staging-" + ++sequence);
   const auth = initializeAuth(app, {
@@ -20,6 +25,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true
   });
+  if (emulatorAccount) { connectAuthEmulator(auth, "http://127.0.0.1:19099", { disableWarnings: true });connectFirestoreEmulator(db, "127.0.0.1", 18080); }
   const transport = calendarSdkTransport(db);
   const reader = createCalendarReadOnly(transport);
   let closed = false,
@@ -40,6 +46,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
       return probeCalendarWriterReads((collection, id) => getDocFromServer(doc(db, collection, id)), () => !closed && current === session && Boolean(auth.currentUser?.uid));
     } } : {}),
     ...(writer && !roleWriteQa ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
+    ...(writer && mutations ? { mutate: createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
     ...(writer && roleWriteQa ? { roleWriteQa: calendarRoleWriteSdk(db, () => closed ? null : auth.currentUser?.uid, roleWriteProposal, () => reader.refresh()) } : {}),
     async login() {
       if (closed) throw new Error("Client closed");
@@ -49,7 +56,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
       provider.setCustomParameters({
         prompt: "select_account"
       });
-      const result = await signInWithPopup(auth, provider);
+      const result = emulatorAccount ? await signInWithEmailAndPassword(auth, `mutation-ui-${emulatorAccount}@example.test`, calendarTestPassword) : await signInWithPopup(auth, provider);
       if (current !== session || closed) throw new Error("Session changed");
       reader.setSession(result.user.uid);
     },

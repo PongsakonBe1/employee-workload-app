@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "environment": "Edge /calendar actual main route; synthetic loopback Auth + Firestore",
+  "cloudUsed": false,
+  "checks": [
+    "Admin sees edit/cancel actions on versioned schedules",
+    "Room conflict retains draft and focuses rooms",
+    "Empty title focuses the title input",
+    "Admin weekly edit commits and reads back",
+    "Independent Superadmin edits the same schedule",
+    "Older Admin draft rejected as stale and text retained",
+    "Mobile DL edit retains 75 people, evening round, 406+407 and directory IDs",
+    "Mobile date/time fonts 16px; client/scroll 380 at innerWidth 390; dialog inside viewport",
+    "Mobile DL cancellation disappears from server reads",
+    "Back from weekly cancellation confirmation preserves detail",
+    "Whole weekly series cancellation also absent next week",
+    "Reload clears in-memory Auth; new Staff session reads committed result",
+    "Staff create/import disabled and detail edit/cancel absent",
+    "Staging home and calendar navigation retains Staff session/cache",
+    "Term starts Monday, weekly lesson Wednesday: title-only edit preserves weekday and bounds after fresh read",
+    "Changing the explicit weekly-day control moves occurrences to Thursday without changing the term start"
+  ],
+  "mobile": {
+    "innerWidth": 390,
+    "clientWidth": 380,
+    "scrollWidth": 380,
+    "dialogWidth": 348,
+    "dateTimeFont": "16px"
+  },
+  "console": {
+    "errorsObserved": 0,
+    "warnings": [
+      "Next smooth scrolling future behavior warning"
+    ]
+  },
+  "physicalDeviceUat": false,
+  "weekdayRegression": {
+    "termStart": "2026-11-09",
+    "initialWeekday": 2,
+    "afterTitleEditWeekday": 2,
+    "explicitChangedWeekday": 3
+  }
+}

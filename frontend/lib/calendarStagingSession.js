@@ -1,29 +1,29 @@
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 const failed = (code, message = code) => Object.assign(new Error(message), { code });
 const writerRole = user => user?.active === true && ["admin", "superadmin"].includes(user.role) && user.calendarWriter === true;
-const initialState = () => ({ status: "signed-out", user: null, errorCode: null, canCreate: false, saving: false, writeRevision: 0, writeOutcome: null });
+const initialState = () => ({ status: "signed-out", user: null, errorCode: null, canCreate: false, canEdit: false, saving: false, writeRevision: 0, writeOutcome: null });
 // Ignore UI-only row IDs when comparing a retry; the writer derives its own document IDs.
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 const fingerprint = input => JSON.stringify(canonical(Object.fromEntries(["rules", "events"].map(key => [key, input[key]?.map(row => Object.fromEntries(Object.entries(row).filter(([field]) => field !== "id")))]))));
 
 // One isolated client survives navigation. Writes are explicitly opt-in; logout invalidates late results.
-export function createCalendarStagingSession(createClient, { writable = false } = {}) {
-  writable = writable === true;
+export function createCalendarStagingSession(createClient, { writable = false, mutable = false } = {}) {
+  writable = writable === true;mutable = writable && mutable === true;
   let client = null, generation = 0, state = initialState(), uncertainDraft = null, writeBlocked = false;
   const listeners = new Set();
   const emit = next => {
-    state = { ...next, canCreate: writable && next.status === "ready" && writerRole(next.user) && !writeBlocked };
+    state = { ...next, canCreate: writable && next.status === "ready" && writerRole(next.user) && !writeBlocked, canEdit: mutable && next.status === "ready" && writerRole(next.user) && !writeBlocked };
     for (const listener of listeners) listener(state);
   };
   const active = (expected, expectedClient) => {
     if (expected !== generation || client !== expectedClient) throw failed("session-changed");
   };
-  async function create(input) {
+  async function submit(kind, input) {
     if (!client || state.status !== "ready") throw failed("unauthenticated");
-    if (!state.canCreate) throw failed("permission-denied");
+    if (!(kind === "mutate" ? state.canEdit : state.canCreate)) throw failed("permission-denied");
     if (state.saving) throw failed("calendar-write-validation", "กำลังบันทึกชุดก่อนหน้า กรุณารอผลก่อน");
     const draft = structuredClone(input);
-    if (uncertainDraft && fingerprint(draft) !== fingerprint(uncertainDraft)) throw failed("calendar-write-validation", "ยังยืนยันผลชุดก่อนหน้าไม่ได้ กรุณาตรวจผลหรือส่งชุดเดิมอีกครั้งก่อนเพิ่มชุดใหม่");
+    if (uncertainDraft && (kind !== uncertainDraft.kind || (kind === "create" ? fingerprint(draft) !== fingerprint(uncertainDraft.input) : JSON.stringify(canonical(draft)) !== JSON.stringify(canonical(uncertainDraft.input))))) throw failed("calendar-write-validation", "ยังยืนยันผลชุดก่อนหน้าไม่ได้ กรุณาตรวจผลหรือส่งชุดเดิมอีกครั้งก่อนเพิ่มชุดใหม่");
     const activeClient = client, current = generation;
     let submitted = false;
     emit({ ...state, saving: true });
@@ -34,7 +34,7 @@ export function createCalendarStagingSession(createClient, { writable = false } 
       emit({ ...state, user });
       if (!writerRole(user)) throw failed("permission-denied");
       submitted = true;
-      const result = await activeClient.create(draft);
+      const result = await activeClient[kind](draft);
       active(current, activeClient);
       uncertainDraft = null;
       activeClient.reader.refresh();
@@ -42,8 +42,8 @@ export function createCalendarStagingSession(createClient, { writable = false } 
       return result;
     } catch (error) {
       const changed = current !== generation || client !== activeClient;
-      if (submitted && (changed || !["calendar-write-validation", "permission-denied"].includes(error.code))) {
-        if (!changed) { uncertainDraft = draft;emit({ ...state, writeOutcome: { status: "uncertain" } }); }
+      if (submitted && (changed || !["calendar-write-validation", "calendar-write-stale", "permission-denied"].includes(error.code))) {
+        if (!changed) { uncertainDraft = { kind, input: draft };emit({ ...state, writeOutcome: { status: "uncertain" } }); }
         throw failed("calendar-write-uncertain", "ยังยืนยันผลบันทึกไม่ได้ กรุณาส่งชุดเดิมอีกครั้ง ระบบจะตรวจ receipt ก่อนเพิ่มรายการ");
       }
       if (!changed && error.code === "permission-denied") { writeBlocked = true;emit({ ...state }); }
@@ -64,8 +64,9 @@ export function createCalendarStagingSession(createClient, { writable = false } 
         await previous?.close();
         const approved = validateCalendarStagingConfig(config);
         if (current !== generation) throw failed("session-changed");
-        candidate = createClient(approved, { writer: writable, roleQa: false, roleWriteQa: false });
-        if (!candidate || "roleWriteQa" in candidate || !writable && "create" in candidate) throw failed("read-only-client-required");
+        candidate = createClient(approved, { writer: writable, roleQa: false, roleWriteQa: false, ...(mutable ? { mutations: true } : {}) });
+        if (!candidate || "roleWriteQa" in candidate || !writable && "create" in candidate || !mutable && "mutate" in candidate) throw failed("read-only-client-required");
+        if (mutable && typeof candidate.mutate !== "function") throw failed("mutation-client-required");
         if (writable && typeof candidate.create !== "function") throw failed("writer-client-required");
         client = candidate;
         await candidate.login();
@@ -105,8 +106,9 @@ export function createCalendarStagingSession(createClient, { writable = false } 
         throw error;
       }
     },
-    create,
-    retryCreate() { return uncertainDraft ? create(uncertainDraft) : Promise.reject(failed("calendar-write-validation", "ไม่มีชุดที่รอยืนยันผล")); },
+    create: input => submit("create", input),
+    mutate: input => submit("mutate", input),
+    retryCreate() { return uncertainDraft ? submit(uncertainDraft.kind, uncertainDraft.input) : Promise.reject(failed("calendar-write-validation", "ไม่มีชุดที่รอยืนยันผล")); },
     refresh() { client?.reader.refresh(); },
     stats: () => client?.reader.stats() || null
   };

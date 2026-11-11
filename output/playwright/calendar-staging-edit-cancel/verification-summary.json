@@ -1,0 +1,48 @@
+{
+  "baseCommit": "32f9982",
+  "branch": "codex/calendar-staging-edit-cancel",
+  "scopeCompleteForLocalReview": true,
+  "productionReady": false,
+  "unit": {
+    "passed": true,
+    "tests": 601,
+    "passedTests": 601,
+    "failed": 0,
+    "files": 37
+  },
+  "emulator": {
+    "passed": true,
+    "groups": 14,
+    "cleanup": true
+  },
+  "createRegression": {
+    "passed": true,
+    "groups": 13
+  },
+  "browser": {
+    "passed": true,
+    "checks": 16,
+    "environment": "Edge /calendar actual main route; synthetic loopback Auth + Firestore",
+    "physicalDeviceUat": false
+  },
+  "lint": "passed targeted ESLint",
+  "scriptSyntax": "passed",
+  "compatibilityBuild": true,
+  "productionPreviewDisabled": true,
+  "cloudWrites": 0,
+  "cloudRulesChanged": false,
+  "profilesChangedOnCloud": false,
+  "productionTouched": false,
+  "newPackagesInstalled": false,
+  "pushed": false,
+  "deployed": false,
+  "uiFixturesCleaned": true,
+  "emulatorRulesRestored": true,
+  "limitations": [
+    "Prototype Rules still require trusted-server enforcement of business invariants before production",
+    "No physical Safari/iPhone/Android UAT or new Google cloud mutation QA",
+    "No single-occurrence exceptions, copy, restore or persistent Undo",
+    "Mutation receipt logs actions/versions and actors, not full historical business snapshots"
+  ],
+  "toolingNote": "One approval-review quota failure and sandbox filesystem errors occurred; Unit tests later passed inside sandbox, compatibility build and loopback cleanup completed through approved host execution."
+}
