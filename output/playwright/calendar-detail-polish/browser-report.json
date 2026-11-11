@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-11-10T23:59:43.480Z",
+  "browser": "Edge",
+  "cases": [
+    {
+      "name": "desktop-once",
+      "source": "existing staging QA fixture",
+      "text": "QA-ROLE-CLOUD-CREATE\nตารางเรียน\nวันที่\n23 เมษายน 2570\nเวลา\n10:00–11:00\nห้อง\n402\nผู้สอน\nไม่ระบุ\nการเกิดซ้ำ\nครั้งเดียว",
+      "size": {
+        "dialogWidth": 580,
+        "viewportHeight": 901,
+        "viewportWidth": 1902
+      }
+    },
+    {
+      "name": "desktop-weekly",
+      "source": "existing synthetic preview fixture",
+      "text": "ทักษะดิจิทัล\nตารางเรียน\nวันที่\n2 พฤศจิกายน 2569\nเวลา\n08:00–10:00\nห้อง\n401\nผู้สอน\nผู้สอนตัวอย่าง A\nตารางรายสัปดาห์\n2 พฤศจิกายน 2569 – 14 มีนาคม 2570\nลบตาราง…\nแก้ไขตาราง",
+      "bounds": {
+        "dialogWidth": 580,
+        "innerHeight": 901,
+        "innerWidth": 1912
+      }
+    },
+    {
+      "name": "mobile-once",
+      "source": "existing staging QA fixture",
+      "requestedViewport": {
+        "width": 390,
+        "height": 844
+      },
+      "text": "QA-ROLE-CLOUD-CREATE\nตารางเรียน\nวันที่\n23 เมษายน 2570\nเวลา\n10:00–11:00\nห้อง\n402\nผู้สอน\nไม่ระบุ\nการเกิดซ้ำ\nครั้งเดียว",
+      "bounds": {
+        "clientWidth": 380,
+        "dialogLeft": 8,
+        "dialogRight": 372,
+        "dialogWidth": 364,
+        "innerHeight": 844,
+        "innerWidth": 390,
+        "scrollWidth": 380
+      }
+    },
+    {
+      "name": "mobile-weekly",
+      "source": "existing synthetic preview fixture",
+      "requestedViewport": {
+        "width": 390,
+        "height": 844
+      },
+      "text": "ทักษะดิจิทัล\nตารางเรียน\nวันที่\n2 พฤศจิกายน 2569\nเวลา\n08:00–10:00\nห้อง\n401\nผู้สอน\nผู้สอนตัวอย่าง A\nตารางรายสัปดาห์\n2 พฤศจิกายน 2569 – 14 มีนาคม 2570\nลบตาราง…\nแก้ไขตาราง",
+      "bounds": {
+        "clientWidth": 380,
+        "dialogLeft": 8,
+        "dialogRight": 372,
+        "dialogWidth": 364,
+        "innerHeight": 844,
+        "innerWidth": 390,
+        "scrollWidth": 380
+      }
+    }
+  ],
+  "viewportRestored": {
+    "dialogWidth": 580,
+    "innerHeight": 901,
+    "innerWidth": 1912
+  },
+  "cloudWriteAttempts": 0,
+  "previewRecordsAdded": 0,
+  "physicalSafariOrAndroidTested": false,
+  "theme": "existing dark appearance",
+  "qaBackgroundOverflowFixed": true,
+  "screenshotRecapturedAfterCompositorLag": true
+}

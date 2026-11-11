@@ -265,6 +265,7 @@
 @media(max-width:760px) { .cal-emulator-controls .cal-form-grid { grid-template-columns:1fr; }.cal-emulator-controls .cal-dialog-actions { justify-content:flex-start;margin-top:0; } }
 .cal-import-dataset-note { margin:18px 0; padding:16px; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-soft); }
 .cal-import-dataset-note p { font-size:.8125rem; line-height:1.6; color:var(--ui-sub); }
+.cal-import-dataset-note pre { max-width:100%; white-space:pre-wrap; overflow-wrap:anywhere; }
 .dl-import-form { margin-top:20px; }
 .dl-import-source { margin:16px 0; }
 .dl-import-source summary,.dl-import-proctors summary { min-height:44px;padding-block:12px;cursor:pointer;font-size:.875rem; }

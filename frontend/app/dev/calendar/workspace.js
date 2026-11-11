@@ -9,7 +9,7 @@ import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassCont
 import { GlassSurface } from "../../../components/ui/GlassSurface";
 import { MenuPopover } from "../../../components/ui/MenuPopover";
 import { Dialog } from "../../../components/ui/Dialog";
-import { CALENDAR_KINDS, CALENDAR_ROOMS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
+import { CALENDAR_KINDS, CALENDAR_ROOMS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../../lib/calendarView";
 import CalendarEntryForm from "./CalendarEntryForm";
 import ClassroomImport from "./ClassroomImport";
 import DlImageImport from "./DlImageImport";
@@ -99,6 +99,7 @@ export default function CalendarPreview({ externalCalendar = null }) {
   const datasetLabel = externalCalendar ? externalCalendar.sourceName || "Staging" : dataset === "legacy" ? "ข้อมูลเดิมจำลอง" : dataset === "sample" ? "ชุดตัวอย่าง" : "พื้นที่ทดลองนำเข้า";
   const [filters, setFilters] = usePreviewState("calendar.filters", defaults), [filterDraft, setFilterDraft] = useState(defaults);
   const [dialog, setDialog] = useState(null), [selected, setSelected] = useState(null), [selectedHoliday, setSelectedHoliday] = useState(null);
+  const selectedPeriod = calendarDetailPeriod(selected);
   const readOnly = Boolean(externalCalendar), externalIdentity = externalCalendar?.identity?.id;
   useEffect(() => { if (readOnly) { setDialog(null);setSelected(null);setSelectedHoliday(null); } }, [readOnly, externalIdentity]);
   const [entry, setEntry] = useState(newEntry("2026-11-06")), [editing, setEditing] = useState(null), [error, setError] = useState(null);
@@ -555,9 +556,9 @@ export default function CalendarPreview({ externalCalendar = null }) {
             <dt>ผู้สอน</dt>
             <dd>{selected.teacher || "ไม่ระบุ"}</dd>
           </div>}
-          {selected.recurring && <div>
-            <dt>ตารางรายสัปดาห์</dt>
-            <dd>{`${calendarLabel(selected.validFrom)} – ${calendarLabel(selected.validTo)}`}</dd>
+          {selectedPeriod && <div>
+            <dt>{selectedPeriod.label}</dt>
+            <dd>{selectedPeriod.value}</dd>
           </div>}
         </dl>
         {canEdit && <div className="cal-dialog-actions">

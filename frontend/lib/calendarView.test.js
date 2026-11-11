@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarHolidays, calendarRange, calendarRoomColor, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
+import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarHolidays, calendarRange, calendarRoomColor, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
 const event = { id: "one", sourceId: "one", date: "2026-11-03", start: "09:00", end: "10:30", rooms: ["406"], title: "กิจกรรมตัวอย่าง", kind: "dl", participants: 75, proctors: ["fixture-a"], repeat: "none" };
 describe("calendar date-only and occurrence behavior", () => {
   it("rejects rollover dates and keeps Monday weeks across month/year boundaries", () => {
@@ -66,5 +66,31 @@ describe("calendar date-only and occurrence behavior", () => {
   });
   it("validates missing and invalid input while allowing the evening DL round", () => {
     expect(validateCalendarEntry({ ...event, start: "17:00", end: "18:30" })).toBe(null);expect(validateCalendarEntry({ ...event, title: " " }).field).toBe("title");expect(validateCalendarEntry({ ...event, participants: 75.5 }).field).toBe("participants");expect(validateCalendarEntry({ ...event, proctors: [] }).field).toBe("proctors");expect(validateCalendarEntry({ ...event, end: "08:30" }).field).toBe("end");
+  });
+});
+
+describe("calendar detail period presentation", () => {
+  const rule = { id: "synthetic-once", title: "Synthetic classroom", kind: "classroom", weekday: 4, start: "10:00", end: "11:00", rooms: ["402"], semester: "2/2569", validFrom: "2027-04-23", validTo: "2027-04-23" };
+  it("labels a one-day stored rule as one-off without changing its occurrence data", () => {
+    const before = structuredClone(rule);
+    const [row] = expandCalendar({ rules: [rule], events: [] }, { start: "2027-04-23", end: "2027-04-23" });
+    expect(row.recurring).toBe(true);
+    expect(calendarDetailPeriod(row)).toEqual({ label: "การเกิดซ้ำ", value: "ครั้งเดียว" });
+    expect(rule).toEqual(before);
+    expect(expandCalendar({ rules: [rule], events: [] }, { start: "2027-04-30", end: "2027-04-30" })).toHaveLength(0);
+  });
+  it("keeps weekly bounds even when the current view contains only one occurrence", () => {
+    const weekly = { ...rule, validTo: "2027-04-30" };
+    const rows = expandCalendar({ rules: [weekly], events: [] }, { start: "2027-04-23", end: "2027-04-23" });
+    expect(rows).toHaveLength(1);
+    expect(calendarDetailPeriod(rows[0])).toEqual({ label: "ตารางรายสัปดาห์", value: "23 เมษายน 2570 – 30 เมษายน 2570" });
+    expect(expandCalendar({ rules: [weekly], events: [] }, { start: "2027-04-23", end: "2027-04-30" })).toHaveLength(2);
+  });
+  it("preserves the existing dated-event detail layout", () => {
+    const [row] = expandCalendar({ rules: [], events: [event] }, { start: event.date, end: event.date });
+    expect(calendarDetailPeriod(row)).toBeNull();expect(calendarDetailPeriod(null)).toBeNull();
+  });
+  it("does not invent a period for missing, invalid or reversed bounds", () => {
+    for (const row of [{ recurring: true }, { recurring: true, validFrom: "2027-02-30", validTo: "2027-02-30" }, { recurring: true, validFrom: "2027-04-30", validTo: "2027-04-23" }]) expect(calendarDetailPeriod(row)).toBeNull();
   });
 });

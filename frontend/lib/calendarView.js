@@ -41,6 +41,15 @@ export function calendarToday(now = new Date()) {
   return ["year", "month", "day"].map(type => parts.find(part => part.type === type).value).join("-");
 }
 export const calendarLabel = (value, options = { dateStyle: "long" }) => new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", ...options }).format(utc(value));
+// A bounded rule can represent one occurrence; keep this presentation separate from recurrence storage.
+export function calendarDetailPeriod(item) {
+  if (!item?.recurring) return null;
+  const { validFrom, validTo } = item;
+  if (!validCalendarDate(validFrom) || !validCalendarDate(validTo) || validTo < validFrom) return null;
+  return validFrom === validTo
+    ? { label: "การเกิดซ้ำ", value: "ครั้งเดียว" }
+    : { label: "ตารางรายสัปดาห์", value: `${calendarLabel(validFrom)} – ${calendarLabel(validTo)}` };
+}
 export function timeMinutes(value) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value || "")) return NaN;return Number(value.slice(0, 2)) * 60 + Number(value.slice(3)); }
 export function expandCalendar(data, range, semester = "all") {
   const rows = data.events.filter(item => item.date >= range.start && item.date <= range.end && calendarSemesterMatches(item, semester)).map(item => ({ ...item, sourceId: item.id, recurring: false }));
