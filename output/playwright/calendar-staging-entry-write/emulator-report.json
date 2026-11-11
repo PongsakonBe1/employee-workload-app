@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "project": "labboy-workload-app-staging",
+  "firestoreEndpoint": "http://127.0.0.1:18080",
+  "authEndpoint": "http://127.0.0.1:19099",
+  "checks": [
+    "session manual create/read-back and receipt replay",
+    "reviewed PDF planner output reaches session writer atomically",
+    "reviewed DL planner: two evening rounds, 75 each, 406+407 and directory IDs",
+    "one conflicting row prevents the entire import and gate advance",
+    "proctor collision denied even when rooms do not overlap",
+    "two session controllers serialize conflicting concurrent writes",
+    "identical concurrent batch creates one schedule across two sessions",
+    "Staff and Admin without capability denied by session and actual Rules raw batch",
+    "actual SDK offline preflight fails without queuing a write or advancing the gate",
+    "lost response after actual commit retries frozen input without another write",
+    "read-back failure does not erase confirmed commit; refresh recovers",
+    "fresh profile preflight blocks a capability revoked after login",
+    "logout clears writer state and read cache"
+  ],
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "ownedFixtureCleanupPassed": true,
+  "sourceRulesChanged": false,
+  "note": "Synthetic Emulator Auth; actual Google session is a separate browser check. PDF/OCR byte parsing is covered separately."
+}

@@ -57,7 +57,7 @@ export function createCalendarWriter(db, getUid, onCommitted, { expectedRevision
         });
         // Read deterministic targets too: inactive existing records must never be overwritten.
         const targets = await Promise.all(checked.entries.map(row => tx.get(doc(db, row.collection, row.id))));
-        if (targets.some(record => record.exists())) throw calendarWriteError("พบเอกสารเดิมที่หยุดใช้ กรุณาตรวจรายการก่อนนำเข้าอีกครั้ง");
+        if (targets.some(record => record.exists())) throw Object.assign(calendarWriteError("พบเอกสารเดิมที่หยุดใช้ กรุณาตรวจรายการก่อนนำเข้าอีกครั้ง"), { retryOnRevisionChange: true });
         active();
         const metadata = {
           operationId: plan.operationId,
@@ -96,10 +96,11 @@ export function createCalendarWriter(db, getUid, onCommitted, { expectedRevision
           onCommitted?.();
           return result;
         } catch (error) {
-          if (error.code !== "permission-denied" || contentionAttempt === 2 || observedRevision === undefined) throw error;
+          if ((error.code !== "permission-denied" && !error.retryOnRevisionChange) || contentionAttempt === 2 || observedRevision === undefined) throw error;
           active();
           // Some stale-revision commits fail rules before the SDK sees an ABORTED status.
-          // Re-read through the same user permissions; never retry a genuine unchanged-gate denial.
+          // A target can also appear after an out-of-transaction query. Retry only when a fresh
+          // authorized gate read proves contention; never overwrite an unchanged-gate target.
           const currentGate = await getDocFromServer(doc(db, "calendarWriteState", "main"));
           if (!currentGate.exists() || currentGate.data().revision === observedRevision) throw error;
         }

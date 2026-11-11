@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "targetProject": "labboy-workload-app-staging",
+  "database": "(default)",
+  "status": "proposed-not-authorized-to-write",
+  "entry": "http://127.0.0.1:4311/calendar",
+  "actorAlias": "superadmin",
+  "proctorAliases": ["staff", "superadmin"],
+  "limits": {
+    "newSchedules": 5,
+    "newOperations": 3,
+    "profileWrites": 0,
+    "rulesChanges": 0,
+    "updates": 0,
+    "deletes": 0
+  },
+  "operations": [
+    {
+      "id": "manual",
+      "source": "manual-form",
+      "classrooms": [
+        { "title": "QA-ENTRY-MANUAL", "date": "2027-05-17", "room": "401", "start": "09:00", "end": "10:00", "semester": "1/2570", "teacher": "", "repeat": "none" }
+      ],
+      "dl": []
+    },
+    {
+      "id": "pdf",
+      "source": "anonymous-pdf-reviewed",
+      "classrooms": [
+        { "title": "QA-ENTRY-PDF-401", "date": "2027-05-18", "room": "401", "start": "11:00", "end": "12:00", "semester": "1/2570", "teacher": "", "repeat": "none" },
+        { "title": "QA-ENTRY-PDF-402", "date": "2027-05-18", "room": "402", "start": "11:00", "end": "12:00", "semester": "1/2570", "teacher": "", "repeat": "none" }
+      ],
+      "dl": []
+    },
+    {
+      "id": "dl",
+      "source": "anonymous-image-reviewed",
+      "classrooms": [],
+      "dl": [
+        { "title": "สอบ Digital Literacy", "date": "2027-05-19", "rooms": ["406", "407"], "start": "17:00", "end": "18:30", "participants": 75, "examType": "student", "semester": "1/2570", "proctorAliases": ["staff", "superadmin"] },
+        { "title": "สอบ Digital Literacy", "date": "2027-05-20", "rooms": ["406", "407"], "start": "17:00", "end": "18:30", "participants": 75, "examType": "student", "semester": "1/2570", "proctorAliases": ["staff", "superadmin"] }
+      ]
+    }
+  ],
+  "executionPolicy": "Require explicit review of this manifest before the first cloud write. Review fields after PDF/OCR; source output is not permission. Stop on unexpected revisions, conflicts, missing directory identities, uncertain outcomes or budget mismatch. No test-fixture cleanup in this phase."
+}

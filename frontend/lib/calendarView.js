@@ -81,6 +81,11 @@ export function layoutCalendarDay(rows) {
 export function calendarConflicts(candidate, rows, excludedSource = null) {
   return rows.filter(row => row.sourceId !== excludedSource && row.date === candidate.date && row.rooms.some(room => candidate.rooms.includes(room)) && timeMinutes(candidate.start) < timeMinutes(row.end) && timeMinutes(row.start) < timeMinutes(candidate.end));
 }
+// Reveal a successfully created batch without changing its data or unrelated appearance/holiday filters.
+export function calendarFiltersForCreated(filters, rows, kind) {
+  if (!rows.length) return filters;
+  return { ...filters, semester: filters.semester === "all" ? "all" : rows[0].semester || filters.semester, kinds: [...new Set([...filters.kinds, kind])], query: "", room: filters.room === "all" || rows.every(row => row.rooms?.includes(filters.room)) ? filters.room : "all" };
+}
 export function validateCalendarEntry(entry) {
   if (!entry.title?.trim()) return { field: "title", message: "ระบุชื่อวิชาหรือกิจกรรม" };
   if (!Object.hasOwn(CALENDAR_KINDS, entry.kind)) return { field: "kind", message: "เลือกประเภทกิจกรรม" };

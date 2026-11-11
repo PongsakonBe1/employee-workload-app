@@ -9,7 +9,7 @@ import { GlassButton, GlassControlGroup } from "../ui/GlassControls";
 import { GlassSurface } from "../ui/GlassSurface";
 import { MenuPopover } from "../ui/MenuPopover";
 import { Dialog } from "../ui/Dialog";
-import { CALENDAR_KINDS, CALENDAR_ROOMS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../lib/calendarView";
+import { CALENDAR_KINDS, CALENDAR_ROOMS, CALENDAR_ROOM_COLORS, addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarFiltersForCreated, calendarLabel, calendarRange, calendarToday, calendarWeekday, expandCalendar, filterCalendar, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "../../lib/calendarView";
 import CalendarEntryForm from "./CalendarEntryForm";
 import ClassroomImport from "./ClassroomImport";
 import DlImageImport from "./DlImageImport";
@@ -136,6 +136,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
   function updateEntry(change) {
     setEntry(change);setError(null);
   }
+  function revealCreated(rows, kind, date) { selectDate(date);setFilters(previous => calendarFiltersForCreated(previous, rows, kind)); }
   function commit(next, message) { setUndo({ before: data, message });setData(next);setContractResult(null);setDialog(null);setStatus(message + " · " + datasetLabel); }
   async function createExternal(draft) {
     try {
@@ -143,7 +144,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       setDialog(null);setStatus(`บันทึก ${result.created} รายการ · ข้ามรายการเดิม ${result.skipped} รายการ · ${datasetLabel}`);
       return null;
     } catch (failure) {
-      return failure.code === "calendar-write-validation" ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
+      return ["calendar-write-validation", "calendar-write-preflight", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
     }
   }
   async function saveEntry(event) {
@@ -158,7 +159,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
     const id = editing?.sourceId || `preview-calendar-${++counter.current}`;
     if (externalCalendar) {
       const draft = value.kind === "classroom" ? { rules: value.rooms.map(room => ({ ...value, id, rooms: [room], validFrom: value.date, validTo: value.repeat === "weekly" ? value.validTo : value.date, weekday: calendarWeekday(value.date) })), events: [] } : { rules: [], events: [{ ...value, id }] };
-      const failure = await createExternal(draft);if (failure) setError({ message: failure });else selectDate(value.date);return;
+      const failure = await createExternal(draft);if (failure) setError({ message: failure });else revealCreated([value], value.kind, value.date);return;
     }
     const next = { rules: data.rules.filter(item => item.id !== id), events: data.events.filter(item => item.id !== id) };
     if (value.repeat === "weekly") next.rules = [...next.rules, { ...value, id, validFrom: value.date, weekday: calendarWeekday(value.date) }];else next.events = [...next.events, { ...value, id }];
@@ -176,7 +177,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
   }
   async function importClassrooms(rules) {
     if (!canCreate || !rules.length) return "ไม่มีสิทธิ์เพิ่มตาราง";
-    if (externalCalendar) { const failure = await createExternal({ rules, events: [] });if (!failure) selectDate(rules.map(row => row.validFrom).sort()[0]);return failure; }
+    if (externalCalendar) { const failure = await createExternal({ rules, events: [] });if (!failure) revealCreated(rules, "classroom", rules.map(row => row.validFrom).sort()[0]);return failure; }
     const imported = rules.map(rule=>({...rule,id:`pdf-preview-${++counter.current}`}));
     commit({ ...data, rules: [...data.rules, ...imported] }, `นำเข้า ${imported.length} ตารางรายสัปดาห์แล้ว`);
     selectDate(imported.map(rule=>rule.validFrom).sort()[0]);
@@ -192,7 +193,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
   }
   async function importDlRounds(events, options) {
     if (!canCreate) return "ไม่มีสิทธิ์นำเข้าตารางสอบ";
-    if (externalCalendar) { const failure = await createExternal({ rules: [], events: events.map(row => ({ ...row, examType: options.examType })) });if (!failure) selectDate(events.map(row => row.date).sort()[0]);return failure; }
+    if (externalCalendar) { const failure = await createExternal({ rules: [], events: events.map(row => ({ ...row, examType: options.examType })) });if (!failure) revealCreated(events, "dl", events.map(row => row.date).sort()[0]);return failure; }
     const candidate = events.map((row,index)=>({...row,id:"commit-"+index,selected:true,proctorKeys:[],manualProctors:row.proctors}));
     const checked = planDlImport(candidate,{...options,people},data);
     if(checked.issues.length) return checked.issues[0].message;

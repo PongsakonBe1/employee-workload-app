@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-11-11T10:39:32.033Z",
+  "target": "labboy-workload-app-staging",
+  "stage": "progress",
+  "manifestHash": "23cb6dc5922d7d75ac03dab64078bc0d8305204177bef42679d864343f65b7af",
+  "expectedSchedules": 5,
+  "expectedOperations": 3,
+  "allTargetsAbsent": false,
+  "schedules": [
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-63606f89933a0f100aa10c02372bbb2c8c4afd1f912e7d13c0a23e409196efb5",
+      "operationId": "op-f66773027317813dfdefe8afc796d32d9c8cdd02dc9f0a00f25da5c5e0981ea1",
+      "businessFieldsMatch": true,
+      "digest": "54218978abf9619c5c0505936dceeb160c4afe0f26bcb180277c3266b0a05cd4"
+    },
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-1add7cfab2b6785f15c17a399ac1532d86997823f7ce21fec4eef8944ba44b83",
+      "operationId": "op-03416c8d7e1efea2ff32e12fa14e6397d2ade90692d2aa5d65735c855014b35e",
+      "businessFieldsMatch": true,
+      "digest": "cbe06271db4411ddd8e156c0e3517ec45048f1a6867f9715c6bb055521a17ea7"
+    },
+    {
+      "collection": "classroomSchedules",
+      "id": "cal-5513984aa5fa8e5c11f1a918e8b2be3fb7420bc1408c3765b2e00fd8acf7f6f7",
+      "operationId": "op-03416c8d7e1efea2ff32e12fa14e6397d2ade90692d2aa5d65735c855014b35e",
+      "businessFieldsMatch": true,
+      "digest": "8a131cac3b428a1502b7d12b88bf404883cb549f35f1aa646904f9e72582005c"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "op-f66773027317813dfdefe8afc796d32d9c8cdd02dc9f0a00f25da5c5e0981ea1",
+      "count": 1,
+      "skipped": 0,
+      "digest": "5d335f8a051273f7d3de53fd78b716c21d4e56540b1ca5f72c9ceccfadd9633b"
+    },
+    {
+      "id": "op-03416c8d7e1efea2ff32e12fa14e6397d2ade90692d2aa5d65735c855014b35e",
+      "count": 2,
+      "skipped": 0,
+      "digest": "84da928655094776549930c3a7488ade39dfb144d3c5f8edec0e2d4514cd8ed6"
+    }
+  ],
+  "revision": 12,
+  "gateDigest": "cd3545d3d0a735f3e3e99dd9c6eedc2bd05772e156138d2c1a5040487373ad57",
+  "recordsWritten": 0,
+  "identifiersLogged": false,
+  "productionAccessed": false,
+  "privilegedAuditIsNotRulesEvidence": true
+}

@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { calendarStagingEntryEnabled, calendarStagingEntryPath, resolveStagingHref, stagingEntryLinks, stagingEntrySection } from "./calendarStagingEntry.js";
+import { calendarStagingEntryEnabled, calendarStagingWriteEnabled, calendarStagingEntryPath, resolveStagingHref, stagingEntryLinks, stagingEntrySection } from "./calendarStagingEntry.js";
 import { selectDefaultFirebaseApp } from "./firebaseAppSelection.js";
 describe("isolated staging entry policy", () => {
+  it("requires a separate exact write flag and a development staging entry", () => {
+    expect(calendarStagingWriteEnabled("development", "1", "1")).toBe(true);
+    for (const values of [["production","1","1"],["development","0","1"],["development","1",undefined],["development","1","true"],["test","1","1"]]) expect(calendarStagingWriteEnabled(...values)).toBe(false);
+  });
   it("requires the exact flag and development mode, including when a flag leaks into production", () => {
     expect(calendarStagingEntryEnabled("development", "1")).toBe(true);
     for (const [environment, flag] of [["production", "1"], ["test", "1"], ["development", "0"], ["development", undefined], ["development", "true"]]) expect(calendarStagingEntryEnabled(environment, flag)).toBe(false);

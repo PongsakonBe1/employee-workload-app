@@ -1,0 +1,12 @@
+{
+  "cleanupPassed": true,
+  "browserRegressionExecuted": false,
+  "limitation": "Extra demo-writer browser regression could not sign in: running Auth Emulator resolves SDK API keys to its staging default project, while the owned test identity was created in the separate demo-writer project. Session SDK/Rules SIT uses the aligned project and passed separately.",
+  "project": "demo-calendar-writer",
+  "endpoint": "http://127.0.0.1:18080",
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "ownedFixtureCleanupPassed": true,
+  "ownedAuthRemoved": true,
+  "preexistingRecordsChanged": false
+}

@@ -1,0 +1,11 @@
+{
+  "userApproved": true,
+  "source": "User explicitly approved the concrete manifest in this chat",
+  "manifestHash": "23cb6dc5922d7d75ac03dab64078bc0d8305204177bef42679d864343f65b7af",
+  "target": "labboy-workload-app-staging",
+  "maximumSchedules": 5,
+  "maximumOperations": 3,
+  "noProfileOrRulesChanges": true,
+  "noProduction": true,
+  "noDeletes": true
+}

@@ -61,3 +61,86 @@ describe("read-only staging workspace session across navigation", () => {
     const session = createCalendarStagingSession(() => sdk);await expect(session.login(config)).rejects.toMatchObject({ code: "permission-denied" });expect(session.getState().user).toBeNull();expect(sdk.close).toHaveBeenCalledOnce();
   });
 });
+
+const draft = (title = "Synthetic session fixture") => ({ rules: [{ id: "ui-row", title, rooms: ["401"], weekday: 0, validFrom: "2027-05-17", validTo: "2027-05-17", start: "09:00", end: "10:00", semester: "1/2570", teacher: "" }], events: [] });
+const saved = { created: 1, skipped: 0, operationId: "op-" + "a".repeat(64), repeated: false };
+function writerClient(role = "superadmin", capability = true) {
+  const sdk = client(role), profile = { id: "synthetic-staff", displayName: "Synthetic tester", role, active: true, calendarWriter: capability };
+  sdk.identity.mockResolvedValue(profile);sdk.transport.identity.mockResolvedValue(profile);sdk.create = vi.fn(async () => ({ ...saved }));
+  return { sdk, profile };
+}
+describe("opt-in staging session writes", () => {
+  it("keeps the default session read-only and never forwards create", async () => {
+    const sdk = client(), session = createCalendarStagingSession(() => sdk);await session.login(config);
+    expect(session.getState().canCreate).toBe(false);await expect(session.create(draft())).rejects.toMatchObject({ code: "permission-denied" });
+  });
+  it.each([["staff",true],["admin",false],["superadmin",false]])("denies %s without the required role/capability pair (%s)", async (role, capability) => {
+    const { sdk } = writerClient(role, capability), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    expect(session.getState().canCreate).toBe(false);await expect(session.create(draft())).rejects.toMatchObject({ code: "permission-denied" });expect(sdk.create).not.toHaveBeenCalled();
+  });
+  it.each(["admin","superadmin"])("supports an active %s writer only through explicit opt-in", async role => {
+    const { sdk } = writerClient(role), factory = vi.fn(() => sdk), session = createCalendarStagingSession(factory, { writable: true });await session.login(config);
+    expect(factory.mock.calls[0][1]).toEqual({ writer: true, roleQa: false, roleWriteQa: false });expect(session.getState().canCreate).toBe(true);
+    await expect(session.create(draft())).resolves.toEqual(saved);expect(session.getState()).toMatchObject({ saving: false, writeRevision: 1, writeOutcome: { status: "committed", readBack: "pending" } });
+  });
+  it("rejects a writable client without a create method or with a QA mutation API", async () => {
+    const session = createCalendarStagingSession(() => client(), { writable: true });await expect(session.login(config)).rejects.toMatchObject({ code: "writer-client-required" });
+    const other = createCalendarStagingSession(() => ({ ...writerClient().sdk, roleWriteQa: {} }), { writable: true });await expect(other.login(config)).rejects.toMatchObject({ code: "read-only-client-required" });
+  });
+  it("freezes the reviewed payload and suppresses a second submit before preflight returns", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    let release;sdk.identity.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const input = draft(), before = structuredClone(input), pending = session.create(input);input.rules[0].title = "Changed after click";
+    expect(session.getState().saving).toBe(true);await expect(session.create(draft())).rejects.toMatchObject({ code: "calendar-write-validation" });
+    release({ id: "synthetic-staff", role: "superadmin", active: true, calendarWriter: true });await pending;expect(sdk.create).toHaveBeenCalledExactlyOnceWith(before);
+  });
+  it("rechecks a revoked capability before forwarding to the writer", async () => {
+    const { sdk, profile } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    sdk.identity.mockResolvedValue({ ...profile, calendarWriter: false });await expect(session.create(draft())).rejects.toMatchObject({ code: "permission-denied" });
+    expect(sdk.create).not.toHaveBeenCalled();expect(session.getState()).toMatchObject({ canCreate: false, saving: false, status: "ready" });
+  });
+  it("leaves a validation error editable without recording a commit or retry-only batch", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    sdk.create.mockRejectedValueOnce({ code: "calendar-write-validation", message: "Room conflict" });await expect(session.create(draft())).rejects.toMatchObject({ message: "Room conflict" });
+    expect(session.getState().writeOutcome).toBeNull();await session.create(draft("Corrected"));expect(session.getState().writeOutcome.status).toBe("committed");
+  });
+  it("does not call the writer when the fresh identity read fails", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);sdk.identity.mockRejectedValueOnce({ code: "unavailable" });
+    await expect(session.create(draft())).rejects.toMatchObject({ code: "calendar-write-preflight" });expect(sdk.create).not.toHaveBeenCalled();expect(session.getState().saving).toBe(false);
+  });
+  it("retains an uncertain batch, rejects a different batch and retries the frozen original", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    sdk.create.mockRejectedValueOnce({ code: "unavailable" }).mockResolvedValueOnce({ ...saved, created: 0, skipped: 1, repeated: true });
+    const input = draft();await expect(session.create(input)).rejects.toMatchObject({ code: "calendar-write-uncertain" });input.rules[0].title = "Edited after uncertainty";
+    expect(session.getState()).toMatchObject({ saving: false, writeOutcome: { status: "uncertain" } });
+    await expect(session.create(input)).rejects.toMatchObject({ code: "calendar-write-validation" });expect(sdk.create).toHaveBeenCalledTimes(1);
+    const result = await session.retryCreate();expect(result.repeated).toBe(true);expect(sdk.create.mock.calls[1][0]).toEqual(draft());expect(session.getState().writeOutcome.status).toBe("committed");
+  });
+  it("allows identical UI retries even when the form generates a new row ID", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);sdk.create.mockRejectedValueOnce({ code: "unavailable" });
+    await expect(session.create(draft())).rejects.toMatchObject({ code: "calendar-write-uncertain" });const retry = draft();retry.rules[0].id = "new-ui-row";await expect(session.create(retry)).resolves.toEqual(saved);
+  });
+  it("invalidates pre-write cache and distinguishes committed writes from failed reads", async () => {
+    const { sdk } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);await session.read("2027-05-17", "2027-05-17");
+    await session.create(draft());expect(session.stats().cachedMonths).toEqual([]);sdk.transport.classrooms.mockRejectedValueOnce({ code: "unavailable" });
+    await expect(session.read("2027-05-17", "2027-05-17")).rejects.toMatchObject({ code: "unavailable" });expect(session.getState().writeOutcome).toMatchObject({ status: "committed", created: 1, readBack: "failed" });
+    await session.read("2027-05-17", "2027-05-17");expect(session.getState().writeOutcome.readBack).toBe("verified");expect(sdk.create).toHaveBeenCalledTimes(1);
+  });
+  it("does not publish an old read after a commit or turn it into a read-back failure", async () => {
+    const { sdk, profile } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    let release;sdk.reader.read = vi.fn(() => new Promise(resolve => { release = resolve; }));const pending = session.read("2027-05-17", "2027-05-17");
+    await session.create(draft());release({ identity: profile, data: { rules: [], events: [] } });await expect(pending).rejects.toMatchObject({ code: "session-changed" });expect(session.getState().writeOutcome.readBack).toBe("pending");
+  });
+  it("does not let an invalidated old read overwrite a successful refreshed read-back", async () => {
+    const { sdk, profile } = writerClient(), session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);await session.create(draft());
+    let reject;sdk.reader.read = vi.fn().mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; })).mockResolvedValueOnce({ identity: profile, data: { rules: [], events: [] } });
+    const old = session.read("2027-05-17", "2027-05-17");session.refresh();await session.read("2027-05-17", "2027-05-17");reject({ code: "session-changed" });
+    await expect(old).rejects.toMatchObject({ code: "session-changed" });expect(session.getState().writeOutcome.readBack).toBe("verified");
+  });
+  it("does not publish a late write into a new account, or claim it was cancelled", async () => {
+    const first = writerClient(), second = client(), factory = vi.fn().mockReturnValueOnce(first.sdk).mockReturnValueOnce({ ...second, create: vi.fn() }), session = createCalendarStagingSession(factory, { writable: true });await session.login(config);
+    let release;first.sdk.create.mockImplementation(() => new Promise(resolve => { release = resolve; }));const pending = session.create(draft());await vi.waitFor(() => expect(first.sdk.create).toHaveBeenCalledOnce());
+    await session.logout();await session.login(config);release(saved);await expect(pending).rejects.toMatchObject({ code: "calendar-write-uncertain" });
+    expect(session.getState()).toMatchObject({ canCreate: false, saving: false, writeRevision: 0, writeOutcome: null });
+  });
+});

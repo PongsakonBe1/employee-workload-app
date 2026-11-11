@@ -78,7 +78,53 @@ async function writeFixtures(records) {
 const command = new Command("calendar-staging-internal").before(options => {
   if (options.project !== target || options.user?.email !== account) throw new Error("Staging target/account mismatch");
 }).before(requireAuth).action(async () => {
-  if (action === "qaStagingEntryAudit") {
+  if (action === "qaEntryWriteStorageAudit") {
+    const stage = process.argv[4];if (!["before", "progress", "after"].includes(stage)) throw new Error("Explicit entry write audit stage required");
+    const pairs = process.argv.slice(5).map(value => { const at = value.indexOf("=");return { alias: value.slice(0, at), email: value.slice(at + 1) }; });
+    if (pairs.length !== 2 || pairs.some(row => !["staff", "superadmin"].includes(row.alias) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) || new Set(pairs.map(row => row.alias)).size !== 2 || new Set(pairs.map(row => row.email)).size !== 2) throw new Error("Two approved identity aliases required");
+    const { Client } = require("./lib/apiv2"), authApi = new Client({ urlPrefix: "https://identitytoolkit.googleapis.com", apiVersion: "v1" }), store = new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" });
+    const identities = {};
+    for (const pair of pairs) {
+      const lookup = await authApi.post(`/projects/${target}/accounts:lookup`, { email: [pair.email] }, { queryParams: { fields: "users(localId,emailVerified,providerUserInfo(providerId))" } });
+      const users = lookup.body.users || [];if (users.length !== 1 || users[0].emailVerified !== true || !users[0].providerUserInfo?.some(row => row.providerId === "google.com")) throw new Error("Verified Google staging identity required");identities[pair.alias] = users[0].localId;
+    }
+    const { prepareEntryWriteAudit } = await import("./calendar-entry-write-plan.mjs");
+    const plan = await prepareEntryWriteAudit(fs.readFileSync(path.join(root, "docs/development/calendar-staging-entry-write/staging-fixtures.json"), "utf8"), identities);
+    const prefix = `projects/${target}/databases/(default)/documents`, references = [...plan.operations.flatMap(row => [...row.entries.map(entry => `${prefix}/${entry.collection}/${entry.id}`), `${prefix}/calendarWriteOperations/${row.operationId}`]), `${prefix}/calendarWriteState/main`];
+    const response = await store.post(`/${prefix}:batchGet`, { documents: references });
+    const found = new Map((response.body || []).filter(row => row.found).map(row => [row.found.name, row.found]));
+    const decode = value => value.stringValue ?? value.timestampValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : value.booleanValue !== undefined ? value.booleanValue : value.arrayValue ? (value.arrayValue.values || []).map(decode) : value.mapValue ? decodeFields(value.mapValue.fields || {}) : null);
+    const decodeFields = values => Object.fromEntries(Object.entries(values).map(([key, value]) => [key, decode(value)]));
+    const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    const equal = (left, right) => JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
+    const digest = value => createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
+    const gate = decodeFields(found.get(`${prefix}/calendarWriteState/main`)?.fields || {});
+    const baseline = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-staging-entry-write/cloud-audit-before.json"), "utf8"));
+    if (stage === "before" && (gate.revision !== baseline.revision || found.size !== 1)) throw new Error("Expected fixture/receipt must be absent and gate must match baseline before writing");
+    const schedules = [], receipts = [];let missingOperation = false;
+    if (stage !== "before") {
+      for (const operation of plan.operations) {
+        const present = operation.entries.filter(entry => found.has(`${prefix}/${entry.collection}/${entry.id}`)), receiptRow = found.get(`${prefix}/calendarWriteOperations/${operation.operationId}`);
+        if (stage === "progress" && present.length === 0 && !receiptRow) { missingOperation = true;continue; }
+        if (missingOperation) throw new Error("Entry write operations committed out of reviewed order");
+        for (const entry of operation.entries) {
+          const row = found.get(`${prefix}/${entry.collection}/${entry.id}`);if (!row) throw new Error("Expected entry write fixture missing");
+          const actual = decodeFields(row.fields), business = Object.fromEntries(Object.keys(entry.value).map(key => [key, actual[key]]));
+          if (!equal(business, entry.value) || actual.operationId !== operation.operationId || actual.createdBy !== identities.superadmin || actual.schemaVersion !== 1 || !actual.createdAt) throw new Error("Fixture business fields or ownership differ from approved manifest");
+          schedules.push({ collection: entry.collection, id: entry.id, operationId: operation.operationId, businessFieldsMatch: true, digest: digest(actual) });
+        }
+        const row = found.get(`${prefix}/calendarWriteOperations/${operation.operationId}`);if (!row) throw new Error("Expected entry write receipt missing");
+        const actual = decodeFields(row.fields);
+        if (actual.count !== operation.entries.length || actual.skipped !== 0 || actual.createdBy !== identities.superadmin || actual.schemaVersion !== 1 || !actual.createdAt) throw new Error("Entry write receipt differs from approved budget");
+        receipts.push({ id: operation.operationId, count: actual.count, skipped: actual.skipped, digest: digest(actual) });
+      }
+      if (gate.revision !== baseline.revision + receipts.length || receipts.length > 0 && (gate.operationId !== receipts.at(-1).id || gate.updatedBy !== identities.superadmin)) throw new Error("Unexpected entry write gate revision or final operation");
+    }
+    const result = { checkedAt: new Date().toISOString(), target, stage, manifestHash: plan.hash, expectedSchedules: 5, expectedOperations: 3, allTargetsAbsent: stage === "before", schedules, receipts, revision: gate.revision, gateDigest: digest(gate), recordsWritten: 0, identifiersLogged: false, productionAccessed: false, privilegedAuditIsNotRulesEvidence: true };
+    const output = path.join(root, "output/playwright/calendar-staging-entry-write");fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, `cloud-storage-audit-${stage}.json`), JSON.stringify(result, null, 2) + "\n", stage === "before" ? { flag: "wx" } : undefined);return result;
+  }
+  if (["qaStagingEntryAudit", "qaEntryWriteAudit"].includes(action)) {
     const label = process.argv[4];
     if (!["before", "after"].includes(label)) throw new Error("Explicit staging entry audit stage required");
     const requested = process.argv.slice(5).map(value => {
@@ -102,7 +148,7 @@ const command = new Command("calendar-staging-internal").before(options => {
     const gate = await store.post(`/${prefix}:batchGet`, { documents: [`${prefix}/calendarWriteState/main`], mask: { fieldPaths: ["revision", "operationId", "updatedBy", "updatedAt"] } });
     const fields = gate.body?.[0]?.found?.fields;if (!fields) throw new Error("Staging gate unavailable");
     const result = { checkedAt: new Date().toISOString(), target, stage: label, profiles, revision: Number(fields.revision?.integerValue), gateDigest: digest(fields), recordsWritten: 0, identifiersLogged: false, productionAccessed: false, privilegedReadIsNotRulesEvidence: true };
-    const output = path.join(root, "output/playwright/calendar-staging-entry");fs.mkdirSync(output, { recursive: true });
+    const output = path.join(root, "output/playwright", action === "qaEntryWriteAudit" ? "calendar-staging-entry-write" : "calendar-staging-entry");fs.mkdirSync(output, { recursive: true });
     const filename = path.join(output, `cloud-audit-${label}.json`);
     fs.writeFileSync(filename, JSON.stringify(result, null, 2) + "\n", label === "before" ? { flag: "wx" } : undefined);return result;
   }

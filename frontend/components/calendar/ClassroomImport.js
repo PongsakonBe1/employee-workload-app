@@ -114,7 +114,7 @@ export default function ClassroomImport({data,dataset="sample",datasetLabel,onUs
       <label className="cal-import-check"><input type="checkbox" name="import-confirm" className="ui-checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>ตรวจเทียบ PDF และยืนยันชื่อ วัน เวลา ห้อง และช่วงภาคเรียนแล้ว</span></label>
     </>}
     <div className="cal-import-actions">
-      {result&&<p className="cal-import-next-help" id="import-next-help" aria-live="polite">{termIssues.length?`${termIssues[0].message} · กดปุ่มเพื่อไปกรอก`:sandboxNext?"รายการชนกับชุดที่ใช้ดูตัวอย่าง ใช้พื้นที่ทดลองแยกได้โดยไม่ลบชุดเดิม":plan.issues.length?`${plan.issues[0].message} · กดปุ่มเพื่อตรวจแก้`:!confirmed?"ยืนยันว่าได้ตรวจรายการแล้วก่อนเพิ่มลงปฏิทิน":"ตรวจครบแล้ว เพิ่มเป็นชุดและ Undo ได้"}</p>}
+      {result&&<p className="cal-import-next-help" id="import-next-help" aria-live="polite">{termIssues.length?`${termIssues[0].message} · กดปุ่มเพื่อไปกรอก`:sandboxNext?"รายการชนกับชุดที่ใช้ดูตัวอย่าง ใช้พื้นที่ทดลองแยกได้โดยไม่ลบชุดเดิม":plan.issues.length?`${plan.issues[0].message} · กดปุ่มเพื่อตรวจแก้`:!confirmed?"ยืนยันว่าได้ตรวจรายการแล้วก่อนเพิ่มลงปฏิทิน":writeTarget?"ตรวจครบแล้ว เพิ่มเป็นชุดไปยัง staging ยังไม่มี Undo ฐานข้อมูล":"ตรวจครบแล้ว เพิ่มเป็นชุดและ Undo ได้"}</p>}
       <div className="cal-dialog-actions"><GlassButton mode={glassMode} onClick={onCancel}>ยกเลิก</GlassButton><GlassButton mode={glassMode} variant="prominent" type={needsReview?"button":"submit"} onClick={needsReview?reviewNext:undefined} aria-describedby={result?"import-next-help":undefined} disabled={!canEdit||!result||busy}>{result?nextLabel:"เพิ่มตาราง"}</GlassButton></div>
     </div>
   </form>;

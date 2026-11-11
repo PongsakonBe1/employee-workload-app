@@ -1,0 +1,111 @@
+{
+  "target": "labboy-workload-app-staging",
+  "origin": "http://127.0.0.1:4311",
+  "completed": true,
+  "checks": [
+    {
+      "name": "Superadmin main entry enables add/import; unsupported exam kind absent",
+      "passed": true
+    },
+    {
+      "name": "empty title focuses the required field without cloud submission",
+      "passed": true
+    },
+    {
+      "name": "manual approved fixture committed once and read back as 31 classrooms / 0 exams",
+      "passed": true
+    },
+    {
+      "name": "actual PDF byte parsing reads two rows; missing term focuses start field",
+      "passed": true
+    },
+    {
+      "name": "PDF reviewed import creates two schedules atomically and reads back as 33 classrooms",
+      "passed": true
+    },
+    {
+      "name": "actual OCR reads two evening rounds and unmapped proctor focuses its mapping control",
+      "passed": true
+    },
+    {
+      "name": "mobile import dialog fits 390px, native date/time inputs are 16px and within content bounds",
+      "passed": true,
+      "metrics": {
+        "innerWidth": 390,
+        "clientWidth": 380,
+        "scrollWidth": 380
+      },
+      "observedAfterResize": {
+        "clientWidth": 380,
+        "scrollWidth": 514,
+        "dialogWidth": 364,
+        "dialogRight": 372
+      },
+      "fixedBy": "route-level stylesheet imports and percentage-based mobile dialog sizing",
+      "finalMetrics": {
+        "innerWidth": 390,
+        "clientWidth": 380,
+        "scrollWidth": 380
+      }
+    },
+    {
+      "name": "DL approved two-round import committed and read back as 33 classrooms / 2 exams",
+      "passed": true
+    },
+    {
+      "name": "fresh Staff session reads committed cloud data with add/import disabled",
+      "passed": true
+    },
+    {
+      "name": "mobile Staff DL detail shows evening round, 75 per round and two reviewed proctors",
+      "passed": true
+    },
+    {
+      "name": "Staff navigation keeps cache/view/filter and route CSS after returning from placeholder",
+      "passed": true
+    },
+    {
+      "name": "Staff account menu confirms actual Staff role",
+      "passed": true
+    },
+    {
+      "name": "final desktop calendar shows all five approved schedules with route CSS and no root overflow",
+      "passed": true
+    },
+    {
+      "name": "F5 clears in-memory session and calendar until Google sign-in",
+      "passed": true
+    }
+  ],
+  "operations": [
+    {
+      "id": "manual",
+      "status": "committed-and-read-back",
+      "maximumSchedules": 1
+    },
+    {
+      "id": "pdf",
+      "status": "committed-and-read-back",
+      "maximumSchedules": 2
+    },
+    {
+      "id": "dl",
+      "status": "committed-and-read-back",
+      "maximumSchedules": 2
+    }
+  ],
+  "console": {
+    "hydrationMismatchCount": 0,
+    "messageChannelErrors": 2,
+    "origin": "listener source not confirmed; no observed app flow failure"
+  },
+  "limitations": [
+    "Physical Safari/iPhone/Android not tested",
+    "Extra demo-writer Emulator browser regression could not sign in under the running Auth Emulator default project; owned setup was cleaned up. Session SDK/Rules SIT passed separately.",
+    "Cloud creates ran before the after-create filter visibility fix; that fix has pure regression coverage and final cloud read/display checks, without extra cloud writes."
+  ],
+  "cloudUiSubmissions": 3,
+  "expectedNewSchedules": 5,
+  "expectedNewOperations": 3,
+  "newWritesAfterBudgetExhausted": 0
+}

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { calendarStagingEntryEnabled } from "../../lib/calendarStagingEntry";
+import "../../components/calendar/calendar.css";
 const StagingCalendar = dynamic(() => import("../staging/CalendarEntry"), { ssr: false });
 const LegacyCalendar = dynamic(() => import("./legacy"));
 

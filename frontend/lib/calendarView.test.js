@@ -1,6 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarHolidays, calendarRange, calendarRoomColor, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
+import { addCalendarDays, addCalendarMonths, calendarConflicts, calendarDates, calendarDetailPeriod, calendarFiltersForCreated, calendarHolidays, calendarRange, calendarRoomColor, calendarToday, expandCalendar, filterCalendar, layoutCalendarDay, monthCalendarDates, validCalendarDate, validateCalendarEntry } from "./calendarView";
 const event = { id: "one", sourceId: "one", date: "2026-11-03", start: "09:00", end: "10:30", rooms: ["406"], title: "กิจกรรมตัวอย่าง", kind: "dl", participants: 75, proctors: ["fixture-a"], repeat: "none" };
+describe("filters after a successful external create", () => {
+  it("reveals a different semester/kind/room instead of hiding a newly committed event", () => {
+    const filters = { semester: "2/2569", kinds: ["classroom"], room: "401", query: "previous search", public: true, colorBy: "room" };
+    const created = { ...event, date: "2027-05-19", semester: "1/2570" }, next = calendarFiltersForCreated(filters, [created], "dl");
+    expect(filterCalendar(expandCalendar({ rules: [], events: [created] }, { start: created.date, end: created.date }, next.semester), next)).toHaveLength(1);
+    expect(next).toMatchObject({ semester: "1/2570", room: "all", query: "", public: true, colorBy: "room" });expect(filters.query).toBe("previous search");
+  });
+  it("preserves all-semester and a matching room filter, but reveals both rooms of an imported batch", () => {
+    const filters = { semester: "all", kinds: ["classroom"], room: "401", query: "" }, rows = [{ semester: "1/2570", rooms: ["401"] }];
+    expect(calendarFiltersForCreated(filters, rows, "classroom")).toMatchObject({ semester: "all", room: "401", kinds: ["classroom"] });
+    expect(calendarFiltersForCreated(filters, [...rows, { rooms: ["402"] }], "classroom").room).toBe("all");expect(calendarFiltersForCreated(filters, [], "dl")).toBe(filters);
+  });
+});
 describe("calendar date-only and occurrence behavior", () => {
   it("rejects rollover dates and keeps Monday weeks across month/year boundaries", () => {
     expect(validCalendarDate("2027-02-29")).toBe(false);expect(validCalendarDate("2028-02-29")).toBe(true);
