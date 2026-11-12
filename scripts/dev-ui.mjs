@@ -23,6 +23,7 @@ export const uiDevelopmentEnvironment = {
   NEXT_PUBLIC_CALENDAR_STAGING_WRITE: "0",
   NEXT_PUBLIC_CALENDAR_STAGING_MUTATIONS: "0",
   NEXT_PUBLIC_CALENDAR_MUTATION_EMULATOR: "0",
+  NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER: "0",
 };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if(!prepareClassroomPdfAssets()) console.warn("Classroom PDF assets are not installed yet; the rest of the development UI remains available.");

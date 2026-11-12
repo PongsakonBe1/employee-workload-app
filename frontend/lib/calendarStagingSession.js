@@ -7,7 +7,7 @@ const canonical = value => Array.isArray(value) ? value.map(canonical) : value &
 const fingerprint = input => JSON.stringify(canonical(Object.fromEntries(["rules", "events"].map(key => [key, input[key]?.map(row => Object.fromEntries(Object.entries(row).filter(([field]) => field !== "id")))]))));
 
 // One isolated client survives navigation. Writes are explicitly opt-in; logout invalidates late results.
-export function createCalendarStagingSession(createClient, { writable = false, mutable = false } = {}) {
+export function createCalendarStagingSession(createClient, { writable = false, mutable = false, validateConfig = validateCalendarStagingConfig } = {}) {
   writable = writable === true;mutable = writable && mutable === true;
   let client = null, generation = 0, state = initialState(), uncertainDraft = null, writeBlocked = false;
   const listeners = new Set();
@@ -63,7 +63,7 @@ export function createCalendarStagingSession(createClient, { writable = false, m
       let candidate = null;
       try {
         await previous?.close();
-        const approved = validateCalendarStagingConfig(config);
+        const approved = validateConfig(config);
         if (current !== generation) throw failed("session-changed");
         candidate = createClient(approved, { writer: writable, roleQa: false, roleWriteQa: false, ...(mutable ? { mutations: true } : {}) });
         if (!candidate || "roleWriteQa" in candidate || !writable && "create" in candidate || !mutable && "mutate" in candidate) throw failed("read-only-client-required");

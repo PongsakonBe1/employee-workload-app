@@ -32,3 +32,4 @@ firebase/calendar-emulator/.firebase/
 output/playwright/dl-image-import/source-private*
 
 .next-staging-entry
+.next-trusted-emulator

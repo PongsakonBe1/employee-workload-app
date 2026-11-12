@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "project": "demo-calendar-trusted",
+  "checks": [],
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "browserFixturesRetained": false
+}

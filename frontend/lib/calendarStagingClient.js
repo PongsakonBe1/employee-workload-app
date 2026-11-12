@@ -13,11 +13,14 @@ import { calendarRoleWriteSdk } from "./calendarRoleWriteSdk.js";
 import roleWriteProposal from "../../docs/development/calendar-role-write-plan/staging-fixture.json";
 import { calendarTestPassword } from "./calendarEmulatorConfig.js";
 import { createMutationReceiptReplay, validateMutationReplayPacket } from "./calendarMutationReplayQa.js";
+import { validateTrustedCalendarConfig, trustedCalendarRuntimeEnabled } from "./calendarTrustedConfig.js";
+import { createTrustedCalendarTransport } from "./calendarTrustedTransport.js";
 let sequence = 0;
-export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null } = {}) {
+export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null, trustedServer = false } = {}) {
+  if (trustedServer && (!trustedCalendarRuntimeEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER, Boolean(emulatorAccount), typeof window === "undefined" ? null : window.location) || roleQa || roleWriteQa)) throw new Error("Trusted server requires its dedicated loopback runtime");
   if (mutations && (!writer || roleWriteQa)) throw new Error("Mutations require the ordinary writer client");
   if (emulatorAccount && (process.env.NODE_ENV !== "development" || typeof window === "undefined" || !["127.0.0.1", "localhost"].includes(window.location.hostname) || !["admin", "staff", "superadmin"].includes(emulatorAccount))) throw new Error("Synthetic Emulator login requires development on localhost");
-  const approved = validateCalendarStagingConfig(config);
+  const approved = trustedServer ? validateTrustedCalendarConfig(config) : validateCalendarStagingConfig(config);
   const app = initializeApp(approved, "calendar-staging-" + ++sequence);
   const auth = initializeAuth(app, {
     persistence: inMemoryPersistence,
@@ -26,13 +29,14 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true
   });
-  if (emulatorAccount) { connectAuthEmulator(auth, "http://127.0.0.1:19099", { disableWarnings: true });connectFirestoreEmulator(db, "127.0.0.1", 18080); }
+  if (emulatorAccount) { connectAuthEmulator(auth, trustedServer ? "http://127.0.0.1:19199" : "http://127.0.0.1:19099", { disableWarnings: true });connectFirestoreEmulator(db, "127.0.0.1", trustedServer ? 18180 : 18080); }
   const transport = calendarSdkTransport(db);
   const reader = createCalendarReadOnly(transport);
   let closed = false,
     closing = null,
     session = 0;
-  const mutate = writer && mutations ? createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) : null;
+  const serverWriter = trustedServer && writer ? createTrustedCalendarTransport({ getUser: () => closed ? null : auth.currentUser }) : null;
+  const mutate = writer && mutations ? serverWriter?.mutate || createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) : null;
   return {
     reader,
     async identity() {
@@ -47,7 +51,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
       const current = session;
       return probeCalendarWriterReads((collection, id) => getDocFromServer(doc(db, collection, id)), () => !closed && current === session && Boolean(auth.currentUser?.uid));
     } } : {}),
-    ...(writer && !roleWriteQa ? { create: createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
+    ...(writer && !roleWriteQa ? { create: serverWriter?.create || createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
     ...(mutate ? { mutate } : {}),
     ...(mutate && process.env.NODE_ENV === "development" && !emulatorAccount ? { async replayQa({ text, index }) {
       const packet = await validateMutationReplayPacket(text), uid = closed ? null : auth.currentUser?.uid;

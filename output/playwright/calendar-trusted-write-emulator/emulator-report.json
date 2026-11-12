@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "project": "demo-calendar-trusted",
+  "checks": [
+    "unauthenticated/malformed/wrong-project/Staff/no-capability/inactive/origin denied without writes",
+    "actual Web SDK direct write denied by read-only Rules",
+    "manual create and duplicate receipt replay",
+    "PDF review output batch uses same API atomically (not PDF byte parsing)",
+    "DL 17:00–18:30 75 people 406+407 and actual synthetic directory IDs",
+    "room/proctor overlaps reject entire batch without partial entries",
+    "concurrent HTTP writers serialize: one commit, one conflict",
+    "edit, stale denial, soft cancel and both frozen receipt replays",
+    "fresh revoked capability rejected server-side",
+    "HTTP reply lost after commit is uncertain; original receipt prevents duplicate"
+  ],
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "browserFixturesRetained": true
+}

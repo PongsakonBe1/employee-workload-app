@@ -14,4 +14,12 @@ export default [{
   files: classroomFiles,
   languageOptions: { ecmaVersion:2022,sourceType:"module",globals:globals.browser },
   rules: {"no-undef":"error","no-unused-vars":"error"},
+}, {
+  files: ["frontend/lib/calendarTrusted*.js"],
+  languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.browser },
+  rules: { "no-undef": "error", "no-unused-vars": "error" },
+}, {
+  files: ["backend/src/calendar/**/*.js"],
+  languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.node },
+  rules: { "no-undef": "error", "no-unused-vars": ["error", { argsIgnorePattern: "^_" }] },
 }];

@@ -1,0 +1,17 @@
+{
+  "passed": false,
+  "project": "demo-calendar-trusted",
+  "checks": [
+    "unauthenticated/malformed/wrong-project/Staff/no-capability/inactive/origin denied without writes",
+    "actual Web SDK direct write denied by read-only Rules",
+    "manual create and duplicate receipt replay",
+    "PDF review output batch uses same API atomically (not PDF byte parsing)"
+  ],
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "browserFixturesRetained": false,
+  "failure": {
+    "code": "ERR_ASSERTION",
+    "message": "Expected values to be strictly equal:\n\n400 !== 200\n"
+  }
+}

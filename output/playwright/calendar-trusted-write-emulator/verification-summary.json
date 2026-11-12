@@ -1,0 +1,90 @@
+{
+  "phase": "calendar-trusted-write-emulator",
+  "localDate": "2026-11-12",
+  "project": "demo-calendar-trusted",
+  "edition": "STANDARD",
+  "branch": "codex/calendar-trusted-write-emulator",
+  "baseCommit": "9be4514",
+  "checks": {
+    "unit": {
+      "passed": 629,
+      "failed": 0,
+      "tests": 629,
+      "files": 40,
+      "success": true
+    },
+    "emulatorHttpSdkGroups": 10,
+    "extraSitGroups": 4,
+    "targetedLint": true,
+    "nodeSyntax": true,
+    "compatibilityExport": true,
+    "diffCheck": true
+  },
+  "browser": {
+    "engine": "Edge Chromium",
+    "automatedVia": "CUA",
+    "createEditSoftCancel": true,
+    "readBackAndReload": true,
+    "conflictDraftRetained": true,
+    "staffReadOnly": true,
+    "defaultReadOnlyWithApiOff": true,
+    "mobile": {
+      "viewport": "390x844",
+      "physicalDevice": false,
+      "dateTimeFontSize": "16px",
+      "dateTimeInputsWithinViewport": true,
+      "staffDialogLeft": 8,
+      "staffDialogRight": 372,
+      "documentWidth": 380,
+      "overrideReset": true
+    },
+    "observedAdminConsoleErrors": 0,
+    "pdfOcrBytesRetested": false
+  },
+  "isolation": {
+    "cloudAccessed": false,
+    "cloudRulesChanged": false,
+    "credentialsRead": false,
+    "packagesInstalled": false,
+    "deployment": false,
+    "push": false,
+    "originalRuntimeChanged": false,
+    "namespaceReset": false,
+    "existingReadOnlyRulesReused": true
+  },
+  "cleanup": {
+    "ownedFixtureCleanupPassed": true,
+    "accountsRemoved": true,
+    "newRuntimePortsStopped": [
+      4313,
+      4321,
+      18180,
+      19199,
+      14410,
+      14510
+    ]
+  },
+  "limits": {
+    "rowsPerBatch": 100,
+    "daysPerBatch": 400,
+    "documentsPerQuery": 200,
+    "jsonBody": "256kb"
+  },
+  "knownLimitations": [
+    "Emulator unsigned tokens are not a signed Google-token/IAM cloud test",
+    "PDF/OCR reviewed output only; byte parsers tested in earlier phases",
+    "Read-back and lost-reply faults injected at transport/reader boundary after real API commits",
+    "Actual Render/IAM/TLS/abuse controls and deny-direct-client-writes cutover remain a separate approval",
+    "No physical Safari/iPhone/Android UAT or production sign-off"
+  ],
+  "evidence": [
+    "emulator-report.json",
+    "extra-sit-report.json",
+    "cleanup-report.json",
+    "build-report.json",
+    "browser-conflict-draft.jpg",
+    "browser-edited-detail.jpg",
+    "browser-mobile-form.jpg",
+    "browser-default-readonly.jpg"
+  ]
+}

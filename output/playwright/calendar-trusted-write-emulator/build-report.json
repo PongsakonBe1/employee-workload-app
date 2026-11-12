@@ -1,0 +1,9 @@
+{
+  "compiled": true,
+  "exportDirectory": "frontend/.ui-build-check",
+  "productionOutUntouched": true,
+  "developmentPreviewRendered": false,
+  "lint": "Targeted ESLint is a separate command",
+  "productionDataUsed": false,
+  "deployed": false
+}

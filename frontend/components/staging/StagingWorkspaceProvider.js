@@ -8,7 +8,9 @@ import { calendarStagingEntryPath, calendarStagingWriteEnabled, calendarStagingM
 import { calendarStagingAuthError } from "../../lib/calendarStagingAuthError";
 import { GlassButton } from "../ui/GlassControls";
 import { STAGING_PROJECT, STAGING_APP } from "../../lib/calendarStagingConfig";
+import { TRUSTED_EMULATOR_CONFIG, validateTrustedCalendarConfig } from "../../lib/calendarTrustedConfig";
 const emulatorMode = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_CALENDAR_MUTATION_EMULATOR === "1";
+const trustedServer = emulatorMode && process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER === "1";
 const Context = createContext(null);
 export function StagingWorkspaceProvider({ children }) {
   const writeEnabled = calendarStagingWriteEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_ENTRY, process.env.NEXT_PUBLIC_CALENDAR_STAGING_WRITE);
@@ -16,7 +18,7 @@ export function StagingWorkspaceProvider({ children }) {
   const [emulatorAccount, setEmulatorAccount] = useState("admin");
   const accountRef = useRef(emulatorAccount);accountRef.current = emulatorAccount;
   const sessionRef = useRef(null);
-  if (!sessionRef.current) sessionRef.current = createCalendarStagingSession((config, options) => createCalendarStagingClient(config, { ...options, ...(emulatorMode ? { emulatorAccount: accountRef.current } : {}) }), { writable: writeEnabled, mutable: mutationEnabled });
+  if (!sessionRef.current) sessionRef.current = createCalendarStagingSession((config, options) => createCalendarStagingClient(config, { ...options, ...(emulatorMode ? { emulatorAccount: accountRef.current } : {}), ...(trustedServer ? { trustedServer: true } : {}) }), { writable: writeEnabled, mutable: mutationEnabled, ...(trustedServer ? { validateConfig: validateTrustedCalendarConfig } : {}) });
   const session = sessionRef.current;
   const [state, setState] = useState(session.getState()), [config, setConfig] = useState(null), [configError, setConfigError] = useState(false), [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -24,7 +26,7 @@ export function StagingWorkspaceProvider({ children }) {
     return () => { unsubscribe();session.logout().catch(() => {}); };
   }, [session]);
   useEffect(() => {
-    if (emulatorMode) { setConfig({ projectId: STAGING_PROJECT, appId: STAGING_APP, authDomain: `${STAGING_PROJECT}.firebaseapp.com`, apiKey: "demo-mutation-emulator-placeholder" });return; }
+    if (emulatorMode) { setConfig(trustedServer ? TRUSTED_EMULATOR_CONFIG : { projectId: STAGING_PROJECT, appId: STAGING_APP, authDomain: `${STAGING_PROJECT}.firebaseapp.com`, apiKey: "demo-mutation-emulator-placeholder" });return; }
     let active = true;const controller = new AbortController();setConfig(null);setConfigError(false);
     fetch("/dev-staging-config.json", { cache: "no-store", signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Staging config unavailable");return response.json(); }).then(value => { const approved = validateCalendarStagingConfig(value);if (active) setConfig(approved); }).catch(() => { if (active) setConfigError(true); });
     return () => { active = false;controller.abort(); };

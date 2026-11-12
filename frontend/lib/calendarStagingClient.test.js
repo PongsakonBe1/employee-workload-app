@@ -70,6 +70,21 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("never enables the trusted HTTP writer outside its explicit loopback runtime", async () => {
+    const previous = process.env.NODE_ENV, previousFlag = process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER;
+    try {
+      process.env.NODE_ENV = "development";process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER = "0";
+      vi.stubGlobal("window", { location: { hostname: "127.0.0.1", origin: "http://127.0.0.1:4313" } });
+      expect(() => createCalendarStagingClient(config, { writer: true, mutations: true, emulatorAccount: "admin", trustedServer: true })).toThrow("dedicated loopback");expect(sdk.initializeApp).not.toHaveBeenCalled();
+      process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER = "1";
+      const { TRUSTED_EMULATOR_CONFIG } = await import("./calendarTrustedConfig.js");
+      const currentUser = { uid: "synthetic-reader", getIdToken: async () => "synthetic-token" };
+      sdk.initializeAuth.mockReturnValueOnce({ currentUser });
+      const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ created: 1, skipped: 0, repeated: false, operationId: "op-" + "a".repeat(64) }) }));vi.stubGlobal("fetch", fetcher);
+      const client = createCalendarStagingClient(TRUSTED_EMULATOR_CONFIG, { writer: true, mutations: true, emulatorAccount: "admin", trustedServer: true });
+      await client.create({ rules: [], events: [] });expect(fetcher.mock.calls[0][0]).toBe("http://127.0.0.1:4321/api/calendar/create");expect(client.replayQa).toBeUndefined();await client.close();
+    } finally { process.env.NODE_ENV = previous;if (previousFlag === undefined) delete process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER;else process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER = previousFlag;vi.unstubAllGlobals(); }
+  });
   it("rejects mutation exposure without the ordinary writer and rejects Emulator login outside development localhost", () => {
     expect(() => createCalendarStagingClient(config, { mutations: true })).toThrow("ordinary writer");
     expect(() => createCalendarStagingClient(config, { writer: true, mutations: true, roleWriteQa: true })).toThrow("ordinary writer");
