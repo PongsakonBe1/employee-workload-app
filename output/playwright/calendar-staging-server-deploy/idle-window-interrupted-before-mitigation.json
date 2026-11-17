@@ -1,0 +1,8 @@
+{
+  "lastProbeCompletedAt": "2026-11-17T11:45:03.402Z",
+  "probeNotBefore": "2026-11-17T12:01:03.402Z",
+  "agentProbesDuringIdle": 0,
+  "scheduledIdleMs": 960000,
+  "cancelledBeforeProbe": true,
+  "reason": "Service suspended for compressed-body mitigation before scheduled probe"
+}

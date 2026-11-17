@@ -1,0 +1,72 @@
+{
+  "deploymentAcceptancePassed": true,
+  "productionReady": false,
+  "branch": "codex/calendar-staging-server-prep",
+  "deployedSource": "d9b21f30dba24b613feb71d4ae9436d3bec44f7e",
+  "service": {
+    "id": "srv-dbu3qvdckfvc73b16ku0",
+    "name": "labboy-calendar-staging",
+    "origin": "https://labboy-calendar-staging.onrender.com",
+    "region": "singapore",
+    "plan": "free",
+    "status": "live",
+    "writesEnabled": false,
+    "serviceAutoDeploy": "off",
+    "blueprintAutoSync": false
+  },
+  "blueprint": {
+    "id": "exs-dbu3q8rl550s739rnu50",
+    "path": "deploy/calendar-staging/render.yaml",
+    "renderValidationPassed": true
+  },
+  "existingProduction": {
+    "serviceId": "srv-d8fbr4p9rddc73ci53n0",
+    "lastDeployedCommit": "48c08be",
+    "branch": "main",
+    "newDeploymentObserved": false
+  },
+  "verification": {
+    "unitTests": 671,
+    "unitFiles": 43,
+    "targetedLint": true,
+    "compatibilityBuild": true,
+    "cleanInstallOnRender": true,
+    "httpsCorsWriteOff": true,
+    "localCompressedTrailingBytesRegression": true,
+    "cloudBenignGzipRejection": true,
+    "idleMs": 960000,
+    "cloudColdStart": true,
+    "warmupElapsedMs": 42176,
+    "frontendReadinessAfterIdle": "correctly rejects write-disabled peer before sending any POST"
+  },
+  "boundaries": {
+    "iamChanged": false,
+    "rulesChanged": false,
+    "profilesChanged": false,
+    "credentialsProvisioned": false,
+    "idTokensSent": false,
+    "firebaseSdkUsed": false,
+    "firebaseDataOperationsRequested": false,
+    "firebaseConnectivityVerified": false,
+    "projectWideWriterRevoked": false,
+    "keepaliveCronAdded": false,
+    "packageManifestsOrLockfileChanged": false
+  },
+  "dependencyAudit": {
+    "info": 0,
+    "low": 1,
+    "moderate": 10,
+    "high": 7,
+    "critical": 3,
+    "total": 21,
+    "resolved": false,
+    "compressedBodyWorkaround": "inflate:false",
+    "remainingAdvisoriesRequireHardening": true
+  },
+  "limitations": [
+    "No cloud Auth/IAM or business transactions tested in this write-off phase",
+    "Idle interval agent traffic controlled; unrelated third-party traffic not controlled",
+    "Dependency audit counts are scanner findings, not all validated application exploits"
+  ],
+  "nextGate": "Dependency hardening and review before provisioning IAM/credentials or opening the writer"
+}

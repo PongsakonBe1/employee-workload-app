@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "Blueprint YAML parsed; repo-root layout; no auto-deploy, extra services, or enabled writer; IAM draft excludes delete/admin",
+    "valid gzip and gzip with trailing bytes rejected with 415 before Auth/execute; health survives for every fixture",
+    "write-off GET/HEAD health is small; POST rejected before Auth or Firestore",
+    "HTTP token audience/issuer, Host/Origin, JSON/body size and revocation flag checked; logs contain no token/body/UID",
+    "global request cap rejects before expensive Auth/transaction calls",
+    "active transaction slots bounded and admission failure does not execute a second write",
+    "copied service imports resolve shared frontend planners from repository-root layout",
+    "copied monorepo production entry boots write-disabled without secret file/ADC or cloud requests; clean npm ci not run"
+  ],
+  "cloudUsed": false,
+  "installedPackages": false,
+  "blueprintValidation": "Local YAML parse and reviewed constraints; not Render CLI/API validation",
+  "credentialFilesOpened": false
+}

@@ -1,0 +1,420 @@
+{
+  "counts": {
+    "info": 0,
+    "low": 1,
+    "moderate": 10,
+    "high": 7,
+    "critical": 3,
+    "total": 21
+  },
+  "command": "npm audit --omit=dev --workspace backend --include-workspace-root --package-lock-only --json",
+  "packages": [
+    {
+      "name": "@fastify/busboy",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "<=3.2.1",
+      "lockedVersions": [
+        {
+          "path": "node_modules/@fastify/busboy",
+          "version": "3.2.0"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-xjh9-v7x6-24jw",
+        "https://github.com/advisories/GHSA-x8mw-p69m-v3mx",
+        "https://github.com/advisories/GHSA-gxm5-99cw-xjw9"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "@google-cloud/firestore",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "7.5.0-pre.0 || 7.6.0 - 7.11.6",
+      "lockedVersions": [
+        {
+          "path": "node_modules/@google-cloud/firestore",
+          "version": "7.11.6"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "@google-cloud/storage",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "2.2.0 - 2.5.0 || 5.19.0 - 8.0.0",
+      "lockedVersions": [
+        {
+          "path": "node_modules/@google-cloud/storage",
+          "version": "7.19.0"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": true
+    },
+    {
+      "name": "@grpc/grpc-js",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "1.14.0 - 1.14.4",
+      "lockedVersions": [
+        {
+          "path": "node_modules/google-gax/node_modules/@grpc/grpc-js",
+          "version": "1.14.4"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-m9gg-hp2v-232j",
+        "https://github.com/advisories/GHSA-f596-whhp-79r4"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "body-parser",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "<=1.20.8",
+      "lockedVersions": [
+        {
+          "path": "node_modules/body-parser",
+          "version": "1.20.5"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-v422-hmwv-36x6",
+        "https://github.com/advisories/GHSA-27r3-jxmh-p828"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "fast-xml-parser",
+      "severity": "low",
+      "direct": false,
+      "matchedVersionRange": "<=5.11.2",
+      "lockedVersions": [
+        {
+          "path": "node_modules/fast-xml-parser",
+          "version": "5.8.0"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-474x-hrwr-fgx4"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "firebase-admin",
+      "severity": "moderate",
+      "direct": true,
+      "matchedVersionRange": "10.2.0 - 13.10.0",
+      "lockedVersions": [
+        {
+          "path": "node_modules/firebase-admin",
+          "version": "12.7.0"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "form-data",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "<2.5.6",
+      "lockedVersions": [
+        {
+          "path": "node_modules/form-data",
+          "version": "2.5.5"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-hmw2-7cc7-3qxx"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "gaxios",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "6.4.0 - 6.7.1",
+      "lockedVersions": [
+        {
+          "path": "node_modules/gaxios",
+          "version": "6.7.1"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": true
+    },
+    {
+      "name": "google-gax",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "4.0.5-experimental - 4.6.1",
+      "lockedVersions": [
+        {
+          "path": "node_modules/google-gax",
+          "version": "4.6.1"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "mongoose",
+      "severity": "critical",
+      "direct": true,
+      "matchedVersionRange": "8.0.0 - 8.24.6",
+      "lockedVersions": [
+        {
+          "path": "node_modules/mongoose",
+          "version": "8.23.1"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-664h-wqgq-64gw",
+        "https://github.com/advisories/GHSA-gg4r-jv3p-qx3c",
+        "https://github.com/advisories/GHSA-pcrw-h46h-c93h",
+        "https://github.com/advisories/GHSA-wr5m-5jph-8m96",
+        "https://github.com/advisories/GHSA-8332-j7wj-wjw4",
+        "https://github.com/advisories/GHSA-6972-9mcm-vhwj"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "morgan",
+      "severity": "moderate",
+      "direct": true,
+      "matchedVersionRange": "<=1.12.0",
+      "lockedVersions": [
+        {
+          "path": "node_modules/morgan",
+          "version": "1.10.1"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-4vj7-5mj6-jm8m",
+        "https://github.com/advisories/GHSA-jxfw-x594-9x9m",
+        "https://github.com/advisories/GHSA-9f6g-j8ch-79g4"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "node-forge",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "<=1.4.2",
+      "lockedVersions": [
+        {
+          "path": "node_modules/node-forge",
+          "version": "1.4.0"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+        "https://github.com/advisories/GHSA-4642-5mcj-2rqw",
+        "https://github.com/advisories/GHSA-6wvx-3r32-xmcg",
+        "https://github.com/advisories/GHSA-525v-9gp9-w22h",
+        "https://github.com/advisories/GHSA-7wch-p9px-956x",
+        "https://github.com/advisories/GHSA-h6cr-wjv9-3cpp",
+        "https://github.com/advisories/GHSA-4487-j8r4-4g2f",
+        "https://github.com/advisories/GHSA-5cwg-6vw7-rj6p",
+        "https://github.com/advisories/GHSA-jc66-7q78-782g",
+        "https://github.com/advisories/GHSA-8hrf-8g6f-7xwp",
+        "https://github.com/advisories/GHSA-hqq3-7jhf-c5jx",
+        "https://github.com/advisories/GHSA-5x38-2vff-x55p",
+        "https://github.com/advisories/GHSA-9wg5-mj3p-v49q",
+        "https://github.com/advisories/GHSA-2vgq-wchc-25w7",
+        "https://github.com/advisories/GHSA-h46v-rmh6-fq4f",
+        "https://github.com/advisories/GHSA-rhr8-3pm8-cq29",
+        "https://github.com/advisories/GHSA-6qrw-m8cv-hcxf",
+        "https://github.com/advisories/GHSA-6889-vf6x-f3g5",
+        "https://github.com/advisories/GHSA-w4xr-hqv8-ch44",
+        "https://github.com/advisories/GHSA-6cv4-p8m7-4r25",
+        "https://github.com/advisories/GHSA-j8rw-jp99-435v"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "protobufjs",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "<=7.6.4",
+      "lockedVersions": [
+        {
+          "path": "node_modules/protobufjs",
+          "version": "7.5.7"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-jggg-4jg4-v7c6",
+        "https://github.com/advisories/GHSA-wcpc-wj8m-hjx6",
+        "https://github.com/advisories/GHSA-f38q-mgvj-vph7",
+        "https://github.com/advisories/GHSA-j3f2-48v5-ccww"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "proxy-addr",
+      "severity": "critical",
+      "direct": false,
+      "matchedVersionRange": "1.1.0 - 2.0.7",
+      "lockedVersions": [
+        {
+          "path": "node_modules/proxy-addr",
+          "version": "2.0.7"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-jqcg-44mw-7w3h"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "qs",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "2.2.5 - 6.16.0",
+      "lockedVersions": [
+        {
+          "path": "node_modules/body-parser/node_modules/qs",
+          "version": "6.15.1"
+        },
+        {
+          "path": "node_modules/qs",
+          "version": "6.14.2"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-q8mj-m7cp-5q26",
+        "https://github.com/advisories/GHSA-x5fp-wj9c-mxmx",
+        "https://github.com/advisories/GHSA-4mjr-xmp4-gh2g",
+        "https://github.com/advisories/GHSA-6pq8-jhm2-2vcw"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "retry-request",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "7.0.0 - 7.0.2",
+      "lockedVersions": [
+        {
+          "path": "node_modules/retry-request",
+          "version": "7.0.2"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "source-map-js",
+      "severity": "high",
+      "direct": false,
+      "matchedVersionRange": "1.0.0 - 1.2.1",
+      "lockedVersions": [
+        {
+          "path": "node_modules/source-map-js",
+          "version": "1.2.1"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+      ],
+      "fixAvailable": true
+    },
+    {
+      "name": "teeny-request",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "3.9.1 - 9.0.0",
+      "lockedVersions": [
+        {
+          "path": "node_modules/teeny-request",
+          "version": "9.0.0"
+        }
+      ],
+      "advisoryUrls": [],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "uuid",
+      "severity": "moderate",
+      "direct": false,
+      "matchedVersionRange": "<11.1.1",
+      "lockedVersions": [
+        {
+          "path": "node_modules/@google-cloud/storage/node_modules/uuid",
+          "version": "8.3.2"
+        },
+        {
+          "path": "node_modules/gaxios/node_modules/uuid",
+          "version": "9.0.1"
+        },
+        {
+          "path": "node_modules/google-gax/node_modules/uuid",
+          "version": "9.0.1"
+        },
+        {
+          "path": "node_modules/teeny-request/node_modules/uuid",
+          "version": "9.0.1"
+        },
+        {
+          "path": "node_modules/uuid",
+          "version": "10.0.0"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "14.5.1",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "websocket-driver",
+      "severity": "critical",
+      "direct": false,
+      "matchedVersionRange": "<=0.7.4",
+      "lockedVersions": [
+        {
+          "path": "node_modules/websocket-driver",
+          "version": "0.7.4"
+        }
+      ],
+      "advisoryUrls": [
+        "https://github.com/advisories/GHSA-mp7j-qc5w-4988",
+        "https://github.com/advisories/GHSA-xv26-6w52-cph6"
+      ],
+      "fixAvailable": true
+    }
+  ],
+  "allFindingsValidatedAsAppExploits": false,
+  "packageVersionsChanged": false,
+  "compressedBodyMitigation": "inflate:false; real cloud benign gzip rejected; trailing bytes tested locally only"
+}

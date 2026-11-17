@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "targetOrigin": "https://labboy-calendar-staging.onrender.com",
+  "requests": [
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 0,
+      "elapsedMs": 10008,
+      "startedAt": "2026-11-17T12:13:07.231Z",
+      "completedAt": "2026-11-17T12:13:17.238Z",
+      "networkFailure": true
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 0,
+      "elapsedMs": 10005,
+      "startedAt": "2026-11-17T12:13:20.253Z",
+      "completedAt": "2026-11-17T12:13:30.258Z",
+      "networkFailure": true
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 0,
+      "elapsedMs": 10005,
+      "startedAt": "2026-11-17T12:13:33.272Z",
+      "completedAt": "2026-11-17T12:13:43.278Z",
+      "networkFailure": true
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "elapsedMs": 3117,
+      "startedAt": "2026-11-17T12:13:46.286Z",
+      "completedAt": "2026-11-17T12:13:49.403Z"
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 54,
+      "startedAt": "2026-11-17T12:13:49.406Z",
+      "completedAt": "2026-11-17T12:13:49.461Z"
+    }
+  ],
+  "checks": [
+    "actual frontend readiness GET-only loop reached the exact write-off peer after idle within its 90-second budget, then correctly denied submission",
+    "follow-up warm GET still reports writes disabled"
+  ],
+  "warmupElapsedMs": 42176,
+  "idTokensSent": false,
+  "firebaseSdkUsed": false,
+  "firebaseDataOperationsRequested": false
+}
