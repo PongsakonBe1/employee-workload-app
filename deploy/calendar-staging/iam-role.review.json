@@ -1,0 +1,22 @@
+{
+  "status": "proposed-not-applied",
+  "targetProjectId": "labboy-workload-app-staging",
+  "databaseId": "(default)",
+  "serviceAccountName": "calendar-staging-server",
+  "title": "Calendar Staging Server Pilot",
+  "description": "Review-only pilot role. Data permissions are database-wide, not a collection-level sandbox.",
+  "includedPermissions": [
+    "datastore.databases.get",
+    "datastore.databases.getMetadata",
+    "datastore.entities.get",
+    "datastore.entities.list",
+    "datastore.entities.create",
+    "datastore.entities.update",
+    "firebaseauth.users.get"
+  ],
+  "excludedCapabilities": ["physical-delete", "auth-user-management", "rules-deploy", "iam-management", "production-access"],
+  "applicationWriteAllowlist": ["classroomSchedules", "dlExamSchedules", "calendarWriteState", "calendarWriteOperations"],
+  "iamCollectionScopeGuaranteed": false,
+  "credentialMaterialIncluded": false,
+  "requiresSeparateCloudApproval": true
+}

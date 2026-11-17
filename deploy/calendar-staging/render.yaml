@@ -1,0 +1,36 @@
+# REVIEW ONLY: no service has been created. Keep the repository root available to shared planners.
+services:
+  - type: web
+    name: labboy-calendar-staging
+    runtime: node
+    plan: free
+    region: singapore
+    branch: codex/calendar-staging-server-prep
+    autoDeployTrigger: "off"
+    buildCommand: npm ci --omit=dev --workspace backend --include-workspace-root
+    startCommand: node backend/src/calendar/staging-server.js
+    healthCheckPath: /health
+    maxShutdownDelaySeconds: 60
+    envVars:
+      - key: NODE_VERSION
+        value: "24.15.0"
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: CALENDAR_SERVER_MODE
+        value: staging
+      - key: GCLOUD_PROJECT
+        value: labboy-workload-app-staging
+      - key: CALENDAR_DATABASE_ID
+        value: "(default)"
+      - key: CALENDAR_API_ORIGIN
+        value: https://labboy-calendar-staging.onrender.com
+      - key: CALENDAR_CLIENT_ORIGINS
+        value: http://127.0.0.1:4311
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/calendar-staging-admin.json
+      - key: CALENDAR_SERVER_WRITE
+        value: "0"
+# The operator must supply the staging-only secret file separately after explicit IAM/key approval.
+# Never paste its contents into this file, source control, logs, screenshots or chat.

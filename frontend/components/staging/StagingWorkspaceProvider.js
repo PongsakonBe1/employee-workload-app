@@ -11,6 +11,7 @@ import { STAGING_PROJECT, STAGING_APP } from "../../lib/calendarStagingConfig";
 import { TRUSTED_EMULATOR_CONFIG, validateTrustedCalendarConfig } from "../../lib/calendarTrustedConfig";
 const emulatorMode = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_CALENDAR_MUTATION_EMULATOR === "1";
 const trustedServer = emulatorMode && process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER === "1";
+const stagingServer = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_CALENDAR_STAGING_SERVER === "1";
 const Context = createContext(null);
 export function StagingWorkspaceProvider({ children }) {
   const writeEnabled = calendarStagingWriteEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_ENTRY, process.env.NEXT_PUBLIC_CALENDAR_STAGING_WRITE);
@@ -18,7 +19,7 @@ export function StagingWorkspaceProvider({ children }) {
   const [emulatorAccount, setEmulatorAccount] = useState("admin");
   const accountRef = useRef(emulatorAccount);accountRef.current = emulatorAccount;
   const sessionRef = useRef(null);
-  if (!sessionRef.current) sessionRef.current = createCalendarStagingSession((config, options) => createCalendarStagingClient(config, { ...options, ...(emulatorMode ? { emulatorAccount: accountRef.current } : {}), ...(trustedServer ? { trustedServer: true } : {}) }), { writable: writeEnabled, mutable: mutationEnabled, ...(trustedServer ? { validateConfig: validateTrustedCalendarConfig } : {}) });
+  if (!sessionRef.current) sessionRef.current = createCalendarStagingSession((config, options) => createCalendarStagingClient(config, { ...options, ...(emulatorMode ? { emulatorAccount: accountRef.current } : {}), ...(trustedServer ? { trustedServer: true } : {}), ...(stagingServer ? { stagingServer: true } : {}) }), { writable: writeEnabled, mutable: mutationEnabled, ...(trustedServer ? { validateConfig: validateTrustedCalendarConfig } : {}) });
   const session = sessionRef.current;
   const [state, setState] = useState(session.getState()), [config, setConfig] = useState(null), [configError, setConfigError] = useState(false), [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -46,7 +47,7 @@ export function StagingWorkspaceProvider({ children }) {
     const warn = event => { event.preventDefault();event.returnValue = ""; };
     window.addEventListener("beforeunload", warn);return () => window.removeEventListener("beforeunload", warn);
   }, [state.saving, state.writeOutcome]);
-  const value = useMemo(() => ({ ...state, writeEnabled, mutationEnabled, emulatorMode, emulatorAccount, setEmulatorAccount, mutate: state.canEdit ? mutate : undefined, replayQa: state.canEdit ? replayQa : undefined, configReady: Boolean(config), configError, login, logout, read, refresh, stats, retryConfig, create: state.canCreate ? create : undefined, retryCreate: state.canCreate ? retryCreate : undefined }), [state, writeEnabled, mutationEnabled, emulatorAccount, mutate, replayQa, config, configError, login, logout, read, refresh, stats, retryConfig, create, retryCreate]);
+  const value = useMemo(() => ({ ...state, writeEnabled, mutationEnabled, emulatorMode, stagingServer, emulatorAccount, setEmulatorAccount, mutate: state.canEdit ? mutate : undefined, replayQa: state.canEdit && !stagingServer ? replayQa : undefined, configReady: Boolean(config), configError, login, logout, read, refresh, stats, retryConfig, create: state.canCreate ? create : undefined, retryCreate: state.canCreate ? retryCreate : undefined }), [state, writeEnabled, mutationEnabled, emulatorAccount, mutate, replayQa, config, configError, login, logout, read, refresh, stats, retryConfig, create, retryCreate]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useStagingWorkspace() {

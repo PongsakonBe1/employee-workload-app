@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "baseCommit": "14da90c",
+  "branch": "codex/calendar-staging-server-prep",
+  "unit": {
+    "passed": 670,
+    "failed": 0,
+    "files": 43
+  },
+  "targetedLintPassed": true,
+  "compatibilityBuildPassed": true,
+  "cloudUsed": false,
+  "installedPackages": false,
+  "pushed": false,
+  "deployed": false,
+  "credentialFilesOpened": false,
+  "cleanInstallTested": false,
+  "renderValidation": "Local YAML parse/constraints only",
+  "cleanup": {
+    "ownedFixturesOnly": true,
+    "namespaceReset": false,
+    "runtimePortsStopped": [
+      4313,
+      4321,
+      18180,
+      19199,
+      14410,
+      14510,
+      9150
+    ]
+  },
+  "reports": [
+    "http-package-report.json",
+    "rules-emulator-report.json",
+    "warmup-emulator-report.json",
+    "regression-emulator-report.json",
+    "regression-extra-sit-report.json",
+    "build-report.json",
+    "browser-report.json",
+    "cleanup-report.json"
+  ]
+}

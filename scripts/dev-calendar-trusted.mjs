@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { uiDevelopmentEnvironment } from "./dev-ui.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), writable = process.argv.includes("--writer");
-const env = { ...process.env, ...uiDevelopmentEnvironment, GCLOUD_PROJECT: "demo-calendar-trusted", FIRESTORE_EMULATOR_HOST: "127.0.0.1:18180", FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:19199", CALENDAR_TRUSTED_EMULATOR: "1", CALENDAR_TRUSTED_EMULATOR_RUNTIME: "1", NEXT_PUBLIC_CALENDAR_STAGING_ENTRY: "1", NEXT_PUBLIC_CALENDAR_STAGING_WRITE: writable ? "1" : "0", NEXT_PUBLIC_CALENDAR_STAGING_MUTATIONS: writable ? "1" : "0", NEXT_PUBLIC_CALENDAR_MUTATION_EMULATOR: "1", NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER: "1" };
+const env = { ...process.env, ...uiDevelopmentEnvironment, GCLOUD_PROJECT: "demo-calendar-trusted", FIRESTORE_EMULATOR_HOST: "127.0.0.1:18180", FIREBASE_AUTH_EMULATOR_HOST: "127.0.0.1:19199", CALENDAR_TRUSTED_EMULATOR: "1", CALENDAR_TRUSTED_EMULATOR_RUNTIME: "1", NEXT_PUBLIC_CALENDAR_STAGING_ENTRY: "1", NEXT_PUBLIC_CALENDAR_STAGING_WRITE: writable ? "1" : "0", NEXT_PUBLIC_CALENDAR_STAGING_MUTATIONS: writable ? "1" : "0", NEXT_PUBLIC_CALENDAR_MUTATION_EMULATOR: "1", NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER: "1", NEXT_PUBLIC_CALENDAR_SERVER_PREFLIGHT: process.argv.includes("--server-preflight") ? "1" : "0" };
 for (const key of ["GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CLOUD_PROJECT", "FIREBASE_TOKEN", "FIREBASE_CONFIG"]) delete env[key];
 const children = [];
 if (writable) children.push(spawn(process.execPath, [path.join(root, "backend/src/calendar/server.js")], { cwd: root, env, stdio: "inherit", windowsHide: true }));

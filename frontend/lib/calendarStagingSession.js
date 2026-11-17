@@ -1,7 +1,7 @@
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 const failed = (code, message = code) => Object.assign(new Error(message), { code });
 const writerRole = user => user?.active === true && ["admin", "superadmin"].includes(user.role) && user.calendarWriter === true;
-const initialState = () => ({ status: "signed-out", user: null, errorCode: null, canCreate: false, canEdit: false, saving: false, writeRevision: 0, writeOutcome: null });
+const initialState = () => ({ status: "signed-out", user: null, errorCode: null, canCreate: false, canEdit: false, saving: false, writePhase: null, writeRevision: 0, writeOutcome: null });
 // Ignore UI-only row IDs when comparing a retry; the writer derives its own document IDs.
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 const fingerprint = input => JSON.stringify(canonical(Object.fromEntries(["rules", "events"].map(key => [key, input[key]?.map(row => Object.fromEntries(Object.entries(row).filter(([field]) => field !== "id")))]))));
@@ -34,7 +34,13 @@ export function createCalendarStagingSession(createClient, { writable = false, m
       writeBlocked = !writerRole(user);
       emit({ ...state, user });
       if (!writerRole(user)) throw failed("permission-denied");
+      if (["create", "mutate"].includes(kind) && activeClient.prepareWrite) {
+        emit({ ...state, writePhase: "connecting" });
+        await activeClient.prepareWrite();
+        active(current, activeClient);
+      }
       submitted = true;
+      emit({ ...state, writePhase: "sending" });
       const result = await activeClient[kind](draft);
       active(current, activeClient);
       uncertainDraft = null;
@@ -43,15 +49,15 @@ export function createCalendarStagingSession(createClient, { writable = false, m
       return result;
     } catch (error) {
       const changed = current !== generation || client !== activeClient;
-      if (submitted && (changed || !["calendar-write-validation", "calendar-write-stale", "permission-denied"].includes(error.code))) {
+      if (submitted && (changed || !["calendar-write-validation", "calendar-write-stale", "calendar-write-busy", "permission-denied"].includes(error.code))) {
         if (!changed) { uncertainDraft = { kind, input: draft };emit({ ...state, writeOutcome: { status: "uncertain" } }); }
         throw failed("calendar-write-uncertain", "ยังยืนยันผลบันทึกไม่ได้ กรุณาส่งชุดเดิมอีกครั้ง ระบบจะตรวจ receipt ก่อนเพิ่มรายการ");
       }
       if (!changed && error.code === "permission-denied") { writeBlocked = true;emit({ ...state }); }
-      if (!submitted && !["permission-denied", "session-changed"].includes(error.code)) throw failed("calendar-write-preflight", "ยังไม่ได้ส่งรายการบันทึก ตรวจการเชื่อมต่อและลองใหม่");
+      if (!submitted && !["permission-denied", "session-changed", "calendar-write-preflight"].includes(error.code)) throw failed("calendar-write-preflight", "ยังไม่ได้ส่งรายการบันทึก ตรวจการเชื่อมต่อและลองใหม่");
       throw error;
     } finally {
-      if (current === generation && client === activeClient) emit({ ...state, saving: false });
+      if (current === generation && client === activeClient) emit({ ...state, saving: false, writePhase: null });
     }
   }
   return {

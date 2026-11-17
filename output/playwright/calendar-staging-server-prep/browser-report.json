@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "source": "Observed Edge UI via CUA and real demo API audit",
+  "cloudUsed": false,
+  "desktop": [
+    "Admin create via readiness + HTTP, commit/read-back",
+    "edit and soft-cancel via HTTP under client-write-deny Rules",
+    "persisted metadata and mutationVersion=2 checked by extra SIT",
+    "reload requires in-memory session sign-in; Staff read succeeds"
+  ],
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "staffCreateEnabled": false,
+    "staffImportEnabled": false,
+    "superadminForm": true,
+    "missingTitleFocus": true,
+    "documentOverflow": false
+  },
+  "coldStartVisualTested": false,
+  "screenshots": [
+    "browser-admin-commit.jpg",
+    "browser-staff-mobile.jpg",
+    "browser-superadmin-mobile-form.jpg"
+  ]
+}

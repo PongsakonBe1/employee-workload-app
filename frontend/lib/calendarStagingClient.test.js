@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCalendarStagingClient } from "./calendarStagingClient.js";
 import { createCalendarEmulatorClient } from "./calendarEmulatorClient.js";
 import { STAGING_APP, STAGING_PROJECT } from "./calendarStagingConfig.js";
+import { STAGING_CALENDAR_API_ORIGIN } from "./calendarServerProtocol.js";
 const sdk = vi.hoisted(() => ({
   initializeApp: vi.fn(() => ({})),
   deleteApp: vi.fn(async () => {}),
@@ -70,6 +71,19 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("fails before SDK initialization unless the staging HTTP runtime is explicit and isolated", async () => {
+    vi.stubEnv("NODE_ENV", "development");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_SERVER", "0");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_API_ORIGIN", STAGING_CALENDAR_API_ORIGIN);
+    try {
+      expect(() => createCalendarStagingClient(config, { writer: true, stagingServer: true })).toThrow("reviewed runtime");expect(sdk.initializeApp).not.toHaveBeenCalled();
+      vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_SERVER", "1");
+      for (const extra of [{ emulatorAccount: "admin" }, { trustedServer: true }, { roleQa: true }, { roleWriteQa: true }]) expect(() => createCalendarStagingClient(config, { writer: true, stagingServer: true, ...extra })).toThrow("reviewed runtime");
+      expect(sdk.initializeApp).not.toHaveBeenCalled();
+      const fetcher = vi.fn();vi.stubGlobal("fetch", fetcher);
+      const client = createCalendarStagingClient(config, { writer: true, mutations: true, stagingServer: true });
+      expect(client.prepareWrite).toBeTypeOf("function");expect(client.replayQa).toBeUndefined();expect(fetcher).not.toHaveBeenCalled();await client.close();
+      vi.stubEnv("NODE_ENV", "production");expect(() => createCalendarStagingClient(config, { writer: true, stagingServer: true })).toThrow("reviewed runtime");
+    } finally { vi.unstubAllEnvs();vi.unstubAllGlobals(); }
+  });
   it("never enables the trusted HTTP writer outside its explicit loopback runtime", async () => {
     const previous = process.env.NODE_ENV, previousFlag = process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER;
     try {

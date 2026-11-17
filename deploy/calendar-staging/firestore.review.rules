@@ -1,0 +1,22 @@
+// Prototype, review-only staging cutover. No client writes, including old create/mutation pilots.
+// users/{uid}: role staff/admin/superadmin and active boolean; identity/directory reads only.
+// classroomSchedules/{id}: recurring/once rules; dlExamSchedules/{id}: dated DL rounds.
+// Receipts/gate and all other paths are server-only through IAM and application validation.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidReader(data) {
+      return data.keys().hasAll(['role', 'active']) && data.active is bool && data.active == true
+        && data.role in ['staff', 'admin', 'superadmin'];
+    }
+    function reader() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && isValidReader(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+    }
+    match /users/{uid} { allow read: if reader(); allow write: if false; }
+    match /classroomSchedules/{id} { allow read: if reader(); allow write: if false; }
+    match /dlExamSchedules/{id} { allow read: if reader(); allow write: if false; }
+    match /{path=**} { allow read, write: if false; }
+  }
+}

@@ -3,11 +3,12 @@ import { prepareCalendarCreate, validateCalendarCreateAgainst, calendarWriteErro
 import { prepareCalendarMutation, validateCalendarMutationTarget, validateCalendarMutationAgainst } from "../../../frontend/lib/calendarMutationPlan.js";
 import { adaptCalendarDocuments } from "../../../frontend/lib/calendarDataAdapter.js";
 import { TRUSTED_CALENDAR_PROJECT } from "./emulatorConfig.js";
+import { STAGING_CALENDAR_PROJECT } from "../../../frontend/lib/calendarServerProtocol.js";
 const LIMIT = 200;
 const denied = () => Object.assign(new Error("บัญชีนี้ไม่มีสิทธิ์เขียนปฏิทิน"), { code: "permission-denied" });
 const records = snapshot => snapshot.docs.map(row => ({ ...row.data(), id: row.id }));
-export function createTrustedCalendarService({ db, timestamp }) {
-  if (db.projectId !== TRUSTED_CALENDAR_PROJECT) throw new Error("Calendar service requires demo Emulator project");
+export function createTrustedCalendarService({ db, timestamp, projectId = TRUSTED_CALENDAR_PROJECT }) {
+  if (![TRUSTED_CALENDAR_PROJECT, STAGING_CALENDAR_PROJECT].includes(projectId) || db.projectId !== projectId) throw new Error("Calendar service requires the reviewed project");
   const query = collection => db.collection(collection).limit(LIMIT + 1);
   async function bounded(tx, request) {
     const rows = records(await tx.get(request));

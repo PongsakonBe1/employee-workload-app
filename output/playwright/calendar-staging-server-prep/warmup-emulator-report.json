@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "checks": [
+    "warming HTML leaves session connecting and double-submit blocked; zero POSTs or tokens sent",
+    "after warmup actual HTTP commits once, server read-back verifies and original receipt replays without another schedule"
+  ],
+  "cloudUsed": false
+}

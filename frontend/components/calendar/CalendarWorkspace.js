@@ -148,7 +148,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       setDialog(null);setStatus(`บันทึก ${result.created} รายการ · ข้ามรายการเดิม ${result.skipped} รายการ · ${datasetLabel}`);
       return null;
     } catch (failure) {
-      return ["calendar-write-validation", "calendar-write-preflight", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
+      return ["calendar-write-validation", "calendar-write-preflight", "calendar-write-busy", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เพิ่มตารางหรือข้อมูลไม่ผ่านการตรวจของ staging" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาลองใหม่ด้วยรายการเดิม ระบบจะตรวจการนำเข้าซ้ำ";
     }
   }
   async function mutateExternal(input) {
@@ -156,7 +156,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       const result = await externalCalendar.onMutate(input);
       setDialog(null);setStatus(`${result.action === "cancel" ? "ยกเลิก" : "แก้ไข"}ตารางแล้ว · ${datasetLabel}`);return null;
     } catch (failure) {
-      return ["calendar-write-validation", "calendar-write-stale", "calendar-write-preflight", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เปลี่ยนตาราง หรือ Rules staging ยังไม่เปิดใช้งาน" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาตรวจผลก่อนส่งคำสั่งใหม่";
+      return ["calendar-write-validation", "calendar-write-stale", "calendar-write-preflight", "calendar-write-busy", "calendar-write-uncertain"].includes(failure.code) ? failure.message : failure.code === "permission-denied" ? "ไม่มีสิทธิ์เปลี่ยนตาราง หรือ Rules staging ยังไม่เปิดใช้งาน" : "ยังยืนยันผลบันทึกไม่ได้ กรุณาตรวจผลก่อนส่งคำสั่งใหม่";
     }
   }
   async function cancelSelected() {
@@ -499,7 +499,7 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
       open={Boolean(dialog)} onClose={() => setDialog(null)}
       title={title} className={`cal-dialog ${dialog === "entry" ? "cal-entry-dialog" : ""} ${dialog === "import" ? "cal-import-dialog" : ""}`}
       busy={Boolean(externalCalendar?.saving)}
-      description={dialog === "entry" || dialog === "import" ? externalCalendar?.saving ? "กำลังบันทึกรายการที่ยืนยันแล้ว…" : externalCalendar?.writeTarget ? `Development · ${editing && dialog === "entry" ? "แก้ไขตารางใน" : "เพิ่มรายการใหม่ไปยัง"} ${datasetLabel} แยกจาก production` : "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
+      description={dialog === "entry" || dialog === "import" ? externalCalendar?.saving ? externalCalendar.writePhase === "connecting" ? "กำลังเชื่อมต่อพื้นที่ทดสอบ · ยังไม่ได้ส่งรายการบันทึก…" : "กำลังบันทึกรายการที่ยืนยันแล้ว…" : externalCalendar?.writeTarget ? `Development · ${editing && dialog === "entry" ? "แก้ไขตารางใน" : "เพิ่มรายการใหม่ไปยัง"} ${datasetLabel} แยกจาก production` : "Development · พื้นที่ทดลอง ยังไม่บันทึกไปยังระบบจริง" : undefined}
     >
       {dialog === "date" && <form onSubmit={event => { event.preventDefault();if (validCalendarDate(dateDraft)) { selectDate(dateDraft);setDialog(null); } }}>
         <label className="ui-field">

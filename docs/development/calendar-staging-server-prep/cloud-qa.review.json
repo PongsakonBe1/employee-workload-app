@@ -1,0 +1,21 @@
+{
+  "status": "proposed-not-approved",
+  "target": "labboy-workload-app-staging",
+  "database": "(default)",
+  "apiOrigin": "https://labboy-calendar-staging.onrender.com",
+  "serviceHostnameOwnershipVerified": false,
+  "cloudExecutionApproved": false,
+  "maxNewSchedules": 5,
+  "maxWriteOperations": 5,
+  "operations": [
+    {"id": "create-manual", "kind": "create", "title": "QA-SERVER-MANUAL", "date": "2027-06-07", "rooms": ["401"], "start": "09:00", "end": "10:00", "semester": "1/2570"},
+    {"id": "create-pdf-review-output", "kind": "create", "date": "2027-06-08", "rooms": ["401", "402"], "start": "11:00", "end": "12:00", "documents": 2, "semester": "1/2570"},
+    {"id": "create-dl-review-output", "kind": "create", "dates": ["2027-06-09", "2027-06-10"], "rooms": ["406", "407"], "start": "17:00", "end": "18:30", "participantsPerRound": 75, "proctorAliases": ["staff", "superadmin"], "documents": 2, "semester": "1/2570"},
+    {"id": "edit-owned-manual", "kind": "edit", "target": "create-manual", "start": "10:00", "end": "11:00"},
+    {"id": "cancel-owned-manual", "kind": "cancel", "target": "create-manual", "physicalDelete": false}
+  ],
+  "replay": "Use the frozen inputs and committed receipts for all five operations; no extra schedules or gate increments",
+  "preconditions": ["fresh metadata/profile/conflict baseline", "exact candidate Rules hash reviewed", "all direct client write paths denied", "dedicated staging IAM/credential approved", "HTTPS service owner/commit/origin verified", "server write flag enabled only in the approved QA window"],
+  "forbidden": ["production access", "profile changes", "physical deletes", "unreviewed cloud fixture generation", "credential material in reports"],
+  "afterQa": "Disable server and UI write flags; keep direct client writes denied; retain committed records/receipts"
+}

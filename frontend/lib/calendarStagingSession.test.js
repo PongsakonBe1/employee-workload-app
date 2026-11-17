@@ -69,6 +69,27 @@ function writerClient(role = "superadmin", capability = true) {
   sdk.identity.mockResolvedValue(profile);sdk.transport.identity.mockResolvedValue(profile);sdk.create = vi.fn(async () => ({ ...saved }));
   return { sdk, profile };
 }
+describe("staging server preparation before submitting", () => {
+  it("publishes connecting before the writer is called and keeps a failed preflight definite", async () => {
+    const { sdk } = writerClient();let release;sdk.prepareWrite = vi.fn(() => new Promise((_, reject) => { release = reject; }));
+    const session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    const pending = session.create(draft());await vi.waitFor(() => expect(sdk.prepareWrite).toHaveBeenCalledOnce());
+    expect(session.getState()).toMatchObject({ saving: true, writePhase: "connecting" });expect(sdk.create).not.toHaveBeenCalled();
+    release({ code: "calendar-write-preflight", message: "Still connecting; no write sent" });await expect(pending).rejects.toHaveProperty("code", "calendar-write-preflight");expect(session.getState()).toMatchObject({ saving: false, writePhase: null, writeOutcome: null });
+  });
+  it("does not submit after logout while the server is warming", async () => {
+    const { sdk } = writerClient();let release;sdk.prepareWrite = vi.fn(() => new Promise(resolve => { release = resolve; }));
+    const session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    const pending = session.create(draft());await vi.waitFor(() => expect(sdk.prepareWrite).toHaveBeenCalledOnce());await session.logout();release();
+    await expect(pending).rejects.toHaveProperty("code", "session-changed");expect(sdk.create).not.toHaveBeenCalled();expect(session.getState().writeOutcome).toBeNull();
+  });
+  it("keeps a structured server admission rejection separate from an uncertain commit", async () => {
+    const { sdk } = writerClient();sdk.create.mockRejectedValueOnce({ code: "calendar-write-busy" });
+    const session = createCalendarStagingSession(() => sdk, { writable: true });await session.login(config);
+    await expect(session.create(draft())).rejects.toHaveProperty("code", "calendar-write-busy");expect(session.getState().writeOutcome).toBeNull();await session.create(draft("Corrected"));expect(session.getState().writeOutcome.status).toBe("committed");
+  });
+});
+
 describe("opt-in staging session writes", () => {
   it("keeps the default session read-only and never forwards create", async () => {
     const sdk = client(), session = createCalendarStagingSession(() => sdk);await session.login(config);

@@ -15,8 +15,11 @@ import { calendarTestPassword } from "./calendarEmulatorConfig.js";
 import { createMutationReceiptReplay, validateMutationReplayPacket } from "./calendarMutationReplayQa.js";
 import { validateTrustedCalendarConfig, trustedCalendarRuntimeEnabled } from "./calendarTrustedConfig.js";
 import { createTrustedCalendarTransport } from "./calendarTrustedTransport.js";
+import { stagingCalendarServerEnabled } from "./calendarStagingServerConfig.js";
+import { STAGING_CALENDAR_API_ORIGIN } from "./calendarServerProtocol.js";
 let sequence = 0;
-export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null, trustedServer = false } = {}) {
+export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null, trustedServer = false, stagingServer = false } = {}) {
+  if (stagingServer && (!stagingCalendarServerEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_SERVER, Boolean(emulatorAccount), process.env.NEXT_PUBLIC_CALENDAR_STAGING_API_ORIGIN) || trustedServer || roleQa || roleWriteQa)) throw new Error("Staging HTTP writer requires its explicit reviewed runtime");
   if (trustedServer && (!trustedCalendarRuntimeEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER, Boolean(emulatorAccount), typeof window === "undefined" ? null : window.location) || roleQa || roleWriteQa)) throw new Error("Trusted server requires its dedicated loopback runtime");
   if (mutations && (!writer || roleWriteQa)) throw new Error("Mutations require the ordinary writer client");
   if (emulatorAccount && (process.env.NODE_ENV !== "development" || typeof window === "undefined" || !["127.0.0.1", "localhost"].includes(window.location.hostname) || !["admin", "staff", "superadmin"].includes(emulatorAccount))) throw new Error("Synthetic Emulator login requires development on localhost");
@@ -35,10 +38,11 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   let closed = false,
     closing = null,
     session = 0;
-  const serverWriter = trustedServer && writer ? createTrustedCalendarTransport({ getUser: () => closed ? null : auth.currentUser }) : null;
+  const serverWriter = (trustedServer || stagingServer) && writer ? createTrustedCalendarTransport({ getUser: () => closed ? null : auth.currentUser, ...(stagingServer ? { origin: STAGING_CALENDAR_API_ORIGIN, readiness: true } : { readiness: process.env.NEXT_PUBLIC_CALENDAR_SERVER_PREFLIGHT === "1" }) }) : null;
   const mutate = writer && mutations ? serverWriter?.mutate || createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) : null;
   return {
     reader,
+    ...(serverWriter?.prepareWrite ? { prepareWrite: serverWriter.prepareWrite } : {}),
     async identity() {
       const current = session, uid = closed ? null : auth.currentUser?.uid;
       if (!uid) throw Object.assign(new Error("Staging sign-in required"), { code: "unauthenticated" });
@@ -53,7 +57,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
     } } : {}),
     ...(writer && !roleWriteQa ? { create: serverWriter?.create || createCalendarWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) } : {}),
     ...(mutate ? { mutate } : {}),
-    ...(mutate && process.env.NODE_ENV === "development" && !emulatorAccount ? { async replayQa({ text, index }) {
+    ...(mutate && process.env.NODE_ENV === "development" && !emulatorAccount && !stagingServer ? { async replayQa({ text, index }) {
       const packet = await validateMutationReplayPacket(text), uid = closed ? null : auth.currentUser?.uid;
       return createMutationReceiptReplay({ projectId: db.app.options.projectId, getUid: () => closed ? null : auth.currentUser?.uid, identity: () => transport.identity(uid), read: async (collection, id) => { const row = await getDocFromServer(doc(db, collection, id));return row.exists() ? row.data() : null; }, mutate })(packet, index);
     } } : {}),

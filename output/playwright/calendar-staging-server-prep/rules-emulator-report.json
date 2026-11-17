@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "actual review file compiled in isolated demo Emulator; no cloud deploy",
+    "admin: real reader queries pass; all five collection create/update/delete calls and gate/receipt reads denied",
+    "superadmin: real reader queries pass; all five collection create/update/delete calls and gate/receipt reads denied",
+    "staff: real reader queries pass; all five collection create/update/delete calls and gate/receipt reads denied",
+    "no-cap: real reader queries pass; all five collection create/update/delete calls and gate/receipt reads denied",
+    "inactive: schedule read denied",
+    "anonymous: schedule read denied",
+    "denials leave gate unchanged"
+  ],
+  "cloudUsed": false
+}
