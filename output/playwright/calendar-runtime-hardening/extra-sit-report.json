@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "project": "demo-calendar-trusted",
+  "checks": [
+    "browser create/edit/soft-cancel persisted with immutable creation metadata and version 2; gate 11",
+    "malformed JSON, array, >100 rows, >256kb and >400-day range rejected without commit",
+    "real API commit preserved while read-back fails, then verified after recovery",
+    "lost HTTP reply blocks different draft and retryCreate uses frozen input without another commit"
+  ],
+  "cloudUsed": false
+}

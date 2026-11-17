@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "exitCode": 0,
+  "missingOrInvalid": [],
+  "scope": "local installed legacy backend/root graph; no cloud/FCM calls and no audit request"
+}

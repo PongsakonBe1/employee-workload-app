@@ -11,7 +11,7 @@ import { createTrustedCalendarApp } from "../backend/src/calendar/app.js";
 import { createCalendarLimits } from "../backend/src/calendar/limits.js";
 import { STAGING_CALENDAR_PROJECT, STAGING_CALENDAR_API_ORIGIN } from "../frontend/lib/calendarServerProtocol.js";
 const require = createRequire(import.meta.url), yaml = require("js-yaml");
-const output = "output/playwright/calendar-staging-server-prep", checks = [], servers = [];
+const output = process.argv.includes("--hardening") ? "output/playwright/calendar-runtime-hardening" : "output/playwright/calendar-staging-server-prep", checks = [], servers = [];
 fs.mkdirSync(output, { recursive: true });
 const runtime = { mode: "staging", projectId: STAGING_CALENDAR_PROJECT, apiOrigin: STAGING_CALENDAR_API_ORIGIN, origins: ["http://127.0.0.1:4311"], writable: true };
 const result = { created: 1, skipped: 0, operationId: "op-" + "a".repeat(64), repeated: false };
@@ -49,8 +49,9 @@ function fixture({ writable = true, execute, limits } = {}) {
 let failure, child;
 try {
   const blueprint = yaml.load(fs.readFileSync("deploy/calendar-staging/render.yaml", "utf8"));assert.equal(blueprint.services.length, 1);const service = blueprint.services[0];
-  assert.equal(service.name, "labboy-calendar-staging");assert.equal(service.runtime, "node");assert.equal(service.autoDeployTrigger, "off");assert.equal(service.rootDir, undefined);assert.equal(service.startCommand, "node backend/src/calendar/staging-server.js");
-  assert.ok(service.buildCommand.includes("--workspace backend"));assert.ok(service.buildCommand.includes("--include-workspace-root"));
+  assert.equal(service.name, "labboy-calendar-staging");assert.equal(service.runtime, "node");assert.equal(service.autoDeployTrigger, "off");assert.equal(service.rootDir, undefined);assert.equal(service.startCommand, "node calendar-server/src/staging-server.js");
+  assert.equal(service.branch, "codex/calendar-runtime-hardening");
+  assert.ok(service.buildCommand.includes("--workspace calendar-server"));assert.ok(service.buildCommand.includes("--include-workspace-root=false"));assert.ok(service.buildCommand.includes("--ignore-scripts"));
   const env = Object.fromEntries(service.envVars.map(row => [row.key, row.value]));assert.equal(env.CALENDAR_SERVER_WRITE, "0");assert.equal(env.GCLOUD_PROJECT, STAGING_CALENDAR_PROJECT);assert.equal(env.CALENDAR_API_ORIGIN, STAGING_CALENDAR_API_ORIGIN);
   const iam = JSON.parse(fs.readFileSync("deploy/calendar-staging/iam-role.review.json", "utf8"));assert.equal(iam.targetProjectId, STAGING_CALENDAR_PROJECT);assert.ok(iam.includedPermissions.includes("firebaseauth.users.get"));assert.ok(iam.includedPermissions.every(permission => !permission.includes("delete") && !permission.startsWith("iam.")));checks.push("Blueprint YAML parsed; repo-root layout; no auto-deploy, extra services, or enabled writer; IAM draft excludes delete/admin");
   const disabled = fixture({ writable: false }), requestOff = await serving(disabled.app);
@@ -74,7 +75,8 @@ try {
   const pending = concurrentRequest("/api/calendar/create");await started;assert.equal((await concurrentRequest("/api/calendar/create", { token: "synthetic-other" })).status, 429);assert.equal(concurrent.calls.length, 1);release();assert.equal((await pending).status, 200);checks.push("active transaction slots bounded and admission failure does not execute a second write");
   const folder = path.resolve(".tools/calendar-staging/server-package-" + Date.now());fs.mkdirSync(folder, { recursive: true });
   const backendFiles = fs.readdirSync("backend/src/calendar").filter(file => file.endsWith(".js") && !file.endsWith(".test.js")).map(file => "backend/src/calendar/" + file);
-  const copied = [...backendFiles, "package.json", "package-lock.json", "backend/package.json", "frontend/package.json", ...["calendarServerProtocol.js", "calendarCreatePlan.js", "calendarMutationPlan.js", "calendarDataAdapter.js", "calendarView.js"].map(file => "frontend/lib/" + file)];
+  const runtimeFiles = fs.readdirSync("calendar-server/src").filter(file => file.endsWith(".js")).map(file => "calendar-server/src/" + file);
+  const copied = [...backendFiles, ...runtimeFiles, "calendar-server/package.json", "package.json", "package-lock.json", "backend/package.json", "frontend/package.json", ...["calendarServerProtocol.js", "calendarCreatePlan.js", "calendarMutationPlan.js", "calendarDataAdapter.js", "calendarView.js"].map(file => "frontend/lib/" + file)];
   for (const file of copied) { const destination = path.join(folder, file);fs.mkdirSync(path.dirname(destination), { recursive: true });fs.copyFileSync(file, destination); }
   const importProbe = spawn(process.execPath, ["--input-type=module", "-e", "await import('./backend/src/calendar/service.js')"], { cwd: folder, windowsHide: true, stdio: "pipe" });
   const importCode = await new Promise(resolve => importProbe.once("exit", resolve));assert.equal(importCode, 0, "Copied service and shared planner imports resolve");checks.push("copied service imports resolve shared frontend planners from repository-root layout");

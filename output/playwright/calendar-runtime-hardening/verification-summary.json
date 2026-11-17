@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "phase": "calendar-runtime-hardening",
+  "base": "ebd2336",
+  "branch": "codex/calendar-runtime-hardening",
+  "directRuntime": {
+    "firebase-admin": "14.5.1",
+    "express": "4.22.3",
+    "helmet": "8.3.0"
+  },
+  "legacyAdmin": "12.7.0",
+  "unit": {
+    "passed": 671,
+    "failed": 0,
+    "files": 43
+  },
+  "targetedLintPassed": true,
+  "compatibilityBuildPassed": true,
+  "httpAppUnchangedExceptImports": true,
+  "cleanLockMatchesWorkingTree": true,
+  "isolatedPackageNodes": 216,
+  "cleanBootPassed": true,
+  "legacyResolutionPassed": true,
+  "scopedAuditAdvisories": 0,
+  "auditScope": "npm-selected calendar-server dependency graph; not a whole-repository or deployed-backend audit",
+  "emulatorGroups": {
+    "main": 10,
+    "additional": 4,
+    "warmup": 2,
+    "rules": 8
+  },
+  "browserPassed": true,
+  "fixturesCleaned": true,
+  "qaProcessesStopped": true,
+  "qaListenersRemaining": 0,
+  "cloudFirebaseUsed": false,
+  "iamChanged": false,
+  "rulesDeployed": false,
+  "profilesChanged": false,
+  "pushed": false,
+  "deployed": false,
+  "productionReady": false
+}

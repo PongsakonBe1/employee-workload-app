@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "isolatedInstall": true,
+  "health": true,
+  "writeOff": true,
+  "wrongProjectRejectedBeforeSdk": true,
+  "credentialFilesProvided": false,
+  "cloudUsed": false
+}

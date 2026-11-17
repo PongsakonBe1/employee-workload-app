@@ -19,7 +19,7 @@ export default [{
   languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.browser },
   rules: { "no-undef": "error", "no-unused-vars": "error" },
 }, {
-  files: ["backend/src/calendar/**/*.js"],
+  files: ["backend/src/calendar/**/*.js", "calendar-server/src/**/*.js"],
   languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.node },
   rules: { "no-undef": "error", "no-unused-vars": ["error", { argsIgnorePattern: "^_" }] },
 }];

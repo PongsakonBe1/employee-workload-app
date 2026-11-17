@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "legacyAdminVersion": "12.7.0",
+  "legacyNamespaceAvailable": true,
+  "backendManifestAndFcmNotifySourceUnchanged": true,
+  "initializedApps": 0,
+  "realFcmMessagesSent": 0,
+  "cloudUsed": false
+}

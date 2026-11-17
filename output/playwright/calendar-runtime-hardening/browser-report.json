@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "browser": "Edge",
+  "route": "/calendar",
+  "apiInstall": "isolated clean calendar-server SDK14",
+  "syntheticAdmin": {
+    "create": true,
+    "edit": true,
+    "softCancel": true,
+    "readBack": true
+  },
+  "staffAfterReload": {
+    "read": true,
+    "createDisabled": true,
+    "importDisabled": true
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "horizontalDocumentOverflow": false
+  },
+  "screenshot": "browser-staff-mobile.jpg",
+  "cloudFirebaseUsed": false,
+  "fullApplicationUat": false
+}
