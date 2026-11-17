@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "closed apply window rejected",
+    "production target rejected",
+    "permission expansion rejected",
+    "identity outside staging rejected",
+    "writer enablement drift rejected"
+  ],
+  "cloudUsed": false,
+  "cliAvailableInFixtures": false,
+  "credentialsUsed": false
+}

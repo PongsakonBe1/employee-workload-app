@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "targetProjectId": "labboy-workload-app-staging",
+  "stage": "bind-role",
+  "createdIdentityThisRun": true,
+  "bindingWriteAttempted": true,
+  "status": 400,
+  "errorType": "FirebaseError",
+  "credentialMaterialRead": false,
+  "automaticBroadRetry": false
+}

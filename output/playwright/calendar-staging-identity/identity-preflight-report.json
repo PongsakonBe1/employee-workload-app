@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-17T17:06:57.331Z",
+  "targetProjectId": "labboy-workload-app-staging",
+  "mode": "read-only",
+  "serviceAccountEmail": "calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+  "serviceAccountExists": false,
+  "serviceAccountEnabled": false,
+  "customRoleName": "projects/labboy-workload-app-staging/roles/calendarStagingServerPilot",
+  "includedPermissions": [
+    "datastore.databases.get",
+    "datastore.databases.getMetadata",
+    "datastore.entities.create",
+    "datastore.entities.get",
+    "datastore.entities.list",
+    "datastore.entities.update",
+    "firebaseauth.users.get"
+  ],
+  "roleMatchesApprovedDraft": true,
+  "directProjectBindings": [],
+  "userManagedKeyCount": 0,
+  "createdIdentityThisRun": false,
+  "bindingWriteAttempted": false,
+  "credentialMaterialRead": false,
+  "firestoreDocumentsRead": false,
+  "rulesChanged": false,
+  "profilesChanged": false,
+  "productionChanged": false,
+  "billingChanged": false,
+  "effectiveInheritedPermissionsEvaluated": false
+}

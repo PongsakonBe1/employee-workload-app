@@ -1,0 +1,31 @@
+{
+  "status": "applied-and-verified",
+  "targetProjectId": "labboy-workload-app-staging",
+  "runtimeDatabaseId": "(default)",
+  "serviceAccountId": "calendar-staging-server",
+  "serviceAccountEmail": "calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+  "serviceAccountDisplayName": "Calendar Staging Server",
+  "serviceAccountDescription": "Dedicated Calendar staging runtime identity. No keys in this phase; API writer remains off.",
+  "customRoleId": "calendarStagingServerPilot",
+  "customRoleName": "projects/labboy-workload-app-staging/roles/calendarStagingServerPilot",
+  "customRoleTitle": "Calendar Staging Server Pilot",
+  "includedPermissions": [
+    "datastore.databases.get",
+    "datastore.databases.getMetadata",
+    "datastore.entities.get",
+    "datastore.entities.list",
+    "datastore.entities.create",
+    "datastore.entities.update",
+    "firebaseauth.users.get"
+  ],
+  "bindingResource": "projects/labboy-workload-app-staging",
+  "bindingMember": "serviceAccount:calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+  "dataPermissionScope": "Project IAM grant; database data permissions are not a collection-level sandbox.",
+  "createKeys": false,
+  "changeBillingPlan": false,
+  "changeRules": false,
+  "changeProfiles": false,
+  "enableApiWriter": false,
+  "changeProduction": false,
+  "rollback": "Remove only the new binding and disable the newly created identity if verification fails; preserve unrelated IAM policies."
+}

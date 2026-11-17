@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-17T17:12:10.237Z",
+  "origin": "https://labboy-calendar-staging.onrender.com",
+  "status": 200,
+  "writerEnabled": false,
+  "projectId": "labboy-workload-app-staging",
+  "elapsedMs": 14416,
+  "tokenSent": false,
+  "firebaseDataOperationsRequested": false
+}
