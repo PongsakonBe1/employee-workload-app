@@ -1,5 +1,7 @@
 # labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.10.0)
 
+> **UI เวอร์ชันถัดไปอยู่ระหว่างเตรียม release:** ใช้ [Release checklist กลาง](docs/release/README.md) เพื่อตรวจ scope, data integration, UAT และ Go/No-Go; การผ่าน preview/staging ยังไม่ใช่การเปิดทั้งเวอร์ชันบน production
+
 > **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
 > มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
 > รองรับ PWA บน iOS/Android/Desktop, Google Sign-In, Real-time sync, Push Notification และ Dashboard วิเคราะห์ข้อมูล

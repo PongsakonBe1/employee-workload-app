@@ -1,5 +1,7 @@
 # Coverage รายหน้า
 
+สถานะ release ปัจจุบันให้ใช้ [Release checklist กลาง](../../release/README.md) และ route inventory ณ baseline ที่ freeze ตารางและจำนวน routes ด้านล่างเป็นหลักฐานย้อนหลังของแต่ละเฟส ไม่ใช้แทนสถานะ production readiness ล่าสุด
+
 เฟส [ปฏิทิน Emulator อ่านอย่างเดียว](../calendar-emulator-readonly/README.md): เพิ่ม `/dev/calendar-readonly` สำหรับ Auth/Firestore Emulator จริงพร้อม fixture, prototype rules deny client writes, session/month cache และ auth isolation เฉพาะ development; ไม่เชื่อม project จริงและไม่นับว่าหน้า production ย้ายเสร็จ · all-pages-ready = false
 
 เฟส [ตัวแปลงข้อมูลปฏิทิน](../calendar-data-adapter/README.md): legacy document mapping/dry-run/cache ด้วย fixture ใน Develop; เพิ่มโหมดข้อมูลเดิมจำลอง ไม่เชื่อมบริการหรือข้อมูลจริง และยังไม่มี production writer · all-pages-ready = false

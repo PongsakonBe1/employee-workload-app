@@ -1,0 +1,106 @@
+{
+  "passed": true,
+  "dateBangkok": "2026-11-18",
+  "baseCommit": "316e6c5",
+  "branch": "codex/production-release-freeze",
+  "documentationOnly": true,
+  "routeCounts": {
+    "totalRoutes": 42,
+    "applicationRoutes": 24,
+    "developmentRoutes": 17,
+    "stagingEntryRoutes": 1,
+    "approvedViews": 30
+  },
+  "allApplicationRoutesInMatrix": true,
+  "allApprovedViewIdsInventoried": true,
+  "releaseGateCount": 18,
+  "gates": [
+    {
+      "id": "SCOPE",
+      "status": "documented-freeze"
+    },
+    {
+      "id": "SEC",
+      "status": "pending"
+    },
+    {
+      "id": "DATA",
+      "status": "pending"
+    },
+    {
+      "id": "ENV",
+      "status": "pending"
+    },
+    {
+      "id": "DEPENDENCIES",
+      "status": "pending"
+    },
+    {
+      "id": "CAL-CONNECT",
+      "status": "pending"
+    },
+    {
+      "id": "CAL-WRITE",
+      "status": "pending"
+    },
+    {
+      "id": "CAL-CUTOVER",
+      "status": "pending"
+    },
+    {
+      "id": "AUTH",
+      "status": "pending"
+    },
+    {
+      "id": "CORE",
+      "status": "pending"
+    },
+    {
+      "id": "ANALYTICS",
+      "status": "pending"
+    },
+    {
+      "id": "UI",
+      "status": "pending"
+    },
+    {
+      "id": "PROD-BUILD",
+      "status": "pending"
+    },
+    {
+      "id": "TESTS",
+      "status": "pending"
+    },
+    {
+      "id": "UAT",
+      "status": "pending"
+    },
+    {
+      "id": "COST",
+      "status": "pending"
+    },
+    {
+      "id": "OPS",
+      "status": "pending"
+    },
+    {
+      "id": "GO",
+      "status": "pending"
+    }
+  ],
+  "uatScenarioCount": 12,
+  "localMarkdownLinksChecked": 24,
+  "privateCredentialFilenameFindingCount": 1,
+  "credentialContentsRead": false,
+  "privatePathListExcludedFromCommit": true,
+  "sensitiveAddedContentScanPassed": true,
+  "runtimeChanged": false,
+  "cloudChanged": false,
+  "credentialsCreated": false,
+  "productionDataRead": false,
+  "unitOrBuildRun": false,
+  "pushed": false,
+  "deployed": false,
+  "allPagesReady": false,
+  "productionReady": false
+}

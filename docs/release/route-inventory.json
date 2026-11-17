@@ -1,0 +1,523 @@
+{
+  "snapshotDateBangkok": "2026-11-18",
+  "sourceCommit": "316e6c5",
+  "scope": "approved UI version plus existing application capabilities; no implicit feature removals",
+  "counts": {
+    "totalRoutes": 42,
+    "applicationRoutes": 24,
+    "developmentRoutes": 17,
+    "stagingEntryRoutes": 1,
+    "approvedViews": 30
+  },
+  "routes": [
+    {
+      "route": "/",
+      "source": "frontend/app/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin",
+      "source": "frontend/app/admin/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/audit-logs",
+      "source": "frontend/app/admin/audit-logs/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/classroom-schedules",
+      "source": "frontend/app/admin/classroom-schedules/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/cleanup",
+      "source": "frontend/app/admin/cleanup/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/dl-exam-schedules",
+      "source": "frontend/app/admin/dl-exam-schedules/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/equipment-health",
+      "source": "frontend/app/admin/equipment-health/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/equipment-items",
+      "source": "frontend/app/admin/equipment-items/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/record",
+      "source": "frontend/app/admin/record/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/settings",
+      "source": "frontend/app/admin/settings/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/staff-analytics",
+      "source": "frontend/app/admin/staff-analytics/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/system",
+      "source": "frontend/app/admin/system/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/templates",
+      "source": "frontend/app/admin/templates/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/admin/users",
+      "source": "frontend/app/admin/users/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/calendar",
+      "source": "frontend/app/calendar/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dashboard",
+      "source": "frontend/app/dashboard/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar",
+      "source": "frontend/app/dev/calendar/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-mutation-replay",
+      "source": "frontend/app/dev/calendar-mutation-replay/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-readonly",
+      "source": "frontend/app/dev/calendar-readonly/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-staging",
+      "source": "frontend/app/dev/calendar-staging/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-staging-roles",
+      "source": "frontend/app/dev/calendar-staging-roles/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-staging-role-write",
+      "source": "frontend/app/dev/calendar-staging-role-write/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-staging-write",
+      "source": "frontend/app/dev/calendar-staging-write/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/calendar-write",
+      "source": "frontend/app/dev/calendar-write/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/dashboard",
+      "source": "frontend/app/dev/dashboard/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/equipment",
+      "source": "frontend/app/dev/equipment/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/equipment/usage",
+      "source": "frontend/app/dev/equipment/usage/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/history",
+      "source": "frontend/app/dev/history/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/record",
+      "source": "frontend/app/dev/record/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/resources",
+      "source": "frontend/app/dev/resources/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/staff",
+      "source": "frontend/app/dev/staff/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/templates",
+      "source": "frontend/app/dev/templates/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/dev/ui",
+      "source": "frontend/app/dev/ui/page.js",
+      "kind": "development",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/export",
+      "source": "frontend/app/export/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/help",
+      "source": "frontend/app/help/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/login",
+      "source": "frontend/app/login/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/pending",
+      "source": "frontend/app/pending/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/profile",
+      "source": "frontend/app/profile/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/resources",
+      "source": "frontend/app/resources/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/staging",
+      "source": "frontend/app/staging/page.js",
+      "kind": "staging-entry",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/worklogs",
+      "source": "frontend/app/worklogs/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    },
+    {
+      "route": "/worklogs/new",
+      "source": "frontend/app/worklogs/new/page.js",
+      "kind": "application",
+      "newVersionReleaseVerification": "pending"
+    }
+  ],
+  "approvedViews": [
+    {
+      "id": "dashboard",
+      "label": "ภาพรวม (dashboard)",
+      "legacyReference": "/dashboard",
+      "previewReferenceAtCoverageSnapshot": "/dev/dashboard",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "record",
+      "label": "บันทึกงาน (record)",
+      "legacyReference": "/admin/record",
+      "previewReferenceAtCoverageSnapshot": "/dev/record",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "worklogs",
+      "label": "รายการงาน (worklogs)",
+      "legacyReference": "/worklogs",
+      "previewReferenceAtCoverageSnapshot": "/dev/history",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "new-log",
+      "label": "กรอกบันทึกงาน (new-log)",
+      "legacyReference": "/worklogs/new",
+      "previewReferenceAtCoverageSnapshot": "/dev/record → กรอกเอง",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "dl",
+      "label": "ตารางสอบ DL (dl)",
+      "legacyReference": "/admin/dl-exam-schedules",
+      "previewReferenceAtCoverageSnapshot": "/dev/calendar",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "classrooms",
+      "label": "ตารางเรียน (classrooms)",
+      "legacyReference": "/admin/classroom-schedules",
+      "previewReferenceAtCoverageSnapshot": "/dev/calendar",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "equipment",
+      "label": "จัดการอุปกรณ์ (equipment)",
+      "legacyReference": "/admin/equipment-items",
+      "previewReferenceAtCoverageSnapshot": "/dev/equipment",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "usage",
+      "label": "การใช้งานอุปกรณ์ (usage)",
+      "legacyReference": "/admin/equipment-health",
+      "previewReferenceAtCoverageSnapshot": "/dev/equipment/usage",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "staff",
+      "label": "Staff Analytics (staff)",
+      "legacyReference": "/admin/staff-analytics",
+      "previewReferenceAtCoverageSnapshot": "/dev/staff",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "profile",
+      "label": "โปรไฟล์ของฉัน (profile)",
+      "legacyReference": "/profile",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "export",
+      "label": "ส่งออกข้อมูล (export)",
+      "legacyReference": "/export",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "admin",
+      "label": "ศูนย์ผู้ดูแล (admin)",
+      "legacyReference": "/admin",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "users",
+      "label": "จัดการผู้ใช้ (users)",
+      "legacyReference": "/admin/users",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "templates",
+      "label": "บันทึกด่วนและ Combo (templates)",
+      "legacyReference": "/admin/templates",
+      "previewReferenceAtCoverageSnapshot": "/dev/templates",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "system",
+      "label": "จัดการระบบ (system)",
+      "legacyReference": "/admin/system",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "settings",
+      "label": "ตั้งค่า (settings)",
+      "legacyReference": "/admin/settings",
+      "previewReferenceAtCoverageSnapshot": "/dev/ui และ AppearanceSettings",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "audit",
+      "label": "ประวัติระบบ (audit)",
+      "legacyReference": "/admin/audit-logs",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "broadcast",
+      "label": "ประกาศและแจ้งเตือน (broadcast)",
+      "legacyReference": "/admin/system#broadcast",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "imports",
+      "label": "นำเข้าข้อมูล (imports)",
+      "legacyReference": "/admin/system#import",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "cleanup",
+      "label": "ตรวจข้อมูลซ้ำ (cleanup)",
+      "legacyReference": "/admin/cleanup",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "help",
+      "label": "คู่มือการใช้งาน (help)",
+      "legacyReference": "/help",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "login",
+      "label": "เข้าสู่ระบบ (login)",
+      "legacyReference": "/login",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "pending",
+      "label": "รออนุมัติ (pending)",
+      "legacyReference": "/pending",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "design",
+      "label": "ชุด UI และสถานะ (design)",
+      "legacyReference": "design-only",
+      "previewReferenceAtCoverageSnapshot": "/dev/ui",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "resources",
+      "label": "ห้องและทรัพยากร (resources)",
+      "legacyReference": "RoomEquipmentStatus",
+      "previewReferenceAtCoverageSnapshot": "/dev/resources",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "condition",
+      "label": "สภาพและประวัติคืน (condition)",
+      "legacyReference": "/admin/equipment-health",
+      "previewReferenceAtCoverageSnapshot": "/dev/equipment/usage → สภาพตอนคืน",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "export-requests",
+      "label": "คำขอส่งออก (export-requests)",
+      "legacyReference": "/admin/system#exports",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "data-import",
+      "label": "นำเข้าข้อมูลงาน (data-import)",
+      "legacyReference": "/admin/system#import",
+      "previewReferenceAtCoverageSnapshot": "—",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "notifications",
+      "label": "การแจ้งเตือน (notifications)",
+      "legacyReference": "NotificationBell",
+      "previewReferenceAtCoverageSnapshot": "ตัวอย่างใน record/calendar",
+      "currentReleaseVerification": "pending"
+    },
+    {
+      "id": "about",
+      "label": "เกี่ยวกับแอป (about)",
+      "legacyReference": "Version Control",
+      "previewReferenceAtCoverageSnapshot": "FAB ข้อมูลเวอร์ชัน",
+      "currentReleaseVerification": "pending"
+    }
+  ],
+  "designReferences": [
+    {
+      "source": "docs/design/phase1/revision7/index.html",
+      "sha256": "e5e36d218d325b72fff0fc34cff995ff07af1a98e02e859fa38868859c7078bd"
+    },
+    {
+      "source": "docs/design/phase1/revision7/REVIEW_10.md",
+      "sha256": "1bf46299f6fa928641346f6d614b8113702de0298388b03b0f4d678b3b67b980"
+    }
+  ],
+  "credentialFilenameMetadata": {
+    "trackedCandidateCount": 1,
+    "credentialContentsRead": false,
+    "activeCredentialConfirmed": false,
+    "privateLocalPathList": ".tools/calendar-staging/release-freeze-sensitive-paths.json"
+  },
+  "sourceEvidence": [
+    {
+      "source": "frontend/lib/calendarStagingEntry.js",
+      "finding": "New calendar entry is development-only; this is not a production UI cutover."
+    },
+    {
+      "source": "frontend/app/dev/record/workspace.js",
+      "finding": "Record preview imports fixtures and uses preview ledger."
+    },
+    {
+      "source": "frontend/app/dev/resources/workspace.js",
+      "finding": "Resource previews use the shared synthetic record ledger."
+    },
+    {
+      "source": "frontend/app/dev/dashboard/workspace.js",
+      "finding": "Dashboard/staff previews use synthetic people/tasks and preview state."
+    },
+    {
+      "source": "frontend/app/dev/templates/workspace.js",
+      "finding": "Templates preview uses synthetic catalog/preview state."
+    },
+    {
+      "source": "frontend/lib/previewState.js",
+      "finding": "Tab-local drafts are not a persistent production data layer."
+    }
+  ],
+  "runtimeOrCloudChanged": false,
+  "allPagesReady": false,
+  "productionReady": false
+}
