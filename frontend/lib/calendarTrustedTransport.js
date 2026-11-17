@@ -29,7 +29,7 @@ export function createTrustedCalendarTransport({ getUser, fetcher = fetch, origi
       if (!response.ok) {
         if ([401, 403].includes(response.status)) throw failure("permission-denied", "ไม่มีสิทธิ์บันทึกหรือ session หมดอายุ");
         if (response.status === 429 && result.code === "calendar-write-busy") throw failure(result.code, "มีคำขอกำลังทำงานหรือเกินขอบเขต กรุณารอแล้วส่งชุดเดิม");
-        if ([400, 409, 413].includes(response.status) && ["calendar-write-validation", "calendar-write-stale"].includes(result.code)) throw failure(result.code, result.message);
+        if ([400, 409, 413, 415].includes(response.status) && ["calendar-write-validation", "calendar-write-stale"].includes(result.code)) throw failure(result.code, result.message);
         throw failure("unavailable", "ยังยืนยันผลไม่ได้ ให้ส่งชุดเดิมเพื่อตรวจ receipt");
       }
       const validNumber = n => Number.isSafeInteger(n) && n >= 0 && n <= 100;

@@ -24,7 +24,7 @@ describe("trusted calendar transport and config", () => {
     const pending = f.transport.create({});await expect(f.transport.create({})).rejects.toHaveProperty("code", "calendar-write-validation");f.getUser.mockReturnValue(null);release("synthetic");
     await expect(pending).rejects.toHaveProperty("code", "session-changed");expect(f.fetcher).not.toHaveBeenCalled();
   });
-  it.each([[403, "permission-denied"], [401, "permission-denied"], [400, "calendar-write-validation"], [409, "calendar-write-stale"], [503, "unavailable"]])("preserves definite versus uncertain failures for status %i", async (status, code) => {
+  it.each([[403, "permission-denied"], [401, "permission-denied"], [400, "calendar-write-validation"], [409, "calendar-write-stale"], [415, "calendar-write-validation"], [503, "unavailable"]])("preserves definite versus uncertain failures for status %i", async (status, code) => {
     const f = fixture();f.fetcher.mockResolvedValueOnce({ ok: false, status, json: async () => ({ code, message: "Synthetic failure" }) });await expect(f.transport.create({})).rejects.toHaveProperty("code", code);
   });
   it("does not claim a commit after a lost reply, malformed result or account switch", async () => {

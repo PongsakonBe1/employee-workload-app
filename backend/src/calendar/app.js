@@ -17,7 +17,8 @@ export function createTrustedCalendarApp({ auth, execute, runtime = { mode: "emu
     next();
   });
   app.get("/health", (_req, res) => res.json({ ok: true, projectId: runtime.projectId, mode: runtime.mode, protocol: CALENDAR_SERVER_PROTOCOL, writesEnabled: runtime.writable, emulator: runtime.mode === "emulator" }));
-  app.use(express.json({ limit: "256kb", strict: true }));
+  // The browser sends plain JSON. Reject encoded bodies before creating a decompressor (GHSA-27r3-jxmh-p828).
+  app.use(express.json({ limit: "256kb", strict: true, inflate: false }));
   for (const kind of ["create", "mutate"]) app.post(`/api/calendar/${kind}`, async (req, res, next) => {
     const started = Date.now(), requestId = randomUUID();res.set("X-Request-Id", requestId);
     res.on("finish", () => log({ event: "calendar-write", requestId, status: res.statusCode, durationMs: Date.now() - started }));
@@ -41,6 +42,7 @@ export function createTrustedCalendarApp({ auth, execute, runtime = { mode: "emu
   app.use((error, _req, res, _next) => {
     if (error.code === "permission-denied") return errorResponse(res, 403, error.code, "บัญชีนี้ไม่มีสิทธิ์เขียนปฏิทิน");
     if (["calendar-write-validation", "calendar-write-stale"].includes(error.code)) return errorResponse(res, error.code === "calendar-write-stale" ? 409 : 400, error.code, error.message);
+    if (error.type === "encoding.unsupported") return errorResponse(res, 415, "calendar-write-validation", "ส่ง JSON ปกติโดยไม่บีบอัดข้อมูล");
     if (error.type === "entity.parse.failed" || error.type === "entity.too.large") return errorResponse(res, error.status, "calendar-write-validation", "JSON ไม่ถูกต้องหรือคำขอใหญ่เกินกำหนด");
     // Do not leak request bodies, ID tokens, Admin errors or credentials into logs/responses.
     return errorResponse(res, 503, "unavailable", "ยังยืนยันผลไม่ได้ โปรดส่งชุดเดิมเพื่อตรวจ receipt");

@@ -4,6 +4,7 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import net from "node:net";
 import http from "node:http";
+import { gzipSync } from "node:zlib";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { createTrustedCalendarApp } from "../backend/src/calendar/app.js";
@@ -26,6 +27,12 @@ function localRequest(url, options = {}) {
 async function serving(app) {
   const server = app.listen(0, "127.0.0.1");servers.push(server);await new Promise((resolve, reject) => { server.once("listening", resolve);server.once("error", reject); });
   const origin = "http://127.0.0.1:" + server.address().port;
+  const compressed = Buffer.concat([gzipSync(Buffer.from("{}")), Buffer.from("trailing-bytes")]);
+  for (const body of [gzipSync(Buffer.from("{}")), compressed]) {
+    const rejected = await localRequest(origin + "/api/calendar/create", { method: "POST", headers: { Host: host, "Content-Type": "application/json", "Content-Encoding": "gzip" }, body });
+    assert.equal(rejected.status, 415);assert.equal(rejected.value.code, "calendar-write-validation");
+    assert.equal((await localRequest(origin + "/health", { headers: { Host: host } })).status, 200);
+  }
   return async (route, { token = "synthetic-good", body = {}, headers = {}, method = "POST" } = {}) => {
     return localRequest(origin + route, { method, headers: { Host: host, Origin: runtime.origins[0], "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}), ...headers }, ...(method === "POST" ? { body: typeof body === "string" ? body : JSON.stringify(body) } : {}) });
   };
@@ -47,6 +54,7 @@ try {
   const env = Object.fromEntries(service.envVars.map(row => [row.key, row.value]));assert.equal(env.CALENDAR_SERVER_WRITE, "0");assert.equal(env.GCLOUD_PROJECT, STAGING_CALENDAR_PROJECT);assert.equal(env.CALENDAR_API_ORIGIN, STAGING_CALENDAR_API_ORIGIN);
   const iam = JSON.parse(fs.readFileSync("deploy/calendar-staging/iam-role.review.json", "utf8"));assert.equal(iam.targetProjectId, STAGING_CALENDAR_PROJECT);assert.ok(iam.includedPermissions.includes("firebaseauth.users.get"));assert.ok(iam.includedPermissions.every(permission => !permission.includes("delete") && !permission.startsWith("iam.")));checks.push("Blueprint YAML parsed; repo-root layout; no auto-deploy, extra services, or enabled writer; IAM draft excludes delete/admin");
   const disabled = fixture({ writable: false }), requestOff = await serving(disabled.app);
+  checks.push("valid gzip and gzip with trailing bytes rejected with 415 before Auth/execute; health survives for every fixture");
   const health = await requestOff("/health", { method: "GET" });assert.equal(health.value.writesEnabled, false);assert.equal(health.value.protocol, 1);assert.ok(health.text.length < 4096);assert.equal((await requestOff("/health", { method: "HEAD" })).text, "");
   assert.equal((await requestOff("/api/calendar/create")).value.code, "calendar-write-disabled");assert.equal(disabled.authCalls.length, 0);assert.equal(disabled.calls.length, 0);checks.push("write-off GET/HEAD health is small; POST rejected before Auth or Firestore");
   const normal = fixture(), request = await serving(normal.app);
