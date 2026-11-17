@@ -2,6 +2,8 @@
 
 วันที่ 17 พฤศจิกายน 2569 · branch `codex/calendar-runtime-hardening` · base `ebd2336`
 
+บันทึกนี้เป็นผลของ local phase ณ commit `8ea0c91`; หลังผู้ใช้ตรวจรับแล้ว มีการ deploy staging ในเฟสถัดไป ดูสถานะใหม่และหลักฐานที่ [รายงาน deployment](../calendar-runtime-hardening-deploy/README.md) ข้อความ “ยังไม่ deploy” ด้านล่างอธิบายสถานะเมื่อจบ local phase เท่านั้น
+
 ## สิ่งที่เปลี่ยน
 
 แยก HTTP app และ entry ของ Calendar ไปไว้ใน workspace `calendar-server` เพื่อให้ dependency resolution ใช้ Firebase Admin **14.5.1**, Express **4.22.3** และ Helmet **8.3.0** โดยตรง ส่วน paths เดิมใต้ `backend/src/calendar` เป็น compatibility wrappers และยังใช้ service/planner/config เดิม ไม่เปลี่ยน document contract หรือพฤติกรรม business validation

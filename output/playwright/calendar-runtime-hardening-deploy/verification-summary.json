@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "phase": "calendar-runtime-hardening-deploy",
+  "branch": "codex/calendar-runtime-hardening",
+  "deployedCommit": "8ea0c916f4559acde08602e0857eb05750f46ff7",
+  "deploymentId": "dep-dbu8027f3r2c73dabimg",
+  "serviceId": "srv-dbu3qvdckfvc73b16ku0",
+  "targetOrigin": "https://labboy-calendar-staging.onrender.com",
+  "writerEnabled": false,
+  "render": {
+    "live": true,
+    "cleanScopedInstall": true,
+    "node": "24.15.0",
+    "installedPackages": 216,
+    "auditedPackages": 218,
+    "reportedVulnerabilities": 0,
+    "scope": "Calendar runtime only",
+    "durationSeconds": 127,
+    "autoDeploy": "off",
+    "blueprintAutoSync": "no"
+  },
+  "httpsSmoke": {
+    "passed": true,
+    "requests": 10,
+    "allowedCors": true,
+    "deniedCors": true,
+    "writeEndpointsDisabled": true,
+    "benignGzipRejected": true
+  },
+  "afterIdle": {
+    "passed": true,
+    "actualAgentIdleMs": 960082,
+    "readinessMs": 13121,
+    "warmGetMs": 53,
+    "requests": 3,
+    "getOnly": true,
+    "lifecycleRestartIndependentlyConfirmed": false,
+    "otherTrafficControlled": false
+  },
+  "syntaxPassed": true,
+  "yamlValuesMatchDeployedCommit": true,
+  "diffCheckPassed": true,
+  "preDeployUnitReference": {
+    "path": "../calendar-runtime-hardening/verification-summary.json",
+    "passed": 671,
+    "rerunInThisPhase": false
+  },
+  "firebaseSdkUsed": false,
+  "firebaseDataOperationsRequested": false,
+  "idTokensSent": false,
+  "credentialsAdded": false,
+  "iamChanged": false,
+  "rulesDeployed": false,
+  "profilesChanged": false,
+  "newResourcesCreated": 0,
+  "productionChanged": false,
+  "productionLastLiveCommit": "48c08be6b308a7f8ef6c346f4cc525752e6075ea",
+  "keepaliveCronAdded": false,
+  "rollbackNeeded": false,
+  "remainingGate": "Review staging-only identity/IAM/credentials, Rules cutover and frozen QA manifest before enabling writer; no production readiness claim",
+  "productionReady": false
+}

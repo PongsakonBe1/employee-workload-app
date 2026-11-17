@@ -1,4 +1,4 @@
-# LOCAL HARDENING CANDIDATE: not deployed. Keep the repository root available to shared planners.
+# Staging Calendar API with writes off. Keep the repository root available to shared planners.
 services:
   - type: web
     name: labboy-calendar-staging

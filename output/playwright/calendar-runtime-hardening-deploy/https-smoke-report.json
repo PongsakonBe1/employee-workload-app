@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "targetOrigin": "https://labboy-calendar-staging.onrender.com",
+  "requests": [
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 210,
+      "startedAt": "2026-11-17T16:27:55.415Z",
+      "completedAt": "2026-11-17T16:27:55.624Z"
+    },
+    {
+      "path": "/health",
+      "method": "HEAD",
+      "status": 200,
+      "elapsedMs": 53,
+      "startedAt": "2026-11-17T16:27:55.625Z",
+      "completedAt": "2026-11-17T16:27:55.678Z"
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 80,
+      "startedAt": "2026-11-17T16:27:55.678Z",
+      "completedAt": "2026-11-17T16:27:55.758Z"
+    },
+    {
+      "path": "/api/calendar/create",
+      "method": "POST",
+      "status": 503,
+      "elapsedMs": 86,
+      "startedAt": "2026-11-17T16:27:55.758Z",
+      "completedAt": "2026-11-17T16:27:55.844Z"
+    },
+    {
+      "path": "/api/calendar/mutate",
+      "method": "POST",
+      "status": 503,
+      "elapsedMs": 52,
+      "startedAt": "2026-11-17T16:27:55.844Z",
+      "completedAt": "2026-11-17T16:27:55.896Z"
+    },
+    {
+      "path": "/api/calendar/create",
+      "method": "POST",
+      "status": 415,
+      "elapsedMs": 49,
+      "startedAt": "2026-11-17T16:27:55.897Z",
+      "completedAt": "2026-11-17T16:27:55.946Z"
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 48,
+      "startedAt": "2026-11-17T16:27:55.946Z",
+      "completedAt": "2026-11-17T16:27:55.994Z"
+    },
+    {
+      "path": "/api/calendar/create",
+      "method": "OPTIONS",
+      "status": 204,
+      "elapsedMs": 51,
+      "startedAt": "2026-11-17T16:27:55.994Z",
+      "completedAt": "2026-11-17T16:27:56.045Z"
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 403,
+      "elapsedMs": 79,
+      "startedAt": "2026-11-17T16:27:56.045Z",
+      "completedAt": "2026-11-17T16:27:56.124Z"
+    },
+    {
+      "path": "/api/calendar/create",
+      "method": "OPTIONS",
+      "status": 403,
+      "elapsedMs": 57,
+      "startedAt": "2026-11-17T16:27:56.124Z",
+      "completedAt": "2026-11-17T16:27:56.181Z"
+    }
+  ],
+  "checks": [
+    "HTTPS peer has the exact staging project/mode/protocol, writes=false and emulator=false",
+    "HEAD health returns no body",
+    "exact allowed browser origin accepted without cookies or token",
+    "both write endpoints reject empty unauthenticated probes with calendar-write-disabled before Auth/execute",
+    "benign valid gzip rejected with 415 and health remains available; no exploit payload sent to cloud",
+    "allowed POST CORS preflight succeeds",
+    "unreviewed origin GET and preflight denied without reflected CORS"
+  ],
+  "idTokensSent": false,
+  "firebaseSdkUsed": false,
+  "firebaseDataOperationsRequested": false
+}

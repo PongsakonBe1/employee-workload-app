@@ -5,7 +5,7 @@ import { performance } from "node:perf_hooks";
 import { gzipSync } from "node:zlib";
 import { STAGING_CALENDAR_API_ORIGIN as origin, STAGING_CALENDAR_PROJECT, CALENDAR_SERVER_PROTOCOL } from "../frontend/lib/calendarServerProtocol.js";
 import { createCalendarServerReadiness } from "../frontend/lib/calendarServerReadiness.js";
-const output = "output/playwright/calendar-staging-server-deploy", checks = [], requests = [];
+const output = process.argv.includes("--hardening") ? "output/playwright/calendar-runtime-hardening-deploy" : "output/playwright/calendar-staging-server-deploy", checks = [], requests = [];
 fs.mkdirSync(output, { recursive: true });
 const allowedOrigin = "http://127.0.0.1:4311", deniedOrigin = "https://unreviewed.example.test";
 async function call(path, options = {}) {

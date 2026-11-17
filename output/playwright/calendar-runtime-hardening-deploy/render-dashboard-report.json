@@ -1,0 +1,53 @@
+{
+  "observedAt": "2026-11-17T16:31:00.201Z",
+  "evidenceSource": "Render Dashboard UI via existing Edge session",
+  "workspaceId": "tea-d8fbbgq8qa3s738qtkhg",
+  "serviceId": "srv-dbu3qvdckfvc73b16ku0",
+  "blueprintId": "exs-dbu3q8rl550s739rnu50",
+  "syncId": "exe-dbu7vqsipgvc73dq4pb0",
+  "deploymentId": "dep-dbu8027f3r2c73dabimg",
+  "deployedCommit": "8ea0c916f4559acde08602e0857eb05750f46ff7",
+  "previousCommit": "d9b21f30dba24b613feb71d4ae9436d3bec44f7e",
+  "branch": "codex/calendar-runtime-hardening",
+  "status": "live",
+  "durationSeconds": 127,
+  "plan": "free",
+  "region": "singapore",
+  "node": "24.15.0",
+  "buildCommand": "npm ci --omit=dev --ignore-scripts --workspace calendar-server --include-workspace-root=false",
+  "startCommand": "node calendar-server/src/staging-server.js",
+  "rootDirectory": "repository-root",
+  "installedPackages": 216,
+  "auditedPackages": 218,
+  "npmReportedVulnerabilities": 0,
+  "auditScope": "Calendar workspace installed by Render; not all repository workspaces",
+  "serviceAutoDeploy": "off",
+  "blueprintAutoSync": "no",
+  "syncChangedFields": [
+    "branch",
+    "buildCommand",
+    "startCommand"
+  ],
+  "environmentChanged": false,
+  "newResourcesCreated": 0,
+  "writerEnabled": false,
+  "credentialsAdded": false,
+  "secretValuesOpened": false,
+  "iamChanged": false,
+  "rulesDeployed": false,
+  "profilesChanged": false,
+  "production": {
+    "serviceId": "srv-d8fbr4p9rddc73ci53n0",
+    "branch": "main",
+    "lastLiveCommit": "48c08be6b308a7f8ef6c346f4cc525752e6075ea",
+    "changed": false
+  },
+  "warnings": [
+    {
+      "code": "MODULE_TYPELESS_PACKAGE_JSON",
+      "meaning": "Node reparses shared frontend ESM module; runtime starts successfully. Global module-type changes are outside this rollout.",
+      "fatal": false
+    }
+  ],
+  "runtimeCloudFirebaseConnectivityVerified": false
+}

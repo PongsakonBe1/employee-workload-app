@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "targetOrigin": "https://labboy-calendar-staging.onrender.com",
+  "requests": [
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 0,
+      "elapsedMs": 10007,
+      "startedAt": "2026-11-17T16:43:56.263Z",
+      "completedAt": "2026-11-17T16:44:06.270Z",
+      "networkFailure": true
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "elapsedMs": 99,
+      "startedAt": "2026-11-17T16:44:09.280Z",
+      "completedAt": "2026-11-17T16:44:09.379Z"
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 53,
+      "startedAt": "2026-11-17T16:44:09.385Z",
+      "completedAt": "2026-11-17T16:44:09.437Z"
+    }
+  ],
+  "checks": [
+    "actual frontend readiness GET-only loop reached the exact write-off peer after idle within its 90-second budget, then correctly denied submission",
+    "follow-up warm GET still reports writes disabled"
+  ],
+  "warmupElapsedMs": 13121,
+  "idTokensSent": false,
+  "firebaseSdkUsed": false,
+  "firebaseDataOperationsRequested": false
+}
