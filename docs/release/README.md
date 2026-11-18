@@ -40,7 +40,7 @@ Release นี้คือ **เว็บแอป UI ที่รับรอ�
 | ขอบเขต | สิ่งที่ผ่านแล้ว | ไม่ได้ยืนยันอะไร |
 |---|---|---|
 | Calendar local runtime | SDK14 clean install, Unit 671 tests, Emulator SIT, compatibility build | ไม่ใช่ full app production/UAT |
-| Calendar Render staging | revision `8ea0c91`, scoped install 216 packages/audit 0 advisory, HTTPS/CORS/write-off และ readiness หลัง idle | ไม่มี credentials; ยังไม่ยืนยัน Firebase connection ของ server |
+| Calendar Render staging | rollout revision `2aa1bd2` Live บน Free, HTTPS/CORS ผ่านและ writer/probe ปิด; dependency/readiness baseline ดูผล `8ea0c91` | รอ owner ใส่ credentials ตาม handoff; ยังไม่ยืนยัน Firebase connection ของ server |
 | Staging identity | service account + custom role 7 permissions, binding เดียว, keys 0, snapshots เดิมต่างเพียง binding ที่อนุมัติ | ยังไม่ทดสอบ effective access ด้วย credential ของ identity นี้ |
 | UI previews | หลาย flow ตรวจด้วย synthetic ledger และ review reference แล้ว | preview/fixture ไม่เท่ากับ persistent data integration |
 | Production | รอบนี้ไม่ได้ deploy หรือเปลี่ยนข้อมูล/สิทธิ์ production | ต้องทำ baseline/schema/index/role/rollback review ก่อน cutover |
@@ -98,7 +98,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 
 ### G1 — Calendar/Auth ทำงานจริงใน staging
 
-- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว และเตรียม [rollout manifest](../../deploy/calendar-staging/connectivity-rollout.review.json) สำหรับตรวจรับ แต่ยังไม่ push/deploy/ออก key/เชื่อม Firebase cloud จึงยังไม่ผ่าน gate นี้
+- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว ผู้ใช้อนุมัติ [rollout manifest](../../deploy/calendar-staging/connectivity-rollout.review.json) และ push/deploy `2aa1bd2` แบบ writer/probe ปิดสำเร็จ แต่ยังรอ owner credentials และ bounded Cloud QA ตาม [execution record](../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) จึงยังไม่ผ่าน gate นี้
 - [ ] **CAL-WRITE** trusted server ผ่าน approved synthetic cloud manifest: manual/PDF/DL, edit/soft-cancel, duplicate/replay, lost response/read-back failure, concurrency/atomic failure, room/proctor conflicts; จำนวนและ IDs ถูกตรวจ ไม่เขียนนอกชุดเพื่อแก้ผลทดสอบ
 - [ ] **CAL-CUTOVER** เตรียม Rules ที่ปิด direct client writes ทุกทางที่เกี่ยวข้อง ตรวจ hash/ผลกระทบ/คำขอค้าง/reader queries แล้วอนุมัติ cutover ก่อน trusted writer; รักษา collection อื่นของ production ไม่ deploy staging prototype ทั้งไฟล์ทับ production
 - [ ] **AUTH** Anonymous/pending/inactive/Staff/Admin-no-capability/Admin-writer/Superadmin ถูก allow/deny ตาม contract ทั้งเรียกตรง backend/SDK และ UI; ไม่เปลี่ยน profile/role เพื่อให้เทสต์ผ่านโดยไม่อนุมัติ

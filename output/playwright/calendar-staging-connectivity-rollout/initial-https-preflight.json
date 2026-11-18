@@ -1,0 +1,54 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T01:42:51.040Z",
+  "origin": "https://labboy-calendar-staging.onrender.com",
+  "peer": {
+    "ok": true,
+    "projectId": "labboy-workload-app-staging",
+    "mode": "staging",
+    "protocol": 1,
+    "writesEnabled": false,
+    "connectivityEnabled": false,
+    "emulator": false
+  },
+  "requests": [
+    {
+      "route": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 176
+    },
+    {
+      "route": "/health",
+      "method": "HEAD",
+      "status": 200,
+      "elapsedMs": 45
+    },
+    {
+      "route": "/health",
+      "method": "GET",
+      "status": 200,
+      "elapsedMs": 59
+    },
+    {
+      "route": "/health",
+      "method": "GET",
+      "status": 403,
+      "elapsedMs": 56
+    },
+    {
+      "route": "/api/calendar/connectivity",
+      "method": "OPTIONS",
+      "status": 204,
+      "elapsedMs": 43
+    }
+  ],
+  "healthGetRequests": 3,
+  "elapsedMs": 380,
+  "idTokensSent": false,
+  "anonymousProbeRequests": 0,
+  "authenticatedProbeRequests": 0,
+  "firebaseDataRead": false,
+  "writeRequestsSent": false,
+  "createMutateRequestsSent": false
+}

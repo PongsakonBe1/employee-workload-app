@@ -2,7 +2,20 @@
 
 วันที่ 18 พฤศจิกายน 2569 · branch `codex/calendar-staging-connectivity-rollout` จาก `786bfb8`
 
-**สถานะ: เตรียม local เท่านั้น ยังไม่อนุมัติ push/deploy/สร้าง key/อ่านข้อมูลผ่าน API บน cloud** การอนุมัติให้เตรียมเฟสนี้ไม่ใช่การออก credentials หรือเปลี่ยนบริการจริง ดู [manifest สำหรับตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json)
+**สถานะดำเนินการ: ผู้ใช้อนุมัติ manifest แล้ว และ deploy แรกสำเร็จ ขณะ writer/probe ปิด ยังรอ owner credentials และ Cloud QA** [manifest ที่ตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json) คงไฟล์ snapshot เดิมเพื่อรักษา digest การอนุมัติจริงและสถานะดำเนินการเก็บใน [execution record](../../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) แยกจาก snapshot ที่เดิมยังระบุ pending
+
+## ผลดำเนินการหลังอนุมัติ
+
+- Push เฉพาะ branch rollout สำเร็จที่ `2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5` ไม่แก้ main/force-push/history
+- เปลี่ยน source branch ของ Blueprint เดิม และ review Manual sync พบเพียง update branch ของ `labboy-calendar-staging` กับเพิ่ม `CALENDAR_SERVER_CONNECTIVITY` ตาม YAML จากนั้นอนุมัติ sync ตามขอบเขตผู้ใช้
+- Render deploy `dep-dbug3emc6qcc73dlok6g` เป็น Live ที่ `2aa1bd2` ใช้เวลา 1 นาที 36 วินาที คง Free; อ่าน Settings ยืนยัน Auto-Deploy Off และ Blueprint คง Sync paused/Auto Sync No
+- [HTTPS preflight](../../../output/playwright/calendar-staging-connectivity-rollout/initial-https-preflight.json) ผ่าน 5 requests: GET/HEAD health, allowed-Origin GET, denied-Origin GET และ OPTIONS connectivity ผล health ระบุ staging, writer=false, connectivity=false; ไม่ส่ง token, probe POST หรือ create/mutate
+- ใช้ health GET ไป 3 ครั้ง จากวงสูงสุด 30 ครั้ง; anonymous probe 0/1 และ authenticated probe 0/2 ยังไม่ถูกใช้
+- IAM metadata ก่อน handoff เวลา 08:41 น. ไทย ยืนยัน identity เปิดใช้งานและ user-managed keys 0 ไม่สร้าง key โดย agent
+- เตรียม Google Console ด้วยบัญชี ICIT ที่มีสิทธิ์ บนแท็บ Keys ของ service account ที่ถูกต้อง ซึ่งแสดง No rows to display และ Render Secret Files เตรียมเฉพาะชื่อ `calendar-staging-admin.json` ไม่เปิด Contents หรือกด Save แทนเจ้าของ
+- ให้เจ้าของสร้าง key และกรอก Contents เอง บันทึก Save only และออกจากฟอร์มค่าลับก่อนแจ้งเสร็จ หลังยืนยันจะตรวจ metadata/Live และ deploy ต่อหากจำเป็น ยังไม่ถือว่า Firebase connection ผ่าน
+
+หลักฐาน Live: [ภาพ Dashboard](../../../output/playwright/calendar-staging-connectivity-rollout/render-live-initial.jpg) รอบนี้ยังไม่แก้ IAM/Rules/profile/billing หรือบริการ production ไม่รัน Unit/build ใหม่เพราะไม่มี runtime source change จากชุดที่ตรวจแล้ว
 
 ## Baseline ที่ตรวจแบบอ่านอย่างเดียว
 
