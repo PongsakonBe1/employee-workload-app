@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T12:33:15.482Z",
+  "scope": "offline manifest arithmetic and pure planner validation only",
+  "cloudUsed": false,
+  "credentialMaterialRead": false,
+  "sdkImported": false,
+  "networkRequests": 0,
+  "emulatorSitExecuted": false,
+  "unitSuiteExecuted": false,
+  "buildExecuted": false,
+  "candidateRulesCompiledThisPhase": false,
+  "candidateRulesCloudBaselineVerified": false,
+  "cloudExecutionApproved": false,
+  "manifestSha256": "7c7fd051fdd935dcb440ee7c0d54bede8d1d8cf29c915fcf96ad200c5553560a",
+  "candidateRulesSha256": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "connectivityManifestHash": "7ba003c7879e8d7e24a81cc44946c131219ae6ebf29eefc208e77b22bb7eb1ae",
+  "blueprintHash": "c45be50a48b9b12ec33559da9da6ababba61bd529311dc29220db787b1140973",
+  "checks": [
+    "Cloud approvals remain false and cloud UID/source/Rules bindings remain unfrozen",
+    "13 POST proposal totals 5 schedules, 5 receipts and gate +5",
+    "Prior approved connectivity manifest and Blueprint remain unchanged",
+    "Manual payload has deterministic targets and receipt; concurrency itself is not tested offline",
+    "Atomic room-conflict plan rejects the whole proposed batch at pure validation; no transaction claim",
+    "PDF review-output creates 2 classroom plans; DL review-output creates 2 evening 75-person plans using both rooms and synthetic IDs",
+    "Combined DL room/proctor overlap rejected; isolated proctor-only behavior not claimed",
+    "Edit preserves target, stale original rejects with distinct receipt hash, cancellation retains the inactive record at version 2"
+  ],
+  "syntheticPlansNotApprovedCloudPayloads": [
+    {
+      "alias": "manual",
+      "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+      "targets": [
+        "classroomSchedules/cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c"
+      ]
+    },
+    {
+      "alias": "pdf",
+      "operationId": "op-e8c2dd699d6ff9465e291d35a5d239f4f01237b97046ce4539b397f48473b4ac",
+      "targets": [
+        "classroomSchedules/cal-aafeee83e5fddea9d9c5bba4f8063d33aab4be04fa3abc8b8f992bbd53a4308c",
+        "classroomSchedules/cal-60748f3e337fe4ec2a03a3ab41e329acbf577456fa1ac5de28fec3fa02010738"
+      ]
+    },
+    {
+      "alias": "dl-synthetic-ids-only",
+      "operationId": "op-c1dee7f5f274fe6df5c5bff607192ae25a3708d3f0a71178fb5e86863f2cb4fa",
+      "targets": [
+        "dlExamSchedules/cal-efd52f29497014c2f045357e6eee8d4742893ff15047f57445d73be9d0956465",
+        "dlExamSchedules/cal-b31c0aeb56ba89038ad4ff0039b9d77e92a37c475f2959faa0b2da12293d2509"
+      ]
+    },
+    {
+      "alias": "edit-manual",
+      "operationId": "op-7aabd48c8c9057213bcbb2541e1612f03cb4b746dd871f5c8776aebd031a6198",
+      "targets": [
+        "classroomSchedules/cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c"
+      ]
+    },
+    {
+      "alias": "cancel-manual",
+      "operationId": "op-6df382f40575f5264f5bc8c4bc400460e73f29f06e77bf5b52141ae18c6c69ec",
+      "targets": [
+        "classroomSchedules/cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c"
+      ]
+    }
+  ],
+  "limitations": [
+    "No live baseline or real directory binding",
+    "No transaction, receipt replay, concurrency or HTTP assertion",
+    "No PDF/OCR byte parsing in this offline check",
+    "Local fixture IDs and hashes must not be used as frozen cloud payloads"
+  ]
+}

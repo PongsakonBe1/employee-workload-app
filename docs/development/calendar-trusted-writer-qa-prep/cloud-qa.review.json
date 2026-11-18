@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed-not-approved-for-cloud",
+  "cloudExecutionApproved": false,
+  "preparedOn": "2026-11-18",
+  "preparationBaseline": "ba66899",
+  "target": {
+    "projectId": "labboy-workload-app-staging",
+    "databaseId": "(default)",
+    "serviceId": "srv-dbu3qvdckfvc73b16ku0",
+    "apiOrigin": "https://labboy-calendar-staging.onrender.com",
+    "clientOrigin": "http://127.0.0.1:4311",
+    "plan": "free"
+  },
+  "source": {
+    "preparationBranch": "codex/calendar-trusted-writer-qa-prep",
+    "lastVerifiedRuntimeCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+    "cloudQaRuntimeCommit": null,
+    "pushApproved": false,
+    "deployApproved": false
+  },
+  "rules": {
+    "candidatePath": "deploy/calendar-staging/firestore.review.rules",
+    "candidateSha256": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+    "freshDeployedHash": null,
+    "freshBaselineReadApproved": false,
+    "deployApproved": false,
+    "requiredBeforeWriter": "Deny all direct SDK writes, including legacy pilots, while preserving active calendar readers",
+    "restoreLegacyClientWrites": false,
+    "fallback": "Keep client-write denial and disable server/UI writers; never roll back by reopening SDK writes"
+  },
+  "actors": {
+    "writerAlias": "superadmin",
+    "requiredWriterProfile": { "role": "superadmin", "active": true, "calendarWriter": true },
+    "proctorAliases": ["staff", "superadmin"],
+    "bindToExistingDirectoryIdsOnly": true,
+    "cloudUidBindingsFrozen": false,
+    "createAccountsOrChangeProfiles": false
+  },
+  "inputTemplates": {
+    "manual": { "date": "2027-06-07", "room": "401", "title": "QA-SERVER-MANUAL", "start": "09:00", "end": "10:00", "semester": "1/2570" },
+    "pdfReview": { "date": "2027-06-08", "rooms": ["401", "402"], "titlePrefix": "QA-SERVER-PDF", "start": "11:00", "end": "12:00", "semester": "1/2570" },
+    "dlReview": { "dates": ["2027-06-09", "2027-06-10"], "rooms": ["406", "407"], "title": "QA-SERVER-DL", "start": "17:00", "end": "18:30", "participantsPerRound": 75, "semester": "1/2570" },
+    "manualEdit": { "start": "10:00", "end": "11:00" },
+    "atomicConflict": { "freeDate": "2027-06-11", "freeRoom": "402", "freeStart": "10:00", "freeEnd": "11:00" }
+  },
+  "budgets": {
+    "maximumNewSchedules": 5,
+    "maximumNewReceipts": 5,
+    "expectedGateRevisionIncrease": 5,
+    "uniqueSuccessfulWriteOperations": 5,
+    "replayRequests": 5,
+    "expectedFailureRequests": 3,
+    "maximumCreateOrMutatePostRequests": 13,
+    "healthGetMaximumAttempts": 30,
+    "maximumDocumentsPerBoundedQuery": 200,
+    "maximumConcurrentWriteRequests": 2,
+    "maximumPostRequestsPerUidPerRollingMinute": 10,
+    "physicalDeletes": 0
+  },
+  "requestSequence": [
+    { "id": "manual-and-concurrent-replay", "kind": "create", "httpRequests": 2, "concurrent": true, "sameFrozenPayload": true, "expectedNewSchedules": 1, "expectedNewReceipts": 1, "expectedGateIncrease": 1, "expected": "Both HTTP 200; exactly one created=1 and one repeated=true, created=0" },
+    { "id": "atomic-room-conflict", "kind": "create", "httpRequests": 1, "expectedNewSchedules": 0, "expectedNewReceipts": 0, "expectedGateIncrease": 0, "expected": "HTTP 400; one otherwise valid classroom plus a different-title overlap with the committed manual; neither is saved" },
+    { "id": "pdf-review-output", "kind": "create", "httpRequests": 1, "expectedNewSchedules": 2, "expectedNewReceipts": 1, "expectedGateIncrease": 1, "expected": "HTTP 200; reviewed PDF output creates two classrooms atomically" },
+    { "id": "dl-review-output", "kind": "create", "httpRequests": 1, "expectedNewSchedules": 2, "expectedNewReceipts": 1, "expectedGateIncrease": 1, "expected": "HTTP 200; reviewed image output creates two evening rounds using bound directory IDs" },
+    { "id": "dl-room-and-proctor-conflict", "kind": "create", "httpRequests": 1, "expectedNewSchedules": 0, "expectedNewReceipts": 0, "expectedGateIncrease": 0, "expected": "HTTP 400; a different-title overlap with the first DL round; combined room/proctor overlap, not isolated proctor-only evidence" },
+    { "id": "edit-owned-manual", "kind": "mutate", "httpRequests": 1, "expectedNewSchedules": 0, "expectedNewReceipts": 1, "expectedGateIncrease": 1, "expected": "HTTP 200; same document ID, 10:00-11:00, mutationVersion=1" },
+    { "id": "stale-manual-edit", "kind": "mutate", "httpRequests": 1, "expectedNewSchedules": 0, "expectedNewReceipts": 0, "expectedGateIncrease": 0, "expected": "HTTP 409; new mutation input with original version=0 after edit; not a frozen receipt replay" },
+    { "id": "cancel-owned-manual", "kind": "mutate", "httpRequests": 1, "expectedNewSchedules": 0, "expectedNewReceipts": 1, "expectedGateIncrease": 1, "expected": "HTTP 200; isActive=false, mutationVersion=2; preserve the document" },
+    { "id": "replay-pdf-dl-edit-cancel", "kind": "replay", "httpRequests": 4, "sameFrozenPayload": true, "expectedNewSchedules": 0, "expectedNewReceipts": 0, "expectedGateIncrease": 0, "expected": "Four HTTP 200 replies, repeated=true with created/changed=0; no new receipts or gate increments" }
+  ],
+  "preconditions": [
+    "Review and explicitly approve the fresh staging baseline read before binding IDs or freezing cloud operations",
+    "Freeze actual directory IDs, source SHA, Rules hashes, all payloads, deterministic targets and operation IDs; obtain cloud action approval",
+    "Stop old pilot tabs and in-flight writes; record baseline gate revision and synthetic ownership",
+    "Verify complete adapter output and active bounded collections <=200; stop on partial or oversized baseline",
+    "Pace at most 10 POSTs per UID in any rolling 60 seconds, below runtime limit 12; concurrent and rejected requests consume budget too",
+    "Check proposed dates and rooms against fresh staging schedules; never silently move dates or remove conflicts",
+    "Approve and deploy exact deny-client-write Rules before enabling trusted writer; verify reader queries and direct-write denial",
+    "Keep connectivity=0; enable server/UI writer only during the explicitly approved QA window",
+    "No paid service, billing enablement, new key, IAM change, profile change or production access"
+  ],
+  "evidenceRequirements": [
+    "Record request reservation before each POST, response status/count/operationId and bounded ownership audit after each stage",
+    "A read-only trusted audit channel must be reviewed before execution; the new Rules deny SDK receipt/gate reads, so legacy replay tooling is insufficient",
+    "Freeze edit original and post-edit cancellation original once; replay exactly those payloads",
+    "Observe unchanged gate and document counts for rejection/replay; distinguish UI read-back failure from successful commit",
+    "Verify browser manual/PDF/image review on desktop/mobile; imported data must match the frozen fixture",
+    "If any rejected request writes, stop immediately, disable writer and preserve unexpected records for review; do not delete to repair evidence"
+  ],
+  "deferredCoverage": [
+    "Cloud Staff/no-capability/inactive/revoked-token HTTP denial requires a separate bounded authorization matrix; existing Emulator coverage does not prove cloud coverage",
+    "Distinct conflicting concurrent writers and isolated proctor-only conflict remain Emulator evidence unless separately budgeted",
+    "Lost HTTP response/read-back failure remain controlled Emulator/transport evidence unless an explicit non-destructive browser fault method is reviewed"
+  ],
+  "stopAndRollback": {
+    "onUnexpectedStatusIdentityHashOrCount": "Stop further POSTs, disable server/UI writer and retain frozen payloads/receipts for review",
+    "afterQa": "Deploy server write=0/connectivity=0, verify HTTPS health, keep direct client writes denied, preserve all committed documents and receipts",
+    "uncertainCommit": "Do not invent a new operation or assert cancellation; consume only a reserved replay request with the identical frozen payload after reviewer-directed receipt audit",
+    "rulesDeploymentFailure": "Do not enable writer; keep the last reviewed write-off service and report which Rules actually remain deployed"
+  }
+}
