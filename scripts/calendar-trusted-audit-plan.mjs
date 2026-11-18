@@ -17,7 +17,7 @@ const shape = (data, expected, timestamps = []) => {
   for (const key of timestamps) assert(timestamp(data[key]), "Expected server timestamp");
 };
 
-export async function auditTrustedCheckpoint({ snapshot, observation, completed, previous = null }) {
+export async function auditTrustedCheckpoint({ snapshot, observation, completed, previous = null, terminalFromBaseline = false }) {
   assert.equal(snapshot.target, TRUSTED_REVIEW_PROJECT);assert.equal(snapshot.database, "(default)");
   assert.equal(snapshot.frozen.target, TRUSTED_REVIEW_PROJECT);
   assert(Number.isInteger(completed) && completed >= 0 && completed <= 5);
@@ -25,9 +25,10 @@ export async function auditTrustedCheckpoint({ snapshot, observation, completed,
   assert.equal(frozen.operations.length, 5);assert.equal(frozen.rejections.length, 3);
   assert.equal(new Set(frozen.references).size, 16);
   const contextHash = reviewValueHash(snapshot);
+  if (terminalFromBaseline) assert.equal(previous?.completed, 0, "Final smoke audit requires checkpoint 0");
   if (previous) {
     assert.equal(previous.contextHash, contextHash);
-    assert([previous.completed, previous.completed + 1].includes(completed), "Audit cannot skip or reverse a checkpoint");
+    assert(terminalFromBaseline || [previous.completed, previous.completed + 1].includes(completed), "Audit cannot skip or reverse a checkpoint");
   } else assert.equal(completed, 0, "Initial audit must precede the first write");
   equal(Object.keys(observation.documents).sort(), [...frozen.references, gateReference].sort());
   equal(Object.keys(observation.profiles).sort(), ["staff", "superadmin"]);
@@ -92,6 +93,10 @@ export async function auditTrustedCheckpoint({ snapshot, observation, completed,
     const last = frozen.operations[completed - 1];
     shape(gate.data, { revision: snapshot.gateRevision + completed, operationId: last.operationId, updatedBy: actorUid }, ["updatedAt"]);
     sameTimestamp(gate.data.updatedAt, observation.documents["calendarWriteOperations/" + last.operationId].data.createdAt);
+  }
+  if (terminalFromBaseline) {
+    const committedAt = frozen.operations.slice(0, completed).map(operation => normalizeTimestamp(observation.documents["calendarWriteOperations/" + operation.operationId].data.createdAt));
+    assert(committedAt.every((time, index) => index === 0 || time >= committedAt[index - 1]), "Smoke receipts are out of order");
   }
   if (previous) {
     equal(profileVersions, previous.profileVersions);equal(protectedDigests, previous.protectedDigests);

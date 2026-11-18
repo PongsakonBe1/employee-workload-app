@@ -9,8 +9,9 @@ import { auditTrustedCheckpoint } from "./calendar-trusted-audit-plan.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), target = TRUSTED_REVIEW_PROJECT;
 const [operator, checkpoint, mode, ...extra] = process.argv.slice(2), completed = Number(checkpoint), renewedPrecutover = mode === "--renewed-precutover", beforeCutover = mode === "--before-cutover" || renewedPrecutover, trustedWindow = mode === "--trusted-window";
 const renewedCutover = mode === "--renewed-cutover";
+const writerSmoke = mode === "--writer-smoke";
 assert.match(operator || "", /^[^\s@]+@[^\s@]+\.[^\s@]+$/);assert.match(checkpoint || "", /^[0-5]$/);
-assert(extra.length === 0 && [undefined, "--before-cutover", "--renewed-precutover", "--renewed-cutover", "--trusted-window"].includes(mode));assert(trustedWindow || completed === 0);
+assert(extra.length === 0 && [undefined, "--before-cutover", "--renewed-precutover", "--renewed-cutover", "--trusted-window", "--writer-smoke"].includes(mode));assert(trustedWindow || writerSmoke || completed === 0);
 const base = path.join(root, ".tools/calendar-staging/trusted-writer-baseline");
 const snapshot = JSON.parse(fs.readFileSync(path.join(base, "prepared.json"), "utf8"));
 const baseline = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-trusted-writer-baseline/baseline-report.json"), "utf8"));
@@ -22,7 +23,7 @@ const latestPath = path.join(directory, "latest.json"), ledgerPath = path.join(d
 assert(!beforeCutover || !fs.existsSync(latestPath), "Never return to the legacy baseline after a candidate checkpoint");
 const latest = fs.existsSync(latestPath) ? JSON.parse(fs.readFileSync(latestPath, "utf8")) : null;
 if (latest) assert.equal(reviewValueHash(latest.audit), latest.auditHash);
-assert(latest ? [latest.audit.completed, latest.audit.completed + 1].includes(completed) : completed === 0);
+assert(writerSmoke ? latest?.audit.completed === 0 : latest ? [latest.audit.completed, latest.audit.completed + 1].includes(completed) : completed === 0);
 const ledger = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : { target, contextHash: baseline.privateSnapshotHash, attempts: [] };
 assert.equal(ledger.target, target);assert.equal(ledger.contextHash, baseline.privateSnapshotHash);
 const approvedCutoverManifestHash = "fc3c8b4a161941707dda95f0e6178b37b811d50555854678bd9dbc3df6b135a3";
@@ -49,9 +50,25 @@ if (renewedCutover) {
   assert.equal(latest?.report, `cloud-audit-0-${ledger.attempts.length}.json`);
   assert.equal(latest?.audit.revision, 17);
 }
+if (writerSmoke) {
+  const review = JSON.parse(fs.readFileSync(path.join(root, "docs/development/calendar-staging-writer-smoke/review.json"), "utf8"));
+  const approval = JSON.parse(fs.readFileSync(path.join(directory, "writer-smoke-approval.json"), "utf8"));
+  assert.equal(reviewValueHash(review), "e6699885c178e982b8a08b2dc0865e9ce04b8201e6d2d7f3d0b23360884a711c");
+  assert.equal(approval.reviewHash, reviewValueHash(review));
+  assert.equal(approval.target, target);
+  assert.equal(approval.database, "(default)");
+  assert.equal(approval.maximumAdditionalCliAuditRequests, 14);
+  assert.equal(review.pins.privateSnapshotHash, baseline.privateSnapshotHash);
+  assert.equal(review.pins.frozenPayloadHash, baseline.frozenHash);
+  const priorSmokeAudits = ledger.attempts.filter(row => row.auditWindow === "writer-smoke");
+  assert(ledger.attempts.length === 6 + priorSmokeAudits.length && priorSmokeAudits.length < 2);
+  assert(ledger.attempts.every(row => row.passed === true && row.completed === 0 && row.requests.length === 7));
+  assert.equal(latest.report, `cloud-audit-0-${ledger.attempts.length}.json`);
+  assert(priorSmokeAudits.length === 1 || completed === 0);
+}
 assert(ledger.attempts.length < 13, "Audit window exhausted; obtain renewed review before more reads");
 assert(ledger.attempts.filter(row => Boolean(row.beforeCutover) === beforeCutover).length < (beforeCutover ? renewedPrecutover ? 2 : 1 : 12));
-const auditWindow = beforeCutover ? "before-cutover" : trustedWindow ? "trusted-window" : renewedCutover ? "renewed-cutover" : "cutover";
+const auditWindow = beforeCutover ? "before-cutover" : writerSmoke ? "writer-smoke" : trustedWindow ? "trusted-window" : renewedCutover ? "renewed-cutover" : "cutover";
 assert(auditWindow !== "cutover" || ledger.attempts.filter(row => row.auditWindow === "cutover").length < 2);
 const lockPath = path.join(directory, "audit.lock"), lock = fs.openSync(lockPath, "wx");
 // Detect a different process advancing the ledger between the initial read and our lock.
@@ -108,7 +125,7 @@ try {
       const response = await read("store", "POST", `/${prefix}:runQuery`, { structuredQuery: { from: [{ collectionId: collection }], select: { fields: (collection === "users" ? ["role", "active"] : collection === "dlExamSchedules" ? ["isActive", "date"] : ["isActive"]).map(fieldPath => ({ fieldPath })) }, where: filters.length === 1 ? filters[0] : { compositeFilter: { op: "AND", filters } }, ...(collection === "dlExamSchedules" ? { orderBy: [{ field: { fieldPath: "date" }, direction: "ASCENDING" }] } : {}), limit: 201 } }, collection + " protected versions");
       observation.protected[collection] = response.filter(row => row.document).map(row => ({ id: row.document.name.split("/").at(-1), updateTime: row.document.updateTime }));
     }
-    const audit = await auditTrustedCheckpoint({ snapshot, observation, completed, previous: latest?.audit || null });
+    const audit = await auditTrustedCheckpoint({ snapshot, observation, completed, previous: latest?.audit || null, terminalFromBaseline: writerSmoke && attempt.number === 8 });
     const report = { ...audit, checkedAt: new Date().toISOString(), attempt: attempt.number, beforeCutover, auditWindow, deployedRulesHash: expectedRulesHash, candidateRulesHash: snapshot.candidateRulesHash, readApiRequests: attempt.requests.length, countsAreNotBilledReads: true, productionAccessed: false, rulesChanged: false, profilesChanged: false };
     const output = path.join(root, "output/playwright/calendar-trusted-writer-audit-prep");fs.mkdirSync(output, { recursive: true });
     const filename = `${beforeCutover ? "precutover-audit" : "cloud-audit"}-${completed}-${attempt.number}.json`;

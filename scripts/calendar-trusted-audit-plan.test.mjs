@@ -100,3 +100,17 @@ test("does not accept skipped, reversed, production or cross-snapshot checkpoint
   const previous = { ...zero, contextHash: "different" };await assert.rejects(audit(f, 0, previous));
   f.snapshot.target = "labboy-workload-app";await assert.rejects(audit(f, 0));
 });
+
+test("final smoke audit checks all targets and receipts directly against checkpoint 0", async () => {
+  const f = await fixture(), previous = await audit(f, 0);
+  for (let step = 1; step <= 5; step++) await f.advance(step);
+  const terminal = () => auditTrustedCheckpoint({ snapshot: f.snapshot, observation: f.observation, completed: 5, previous, terminalFromBaseline: true });
+  await assert.rejects(audit(f, 5, previous));
+  const result = await terminal();
+  assert.equal(result.revision, 22);
+  assert.equal(result.receipts.length, 5);
+  assert.equal(result.schedules.filter(row => row.active).length, 4);
+  const rejectedReceipt = "calendarWriteOperations/" + f.snapshot.frozen.rejections[0].operationId;
+  f.observation.documents[rejectedReceipt] = { data: {}, updateTime: time(5) };
+  await assert.rejects(terminal(), /Unexpected future or rejection receipt/);
+});
