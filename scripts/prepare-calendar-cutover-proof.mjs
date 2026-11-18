@@ -15,7 +15,7 @@ assert.match(latest.report, /^cloud-audit-0-\d+\.json$/);
 const report = JSON.parse(fs.readFileSync(path.join("output/playwright/calendar-trusted-writer-audit-prep", latest.report), "utf8"));
 assert.equal(report.passed, true);assert.equal(report.contextHash, latest.audit.contextHash);assert.equal(report.candidateRulesHash, snapshot.candidateRulesHash);
 assert.equal(report.beforeCutover, false);assert.equal(report.deployedRulesHash, snapshot.candidateRulesHash);
-assert.equal(report.auditWindow, "cutover");
+assert(report.auditWindow === "cutover" || report.auditWindow === "renewed-cutover" && report.attempt === 5, "A pre-probe cutover audit is required");
 assert.equal(reviewValueHash(Object.fromEntries(Object.keys(latest.audit).map(key => [key, report[key]]))), latest.auditHash);
 const age = Date.now() - Date.parse(report.checkedAt);assert(Number.isFinite(age) && age >= -5000 && age <= 120000, "A fresh post-cutover checkpoint 0 is required");
 const proof = { target: snapshot.target, frozenHash: baseline.frozenHash, snapshotHash: baseline.privateSnapshotHash, candidateRulesHash: snapshot.candidateRulesHash, sourceCommit: snapshot.sourceCommit, completed: 0, gateRevision: 17, auditHash: latest.auditHash, auditedAt: report.checkedAt, readerChecksApproved: args.includes("--approve-readers"), directWriteProbeApproved: args.includes("--approve-sdk-denial") };

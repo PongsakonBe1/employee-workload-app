@@ -8,8 +8,9 @@ import { assertTrustedReviewRead, reviewTextHash, reviewValueHash, TRUSTED_REVIE
 import { auditTrustedCheckpoint } from "./calendar-trusted-audit-plan.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), target = TRUSTED_REVIEW_PROJECT;
 const [operator, checkpoint, mode, ...extra] = process.argv.slice(2), completed = Number(checkpoint), renewedPrecutover = mode === "--renewed-precutover", beforeCutover = mode === "--before-cutover" || renewedPrecutover, trustedWindow = mode === "--trusted-window";
+const renewedCutover = mode === "--renewed-cutover";
 assert.match(operator || "", /^[^\s@]+@[^\s@]+\.[^\s@]+$/);assert.match(checkpoint || "", /^[0-5]$/);
-assert(extra.length === 0 && [undefined, "--before-cutover", "--renewed-precutover", "--trusted-window"].includes(mode));assert(trustedWindow || completed === 0);
+assert(extra.length === 0 && [undefined, "--before-cutover", "--renewed-precutover", "--renewed-cutover", "--trusted-window"].includes(mode));assert(trustedWindow || completed === 0);
 const base = path.join(root, ".tools/calendar-staging/trusted-writer-baseline");
 const snapshot = JSON.parse(fs.readFileSync(path.join(base, "prepared.json"), "utf8"));
 const baseline = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-trusted-writer-baseline/baseline-report.json"), "utf8"));
@@ -24,17 +25,41 @@ if (latest) assert.equal(reviewValueHash(latest.audit), latest.auditHash);
 assert(latest ? [latest.audit.completed, latest.audit.completed + 1].includes(completed) : completed === 0);
 const ledger = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : { target, contextHash: baseline.privateSnapshotHash, attempts: [] };
 assert.equal(ledger.target, target);assert.equal(ledger.contextHash, baseline.privateSnapshotHash);
+const approvedCutoverManifestHash = "fc3c8b4a161941707dda95f0e6178b37b811d50555854678bd9dbc3df6b135a3";
 if (renewedPrecutover) {
   const approval = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-staging-cutover-verify/execution-progress.json"), "utf8"));
-  assert.equal(approval.target, target);assert.equal(approval.approvedManifestSha256, "fc3c8b4a161941707dda95f0e6178b37b811d50555854678bd9dbc3df6b135a3");
+  assert.equal(approval.target, target);assert.equal(approval.approvedManifestSha256, approvedCutoverManifestHash);
   assert.equal(approval.explicitActionApproval?.additionalPreAuditApproved, true);assert.equal(approval.explicitActionApproval?.maximumTotalAuditReadRequests, 28);
   assert.equal(ledger.attempts.filter(row => row.beforeCutover).length, 1, "Renewed approval permits exactly one additional pre-audit");
 }
+if (renewedCutover) {
+  const execution = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-staging-cutover-verify/execution-progress.json"), "utf8"));
+  const approval = execution.renewedCutoverApproval;
+  assert.equal(execution.target, target);
+  assert.equal(execution.database, "(default)");
+  assert.equal(execution.approvedManifestSha256, approvedCutoverManifestHash);
+  assert.equal(execution.deployedRulesHash, snapshot.candidateRulesHash);
+  assert.equal(approval?.additionalAudits, 2);
+  assert.equal(approval?.maximumAdditionalReadRequests, 14);
+  assert.equal(approval?.maximumTotalAuditReadRequests, 42);
+  const expectedWindows = ["before-cutover", "before-cutover", "cutover", "cutover", "renewed-cutover"];
+  assert(ledger.attempts.length === 4 || ledger.attempts.length === 5, "Renewed cutover permits only audit rounds 5 and 6");
+  assert.deepEqual(ledger.attempts.map(row => row.auditWindow), expectedWindows.slice(0, ledger.attempts.length));
+  assert(ledger.attempts.every(row => row.passed === true && row.completed === 0 && row.requests.length === 7));
+  assert.equal(latest?.report, `cloud-audit-0-${ledger.attempts.length}.json`);
+  assert.equal(latest?.audit.revision, 17);
+}
 assert(ledger.attempts.length < 13, "Audit window exhausted; obtain renewed review before more reads");
 assert(ledger.attempts.filter(row => Boolean(row.beforeCutover) === beforeCutover).length < (beforeCutover ? renewedPrecutover ? 2 : 1 : 12));
-const auditWindow = beforeCutover ? "before-cutover" : trustedWindow ? "trusted-window" : "cutover";
+const auditWindow = beforeCutover ? "before-cutover" : trustedWindow ? "trusted-window" : renewedCutover ? "renewed-cutover" : "cutover";
 assert(auditWindow !== "cutover" || ledger.attempts.filter(row => row.auditWindow === "cutover").length < 2);
 const lockPath = path.join(directory, "audit.lock"), lock = fs.openSync(lockPath, "wx");
+// Detect a different process advancing the ledger between the initial read and our lock.
+const lockedLedger = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : ledger;
+if (reviewValueHash(lockedLedger) !== reviewValueHash(ledger)) {
+  fs.closeSync(lock);fs.unlinkSync(lockPath);
+  throw new Error("Audit ledger changed while acquiring the lock");
+}
 const attempt = { number: ledger.attempts.length + 1, completed, beforeCutover, auditWindow, startedAt: new Date().toISOString(), requests: [] };
 ledger.attempts.push(attempt);
 const save = () => fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + "\n");save();
