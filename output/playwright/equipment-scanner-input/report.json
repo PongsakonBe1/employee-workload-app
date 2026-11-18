@@ -1,0 +1,16 @@
+{
+  "branch": "codex/equipment-scanner-input",
+  "target": "demo-worklog-workspace",
+  "scannerInputSimulation": "keyboard plus Enter",
+  "physicalScannerTested": false,
+  "kindOpensNumericField": {
+    "power": true,
+    "usb": true,
+    "headphones": true
+  },
+  "badInputCouldNotWrite": true,
+  "borrowSavedOnce": true,
+  "returnUsesStoredBorrowerWithoutRescan": true,
+  "availableAfterReturnReload": true,
+  "persistedTwoWorklogsAndMatchingBorrower": true
+}

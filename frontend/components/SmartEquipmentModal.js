@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Headphones, Plug, Usb, User, Clock, RotateCcw, AlertTriangle, Ban } from 'lucide-react';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode, STUDENT_CODE_HINT } from '../lib/equipmentLoan';
 
 export default function SmartEquipmentModal({ 
   isOpen, 
   onClose, 
   onSelect, 
   templateName,
-  templateMinorTask 
+  templateMinorTask,
+  isSmart
 }) {
   const [selectedEquipment, setSelectedEquipment] = useState('');
   const [equipmentStatus, setEquipmentStatus] = useState({});
@@ -19,6 +21,13 @@ export default function SmartEquipmentModal({
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const recipientRef = useRef(null);
+  const savingRef = useRef(false);
+  const recipientId = useId();
+  const scannerHintId = useId();
+  const errorId = useId();
   // ITEM-1: Return condition state
   const [returnCondition, setReturnCondition] = useState('normal');
   const [returnNote, setReturnNote] = useState('');
@@ -28,12 +37,18 @@ export default function SmartEquipmentModal({
   // กำหนดประเภทอุปกรณ์
   const tName = templateName || '';
   const tTask = templateMinorTask || '';
-  const equipmentType = (tTask.includes('หูฟัง') || tName.includes('หูฟัง')) ? 'headphones'
-                      : (tTask.includes('ปลั๊กไฟ') || tName.includes('ปลั๊กไฟ')) ? 'power'
-                      : (tTask.includes('USB') || tName.includes('USB')) ? 'usb'
-                      : null;
+  const equipmentType = equipmentLoanKind({ name: tName, minorTask: tTask, isSmart });
   const isHeadphones = equipmentType === 'headphones';
   const isUsb = equipmentType === 'usb';
+  const selectedStatus = equipmentStatus[selectedEquipment];
+  const returning = selectedStatus === 'in_use';
+  const originalBorrower = equipmentDetails[selectedEquipment]?.user || '';
+  const noteRequired = returning && (returnCondition === 'damaged' || returnCondition === 'lost');
+  const canConfirm = Boolean(selectedEquipment && !loading && !saving && (returning ? !noteRequired || returnNote.trim() : selectedStatus === 'available' && isEquipmentStudentCode(recipient)));
+
+  useLayoutEffect(() => {
+    if (isOpen && mounted && selectedStatus === 'available' && !loading) recipientRef.current?.focus();
+  }, [isOpen, mounted, selectedEquipment, selectedStatus, loading]);
 
   // ตรวจว่า template เป็นของห้องไหน
   const isFinn   = tName.toLowerCase().includes('finn') || tTask.toLowerCase().includes('finn');
@@ -267,50 +282,53 @@ export default function SmartEquipmentModal({
   };
 
   const handleSelect = (equipment) => {
+    if (savingRef.current) return;
     // ITEM-1: ถ้าอุปกรณ์ damaged/lost ห้ามยืม — ถ้า in_use ให้คืนได้ปกติ
     const cond = equipmentConditionMap[equipment];
     if (equipmentStatus[equipment] !== 'in_use' && (cond === 'damaged' || cond === 'lost')) return;
     setSelectedEquipment(equipment);
     setReturnCondition('normal');
     setReturnNote('');
-    if (equipmentStatus[equipment] === 'in_use' && equipmentDetails[equipment]?.user) {
-      setRecipient(equipmentDetails[equipment].user);
-    } else {
-      setRecipient('');
-    }
+    setError('');
+    if (selectedEquipment !== equipment) setRecipient('');
+    else recipientRef.current?.focus();
   };
 
-  const handleConfirm = () => {
-    if (!selectedEquipment) return;
-    const isReturn = equipmentStatus[selectedEquipment] === 'in_use';
-    if (!isReturn && !recipient.trim()) {
-      alert('กรุณากรอกผู้รับบริการ');
+  const handleConfirm = async () => {
+    if (savingRef.current || loading || !selectedEquipment || !['in_use', 'available'].includes(selectedStatus)) return;
+    if (!returning && !isEquipmentStudentCode(recipient)) {
+      setError('กรุณากรอกรหัสนักศึกษาเป็นเลข 0–9 ครบ 13 หลัก');
+      recipientRef.current?.focus();
       return;
     }
-    // ITEM-1: validate note ถ้า damaged/lost
-    if (isReturn && (returnCondition === 'damaged' || returnCondition === 'lost') && !returnNote.trim()) {
-      alert('กรุณากรอกโน้ตสั้นๆ เพื่ออธิบายสภาพอุปกรณ์');
+    if (noteRequired && !returnNote.trim()) {
+      setError('กรุณาระบุรายละเอียดสภาพอุปกรณ์');
       return;
     }
-    const itemType = templateMinorTask.includes('หูฟัง') || tName.includes('หูฟัง') ? 'หูฟัง' : templateMinorTask.includes('USB') || tName.includes('USB') ? ' USB' : 'ปลั๊กไฟ';
-    const actionShort = isReturn ? 'คืน' : 'ยืม';
-    const comment = `${actionShort}${itemType} ${selectedEquipment}`;
-    const minorTask = `${actionShort}${itemType}`;
-    // ITEM-1: ส่ง condition/note เพิ่มเติม
-    onSelect(comment, selectedEquipment, minorTask, recipient.trim(), isReturn ? returnCondition : 'normal', isReturn ? returnNote.trim() : '');
-    onClose();
-    setSelectedEquipment('');
-    setRecipient('');
-    setReturnCondition('normal');
-    setReturnNote('');
+    const minorTask = equipmentLoanTask(equipmentType, returning);
+    if (!minorTask) return;
+    savingRef.current = true;
+    setSaving(true);
+    setError('');
+    try {
+      await onSelect(`${minorTask} ${selectedEquipment}`, selectedEquipment, minorTask, returning ? originalBorrower : recipient, returning ? returnCondition : 'normal', returning ? returnNote.trim() : '');
+      onClose();
+    } catch {
+      setError('ยังยืนยันการบันทึกไม่ได้ กรุณาเปิดประวัติตรวจรายการก่อนลองใหม่');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const handleClose = () => {
+    if (savingRef.current) return;
     onClose();
     setSelectedEquipment('');
     setRecipient('');
     setReturnCondition('normal');
     setReturnNote('');
+    setError('');
   };
 
   const availableCount = equipmentList.filter(e => equipmentStatus[e] === 'available').length;
@@ -329,7 +347,7 @@ export default function SmartEquipmentModal({
             <h3 className="text-lg font-semibold text-slate-950">{templateName}</h3>
             <p className="text-sm text-slate-400 mt-0.5">ว่าง {availableCount} · ใช้งาน {inUseCount}</p>
           </div>
-          <button onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
+          <button type="button" aria-label="ปิดหน้าต่าง" disabled={saving} onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -366,7 +384,7 @@ export default function SmartEquipmentModal({
                     <button
                       key={equipment}
                       onClick={() => handleSelect(equipment)}
-                      disabled={equipmentStatus[equipment] !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost')}
+                      disabled={saving || (equipmentStatus[equipment] !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost'))}
                       title={equipmentStatus[equipment] !== 'in_use' && equipmentConditionMap[equipment] === 'damaged' ? 'ยืมไม่ได้ — ชำรุด' : equipmentStatus[equipment] !== 'in_use' && equipmentConditionMap[equipment] === 'lost' ? 'ยืมไม่ได้ — สูญหาย' : undefined}
                       className={`p-2 rounded-xl border-2 transition-all relative active:scale-95 ${
                         equipmentStatus[equipment] !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost')
@@ -433,7 +451,8 @@ export default function SmartEquipmentModal({
                   <button
                     key={v}
                     type="button"
-                    onClick={() => { setReturnCondition(v); if (v === 'normal') setReturnNote(''); }}
+                    disabled={saving}
+                    onClick={() => { setReturnCondition(v);setError('');if (v === 'normal') setReturnNote(''); }}
                     className={`py-1.5 rounded-xl border-2 text-xs font-semibold transition-all ${
                       returnCondition === v ? cls + ' ring-2 ring-offset-1 ring-current' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                     }`}
@@ -445,6 +464,7 @@ export default function SmartEquipmentModal({
               {(returnCondition === 'damaged' || returnCondition === 'lost') && (
                 <textarea
                   value={returnNote}
+                  disabled={saving}
                   onChange={(e) => setReturnNote(e.target.value.slice(0, 200))}
                   className="apple-input text-sm resize-none"
                   rows={2}
@@ -454,28 +474,41 @@ export default function SmartEquipmentModal({
               )}
             </div>
           )}
-          {equipmentStatus[selectedEquipment] !== 'in_use' && (
+          {selectedEquipment && selectedStatus === 'available' && (
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
+              <label htmlFor={recipientId} className="block text-xs font-medium text-slate-500 mb-1.5">รหัสนักศึกษา 13 หลัก</label>
               <input
+                id={recipientId}
+                ref={recipientRef}
                 type="text"
+                inputMode="numeric"
+                lang="en"
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                pattern="[0-9]{13}"
+                aria-required="true"
+                aria-describedby={error ? `${scannerHintId} ${errorId}` : scannerHintId}
+                aria-invalid={Boolean(error) || /[^0-9]/.test(recipient) || recipient.length > 13}
                 value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
-                className="apple-input text-sm"
-                placeholder={selectedEquipment ? 'กรอกชื่อผู้รับบริการ หรือรหัสนักศึกษา' : 'เลือกรายการก่อน'}
-                autoFocus={!!selectedEquipment}
+                disabled={saving}
+                onChange={(event) => { setRecipient(event.target.value);setError(''); }}
+                onKeyDown={event => {
+                  if (event.key !== 'Enter' || event.nativeEvent.isComposing || event.repeat) return;
+                  event.preventDefault();
+                  void handleConfirm();
+                }}
+                className="apple-input !text-base"
+                placeholder="สแกนหรือกรอกรหัสนักศึกษา"
               />
+              <p id={scannerHintId} className="ui-caption mt-1">{STUDENT_CODE_HINT}</p>
             </div>
           )}
+          {error && <p id={errorId} className="text-sm text-red-600" role="alert">{error}</p>}
           <div className="flex gap-2">
             <button
               onClick={handleConfirm}
-              disabled={
-                !selectedEquipment ||
-                (equipmentStatus[selectedEquipment] !== 'in_use' && !recipient.trim()) ||
-                (equipmentStatus[selectedEquipment] === 'in_use' && (returnCondition === 'damaged' || returnCondition === 'lost') && !returnNote.trim())
-              }
+              disabled={!canConfirm}
               className={`apple-button flex-1 disabled:opacity-40 ${
                 selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
                   ? returnCondition === 'damaged' ? 'bg-amber-600 hover:bg-amber-700'
@@ -483,12 +516,12 @@ export default function SmartEquipmentModal({
                   : ''
               }`}
             >
-              {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
+              {saving ? 'กำลังบันทึก…' : selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
                 ? `คืน ${selectedEquipment} — ${returnCondition === 'normal' ? 'สมบูรณ์' : returnCondition === 'damaged' ? 'ชำรุด' : 'สูญหาย'}`
                 : `ยืนยัน${selectedEquipment ? ` — ยืม ${selectedEquipment}` : ''}`
               }
             </button>
-            <button onClick={handleClose} className="apple-button-secondary px-4">
+            <button disabled={saving} onClick={handleClose} className="apple-button-secondary px-4">
               ยกเลิก
             </button>
           </div>

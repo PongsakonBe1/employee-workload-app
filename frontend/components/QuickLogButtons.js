@@ -11,6 +11,7 @@ import { db } from '../lib/firebase';
 import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
+import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode } from '../lib/equipmentLoan';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
 
@@ -63,18 +64,10 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     loadTemplates();
   }, [user]);
 
-  const isReturnTemplate = (template) =>
-    template.minorTask.includes('คืนหูฟัง') || template.minorTask.includes('คืนปลั๊กไฟ') ||
-    template.name.includes('คืนหูฟัง') || template.name.includes('คืนปลั๊กไฟ');
-
   const isSmartOrEquipmentTemplate = (template) => {
-    return template.isSmart ||
+    return equipmentLoanKind(template) || template.isSmart ||
       template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4') ||
-      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
-      template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ') ||
-      template.minorTask.includes('หูฟัง') || template.minorTask.includes('ปลั๊กไฟ') ||
-      template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
-      template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ');
+      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4');
   };
 
   const isDirectLog = (template) => !isSmartOrEquipmentTemplate(template) && !template.requireRecipient && !template.isCombo;
@@ -156,11 +149,18 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
-    if (template.requireComment) {
+    const loanKind = equipmentLoanKind(template);
+    if (template.requireComment && !(loanKind && template.isSmart)) {
       setSelectedTemplate(template);
       setCommentText('');
       setRecipient('');
       setShowCommentModal(true);
+      return;
+    }
+
+    if (loanKind) {
+      setSelectedTemplate(template);
+      setShowSmartEquipmentModal(true);
       return;
     }
 
@@ -170,11 +170,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       const isRoom = template.minorTask.includes('ห้องเรียน') ||
                      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
                      template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4');
-      if (template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
-          template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ') ||
-          template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ')) {
-        setShowSmartEquipmentModal(true);
-      } else if (isRoom) {
+      if (isRoom) {
         setShowSmartRoomModal(true);
       } else {
         setShowSmartEquipmentModal(true);
@@ -438,11 +434,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   };
 
   const handleLogWithSmartEquipment = async (comment, equipment, minorTask, recipient, equipmentCondition = 'normal', equipmentNote = '') => {
-    if (!selectedTemplate || !comment.trim()) {
-      if (onLogSuccess) {
-        onLogSuccess('กรุณาเลือกรายการอุปกรณ์', 'error');
-      }
-      return;
+    const equipmentType = equipmentLoanKind(selectedTemplate || undefined);
+    const returning = minorTask === equipmentLoanTask(equipmentType, true);
+    if (!user || !logAsUser || !equipmentType || !equipment || !comment.trim() ||
+        (!returning && (minorTask !== equipmentLoanTask(equipmentType, false) || !isEquipmentStudentCode(recipient)))) {
+      throw new Error('Invalid equipment loan input');
     }
 
     setLoggingTemplate(selectedTemplate.id);
@@ -457,7 +453,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         comment: comment.trim(),
         minorTask: minorTask, // override minorTask ตามสถานะ
         equipment: equipment,
-        recipient: recipient.trim(),
+        recipient,
         equipmentCondition: equipmentCondition || 'normal', // ITEM-1
         equipmentNote: equipmentNote || '',                 // ITEM-1
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
@@ -468,54 +464,31 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // บันทึกงานจาก template พร้อม override comment และ minorTask
       await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
 
-      // อัปเดตสถานะอุปกรณ์ใน RoomEquipmentStatus
-      const equipmentType = selectedTemplate.minorTask.includes('หูฟัง') ? 'headphones' : 
-                           selectedTemplate.minorTask.includes('ปลั๊กไฟ') ? 'power' : null;
-      
-      if (equipmentType) {
-        // กำหนดสถานะใหม่ตามการกระทำ
-        const newStatus = minorTask.includes('ยืม') || minorTask.includes('เปิด') ? 'in_use' : 'available';
-        
-        // อัปเดตใน RoomEquipmentStatus collection
-        const statusRef = doc(db, 'RoomEquipmentStatus', 'equipment');
-        await setDoc(statusRef, {
-          [`${equipmentType}.${equipment}`]: newStatus,
-          [`${equipmentType}.${equipment}_user`]: recipient,
-          [`${equipmentType}.${equipment}_timestamp`]: new Date().toISOString()
-        }, { merge: true });
-        
-        console.log(`✅ Updated ${equipmentType} ${equipment} status to ${newStatus}`);
-        
-        // Trigger refresh ของสถานะอุปกรณ์โดยการส่ง custom event
-        window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
-          detail: { equipmentType, equipment, status: newStatus }
-        }));
+      const newStatus = returning ? 'available' : 'in_use';
+      let statusSynced = true;
+      if (equipmentType !== 'usb') {
+        try {
+          await setDoc(doc(db, 'RoomEquipmentStatus', 'equipment'), {
+            [`${equipmentType}.${equipment}`]: newStatus,
+            [`${equipmentType}.${equipment}_user`]: recipient,
+            [`${equipmentType}.${equipment}_timestamp`]: new Date().toISOString()
+          }, { merge: true });
+        } catch {
+          // The worklog already committed. Report the status sync separately to avoid another loan on retry.
+          statusSynced = false;
+        }
       }
+      window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', { detail: { equipmentType, equipment, status: newStatus } }));
 
-      // บันทึก system log
-      await logSystemAction(
+      void logSystemAction(
         SystemActions.WORKLOG_CREATE,
-        `Smart log from template: ${selectedTemplate.name} - ${equipment} (${minorTask}) - ${recipient}`,
-        { templateId: selectedTemplate.id, equipment, minorTask, recipient }
+        `Smart log from template: ${selectedTemplate.name} - ${equipment} (${minorTask})`,
+        logAsUser.uid || logAsUser.id
       );
 
-      // แจ้งผู้ใช้
-      if (onLogSuccess) {
-        console.log('🔔 Calling onLogSuccess with message:', `บันทึกงาน "${comment}" สำหรับ ${recipient} เรียบร้อยแล้ว`);
-        onLogSuccess(`บันทึกงาน "${comment}" สำหรับ ${recipient} เรียบร้อยแล้ว`);
-      } else {
-        console.log('❌ onLogSuccess is not available');
-      }
-      
-      setShowSmartEquipmentModal(false);
+      onLogSuccess?.(statusSynced ? `บันทึกงาน “${comment}” เรียบร้อยแล้ว` : `บันทึกงาน “${comment}” แล้ว แต่ซิงก์สถานะอุปกรณ์ไม่สำเร็จ`);
       setSelectedTemplate(null);
       setEquipmentComment('');
-
-    } catch (error) {
-      console.error("Error quick logging with smart equipment:", error);
-      if (onLogSuccess) {
-        onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
-      }
     } finally {
       setLoading(false);
       setLoggingTemplate(null);
@@ -824,6 +797,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
           onSelect={handleLogWithSmartEquipment}
           templateName={selectedTemplate.name}
           templateMinorTask={selectedTemplate.minorTask}
+          isSmart={selectedTemplate.isSmart}
         />
       )}
 
