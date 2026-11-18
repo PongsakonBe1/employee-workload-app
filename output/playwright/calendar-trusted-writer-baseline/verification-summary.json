@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T12:47:49.732Z",
+  "unitCommand": "node --test scripts/calendar-trusted-cloud-plan.test.mjs",
+  "unitTests": 7,
+  "unitPassed": 7,
+  "unitFailed": 0,
+  "syntaxChecksPassed": true,
+  "frozenIntegrityPassed": true,
+  "operationIdsRecomputed": 8,
+  "actualUidsAbsentFromCommittedJson": true,
+  "localLinksExist": true,
+  "cloudBaselineReadPassed": true,
+  "cloudDataWrites": 0,
+  "cloudRulesChanged": false,
+  "fullVitestRun": false,
+  "compatibilityBuildRun": false
+}

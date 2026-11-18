@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "capturedAt": "2026-11-18T12:41:44.251Z",
+  "projectId": "labboy-workload-app-staging",
+  "databaseId": "(default)",
+  "edition": "STANDARD",
+  "sourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "runtimeHealth": {
+    "ok": true,
+    "projectId": "labboy-workload-app-staging",
+    "mode": "staging",
+    "protocol": 1,
+    "writesEnabled": false,
+    "connectivityEnabled": false,
+    "emulator": false
+  },
+  "proposalSha256": "7c7fd051fdd935dcb440ee7c0d54bede8d1d8cf29c915fcf96ad200c5553560a",
+  "baselineRulesHash": "360f18769fc93b3642af26b5aae5fbdada29780116503e36b145fe8a98548195",
+  "candidateRulesHash": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "baselineMatchesCandidate": false,
+  "gateRevision": 17,
+  "expectedFinalGateRevision": 22,
+  "counts": {
+    "users": 5,
+    "classroomSchedules": 32,
+    "dlExamSchedules": 0
+  },
+  "actorProfiles": {
+    "staff": {
+      "role": "staff",
+      "active": true,
+      "calendarWriter": false
+    },
+    "superadmin": {
+      "role": "superadmin",
+      "active": true,
+      "calendarWriter": true
+    }
+  },
+  "frozenHash": "6c6b85f57289cdc2be618d690014fa073ee0fc5eb87e219be7473f6b01758f31",
+  "privateSnapshotHash": "fbc37be6e2148afb9caba350a193de7a6dc7e671a151c21791a0f9ecdcdeb6d7",
+  "scheduleTargetsAbsent": 8,
+  "operationReceiptsAbsent": 8,
+  "gateAndProfileStableDuringCapture": true,
+  "conflictsWithBaseline": 0,
+  "cloudApiReadRequests": 10,
+  "healthGetAttempts": 1,
+  "frontendReadsNotIncluded": true,
+  "countsAreNotBilledReads": true,
+  "cloudDataWrites": 0,
+  "rulesChanged": false,
+  "profilesChanged": false,
+  "billingChanged": false,
+  "iamChanged": false,
+  "productionAccessed": false,
+  "keyMaterialRead": false,
+  "cloudExecutionApproved": false,
+  "rulesDeploymentApproved": false,
+  "gateStillNeedsRevalidationImmediatelyBeforeCutover": true,
+  "privilegedAuditIsNotRulesEvidence": true,
+  "localArtifacts": [
+    ".tools/calendar-staging/trusted-writer-baseline/prepared.json",
+    ".tools/calendar-staging/trusted-writer-baseline/reviewed-operations.json",
+    ".tools/calendar-staging/trusted-writer-baseline/baseline.rules"
+  ]
+}

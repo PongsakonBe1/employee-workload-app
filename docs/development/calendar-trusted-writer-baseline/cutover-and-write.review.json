@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "status": "frozen-inputs-pending-cutover-and-cloud-write-approval",
+  "target": {
+    "projectId": "labboy-workload-app-staging",
+    "databaseId": "(default)",
+    "serviceId": "srv-dbu3qvdckfvc73b16ku0",
+    "apiOrigin": "https://labboy-calendar-staging.onrender.com",
+    "plan": "free"
+  },
+  "capturedAt": "2026-11-18T12:41:44.251Z",
+  "sourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "gateRevisionBefore": 17,
+  "expectedGateRevisionAfter": 22,
+  "baselineCounts": {
+    "users": 5,
+    "classroomSchedules": 32,
+    "dlExamSchedules": 0
+  },
+  "actorProfiles": {
+    "staff": {
+      "role": "staff",
+      "active": true,
+      "calendarWriter": false
+    },
+    "superadmin": {
+      "role": "superadmin",
+      "active": true,
+      "calendarWriter": true
+    }
+  },
+  "baselineRulesRawSha256": "360f18769fc93b3642af26b5aae5fbdada29780116503e36b145fe8a98548195",
+  "baselineRulesNormalizedSha256": "6cd83e8b8a287f301725b26adbb36c987f789351a8aea1475a6150d40bae458f",
+  "candidateRulesRawSha256": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "candidateRulesPath": "deploy/calendar-staging/firestore.review.rules",
+  "frozenPayloadHash": "6c6b85f57289cdc2be618d690014fa073ee0fc5eb87e219be7473f6b01758f31",
+  "privateSnapshotHash": "fbc37be6e2148afb9caba350a193de7a6dc7e671a151c21791a0f9ecdcdeb6d7",
+  "cloudExecutionApproved": false,
+  "rulesDeploymentApproved": false,
+  "enableWriterApproved": false,
+  "pushOrApplicationDeployApproved": false,
+  "previewContainsAliasesInsteadOfUids": true,
+  "operations": [
+    {
+      "id": "manual",
+      "kind": "create",
+      "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+      "inputHash": "518d7f5ceacea42c82b31441c47e8e6a7ef633871f514ce15d5fc2eb2acb0f09",
+      "expectedGateRevision": 18,
+      "inputPreview": {
+        "rules": [
+          {
+            "kind": "classroom",
+            "title": "QA-SERVER-MANUAL",
+            "rooms": [
+              "401"
+            ],
+            "weekday": 0,
+            "validFrom": "2027-06-07",
+            "validTo": "2027-06-07",
+            "start": "09:00",
+            "end": "10:00",
+            "semester": "1/2570",
+            "teacher": ""
+          }
+        ],
+        "events": []
+      },
+      "expectedNewSchedules": 1
+    },
+    {
+      "id": "pdf",
+      "kind": "create",
+      "operationId": "op-e8c2dd699d6ff9465e291d35a5d239f4f01237b97046ce4539b397f48473b4ac",
+      "inputHash": "ee5a654a58118987a86523c1e73f6a8b67498e7b3c45c3aa77d253ec2ee68888",
+      "expectedGateRevision": 19,
+      "inputPreview": {
+        "rules": [
+          {
+            "kind": "classroom",
+            "title": "QA-SERVER-PDF 401",
+            "rooms": [
+              "401"
+            ],
+            "weekday": 1,
+            "validFrom": "2027-06-08",
+            "validTo": "2027-06-08",
+            "start": "11:00",
+            "end": "12:00",
+            "semester": "1/2570",
+            "teacher": ""
+          },
+          {
+            "kind": "classroom",
+            "title": "QA-SERVER-PDF 402",
+            "rooms": [
+              "402"
+            ],
+            "weekday": 1,
+            "validFrom": "2027-06-08",
+            "validTo": "2027-06-08",
+            "start": "11:00",
+            "end": "12:00",
+            "semester": "1/2570",
+            "teacher": ""
+          }
+        ],
+        "events": []
+      },
+      "expectedNewSchedules": 2
+    },
+    {
+      "id": "dl",
+      "kind": "create",
+      "operationId": "op-7a2033d3505e5c8424ce3c86b654f7e725e35d730a61069ec06046a62592c76b",
+      "inputHash": "552cb922a81ecdd21315f668b2fbb7d8719b5a938b8414f5d0dc0111827dbe0f",
+      "expectedGateRevision": 20,
+      "inputPreview": {
+        "rules": [],
+        "events": [
+          {
+            "kind": "dl",
+            "title": "QA-SERVER-DL",
+            "date": "2027-06-09",
+            "start": "17:00",
+            "end": "18:30",
+            "rooms": [
+              "406",
+              "407"
+            ],
+            "participants": 75,
+            "proctors": [
+              "alias:staff",
+              "alias:superadmin"
+            ],
+            "examType": "student",
+            "semester": "1/2570",
+            "repeat": "none"
+          },
+          {
+            "kind": "dl",
+            "title": "QA-SERVER-DL",
+            "date": "2027-06-10",
+            "start": "17:00",
+            "end": "18:30",
+            "rooms": [
+              "406",
+              "407"
+            ],
+            "participants": 75,
+            "proctors": [
+              "alias:staff",
+              "alias:superadmin"
+            ],
+            "examType": "student",
+            "semester": "1/2570",
+            "repeat": "none"
+          }
+        ]
+      },
+      "expectedNewSchedules": 2
+    },
+    {
+      "id": "edit",
+      "kind": "mutate",
+      "operationId": "op-7aabd48c8c9057213bcbb2541e1612f03cb4b746dd871f5c8776aebd031a6198",
+      "inputHash": "590d867a5b2e5316f4eaf4f178f209e0eb4037b5a4d413d3590882d4bc044848",
+      "expectedGateRevision": 21,
+      "inputPreview": {
+        "action": "edit",
+        "original": {
+          "id": "classroomSchedules:cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+          "source": {
+            "collection": "classroomSchedules",
+            "documentId": "cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+            "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+            "version": 0
+          },
+          "title": "QA-SERVER-MANUAL",
+          "kind": "classroom",
+          "weekday": 0,
+          "rooms": [
+            "401"
+          ],
+          "start": "09:00",
+          "end": "10:00",
+          "validFrom": "2027-06-07",
+          "validTo": "2027-06-07",
+          "semester": "1/2570",
+          "teacher": "",
+          "note": ""
+        },
+        "replacement": {
+          "id": "classroomSchedules:cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+          "source": {
+            "collection": "classroomSchedules",
+            "documentId": "cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+            "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+            "version": 0
+          },
+          "title": "QA-SERVER-MANUAL",
+          "kind": "classroom",
+          "weekday": 0,
+          "rooms": [
+            "401"
+          ],
+          "start": "10:00",
+          "end": "11:00",
+          "validFrom": "2027-06-07",
+          "validTo": "2027-06-07",
+          "semester": "1/2570",
+          "teacher": "",
+          "note": ""
+        }
+      },
+      "expectedNewSchedules": 0
+    },
+    {
+      "id": "cancel",
+      "kind": "mutate",
+      "operationId": "op-6df382f40575f5264f5bc8c4bc400460e73f29f06e77bf5b52141ae18c6c69ec",
+      "inputHash": "ef1e9c2d8c29ccbce8e760c822ecb228bd661f1e34d50d5fa37760c64ba059a6",
+      "expectedGateRevision": 22,
+      "inputPreview": {
+        "action": "cancel",
+        "original": {
+          "id": "classroomSchedules:cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+          "source": {
+            "collection": "classroomSchedules",
+            "documentId": "cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+            "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+            "version": 1
+          },
+          "title": "QA-SERVER-MANUAL",
+          "kind": "classroom",
+          "weekday": 0,
+          "rooms": [
+            "401"
+          ],
+          "start": "10:00",
+          "end": "11:00",
+          "validFrom": "2027-06-07",
+          "validTo": "2027-06-07",
+          "semester": "1/2570",
+          "teacher": "",
+          "note": ""
+        }
+      },
+      "expectedNewSchedules": 0
+    }
+  ],
+  "rejections": [
+    {
+      "id": "atomic-room-conflict",
+      "kind": "create",
+      "operationId": "op-dd0cc8e2efbb609c95fdb17c3e96794c4295b94fc5d1fb97bf125739ca15430a",
+      "inputHash": "e62057c72c3f4e7901f1e01d39d1d386c0d208a0c629bf9f37867083764fb1c8",
+      "expectedHttpStatus": 400,
+      "inputPreview": {
+        "rules": [
+          {
+            "kind": "classroom",
+            "title": "QA-SERVER-ATOMIC-FREE",
+            "rooms": [
+              "402"
+            ],
+            "weekday": 4,
+            "validFrom": "2027-06-11",
+            "validTo": "2027-06-11",
+            "start": "10:00",
+            "end": "11:00",
+            "semester": "1/2570",
+            "teacher": ""
+          },
+          {
+            "kind": "classroom",
+            "title": "QA-SERVER-ATOMIC-CONFLICT",
+            "rooms": [
+              "401"
+            ],
+            "weekday": 0,
+            "validFrom": "2027-06-07",
+            "validTo": "2027-06-07",
+            "start": "09:00",
+            "end": "10:00",
+            "semester": "1/2570",
+            "teacher": ""
+          }
+        ],
+        "events": []
+      }
+    },
+    {
+      "id": "dl-room-and-proctor-conflict",
+      "kind": "create",
+      "operationId": "op-32a35cec8fc3d9f83355b142273250ad6826b675fdcb92b109e88418f9ba46fa",
+      "inputHash": "7873e4309612f74a7ae584145a390558de329b1cb6c442eb3f8e41842b51d0f2",
+      "expectedHttpStatus": 400,
+      "inputPreview": {
+        "rules": [],
+        "events": [
+          {
+            "kind": "dl",
+            "title": "QA-SERVER-DL-CONFLICT",
+            "date": "2027-06-09",
+            "start": "17:00",
+            "end": "18:30",
+            "rooms": [
+              "406",
+              "407"
+            ],
+            "participants": 75,
+            "proctors": [
+              "alias:staff",
+              "alias:superadmin"
+            ],
+            "examType": "student",
+            "semester": "1/2570",
+            "repeat": "none"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stale-manual-edit",
+      "kind": "mutate",
+      "operationId": "op-ca76eebfc2417e120ce7e9b23da643ffe746eef2983013d718b40e1552b57325",
+      "inputHash": "2cf164eabce8a7991fb6d680f1a82c1f53b996a49390c421de6585cf9c66b569",
+      "expectedHttpStatus": 409,
+      "inputPreview": {
+        "action": "edit",
+        "original": {
+          "id": "classroomSchedules:cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+          "source": {
+            "collection": "classroomSchedules",
+            "documentId": "cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+            "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+            "version": 0
+          },
+          "title": "QA-SERVER-MANUAL",
+          "kind": "classroom",
+          "weekday": 0,
+          "rooms": [
+            "401"
+          ],
+          "start": "09:00",
+          "end": "10:00",
+          "validFrom": "2027-06-07",
+          "validTo": "2027-06-07",
+          "semester": "1/2570",
+          "teacher": "",
+          "note": ""
+        },
+        "replacement": {
+          "id": "classroomSchedules:cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+          "source": {
+            "collection": "classroomSchedules",
+            "documentId": "cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+            "operationId": "op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+            "version": 0
+          },
+          "title": "QA-SERVER-MANUAL",
+          "kind": "classroom",
+          "weekday": 0,
+          "rooms": [
+            "401"
+          ],
+          "start": "11:00",
+          "end": "12:00",
+          "validFrom": "2027-06-07",
+          "validTo": "2027-06-07",
+          "semester": "1/2570",
+          "teacher": "",
+          "note": ""
+        }
+      }
+    }
+  ],
+  "budgets": {
+    "maximumNewSchedules": 5,
+    "maximumNewReceipts": 5,
+    "maximumGateIncrease": 5,
+    "maximumTrustedApiPostRequests": 13,
+    "maximumConcurrentRequests": 2,
+    "maximumPostRequestsPerUidPerRollingMinute": 10
+  },
+  "nextApprovedActionRequired": "Exact staging Rules cutover with server/UI writers kept off, reader/direct-write-denial verification scope reviewed before execution",
+  "auditChannel": {
+    "proposed": "Guarded Firebase CLI read APIs using existing authorized operator session; no new privileged endpoint or key",
+    "captureReadOnlyGuardTested": true,
+    "postWriteAuditImplementationReady": false,
+    "approvalRequiredBeforeWriteWindow": true
+  },
+  "forbidden": [
+    "production access",
+    "profile/IAM/billing/key changes",
+    "physical deletion",
+    "silent fixture movement or UID remapping",
+    "reopening legacy direct SDK writes as rollback"
+  ],
+  "privateFrozenFile": ".tools/calendar-staging/trusted-writer-baseline/reviewed-operations.json"
+}
