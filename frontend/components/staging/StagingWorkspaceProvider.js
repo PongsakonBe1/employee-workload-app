@@ -31,7 +31,7 @@ export function StagingWorkspaceProvider({ children }) {
   useEffect(() => {
     if (emulatorMode) { setConfig(trustedServer ? TRUSTED_EMULATOR_CONFIG : { projectId: STAGING_PROJECT, appId: STAGING_APP, authDomain: `${STAGING_PROJECT}.firebaseapp.com`, apiKey: "demo-mutation-emulator-placeholder" });return; }
     let active = true;const controller = new AbortController();setConfig(null);setConfigError(false);
-    fetch("/dev-staging-config.json", { cache: "no-store", signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Staging config unavailable");return response.json(); }).then(value => { const approved = validateCalendarStagingConfig(value);if (active) setConfig(approved); }).catch(() => { if (active) setConfigError(true); });
+    fetch("/dev/staging-web-config", { cache: "no-store", signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Staging config unavailable");return response.json(); }).then(value => { const approved = validateCalendarStagingConfig(value);if (active) setConfig(approved); }).catch(() => { if (active) setConfigError(true); });
     return () => { active = false;controller.abort(); };
   }, [attempt]);
   const login = useCallback(() => config ? session.login(config) : Promise.reject(new Error("Staging configuration required")), [session, config]);

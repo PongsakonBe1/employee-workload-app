@@ -1,8 +1,13 @@
 import createNextIntlPlugin from "next-intl/plugin";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const withNextIntl = createNextIntlPlugin();
+
+if (process.env.NODE_ENV === "production" && existsSync(new URL("./public/dev-staging-config.json", import.meta.url))) {
+  throw new Error("Move the local staging Web SDK config out of frontend/public before building production");
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

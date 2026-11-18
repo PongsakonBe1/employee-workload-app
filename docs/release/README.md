@@ -58,9 +58,9 @@ Inventory ปัจจุบันจาก source: **43 routes = application 24
 | `/` | redirect เดิม | เข้า route ตาม session/role ถูกต้อง ไม่มี fixture user | AUTH, UI |
 | `/login` | legacy | ย้ายแบบที่รับรอง + Google session/errors/logout/expiry จริง | AUTH, UI |
 | `/pending` | legacy | ยังไม่อนุมัติ/ไม่ active ถูกปฏิเสธจริง | AUTH, UI |
-| `/worklogs/new` | legacy + `/dev/record` | catalog จริง, manual/Quick Log/Combo, duplicate/failure/Undo | CORE |
+| `/worklogs/new` | opt-in production build + legacy fallback | manual ใช้ catalog และ Firestore จริง ผ่าน local smoke; ใช้ Quick Log เดิมและยังรอ UAT เครื่องจริง | CORE |
 | `/admin/record` | legacy + `/dev/record` | flow Admin และการเลือกบุคลากร/ขอบเขตข้อมูลจริง | CORE, AUTH |
-| `/worklogs` | legacy + `/dev/history` | list/calendar/detail/edit/cancel/export ตามสิทธิ์และ storage contract | CORE |
+| `/worklogs` | opt-in production build + legacy fallback | list/detail/reload ผ่าน local smoke; ตรวจ production index และ UAT เครื่องจริงก่อนเปิดใช้ | CORE |
 | `/resources` | legacy + `/dev/resources` | สถานะ/รายละเอียด/ประวัติ/ยืมคืนจริงและ Undo | CORE |
 | `/admin/equipment-items` | legacy + `/dev/equipment` | เพิ่ม/ย้ายสังกัด/หยุดใช้แล้ว Quick Log และประวัติสอดคล้อง | CORE |
 | `/admin/equipment-health` | legacy + `/dev/equipment/usage` | นับความถี่/คงค้าง/สภาพจาก events จริง ไม่เดาค่า timeline | CORE, ANALYTICS |
@@ -108,7 +108,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 - [ ] **CORE** record/history/templates/resources/equipment/export ใช้บริการจริงที่สอดคล้องกัน ผ่าน refresh/ข้ามหน้า/ข้าม session, duplicate submit, concurrent operation, draft/focus และ Undo ตาม storage contract ไม่มี in-memory ledger ถูกใช้เป็นข้อมูล production
 - [ ] **ANALYTICS** Overview/Staff/equipment/report อ่านข้อมูลจริงตามช่วงที่เลือก; aggregate/count/drill-down/export ตรงกัน; JD จริงและแบบประเมินผ่านการตรวจ; unknown/partial data ไม่กลายเป็นศูนย์หรือคะแนนปลอม
 - [ ] **UI** ปิดงานทั้ง 24 routes และ views ที่เกี่ยวข้องตาม Matrix + Review; เลิกอ้างอิง fixture data/role picker ของ develop ใน production ทุกปุ่มมีปลายทาง; ข้อยกเว้นคงหน้าเดิมต้องมี Tech Lead ลงความเห็นชอบก่อน
-- [ ] **PROD-BUILD** production build แสดง UI ใหม่ผ่าน entry/config ที่ตั้งใจรองรับ production โดยไม่ตั้ง NODE_ENV=development; QA tools/role switcher/fixtures/secrets และ staging config ไม่หลุดเข้า production export ต้องแก้ความคาดหวังของ compatibility tests อย่างมีเหตุผล
+- [ ] **PROD-BUILD** [บันทึกงานและประวัติ](../development/worklog-production-workspace/README.md) ผ่าน production-mode export แบบ opt-in ในเครื่อง และแยก staging config ออกจาก public แล้ว ยังต้องตรวจ build ของ release candidate ที่รวมหน้าหลักส่วนที่เหลือและตรวจ config production ก่อนเปิดใช้
 
 ### G3 — ทดสอบและเปิดใช้แบบควบคุม
 

@@ -1,0 +1,7 @@
+{
+  "productionMode": true,
+  "data": "demo-worklog-workspace",
+  "desktop": true,
+  "mobileViewport": true,
+  "physicalMobileTested": false
+}

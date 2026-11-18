@@ -6,7 +6,7 @@ import { initializeAuth, inMemoryPersistence, signOut } from "firebase/auth";
 import { initializeFirestore, getDocFromServer, getDocsFromServer, collection, doc, setDoc, updateDoc, deleteDoc, terminate, setLogLevel } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "../frontend/lib/calendarStagingConfig.js";
 setLogLevel("silent");
-const config = validateCalendarStagingConfig(JSON.parse(fs.readFileSync("frontend/public/dev-staging-config.json", "utf8")));
+const config = validateCalendarStagingConfig(JSON.parse(fs.readFileSync(".tools/calendar-staging/web-sdk-config.json", "utf8")));
 const report = {
   completed: false,
   projectId: config.projectId,

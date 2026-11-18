@@ -7,6 +7,12 @@ import { CheckCircle2, Clock, Zap, X } from "lucide-react";
 import { Toast } from "../../../components/Toast";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
+import { WorklogManualWorkspace } from "../../../components/WorklogManualWorkspace";
+import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassControls";
+import { Dialog } from "../../../components/ui/Dialog";
+import "../../dev/record/record.css";
+import "../../dev/history/history.css";
+import "../worklog-workspace.css";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
@@ -25,17 +31,23 @@ import {
   hasCommentSuggestions,
 } from "../../../lib/commentSuggestions";
 import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
-import { db } from "../../../lib/firebase";
+import { auth, db } from "../../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { today, nowTime, getLockTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask } from "../../../lib/worklogUtils";
 import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
 
+const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
+
 export default function NewWorkLogPage() {
+  const { user } = useAuth();
+  return <WorklogRecord key={user?.uid || "anonymous"} user={user} />;
+}
+
+function WorklogRecord({ user }) {
   const t = useTranslations("worklog");
   const router = useRouter();
-  const { user } = useAuth();
   const [form, setForm] = useState({
     date: today(),
     time: nowTime(),
@@ -51,12 +63,16 @@ export default function NewWorkLogPage() {
   const [error, setError] = useState("");
   const [lastSaved, setLastSaved] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [mode, setMode] = useState("quick");
+  const [review, setReview] = useState(null);
+  const submitLock = useRef(false);
+  const draftKey = workspaceEnabled ? (user?.uid ? `worklogDraft:${user.uid}` : null) : "worklogDraft";
   
   // Mobile toggle: show form or calendar
   const [showCalendarMobile, setShowCalendarMobile] = useState(false);
 
   // Auto-update date/time every minute on desktop mode
-  useAutoUpdateDateTime(setForm);
+  useAutoUpdateDateTime(setForm, !workspaceEnabled || mode === "quick");
 
   // Redirect admin users - they don't record worklogs
   useEffect(() => {
@@ -67,7 +83,9 @@ export default function NewWorkLogPage() {
 
   // Restore draft from localStorage on mount
   useEffect(() => {
-    const savedDraft = localStorage.getItem("worklogDraft");
+    if (!draftKey) return;
+    let savedDraft;
+    try { savedDraft = localStorage.getItem(draftKey); } catch { return; }
     if (savedDraft) {
       try {
         const draft = JSON.parse(savedDraft);
@@ -89,10 +107,11 @@ export default function NewWorkLogPage() {
         console.error("Failed to restore draft:", e);
       }
     }
-  }, []);
+  }, [draftKey]);
 
   // Auto-save draft every 30 seconds or when form changes significantly
   useEffect(() => {
+    if (!draftKey || !(form.recipient || form.minorTask || form.comment)) return;
     const saveDraft = () => {
       const draft = {
         recipient: form.recipient,
@@ -102,14 +121,17 @@ export default function NewWorkLogPage() {
         comment: form.comment,
         timestamp: Date.now(),
       };
-      localStorage.setItem("worklogDraft", JSON.stringify(draft));
-      setLastSaved(new Date());
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setLastSaved(new Date());
+      } catch { /* An unavailable local draft store must not block Firestore writes. */ }
     };
 
     // Save immediately if recipient, minorTask, or comment changed
     const timeoutId = setTimeout(saveDraft, 2000);
     return () => clearTimeout(timeoutId);
   }, [
+    draftKey,
     form.recipient,
     form.minorTask,
     form.comment,
@@ -119,7 +141,7 @@ export default function NewWorkLogPage() {
 
   // Clear draft after successful submit
   const clearDraft = () => {
-    localStorage.removeItem("worklogDraft");
+    try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* Save already committed. */ }
     setLastSaved(null);
   };
 
@@ -161,14 +183,31 @@ export default function NewWorkLogPage() {
     return getLockTime(form.date);
   }, [form.date]);
 
-  async function onSubmit(event) {
+  function onSubmit(event) {
     event.preventDefault();
+    if (submitLock.current) return;
+    const validation = validateWorklogForm(form);
+    if (!validation.valid) {
+      setError(Object.values(validation.errors)[0]);
+      return;
+    }
+    setError("");
+    if (workspaceEnabled) setReview({ fields: { ...form }, employeeId: user?.uid });
+    else void save(form, user?.uid);
+  }
+
+  async function save(fields, employeeId) {
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSaving(true);
     setError("");
     setMessage("");
 
     try {
-      const validation = validateWorklogForm(form);
+      if (!employeeId || auth.currentUser?.uid !== employeeId || user?.uid !== employeeId || user.role === "admin") {
+        throw new Error("บัญชีเปลี่ยนหรือยังไม่พร้อมบันทึกงาน กรุณาเข้าสู่ระบบอีกครั้ง");
+      }
+      const validation = validateWorklogForm(fields);
       if (!validation.valid) {
         throw new Error(Object.values(validation.errors)[0]);
       }
@@ -181,13 +220,13 @@ export default function NewWorkLogPage() {
         "";
 
       await addDoc(collection(db, "worklogs"), {
-        date: form.date,
-        time: form.time,
-        recipient: sanitizeInput(form.recipient),
-        dutyGroup: form.dutyGroup,
-        mainDuty: form.mainDuty,
-        minorTask: form.minorTask,
-        comment: sanitizeInput(form.comment),
+        date: fields.date,
+        time: fields.time,
+        recipient: sanitizeInput(fields.recipient),
+        dutyGroup: fields.dutyGroup,
+        mainDuty: fields.mainDuty,
+        minorTask: fields.minorTask,
+        comment: sanitizeInput(fields.comment),
         employeeId: user.uid,
         employeeNickname: user.nickname || "",
         employeeDisplayName: employeeDisplayName,
@@ -199,11 +238,12 @@ export default function NewWorkLogPage() {
       // Log action
       await logSystemAction(
         SystemActions.CREATE_WORKLOG,
-        `Created worklog: ${form.date} ${form.time} - ${form.recipient}`,
+        `Created worklog: ${fields.date} ${fields.time}`,
         user.uid,
       );
 
       clearDraft();
+      setReview(null);
       setMessage(t("form.saved"));
       setForm((current) => ({
         ...current,
@@ -219,6 +259,7 @@ export default function NewWorkLogPage() {
     } catch (err) {
       setError(err.message);
     } finally {
+      submitLock.current = false;
       setSaving(false);
     }
   }
@@ -227,18 +268,54 @@ export default function NewWorkLogPage() {
   const formRef = useRef(null);
   const minorTaskRef = useRef(null);
 
-  const scrollToForm = () => {
-    const el = minorTaskRef.current || formRef.current;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  // Auto-grow textarea
+  // Auto-grow the legacy textarea.
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.max(80, el.scrollHeight)}px`;
   }, [form.comment]);
+
+  if (workspaceEnabled) {
+    return <AppShell>
+      <div className="ui-page-heading record-heading worklog-workspace-heading" data-worklog-workspace="record">
+        <div><h1>บันทึกงาน</h1><p>เลือกงานที่ทำ แล้วกลับไปทำงานต่อได้ทันที</p></div>
+        <GlassButton mode="quick" onClick={() => router.push("/worklogs")}>ดูประวัติงาน</GlassButton>
+      </div>
+      <ScheduleAlertBanner />
+      <Toast message={message} error={review ? "" : error} info={draftRestored ? "กู้คืนร่างอัตโนมัติแล้ว" : ""} onDismissMessage={() => setMessage("")} onDismissError={() => setError("")} />
+      <div className="record-layout worklog-live-record">
+        <div className="record-column">
+          <section aria-label="บันทึกงานของคุณ">
+            <div className="record-panel-title">
+              <div><h2>งานของฉัน</h2><p>{user?.displayName || user?.nickname || user?.fullName}</p></div>
+              <GlassControlGroup mode="quick" label="วิธีบันทึกงาน" className="record-mode">
+                <button type="button" aria-pressed={mode === "quick"} onClick={() => setMode("quick")}><Zap size={16} aria-hidden="true" /> บันทึกด่วน</button>
+                <button type="button" aria-pressed={mode === "manual"} onClick={() => setMode("manual")}>กรอกเอง</button>
+              </GlassControlGroup>
+            </div>
+            <div className="apple-panel worklog-record-panel" hidden={mode !== "quick"}>
+              <QuickLogButtons onLogSuccess={value => { setMessage(value || "บันทึกสำเร็จ");setTimeout(() => setMessage(""), 3000); }} />
+            </div>
+            <div className="apple-panel worklog-record-panel" hidden={mode !== "manual"}>
+              <WorklogManualWorkspace form={form} setForm={setForm} onTask={handleMinorTaskChange} onSuggestion={handleCommentSuggestion} busy={saving} onReview={onSubmit} />
+            </div>
+          </section>
+          <RoomEquipmentStatusCollapsible />
+        </div>
+        <aside className="record-context" aria-label="ตารางและการใช้ห้อง"><ICloudCalendarStrip /></aside>
+      </div>
+      <Dialog open={Boolean(review)} busy={saving} title="ตรวจรายการก่อนบันทึก" description={saving ? "กำลังบันทึกงาน" : undefined} onClose={() => { if (!submitLock.current) { setReview(null);setError(""); } }}
+        footer={<><GlassButton mode="quick" disabled={saving} onClick={() => { setReview(null);setError(""); }}>กลับไปแก้ไข</GlassButton><GlassButton mode="quick" variant="prominent" disabled={saving} onClick={() => { if (review) void save(review.fields, review.employeeId); }}>ยืนยันบันทึก</GlassButton></>}>
+        {review && <dl className="record-review-fields">
+          <dt>หัวข้อรอง</dt><dd>{review.fields.minorTask}</dd><dt>งานหลัก</dt><dd>{review.fields.mainDuty}</dd>
+          <dt>วันที่และเวลา</dt><dd>{review.fields.date} · {review.fields.time}</dd>
+          <dt>ผู้รับบริการ</dt><dd>{sanitizeInput(review.fields.recipient) || "—"}</dd><dt>รายละเอียด</dt><dd>{sanitizeInput(review.fields.comment) || "—"}</dd>
+        </dl>}
+        {error && <p className="record-error" role="alert">{error}</p>}
+      </Dialog>
+    </AppShell>;
+  }
 
   return (
     <AppShell>

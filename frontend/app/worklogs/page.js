@@ -19,6 +19,11 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { EmptyState } from "../../components/EmptyState";
+import { WorklogHistoryDetails, WorklogHistoryList, WorklogHistoryToolbar } from "../../components/WorklogHistoryWorkspace";
+import { Dialog } from "../../components/ui/Dialog";
+import { GlassButton } from "../../components/ui/GlassControls";
+import "../dev/history/history.css";
+import "./worklog-workspace.css";
 import { useAuth } from "../../components/AuthProvider";
 import { db } from "../../lib/firebase";
 import { getThaiHoliday, prefetchHolidaysForYear } from "../../lib/thaiHolidays";
@@ -50,9 +55,15 @@ import {
 import { normalizeStatus } from "../../lib/worklogUtils";
 import { isAdminRole } from "../../lib/authUtils";
 
+const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
+
 export default function WorkLogsPage() {
-  const t = useTranslations();
   const { user } = useAuth();
+  return <WorklogHistory key={user?.uid || "anonymous"} user={user} />;
+}
+
+function WorklogHistory({ user }) {
+  const t = useTranslations();
   const router = useRouter();
   const [filters, setFilters] = useState({ search: "", from: "", to: "" });
   const [data, setData] = useState({ items: [], total: 0, page: 1, pages: 1 });
@@ -73,7 +84,12 @@ export default function WorkLogsPage() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
   // View mode: list | calendar
-  const [viewMode, setViewMode] = useState("calendar");
+  const [viewMode, setViewMode] = useState(workspaceEnabled ? "list" : "calendar");
+  const [detailId, setDetailId] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(30);
+  const [truncated, setTruncated] = useState(false);
+  const requestSequence = useRef(0);
   const [calendarDate, setCalendarDate] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() }; // 0-indexed month
@@ -83,6 +99,7 @@ export default function WorkLogsPage() {
 
   // Pre-fetch holidays from iApp API whenever the visible year changes
   useEffect(() => {
+    if (workspaceEnabled && viewMode !== "calendar") return;
     prefetchHolidaysForYear(calendarDate.year).then(() => {
       setHolidaysReady((n) => n + 1);
     });
@@ -91,13 +108,14 @@ export default function WorkLogsPage() {
         setHolidaysReady((n) => n + 1);
       });
     }
-  }, [calendarDate.year]);
+  }, [calendarDate.year, calendarDate.month, viewMode]);
 
   // Users cache for display name lookup
   const [usersCache, setUsersCache] = useState({});
 
   // Load users for display name lookup
   useEffect(() => {
+    if (!user?.uid) return;
     async function loadUsers() {
       try {
         const usersRef = collection(db, "users");
@@ -118,7 +136,7 @@ export default function WorkLogsPage() {
       }
     }
     loadUsers();
-  }, []);
+  }, [user?.uid]);
 
   // Helper to get display name from user cache
   function getDisplayName(item) {
@@ -166,14 +184,25 @@ export default function WorkLogsPage() {
   }, [editingId, deleteConfirmId, bulkDeleteConfirm, router, t]);
 
   async function load(page = 1) {
+    if (!user?.uid) return;
+    if (workspaceEnabled && filters.from && filters.to && filters.from > filters.to) {
+      setError("วันที่เริ่มต้นต้องไม่อยู่หลังวันที่สิ้นสุด");
+      return;
+    }
+    const request = ++requestSequence.current;
     setLoading(true);
-    console.log("[Worklogs] Loading... user:", user?.uid, "role:", user?.role);
+    setError("");
     try {
       const isStaffRole = !isAdminRole(user);
       const hasDateFilter = filters.from || filters.to;
       let q;
 
-      if (isStaffRole) {
+      if (isStaffRole && workspaceEnabled) {
+        const conditions = [where("employeeId", "==", user.uid)];
+        if (filters.from) conditions.push(where("date", ">=", filters.from));
+        if (filters.to) conditions.push(where("date", "<=", filters.to));
+        q = query(collection(db, "worklogs"), ...conditions, orderBy("date", "desc"), limit(500));
+      } else if (isStaffRole) {
         // Staff: query เฉพาะ employeeId (ไม่ใช้ orderBy เพื่อหลีกเลี่ยง composite index)
         // filter วันที่ที่ client แทน
         q = query(
@@ -204,12 +233,9 @@ export default function WorkLogsPage() {
       }
 
       const snapshot = await getDocs(q);
-      console.log("[Worklogs] Got snapshot, size:", snapshot.size);
+      if (request !== requestSequence.current) return;
 
-      let items = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      let items = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 
       // Client-side filter: date range สำหรับ staff (admin ใช้ Firestore where แล้ว)
       if (isStaffRole && filters.from) {
@@ -243,28 +269,35 @@ export default function WorkLogsPage() {
         return (b.time || "").localeCompare(a.time || "");
       });
 
-      if (sortConfig.direction === "asc" && sortConfig.key === "date") {
+      if (!workspaceEnabled && sortConfig.direction === "asc" && sortConfig.key === "date") {
         items.reverse();
       }
 
-      console.log("[Worklogs] Items after filter:", items.length);
+      setTruncated(snapshot.size === 500);
+      setVisibleCount(30);
       setData({ items, total: items.length, page, pages: 1 });
     } catch (err) {
-      console.error("[Worklogs] Error loading:", err);
-      setError(err.message);
+      if (request === requestSequence.current) setError(workspaceEnabled ? "โหลดประวัติไม่สำเร็จ กรุณาลองใหม่" : err.message);
     } finally {
-      setLoading(false);
+      if (request === requestSequence.current) setLoading(false);
     }
   }
 
   useEffect(() => {
     if (user) load(1);
+    return () => { requestSequence.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.uid, user?.role]);
 
   function submit(event) {
     event.preventDefault();
+    if (workspaceEnabled) { setDetailId(null);setDetailOpen(false);clearSelection(); }
     load(1);
+  }
+
+  function openDetail(item, inCalendar = false) {
+    setDetailId(item.id);
+    setDetailOpen(inCalendar || window.matchMedia("(max-width:1100px)").matches);
   }
 
   // Sort functions - memoized
@@ -328,6 +361,10 @@ export default function WorkLogsPage() {
   }
 
   function startEdit(item) {
+    if (workspaceEnabled) {
+      if (!canEdit(item)) return;
+      setDetailOpen(false);
+    }
     setEditingId(item.id);
     setEditForm({
       recipient: item.recipient || "",
@@ -374,6 +411,11 @@ export default function WorkLogsPage() {
   }
 
   function confirmDelete(id) {
+    if (workspaceEnabled) {
+      const item = data.items.find(row => row.id === id);
+      if (!item || !canEdit(item)) return;
+      setDetailOpen(false);
+    }
     setDeleteConfirmId(id);
     setActionError("");
   }
@@ -587,6 +629,10 @@ export default function WorkLogsPage() {
     return cells;
   }
 
+  const activeDetail = data.items.find(item => item.id === detailId);
+  const detailProps = { item: activeDetail, displayName: getDisplayName, editable: !!activeDetail && canEdit(activeDetail), onEdit: startEdit, onDelete: confirmDelete };
+  const workspaceRows = workspaceEnabled && sortConfig.direction === "asc" ? [...data.items].reverse() : data.items;
+
   return (
     <>
     {showEditSuccess && typeof document !== 'undefined' && createPortal(
@@ -597,6 +643,10 @@ export default function WorkLogsPage() {
       document.body
     )}
     <AppShell>
+      {workspaceEnabled ? <WorklogHistoryToolbar
+        view={viewMode} onView={setViewMode} onNew={() => router.push(user?.role === "admin" ? "/admin/record" : "/worklogs/new")}
+        filters={filters} onFilters={setFilters} onSubmit={submit} loading={loading} canRecord={Boolean(user)}
+      /> : <>
       <section className="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -661,6 +711,7 @@ export default function WorkLogsPage() {
           {loading ? t("common.loading") : t("common.filter")}
         </button>
       </form>
+      </>}
 
       {error ? (
         <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
@@ -926,6 +977,7 @@ export default function WorkLogsPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm text-slate-600 leading-tight">{item.mainDuty}</p>
                                 <p className="text-xs text-slate-500 mt-0.5">{item.minorTask}</p>
+                                {workspaceEnabled && <button className="history-link" type="button" onClick={() => openDetail(item, true)}>ดูรายละเอียด</button>}
                                 {item.recipient && (
                                   <p className="text-xs text-slate-400 mt-0.5">ผู้รับบริการ: {item.recipient}</p>
                                 )}
@@ -980,7 +1032,22 @@ export default function WorkLogsPage() {
         );
       })()}
 
-      {viewMode === "list" ? (
+      {workspaceEnabled && viewMode === "list" && <>
+        <div className="history-summary" role="status"><span>{loading ? "กำลังโหลดประวัติ…" : `${data.items.length} รายการ${truncated ? " · แสดงจากผลค้นหาสูงสุด 500 รายการ" : ""}`}</span>{data.items.some(canEdit) && <button className="history-link" type="button" onClick={toggleSelectAll}>เลือกทั้งหมดที่แก้ไขได้</button>}</div>
+        {selectedIds.length > 0 && <div className="history-selection">
+          <span>เลือก {selectedIds.length} รายการ</span><GlassButton mode="quick" disabled={bulkProcessing} onClick={clearSelection}>ล้างการเลือก</GlassButton>
+          <GlassButton mode="quick" variant="destructive" disabled={bulkProcessing} onClick={() => setBulkDeleteConfirm(true)}>ลบรายการที่เลือก</GlassButton>
+        </div>}
+        <div className="history-layout">
+          <div className="history-content" aria-busy={loading}>
+            {loading ? <TableSkeleton rows={4} columns={3} /> : <WorklogHistoryList items={workspaceRows.slice(0, visibleCount)} activeId={detailId} onOpen={openDetail} displayName={getDisplayName} selectable={canEdit} selectedIds={selectedIds} onSelect={toggleSelect} ascending={sortConfig.direction === "asc"} onSort={() => setSortConfig(previous => ({ key: "date", direction: previous.direction === "asc" ? "desc" : "asc" }))} />}
+            {!loading && visibleCount < workspaceRows.length && <GlassButton mode="quick" onClick={() => setVisibleCount(count => count + 30)}>แสดงเพิ่ม</GlassButton>}
+          </div>
+          <aside className="history-inspector" aria-label="รายละเอียดงาน" aria-live="polite"><h2>รายละเอียดงาน</h2><WorklogHistoryDetails {...detailProps} /></aside>
+        </div>
+      </>}
+
+      {!workspaceEnabled && viewMode === "list" ? (
         loading ? (
           <div className="apple-panel overflow-hidden">
             <TableSkeleton rows={5} columns={9} />
@@ -1394,7 +1461,7 @@ export default function WorkLogsPage() {
       )}
 
       {/* ── Delete Confirm Modal (Calendar view — mobile friendly) ── */}
-      {deleteConfirmId && viewMode === "calendar" && (
+      {deleteConfirmId && (viewMode === "calendar" || workspaceEnabled) && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={cancelDelete} />
           <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6">
@@ -1417,6 +1484,12 @@ export default function WorkLogsPage() {
           </div>
         </div>
       )}
+      {workspaceEnabled && <>
+        <Dialog open={detailOpen && Boolean(activeDetail)} onClose={() => setDetailOpen(false)} title="รายละเอียดงาน" className="history-dialog"><WorklogHistoryDetails {...detailProps} /></Dialog>
+        <Dialog open={bulkDeleteConfirm} busy={bulkProcessing} onClose={() => setBulkDeleteConfirm(false)} title="ยืนยันลบรายการ" footer={<><GlassButton mode="quick" disabled={bulkProcessing} onClick={() => setBulkDeleteConfirm(false)}>ยกเลิก</GlassButton><GlassButton mode="quick" variant="destructive" disabled={bulkProcessing || selectedIds.length === 0} onClick={executeBulkDelete}>ลบรายการ</GlassButton></>}>
+          <p>ลบ {selectedIds.length} รายการ สามารถเลิกทำได้ภายใน 30 วินาที</p>
+        </Dialog>
+      </>}
     </AppShell>
     </>
   );

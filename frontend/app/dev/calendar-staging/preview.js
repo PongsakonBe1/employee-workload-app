@@ -39,7 +39,7 @@ export default function StagingCalendar({ writable = false, roleQa = false, role
     let active = true;
     const operations = operation,
       controller = new AbortController();
-    fetch("/dev-staging-config.json", {
+    fetch("/dev/staging-web-config", {
       cache: "no-store",
       signal: controller.signal
     }).then(response => {

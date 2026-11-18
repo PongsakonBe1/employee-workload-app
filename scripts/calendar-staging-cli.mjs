@@ -65,7 +65,7 @@ if (result.status !== 0 || parsed?.status !== "success") {
   const source = parsed.result?.sdkConfig;
   if (!source || source.projectId !== target || source.appId !== "1:299459134462:web:5f1bd25089a933cdf7b6af") throw new Error("Unexpected public SDK config target");
   const config = Object.fromEntries(["apiKey", "appId", "projectId", "authDomain", "messagingSenderId"].map(key => [key, source[key]]));
-  fs.writeFileSync(path.join(root, "frontend/public/dev-staging-config.json"), JSON.stringify(config, null, 2));
+  fs.writeFileSync(path.join(directory, "web-sdk-config.json"), JSON.stringify(config, null, 2));
   console.log(JSON.stringify({
     success: true,
     target,

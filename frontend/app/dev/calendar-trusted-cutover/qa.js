@@ -38,7 +38,7 @@ export default function CutoverQa() {
     try {
       if (!ready || origin !== "http://127.0.0.1:4311" || !(proof.readerChecksApproved || proof.directWriteProbeApproved || calendarSmokeApproved(proof))) throw new Error("Not approved");
       if (!clientRef.current) {
-        const response = await fetch("/dev-staging-config.json", { cache: "no-store", credentials: "omit" });if (!response.ok) throw new Error("Config unavailable");
+        const response = await fetch("/dev/staging-web-config", { cache: "no-store", credentials: "omit" });if (!response.ok) throw new Error("Config unavailable");
         clientRef.current = createCalendarDirectDenialClient(await response.json());
       }
       await clientRef.current.login();const role = clientRef.current.alias(frozen);if (!role) throw new Error("Unreviewed identity");

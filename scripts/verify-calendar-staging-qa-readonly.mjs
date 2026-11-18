@@ -6,7 +6,7 @@ import { initializeAuth, inMemoryPersistence, signOut } from "firebase/auth";
 import { initializeFirestore, getDocFromServer, doc, terminate, setLogLevel } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "../frontend/lib/calendarStagingConfig.js";
 setLogLevel("silent");
-const config = validateCalendarStagingConfig(JSON.parse(fs.readFileSync("frontend/public/dev-staging-config.json", "utf8")));
+const config = validateCalendarStagingConfig(JSON.parse(fs.readFileSync(".tools/calendar-staging/web-sdk-config.json", "utf8")));
 const app = initializeApp(config, "calendar-cloud-qa-readonly"), auth = initializeAuth(app, { persistence: inMemoryPersistence }), db = initializeFirestore(app, {});
 const report = { completed: false, project: config.projectId, authenticated: false, deniedReads: 0, realDocumentReferencesUsed: false, writeCalls: 0, productionUsed: false, checks: [] };
 try {

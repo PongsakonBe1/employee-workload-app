@@ -1,0 +1,24 @@
+.worklog-workspace-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap; }
+.worklog-workspace-heading>div { min-width:0; }
+.worklog-record-panel { padding:clamp(14px,3vw,25px);min-width:0; }
+.worklog-record-panel[hidden] { display:none; }
+.worklog-live-record .record-context { align-self:start; }
+.worklog-live-record .record-panel-title { flex-wrap:wrap; }
+.worklog-live-record .record-mode { max-width:100%; }
+.worklog-live-record :is(input,textarea) { min-width:0;max-width:100%; }
+.worklog-task-options { display:grid;gap:1px;margin-top:12px; }
+.worklog-task-options button { min-height:44px;text-align:start;width:100%;padding:8px 12px;border-radius:10px; }
+.worklog-task-options button:is(:hover,[aria-pressed=true]) { background:var(--ui-soft); }
+.worklog-history-toolbar>form { display:flex;align-items:center;flex:1;gap:8px;flex-wrap:wrap;min-width:0; }
+.worklog-history-toolbar .history-search { min-width:min(200px,100%); }
+.worklog-history-toolbar .worklog-history-range { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:1 1 240px;min-width:0;max-width:100%; }
+.worklog-history-range input { width:100%;max-width:100%;min-width:0; }
+.worklog-history-list .history-row-open { min-height:65px; }
+.worklog-history-list .history-table-head { min-height:42px; }
+.worklog-history-list .history-summary { margin-block:12px; }
+@media (max-width:760px), (any-pointer:coarse) {
+  .worklog-live-record :is(input,textarea), .worklog-task-dialog input, .worklog-history-range input { font-size:16px; }
+}
+@media (max-width:760px) {
+  .worklog-history-toolbar>form, .worklog-history-toolbar .worklog-history-range { flex-basis:100%; }
+}
