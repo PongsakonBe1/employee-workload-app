@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "source": "demo-worklog-workspace",
+  "physicalDevice": false,
+  "roomCrossStaff": true,
+  "loanCrossStaff": true,
+  "sameBorrower": true,
+  "noDuplicate": true,
+  "ownHistoryOnly": true
+}

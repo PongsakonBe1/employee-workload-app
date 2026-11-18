@@ -76,7 +76,10 @@ service cloud.firestore {
     }
     
     function isValidWorkLog() {
-      return request.resource.data.keys().hasAll(['date', 'time', 'minorTask', 'mainDuty']) &&
+      return request.resource.data.keys().hasAll(['employeeId', 'date', 'time', 'minorTask', 'mainDuty']) &&
+             request.resource.data.employeeId is string &&
+             request.resource.data.employeeId.size() > 0 &&
+             request.resource.data.employeeId.size() <= 128 &&
              request.resource.data.date is string &&
              request.resource.data.time is string &&
              request.resource.data.minorTask is string &&
@@ -130,27 +133,26 @@ service cloud.firestore {
 
     // Worklogs collection
     match /worklogs/{worklogId} {
-      // Read: All authenticated users (filter at client level)
-      // Temporary fix: isAdmin() causes circular dependency issues
-      allow read: if isAuthenticated();
+      // Staff list queries must constrain employeeId to their UID. Shared room
+      // and equipment status is provided by the authenticated projection.
+      allow read: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
       
       // Create: Staff can only create their own worklog, Admin can create for anyone
-      allow create: if isAuthenticated() && isValidWorkLog() &&
-        (request.resource.data.employeeId == request.auth.uid || isAdmin());
+      allow create: if isValidWorkLog() &&
+        (isAdmin() || (isStaff() && request.resource.data.employeeId == request.auth.uid));
       
       // Update: Admin anytime (with validation), staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check
       allow update: if (isAdmin() && isValidWorkLogUpdate()) ||
-        (isAuthenticated() &&
-         (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+        (isStaff() && resource.data.employeeId == request.auth.uid &&
          resource.data.get('locked', false) != true &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['employeeId', 'createdBy', 'createdAt', 'locked']) &&
          isValidWorkLogUpdate());
       
       // Delete: Admin anytime, staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check
       allow delete: if isAdmin() ||
-         (isAuthenticated() && 
-          (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+         (isStaff() && resource.data.employeeId == request.auth.uid &&
           resource.data.get('locked', false) != true);
     }
 
@@ -310,8 +312,8 @@ service cloud.firestore {
 
     // RoomEquipmentStatus collection (for tracking room and equipment status)
     match /RoomEquipmentStatus/{statusId} {
-      // All authenticated users can read status
-      allow read: if isAuthenticated();
+      // Keep the legacy mirror available only to approved operators.
+      allow read: if hasActiveRole(['staff', 'admin', 'superadmin']);
       
       // Staff and admin can update status (for borrowing/returning equipment, opening/closing rooms)
       allow update: if isAuthenticated() && (isStaff() || isAdmin());
