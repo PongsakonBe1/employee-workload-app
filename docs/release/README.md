@@ -127,7 +127,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 | U01 | login/logout/session expiry/pending/เปลี่ยนสิทธิ์ | ไม่ค้าง session ผิดบัญชี; เรียกคำสั่งตรงแล้วยังบังคับสิทธิ์ |
 | U02 | Quick Log โทรศัพท์/ติดตั้ง/บัญชี + กรอกเอง | catalog/suggestions/required fields จริง; focus ไปช่องผิดบนมือถือ |
 | U03 | Combo ไม่เลือก → เลือก 3 งาน → ยืนยัน/ส่งซ้ำ/Undo | ไม่เลือกอัตโนมัติ; 1 หัวข้อย่อย = 1 บันทึก; ไม่เกิด duplicate/partial |
-| U04 | เปิด–ปิดห้อง + ยืม–คืนด้วย scanner/สอง session | สถานะและผู้ยืมถูกต้อง รหัสคืนเดิม และ concurrency ไม่ทำข้อมูลหาย ส่วน [Smart Quick Log](../development/equipment-scanner-input/README.md) ผ่านสแกนจำลองและยืม–คืนใน Emulator แล้ว รอเครื่องสแกนจริง |
+| U04 | เปิด–ปิดห้อง + ยืม–คืนด้วย scanner/สอง session | สถานะและผู้ยืมถูกต้อง รหัสคืนเดิม และ concurrency ไม่ทำข้อมูลหาย ส่วน [Smart Quick Log](../development/equipment-scanner-input/README.md) ผ่านตรวจรับเครื่องสแกนจริงสำหรับยืม–คืนหูฟังหนึ่งตัวบน Emulator แล้ว |
 | U05 | เพิ่มอุปกรณ์/ย้ายสังกัด/หยุดใช้/แก้ template แล้วไป Quick Log | ID เดิมคงอยู่และรายการ/เงื่อนไขทุกหน้าปรับจริงหลัง reload |
 | U06 | ประวัติ list/calendar/detail/edit/ยกเลิก/CSV | เปิดรายละเอียดไม่เด้งกลับ list; ข้อมูล/สิทธิ์/ยอดตรงกัน |
 | U07 | PDF เรียนต่างช่วง + DL ภาพ/ผู้คุม/รอบเย็น/75 คน | review ถูก; ไม่สร้างชื่อผู้คุมชั่วคราว; ตรวจ conflict จริง ไม่เขียนบางส่วน |

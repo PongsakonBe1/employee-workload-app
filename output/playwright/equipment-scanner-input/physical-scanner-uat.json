@@ -1,0 +1,14 @@
+{
+  "commit": "c5a96ee",
+  "target": "demo-worklog-workspace",
+  "operatorReportedPhysicalScannerSuccess": true,
+  "equipment": "ICIT01",
+  "observedWorklogs": 2,
+  "additionalUnobservedWorklogs": false,
+  "borrowCount": 1,
+  "returnCount": 1,
+  "borrowerIsThirteenAsciiDigits": true,
+  "returnMatchesBorrower": true,
+  "readyAfterReturn": true,
+  "passed": true
+}
