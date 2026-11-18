@@ -89,12 +89,12 @@ Views ที่ไม่เป็น route แยกยังต้องตร�
 ### G0 — ยืนยันความปลอดภัยและ baseline
 
 - [x] **SCOPE** Freeze ตาม baseline และเก็บ inventory/application routes/views ครบในเอกสารนี้
-- [ ] **SEC** เจ้าของยืนยันว่าไฟล์ credential ที่ Git track เคยเป็น key จริง และเลือกตรวจ/เพิกถอนเอง ยังไม่ยืนยันสถานะ active หรือผลเพิกถอน ต้องยืนยันผลและประเมินบริการที่ได้รับผลก่อน release รวมถึงตกลงวิธีจัดการ repo/history แยก การลบไฟล์เฉย ๆ ไม่เท่ากับเพิกถอน key ห้ามอ่าน/แสดง key เพื่อทำ checklist นี้
+- [ ] **SEC** ตรวจ IAM metadata วันที่ 18 พ.ย. 2569 พบ key ที่ ID prefix ตรงชื่อไฟล์ credential เป็น `disabled=true` และ Get resource ซ้ำยืนยันแล้ว จึงไม่ปิด/ลบ key เพิ่ม นำไฟล์ออกจาก Git ปัจจุบันและเพิ่ม ignore โดยคงไฟล์จริงไว้ในเครื่อง ยังต้องตรวจรับการเปลี่ยนแปลงนี้และตัดสินใจเรื่อง remote/history ก่อน release ไม่เปิด key contents ไม่เปลี่ยน key ตัวอื่น
 - [ ] **DATA** ได้รับอนุญาตอ่าน baseline production ที่จำเป็นแล้ว ตรวจ schema, stable employee/resource IDs, เวลา/ปีงบ/ภาคเรียน, legacy missing fields, indexes และปริมาณจริง พร้อม backup/restore plan ไม่แก้ชื่อหรือจับคู่ด้วยชื่อคล้ายกันอัตโนมัติ
 - [ ] **ENV** วาง production identity/project/hostname/config แยกจาก staging และทดสอบป้องกันข้าม project; ไม่เอา guard ที่ hard-code staging ไปเปิด production โดยเพียงสลับ flag
 - [ ] **DEPENDENCIES** ตรวจ dependency graph ของ frontend/legacy backend/runtime ที่ release ใช้จริงและ triage advisory ที่เกี่ยวข้อง ไม่ถือ audit 0 ของ Calendar เท่ากับทั้ง repo; Critical/High ที่ยืนยันและยังไม่ได้แก้/mitigate ต้องมีข้อสรุปก่อน Go
 
-SEC มีหลักฐานจาก filename/Git metadata และคำยืนยันเจ้าของว่าเคยเป็น key จริง ยังไม่ได้ตรวจ key status หรือพิสูจน์การนำไปใช้โดยบุคคลอื่น ชื่อไฟล์สำหรับเจ้าของตรวจเก็บใน `.tools/calendar-staging/release-freeze-sensitive-paths.json` ที่ไม่ commit ไม่อ่าน credential contents ในงานนี้ ผู้ใช้เลือกจัดการเอง จึงไม่ตรวจ production IAM/Render เพิ่ม
+SEC มีหลักฐานจาก filename/Git metadata, คำยืนยันเจ้าของ และ IAM List/Get ของ key ที่ตรง prefix ใน production หลังเจ้าของมอบหมายและอนุมัติ metadata ชัดเจน ไม่ได้เปิด credential เพื่อตรวจ private_key_id ภายใน ไม่ทราบเวลา/เหตุผลที่ปิดหรือการใช้งานย้อนหลัง ไม่ได้ยกเลิก session/access token เดิม และไม่พิสูจน์ว่า Render ใช้ key ใดเพราะไม่ได้เปิดค่าลับ ชื่อไฟล์สำหรับเจ้าของตรวจยังเก็บใน `.tools/calendar-staging/release-freeze-sensitive-paths.json` ที่ไม่ commit ประวัติ Git/remote ไม่ถูก rewrite หรือ push
 
 ### G1 — Calendar/Auth ทำงานจริงใน staging
 

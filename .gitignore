@@ -22,6 +22,7 @@ yarn-error.log*
 **/serviceAccountKey.json
 **/serviceAccountKey*.json
 **/service-account*.json
+**/*firebase-adminsdk*.json
 
 frontend/public/dev-ocr/
 .tools/calendar-emulator/
