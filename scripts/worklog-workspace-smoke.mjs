@@ -107,6 +107,20 @@ switch (process.argv[2]) {
     console.log("PASS synthetic Staff profile seeded in the local emulator");
     break;
   }
+  case "resource-dry-run": {
+    process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:18218";
+    const { initializeApp, deleteApp } = await import("firebase-admin/app");
+    const { FieldPath, getFirestore } = await import("firebase-admin/firestore");
+    const { dryRunResourceStatusBackfill } = await import("../backend/src/services/resourceStatusBackfill.js");
+    const firebase = initializeApp({ projectId: project });
+    try {
+      const documentLimit = Number(process.argv[3] ?? 5000);
+      console.log(JSON.stringify(await dryRunResourceStatusBackfill(getFirestore(firebase), FieldPath.documentId(), { documentLimit }), null, 2));
+    } finally {
+      await deleteApp(firebase);
+    }
+    break;
+  }
   case "verify": {
     const logs = (await localJson(`${documents}/worklogs`)).documents ?? [];
     assert.equal(logs.length, 2);
@@ -122,5 +136,5 @@ switch (process.argv[2]) {
     console.log("PASS exactly two persisted demo worklogs with the expected identity and schema");
     break;
   }
-  default: throw new Error("Use build, emulators, serve, seed or verify");
+  default: throw new Error("Use build, emulators, serve, seed, verify or resource-dry-run");
 }

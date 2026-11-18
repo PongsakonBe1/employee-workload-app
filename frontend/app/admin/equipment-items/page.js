@@ -30,6 +30,8 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { MINOR_TASKS } from "../../../lib/commentSuggestions";
+import { equipmentCode } from "../../../lib/equipmentCatalog";
+import { equipmentLoanKind } from "../../../lib/equipmentLoan";
 
 // Equipment tasks ที่ใช้ในระบบยืม/คืน
 const EQUIPMENT_MINOR_TASKS = MINOR_TASKS.filter(
@@ -109,22 +111,38 @@ export default function EquipmentItemsPage() {
       setError("กรุณากรอกชื่ออุปกรณ์และเลือกหัวข้อรอง");
       return;
     }
+    const previousCode = equipmentCode(editingItem?.name);
+    const nextCode = equipmentCode(formData.name);
+    if (previousCode && (nextCode !== previousCode || equipmentLoanKind(formData) !== equipmentLoanKind(editingItem))) {
+      setError("แก้สังกัดหรือสถานะได้ แต่รหัสและประเภทอุปกรณ์ต้องคงเดิมเพื่อเก็บประวัติยืม–คืน");
+      return;
+    }
+    if (!editingItem && equipmentLoanKind(formData) && !nextCode) {
+      setError("กรอกรหัสอุปกรณ์ เช่น ICIT30");
+      return;
+    }
+    if (!previousCode && nextCode && items.some(item => item.id !== editingItem?.id && equipmentCode(item.name) === nextCode)) {
+      setError("รหัสอุปกรณ์นี้มีอยู่แล้ว ให้แก้สังกัดจากรายการเดิม");
+      return;
+    }
+    const fields = { ...formData, name: nextCode ?? formData.name.trim() };
     setSaving(true);
     setError("");
     try {
       if (editingItem) {
         await updateDoc(doc(db, "equipmentItems", editingItem.id), {
-          ...formData,
+          ...fields,
           updatedAt: serverTimestamp(),
         });
       } else {
         await addDoc(collection(db, "equipmentItems"), {
-          ...formData,
+          ...fields,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: user.uid,
         });
       }
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       resetForm();
       await loadItems();
     } catch (err) {
@@ -140,6 +158,7 @@ export default function EquipmentItemsPage() {
         active: !item.active,
         updatedAt: serverTimestamp(),
       });
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       await loadItems();
     } catch (err) {
       setError("อัปเดตไม่สำเร็จ: " + err.message);
@@ -150,6 +169,7 @@ export default function EquipmentItemsPage() {
     if (!confirm(`ต้องการลบ "${item.name}" ใช่หรือไม่?`)) return;
     try {
       await deleteDoc(doc(db, "equipmentItems", item.id));
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       await loadItems();
     } catch (err) {
       setError("ลบไม่สำเร็จ: " + err.message);
@@ -232,7 +252,7 @@ export default function EquipmentItemsPage() {
           </div>
         </div>
         <p className="text-sm text-slate-500 mt-1">
-          เพิ่ม/แก้ไข/ปิดการใช้งานอุปกรณ์ที่แสดงใน comment suggestions ของระบบยืม-คืน
+          เพิ่ม ย้ายสังกัด หรือหยุดใช้อุปกรณ์ที่แสดงในบันทึกด่วนและหน้าทรัพยากร
         </p>
       </section>
 
@@ -299,8 +319,9 @@ export default function EquipmentItemsPage() {
           </div>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="apple-label">ชื่ออุปกรณ์ *</label>
+              <label className="apple-label" htmlFor="equipment-code">รหัสอุปกรณ์ *</label>
               <input
+                id="equipment-code"
                 type="text"
                 className="apple-input"
                 value={formData.name}
@@ -310,8 +331,9 @@ export default function EquipmentItemsPage() {
               />
             </div>
             <div>
-              <label className="apple-label">หัวข้อรอง (minorTask) *</label>
+              <label className="apple-label" htmlFor="equipment-task">หัวข้อรอง (minorTask) *</label>
               <select
+                id="equipment-task"
                 className="apple-input"
                 value={formData.minorTask}
                 onChange={(e) => setFormData({ ...formData, minorTask: e.target.value })}
@@ -324,8 +346,9 @@ export default function EquipmentItemsPage() {
               </select>
             </div>
             <div>
-              <label className="apple-label">สถานที่ประจำ</label>
+              <label className="apple-label" htmlFor="equipment-location">สถานที่ประจำ</label>
               <input
+                id="equipment-location"
                 type="text"
                 className="apple-input"
                 value={formData.location}

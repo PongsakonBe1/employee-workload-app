@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { X, Headphones, Plug, Usb, User, Clock, RotateCcw, AlertTriangle, Ban } from 'lucide-react';
 import { useSharedResourceStatus } from "../hooks/useSharedResourceStatus";
 import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode, STUDENT_CODE_HINT } from '../lib/equipmentLoan';
+import { visibleEquipment } from '../lib/equipmentCatalog';
 
 export default function SmartEquipmentModal({ 
   isOpen, 
@@ -40,55 +41,27 @@ export default function SmartEquipmentModal({
   const equipmentStatus = status?.equipmentStatus?.[equipmentType] ?? {};
   const equipmentDetails = status?.details ?? {};
   const equipmentConditionMap = status?.equipmentConditions ?? {};
-  const selectedStatus = equipmentStatus[selectedEquipment];
+  const equipmentList = equipmentType ? visibleEquipment(status?.equipmentCatalog ?? [], status?.equipmentStatus ?? {}, {
+    kind: equipmentType, template: `${tName} ${tTask}`
+  }) : [];
+  const selectedItem = equipmentList.find(item => item.id === selectedEquipment);
+  const selectedStatus = selectedItem && equipmentStatus[selectedEquipment];
   const returning = selectedStatus === 'in_use';
+  const cannotBorrow = equipmentConditionMap[selectedEquipment] === 'damaged' || equipmentConditionMap[selectedEquipment] === 'lost';
   const originalBorrower = equipmentDetails[selectedEquipment]?.user || '';
   const noteRequired = returning && (returnCondition === 'damaged' || returnCondition === 'lost');
-  const canConfirm = Boolean(selectedEquipment && !loading && !saving && (returning ? !noteRequired || returnNote.trim() : selectedStatus === 'available' && isEquipmentStudentCode(recipient)));
+  const canConfirm = Boolean(selectedItem && !loading && !saving && (returning ? !noteRequired || returnNote.trim() : selectedStatus === 'available' && !cannotBorrow && isEquipmentStudentCode(recipient)));
 
   useLayoutEffect(() => {
     if (isOpen && mounted && selectedStatus === 'available' && !loading) recipientRef.current?.focus();
   }, [isOpen, mounted, selectedEquipment, selectedStatus, loading]);
-
-  // ตรวจว่า template เป็นของห้องไหน
-  const isFinn   = tName.toLowerCase().includes('finn') || tTask.toLowerCase().includes('finn');
-  const isFloor3 = tName.includes('ชั้น 3') || tTask.includes('ชั้น 3');
-
-  // full ranges สำหรับ scan worklogs
-  const ALL_HP = Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
-  const ALL_PW = ['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'];
-  const ALL_USB = ['ICIT26','ICIT27','ICIT28','ICIT29'];
-
-  // range ที่แสดงใน grid ตาม template
-  const getEquipmentRange = () => {
-    if (isHeadphones) {
-      if (isFinn)   return Array.from({length:8},  (_,i) => `ICIT${String(i+13).padStart(2,'0')}`);
-      if (isFloor3) return Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);
-      return ALL_HP;
-    }
-    if (isUsb) return ALL_USB;
-    if (isFinn)   return ['ICIT24','ICIT25'];
-    if (isFloor3) return ['ICIT21','ICIT22','ICIT23'];
-    return ALL_PW;
-  };
-
-  const equipmentList = getEquipmentRange();
-
-  // กรองเหมือน SmartRoomModal: ถ้ามีทั้งว่างและใช้งาน แสดงทั้งหมด
-  const availableItems = equipmentList.filter(e => equipmentStatus[e] === 'available');
-  const inUseItems = equipmentList.filter(e => equipmentStatus[e] === 'in_use');
-  const filteredEquipment = (availableItems.length > 0 && inUseItems.length > 0)
-    ? equipmentList
-    : availableItems.length > 0 ? availableItems
-    : inUseItems.length > 0 ? inUseItems
-    : equipmentList;
 
   // หา action ที่เหมาะสมสำหรับอุปกรณ์นี้
   const getActionForEquipment = (equipment) => {
     const status = equipmentStatus[equipment];
     if (status === 'available') return 'ยืมใช้งาน';
     if (status === 'in_use') return 'คืนอุปกรณ์';
-    return 'ยืมใช้งาน'; // default
+    return 'ตรวจสอบสถานะ';
   };
 
   const handleSelect = (equipment) => {
@@ -105,7 +78,7 @@ export default function SmartEquipmentModal({
   };
 
   const handleConfirm = async () => {
-    if (savingRef.current || loading || !selectedEquipment || !['in_use', 'available'].includes(selectedStatus)) return;
+    if (savingRef.current || loading || !selectedItem || !['in_use', 'available'].includes(selectedStatus) || (!returning && cannotBorrow)) return;
     if (!returning && !isEquipmentStudentCode(recipient)) {
       setError('กรุณากรอกรหัสนักศึกษาเป็นเลข 0–9 ครบ 13 หลัก');
       recipientRef.current?.focus();
@@ -168,6 +141,8 @@ export default function SmartEquipmentModal({
             <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
             </div>
+          ) : equipmentList.length === 0 ? (
+            <p className="py-4 text-sm text-slate-600" role="status">ไม่มีอุปกรณ์ในสังกัดนี้</p>
           ) : (
             <div className="space-y-4">
               {/* Status Legend */}
@@ -184,7 +159,7 @@ export default function SmartEquipmentModal({
 
               {/* Equipment Grid */}
               <div className={`grid gap-1.5 ${isHeadphones ? 'grid-cols-5 sm:grid-cols-8' : isUsb ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-5'}`}>
-                {filteredEquipment.map((equipment) => {
+                {equipmentList.map(({ id: equipment, active, location }) => {
                   const status = equipmentStatus[equipment];
                   const action = getActionForEquipment(equipment);
                   const isAvailable = status === 'available';
@@ -194,7 +169,8 @@ export default function SmartEquipmentModal({
                     <button
                       key={equipment}
                       onClick={() => handleSelect(equipment)}
-                      disabled={saving || (equipmentStatus[equipment] !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost'))}
+                      aria-label={`${equipment} ${action}${location ? ` · ${location}` : ''}`}
+                      disabled={saving || !['available', 'in_use'].includes(status) || (status !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost'))}
                       title={equipmentStatus[equipment] !== 'in_use' && equipmentConditionMap[equipment] === 'damaged' ? 'ยืมไม่ได้ — ชำรุด' : equipmentStatus[equipment] !== 'in_use' && equipmentConditionMap[equipment] === 'lost' ? 'ยืมไม่ได้ — สูญหาย' : undefined}
                       className={`p-2 rounded-xl border-2 transition-all relative active:scale-95 ${
                         equipmentStatus[equipment] !== 'in_use' && (equipmentConditionMap[equipment] === 'damaged' || equipmentConditionMap[equipment] === 'lost')
@@ -231,7 +207,7 @@ export default function SmartEquipmentModal({
                             ? (isHeadphones ? <Headphones className="w-2.5 h-2.5" /> : isUsb ? <Usb className="w-2.5 h-2.5" /> : <Plug className="w-2.5 h-2.5" />)
                             : <RotateCcw className="w-2.5 h-2.5" />
                           }
-                          {equipmentConditionMap[equipment] === 'damaged' ? 'ชำรุด' : equipmentConditionMap[equipment] === 'lost' ? 'สูญหาย' : action}
+                          {!active ? 'หยุดใช้ · รับคืน' : equipmentConditionMap[equipment] === 'damaged' ? 'ชำรุด' : equipmentConditionMap[equipment] === 'lost' ? 'สูญหาย' : action}
                         </div>
                       </div>
                     </button>
@@ -244,7 +220,7 @@ export default function SmartEquipmentModal({
 
         {/* Sticky footer */}
         <div className="flex-shrink-0 border-t border-slate-100 bg-white px-6 py-4 space-y-3">
-          {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use' && equipmentDetails[selectedEquipment] && (
+          {returning && equipmentDetails[selectedEquipment] && (
             <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
               <User className="w-3.5 h-3.5 shrink-0" />
               <span>ผู้ยืม: <strong>{equipmentDetails[selectedEquipment].user}</strong></span>
@@ -253,7 +229,7 @@ export default function SmartEquipmentModal({
             </div>
           )}
           {/* ITEM-1: Inline condition selector ตอนคืนอุปกรณ์ */}
-          {selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use' && (
+          {returning && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-slate-500">สภาพอุปกรณ์ที่คืน</p>
               <div className="grid grid-cols-3 gap-1.5">
@@ -320,15 +296,15 @@ export default function SmartEquipmentModal({
               onClick={handleConfirm}
               disabled={!canConfirm}
               className={`apple-button flex-1 disabled:opacity-40 ${
-                selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
+                returning
                   ? returnCondition === 'damaged' ? 'bg-amber-600 hover:bg-amber-700'
                   : returnCondition === 'lost' ? 'bg-red-600 hover:bg-red-700' : ''
                   : ''
               }`}
             >
-              {saving ? 'กำลังบันทึก…' : selectedEquipment && equipmentStatus[selectedEquipment] === 'in_use'
+              {saving ? 'กำลังบันทึก…' : returning
                 ? `คืน ${selectedEquipment} — ${returnCondition === 'normal' ? 'สมบูรณ์' : returnCondition === 'damaged' ? 'ชำรุด' : 'สูญหาย'}`
-                : `ยืนยัน${selectedEquipment ? ` — ยืม ${selectedEquipment}` : ''}`
+                : `ยืนยัน${selectedItem ? ` — ยืม ${selectedEquipment}` : ''}`
               }
             </button>
             <button disabled={saving} onClick={handleClose} className="apple-button-secondary px-4">

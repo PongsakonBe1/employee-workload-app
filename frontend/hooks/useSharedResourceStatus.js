@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { auth } from "../lib/firebase";
 
-const statusEvents = ["roomStatusUpdated", "equipmentStatusUpdated", "worklogDeleted", "worklogUpdated"];
+const statusEvents = ["roomStatusUpdated", "equipmentStatusUpdated", "equipmentCatalogUpdated", "worklogDeleted", "worklogUpdated"];
 const api = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchStatus(uid, signal) {
@@ -61,6 +61,7 @@ export function useSharedResourceStatus({ enabled = true, refreshEveryMs = 0 } =
       refreshTimer = setTimeout(load, 400);
     };
     for (const event of statusEvents) window.addEventListener(event, refreshSoon);
+    window.addEventListener("focus", refreshSoon);
     load();
     const interval = refreshEveryMs ? setInterval(load, refreshEveryMs) : null;
     return () => {
@@ -68,6 +69,7 @@ export function useSharedResourceStatus({ enabled = true, refreshEveryMs = 0 } =
       clearTimeout(refreshTimer);
       clearInterval(interval);
       for (const event of statusEvents) window.removeEventListener(event, refreshSoon);
+      window.removeEventListener("focus", refreshSoon);
     };
   }, [uid, attempt, refreshEveryMs]);
 

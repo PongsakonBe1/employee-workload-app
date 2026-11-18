@@ -6,8 +6,9 @@ const { chromium } = require(process.argv[2]);
 const origin = "http://127.0.0.1:4318";
 const auth = "http://127.0.0.1:19218";
 const firestore = "http://127.0.0.1:18218";
-const out = "output/playwright/resource-status-by-id";
+const out = "output/playwright/resource-catalog-backfill";
 const student = "0000000000001";
+const asset = "ICIT31";
 const report = { passed: false, source: "demo-worklog-workspace", physicalDevice: false };
 
 async function login(browser, handle, width) {
@@ -37,7 +38,8 @@ async function login(browser, handle, width) {
     await popup.getByRole("textbox", { name: "Display name", exact: true }).fill("QA Resource Operator");
     await popup.getByRole("button", { name: "Sign in with Google.com", exact: true }).click();
   }
-  await page.getByRole("heading", { name: "บันทึกงาน", exact: true }).waitFor();
+  if (handle === "qa-role-admin") await page.waitForURL(origin + "/dashboard");
+  else await page.getByRole("heading", { name: "บันทึกงาน", exact: true }).waitFor();
   return page;
 }
 
@@ -48,12 +50,33 @@ async function room(page, action) {
   await page.getByRole("heading", { name: "QA ห้องชั้น 4", exact: true }).waitFor({ state: "hidden" });
 }
 
-async function equipmentModal(page) {
-  await page.getByRole("button", { name: /QA หูฟัง/ }).click();
-  const title = page.getByRole("heading", { name: "QA หูฟัง", exact: true });
+async function equipmentModal(page, template, location) {
+  await page.getByRole("button", { name: new RegExp(template) }).click();
+  const title = page.getByRole("heading", { name: template, exact: true });
   await title.waitFor();
-  await page.getByRole("button", { name: /^1(?:\s|ยืม|คืน)/ }).click();
+  await page.getByRole("button", { name: new RegExp(`^${asset} .*${location}`) }).click();
   return title;
+}
+
+async function addEquipment(page) {
+  await page.goto(`${origin}/admin/equipment-items`);
+  await page.getByRole("heading", { name: "จัดการอุปกรณ์", exact: true }).waitFor();
+  await page.getByRole("button", { name: "เพิ่มอุปกรณ์", exact: true }).click();
+  const form = page.locator("form");
+  await form.getByLabel(/รหัสอุปกรณ์/).fill(asset);
+  await form.getByLabel(/หัวข้อรอง/).selectOption("ยืมหูฟัง");
+  await form.getByLabel("สถานที่ประจำ", { exact: true }).fill("ห้องบริการชั้น 3");
+  await form.getByRole("button", { name: "เพิ่มอุปกรณ์", exact: true }).click();
+  const row = page.getByRole("row").filter({ has: page.getByText(asset, { exact: true }) });
+  await row.waitFor();
+  return row;
+}
+
+async function moveEquipment(page, row) {
+  await row.getByRole("button", { name: "แก้ไข", exact: true }).click();
+  await page.getByLabel("สถานที่ประจำ", { exact: true }).fill("Finn Space");
+  await page.getByRole("button", { name: "อัปเดต", exact: true }).click();
+  await row.getByText("Finn Space", { exact: true }).waitFor();
 }
 
 async function verifyWrites() {
@@ -73,7 +96,7 @@ async function verifyWrites() {
       Object.entries(fields).map(([key, value]) => [key, value.stringValue])
     ));
   }
-  const [rooms, loans] = await Promise.all([matching("room", "401"), matching("equipment", "ICIT01")]);
+  const [rooms, loans] = await Promise.all([matching("room", "401"), matching("equipment", asset)]);
   assert.equal(rooms.length, 2);
   assert(rooms.some(row => row.employeeId === "qa-role-staff-a" && row.minorTask === "เปิดห้องเรียนชั้น 4"));
   assert(rooms.some(row => row.employeeId === "qa-role-staff-b" && row.minorTask === "ปิดห้องเรียนชั้น 4"));
@@ -87,24 +110,33 @@ async function verifyWrites() {
   mkdirSync(out, { recursive: true });
   const browser = await chromium.launch({ headless: true, executablePath: process.argv[3] });
   try {
+    const admin = await login(browser, "qa-role-admin", 1440);
+    const row = await addEquipment(admin);
     const desktop = await login(browser, "qa-role-staff-a", 1440);
     const mobile = await login(browser, "qa-role-staff-b", 390);
     await room(desktop, "เปิดใช้งาน");
     await room(mobile, "ปิดการใช้งาน");
-    const first = await equipmentModal(desktop);
+    const first = await equipmentModal(desktop, "QA หูฟัง", "ห้องบริการชั้น 3");
     const field = desktop.getByRole("textbox", { name: "รหัสนักศึกษา 13 หลัก" });
     await field.fill(student);
     await field.press("Enter");
     await first.waitFor({ state: "hidden" });
-    const second = await equipmentModal(mobile);
+    await moveEquipment(admin, row);
+    const second = await equipmentModal(mobile, "QA Finn หูฟัง", "Finn Space");
     await mobile.getByText(student, { exact: true }).first().waitFor();
-    await mobile.getByRole("button", { name: "คืน ICIT01 — สมบูรณ์", exact: true }).click();
+    await mobile.getByRole("button", { name: `คืน ${asset} — สมบูรณ์`, exact: true }).click();
     await second.waitFor({ state: "hidden" });
     await verifyWrites();
     await mobile.goto(origin + "/worklogs");
-    await mobile.getByRole("button").filter({ hasText: "คืนหูฟัง ICIT01" }).first().waitFor();
-    assert.equal(await mobile.getByRole("button").filter({ hasText: "ยืมหูฟัง ICIT01" }).count(), 0);
-    Object.assign(report, { passed: true, roomCrossStaff: true, loanCrossStaff: true, sameBorrower: true, noDuplicate: true, ownHistoryOnly: true });
+    await mobile.getByRole("button").filter({ hasText: `คืนหูฟัง ${asset}` }).first().waitFor();
+    assert.equal(await mobile.getByRole("button").filter({ hasText: `ยืมหูฟัง ${asset}` }).count(), 0);
+    await desktop.goto(origin + "/resources");
+    await desktop.getByRole("button", { name: /ว่างทั้งหมด|มีการใช้งาน/ }).click();
+    await desktop.getByRole("button", { name: "อุปกรณ์", exact: true }).click();
+    await desktop.getByRole("button", { name: `${asset} · Finn Space`, exact: true }).click();
+    assert.equal(await desktop.getByRole("button", { name: `${asset} · ห้องบริการชั้น 3`, exact: true }).count(), 0);
+    await desktop.screenshot({ path: join(out, "equipment-moved-finn.png") });
+    Object.assign(report, { passed: true, adminCreateAndMove: true, locationMatchedOnResourcePage: true, roomCrossStaff: true, loanCrossStaff: true, sameBorrower: true, noDuplicate: true, ownHistoryOnly: true });
     console.log(JSON.stringify(report));
   } finally {
     writeFileSync(join(out, "browser-report.json"), JSON.stringify(report, null, 2) + "\n");

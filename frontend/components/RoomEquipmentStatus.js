@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useSharedResourceStatus } from '../hooks/useSharedResourceStatus';
-import { Monitor, Headphones, Plug, Wifi, Activity, Download, AlertTriangle, Wrench, Ban, Usb } from 'lucide-react';
-import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { Monitor, Headphones, Plug, Activity, Download, Wrench, Ban, Usb } from 'lucide-react';
+import { getFirestore, collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { useAuth } from './AuthProvider';
 import { isAdminRole } from '../lib/authUtils';
+import { EQUIPMENT_LABELS, visibleEquipment } from '../lib/equipmentCatalog';
 
 // ─── Equipment Details Data (Barcode & Item Number) ───
 const EQUIPMENT_DETAILS = {
@@ -231,22 +232,23 @@ const DevicePreview = ({ item }) => {
       <div className={`rounded-lg p-2 flex flex-col items-center gap-1 flex-shrink-0 ${
         item.inUse ? 'bg-red-50/80 border border-red-100'
         : item.condition === 'damaged' ? 'bg-amber-50/80 border border-amber-100'
-        : item.condition === 'lost' ? 'bg-slate-100/80 border border-slate-200'
+        : item.unknown || item.condition === 'lost' ? 'bg-slate-100/80 border border-slate-200'
         : 'bg-emerald-50/80 border border-emerald-100'
       }`}>
         <div className={`w-2 h-2 rounded-full ${
           item.inUse ? 'bg-red-400 animate-pulse'
           : item.condition === 'damaged' ? 'bg-amber-400'
-          : item.condition === 'lost' ? 'bg-slate-400'
+          : item.unknown || item.condition === 'lost' ? 'bg-slate-400'
           : 'bg-emerald-400'
         }`} />
         <span className={`text-xs font-bold ${
           item.inUse ? 'text-red-700'
           : item.condition === 'damaged' ? 'text-amber-700'
-          : item.condition === 'lost' ? 'text-slate-500'
+          : item.unknown || item.condition === 'lost' ? 'text-slate-500'
           : 'text-emerald-700'
         }`}>
           {item.inUse ? 'กำลังใช้งาน'
+          : item.unknown ? 'ตรวจสอบประวัติอุปกรณ์'
           : item.condition === 'damaged' ? 'ชำรุด — ยืมไม่ได้'
           : item.condition === 'lost' ? 'สูญหาย — ยืมไม่ได้'
           : 'พร้อมใช้งาน'}
@@ -317,7 +319,7 @@ const DevicePreview = ({ item }) => {
                 ? 'text-emerald-600' 
                 : 'text-slate-400'
           }`}>
-            {item.inUse 
+            {item.unknown ? 'ยังยืนยันสถานะไม่ได้' : item.inUse
               ? (item.type === 'room' ? 'ห้องกำลังใช้งานอยู่' : 'อุปกรณ์ถูกยืมใช้งาน')
               : (item.type === 'room' ? 'ห้องว่าง พร้อมเช็คอิน' : 'พร้อมให้ยืมใช้งาน')
             }
@@ -327,6 +329,13 @@ const DevicePreview = ({ item }) => {
     </div>
   );
 };
+
+function equipmentDot({ inUse, condition, unknown }) {
+  if (inUse) return 'bg-rose-400';
+  if (condition === 'damaged') return 'bg-amber-400';
+  if (unknown || condition === 'lost') return 'bg-slate-400';
+  return 'bg-emerald-400';
+}
 
 export default function RoomEquipmentStatus() {
   const { user } = useAuth();
@@ -339,7 +348,7 @@ export default function RoomEquipmentStatus() {
   const equipmentStatus = status?.equipmentStatus ?? {};
   const equipmentConditions = status?.equipmentConditions ?? {};
   const equipmentDetails = status?.details ?? {};
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   
   // [SE] View toggle: 'rooms' | 'equipment'
   const [activeView, setActiveView] = useState('rooms');
@@ -358,81 +367,17 @@ export default function RoomEquipmentStatus() {
     "303": "Windows", "304": "iOS", "305": "Android", "306": "Linux"
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'available': return 'bg-green-50 text-green-700 border-green-200';
-      case 'in_use': return 'bg-red-50 text-red-700 border-red-200';
-      case 'maintenance': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'available': return '🟢';
-      case 'in_use': return '🔴';
-      case 'maintenance': return '🟡';
-      default: return '⚪';
-    }
-  };
-
-  // [SE/SA] Export equipment status to CSV for admin
   const exportToCSV = () => {
     const headers = ['รหัสอุปกรณ์', 'ประเภท', 'สังกัด', 'สถานะการใช้งาน', 'สภาพอุปกรณ์', 'บันทึกล่าสุด', 'Barcode', 'Item No'];
-
-    const rows = [];
-
-    // Headphones
-    allHeadphones.forEach(id => {
-      const inUse = (equipmentStatus.headphones || {})[id] === 'in_use';
-      const condition = equipmentConditions[id] || 'normal';
-      const location = allHeadphones3.includes(id) ? 'ชั้น 3' : 'Finn Space';
-      const details = EQUIPMENT_DETAILS[id];
-      rows.push([
-        id,
-        'หูฟัง',
-        location,
-        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
-        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
+    const rows = equipmentItems.map(item => {
+      const details = EQUIPMENT_DETAILS[item.id];
+      return [
+        item.id, EQUIPMENT_LABELS[item.type], item.location.replace(/^(\s*[=+@-]|[\t\r\n])/, "'$1"),
+        item.unknown ? 'ไม่ทราบสถานะ' : item.inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
+        item.unknown ? 'ยังไม่ระบุ' : item.condition === 'damaged' ? 'ชำรุด' : item.condition === 'lost' ? 'สูญหาย' : 'สมบูรณ์',
         lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
-        details?.barcode || '-',
-        details?.itemNo || '-'
-      ]);
-    });
-
-    // Power plugs
-    allPower.forEach(id => {
-      const inUse = (equipmentStatus.power || {})[id] === 'in_use';
-      const condition = equipmentConditions[id] || 'normal';
-      const location = allPower3.includes(id) ? 'ชั้น 3' : 'Finn Space';
-      const details = EQUIPMENT_DETAILS[id];
-      rows.push([
-        id,
-        'ปลั๊กไฟ',
-        location,
-        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
-        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
-        lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
-        details?.barcode || '-',
-        details?.itemNo || '-'
-      ]);
-    });
-
-    // USB
-    allUsb3.forEach(id => {
-      const inUse = (equipmentStatus.usb || {})[id] === 'in_use';
-      const condition = equipmentConditions[id] || 'normal';
-      const details = EQUIPMENT_DETAILS[id];
-      rows.push([
-        id,
-        'USB',
-        'ชั้น 3',
-        inUse ? 'กำลังใช้งาน' : 'พร้อมใช้งาน',
-        condition === 'normal' ? 'สมบูรณ์' : condition === 'damaged' ? 'ชำรุด' : 'สูญหาย',
-        lastUpdated ? lastUpdated.toLocaleString('th-TH') : '-',
-        details?.barcode || '-',
-        details?.itemNo || '-'
-      ]);
+        details?.barcode || '-', details?.itemNo || '-'
+      ];
     });
 
     // Create CSV content with BOM for Thai characters
@@ -575,111 +520,34 @@ export default function RoomEquipmentStatus() {
     }
   };
 
-  const headphoneStats = Object.values(equipmentStatus.headphones || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
-  const powerStats = Object.values(equipmentStatus.power || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
-  const usbStats = Object.values(equipmentStatus.usb || {}).reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+  const allRooms3 = ['303', '304', '305', '306'];
+  const allRooms4 = ['401', '402', '406', '407'];
+  const roomItems = [...allRooms3, ...allRooms4].map(id => ({
+    type: 'room', id, label: id, location: `ห้องบริการ ชั้น ${id[0]}`,
+    inUse: roomStatus[id] === 'in_use', os: roomOsMap[id]
+  }));
+  const equipmentItems = visibleEquipment(status?.equipmentCatalog ?? [], equipmentStatus).map(({ id, kind, location }) => ({
+    type: kind, id, label: `${EQUIPMENT_LABELS[kind]} ${id.slice(4)}`, location: location || 'ไม่ระบุสังกัด',
+    inUse: equipmentStatus[kind]?.[id] === 'in_use', unknown: equipmentStatus[kind]?.[id] === 'unknown',
+    detail: equipmentDetails[id], condition: equipmentConditions[id]
+  }));
+  const equipmentGroups = new Map();
+  for (const item of equipmentItems) {
+    const label = `${EQUIPMENT_LABELS[item.type]} · ${item.location}`;
+    const entries = equipmentGroups.get(label) ?? [];
+    entries.push(item);
+    equipmentGroups.set(label, entries);
+  }
 
-  const allRooms3 = ['303','304','305','306'];
-  const allRooms4 = ['401','402','406','407'];
-  const allRooms = [...allRooms3, ...allRooms4];
-  const allHeadphones3    = Array.from({length:12}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`);   // ICIT01-12
-  const allHeadphonesFinn = Array.from({length:8},  (_,i) => `ICIT${String(i+13).padStart(2,'0')}`);  // ICIT13-20
-  const allHeadphones     = [...allHeadphones3, ...allHeadphonesFinn];
-  const allPower3    = ['ICIT21','ICIT22','ICIT23'];
-  const allPowerFinn = ['ICIT24','ICIT25'];
-  const allPower     = [...allPower3, ...allPowerFinn];
-  const allUsb3      = ['ICIT26','ICIT27','ICIT28','ICIT29'];
+  const anyInUse = [...roomItems, ...equipmentItems].some(item => item.inUse);
+  const navItems = activeView === 'rooms' ? roomItems : equipmentItems;
+  const selectedIndex = navItems.findIndex(item => item.id === selectedId);
+  const selectedItem = navItems[selectedIndex];
 
-  const roomsInUse = allRooms.filter(r => roomStatus[r] === 'in_use');
-  const hpInUse = allHeadphones.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use');
-  const pwInUse = allPower.filter(p => (equipmentStatus.power||{})[p] === 'in_use');
-  const usbInUse = allUsb3.filter(u => (equipmentStatus.usb||{})[u] === 'in_use');
-  const anyInUse = roomsInUse.length > 0 || hpInUse.length > 0 || pwInUse.length > 0 || usbInUse.length > 0;
-
-  // --- Navigation list for preview - Dynamic based on active view ---
-  const navItems = activeView === 'rooms' 
-    ? [
-        ...allRooms3.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 3', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
-        ...allRooms4.map(r => ({ type: 'room', id: r, label: r, location: 'ห้องบริการ ชั้น 4', inUse: roomStatus[r] === 'in_use', os: roomOsMap[r] })),
-      ]
-    : [
-        ...allHeadphones3.map(id => ({ type: 'headphones', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-        ...allPower3.map(id => ({ type: 'power', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-        ...allHeadphonesFinn.map(id => ({ type: 'headphones', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.headphones||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-        ...allPowerFinn.map(id => ({ type: 'power', id, label: id, location: 'Finn Space', inUse: (equipmentStatus.power||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-        ...allUsb3.map(id => ({ type: 'usb', id, label: id, location: 'ชั้น 3', inUse: (equipmentStatus.usb||{})[id] === 'in_use', detail: equipmentDetails[id], condition: equipmentConditions[id] })),
-      ];
-
-  // --- Navigation handlers ---
-  const navigatePrev = () => {
+  const navigate = offset => {
     if (!selectedItem) return;
-    const currentIndex = navItems.findIndex(i => i.id === selectedItem.id);
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : navItems.length - 1;
-    setSelectedItem(navItems[prevIndex]);
+    setSelectedId(navItems[(selectedIndex + offset + navItems.length) % navItems.length].id);
   };
-
-  const navigateNext = () => {
-    if (!selectedItem) return;
-    const currentIndex = navItems.findIndex(i => i.id === selectedItem.id);
-    const nextIndex = currentIndex < navItems.length - 1 ? currentIndex + 1 : 0;
-    setSelectedItem(navItems[nextIndex]);
-  };
-
-  // --- Compact bar: กลุ่มละ dots + label - Dynamic based on active view ---
-  const groups = activeView === 'rooms'
-    ? [
-        {
-          key: 'room3',
-          label: 'ชั้น 3',
-          items: allRooms3,
-          getStatus: r => roomStatus[r] === 'in_use',
-          inUseCount: allRooms3.filter(r => roomStatus[r] === 'in_use').length,
-        },
-        {
-          key: 'room4',
-          label: 'ชั้น 4',
-          items: allRooms4,
-          getStatus: r => roomStatus[r] === 'in_use',
-          inUseCount: allRooms4.filter(r => roomStatus[r] === 'in_use').length,
-        },
-      ]
-    : [
-        {
-          key: 'hp3',
-          label: 'หูฟัง ชั้น 3',
-          items: allHeadphones3,
-          getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
-          inUseCount: allHeadphones3.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
-        },
-        {
-          key: 'pw3',
-          label: 'ปลั๊ก ชั้น 3',
-          items: allPower3,
-          getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
-          inUseCount: allPower3.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
-        },
-        {
-          key: 'hpFinn',
-          label: 'หูฟัง Finn',
-          items: allHeadphonesFinn,
-          getStatus: h => (equipmentStatus.headphones||{})[h] === 'in_use',
-          inUseCount: allHeadphonesFinn.filter(h => (equipmentStatus.headphones||{})[h] === 'in_use').length,
-        },
-        {
-          key: 'pwFinn',
-          label: 'ปลั๊ก Finn',
-          items: allPowerFinn,
-          getStatus: p => (equipmentStatus.power||{})[p] === 'in_use',
-          inUseCount: allPowerFinn.filter(p => (equipmentStatus.power||{})[p] === 'in_use').length,
-        },
-        {
-          key: 'usb3',
-          label: 'USB ชั้น 3',
-          items: allUsb3,
-          getStatus: u => (equipmentStatus.usb||{})[u] === 'in_use',
-          inUseCount: allUsb3.filter(u => (equipmentStatus.usb||{})[u] === 'in_use').length,
-        },
-      ];
 
   return (
     <div className="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm">
@@ -689,32 +557,8 @@ export default function RoomEquipmentStatus() {
         onClick={() => {
           const next = !expanded;
           setExpanded(next);
-          if (!next) {
-            setSelectedItem(null);
-          } else if (!selectedItem) {
-            // Default based on active view
-            if (activeView === 'rooms') {
-              setSelectedItem({
-                type: 'room',
-                id: '303',
-                label: '303',
-                location: 'ห้องบริการ ชั้น 3',
-                inUse: roomStatus['303'] === 'in_use',
-                os: roomOsMap['303']
-              });
-            } else {
-              const defaultId = allHeadphones3[0];
-              setSelectedItem({
-                type: 'headphones',
-                id: defaultId,
-                label: `หูฟัง 01`,
-                num: 1,
-                location: 'ชั้น 3',
-                inUse: (equipmentStatus.headphones||{})[defaultId] === 'in_use',
-                condition: equipmentConditions[defaultId]
-              });
-            }
-          }
+          if (!next) setSelectedId(null);
+          else if (!selectedItem) setSelectedId(navItems[0]?.id ?? null);
         }}
         className="w-full flex items-center gap-0 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
       >
@@ -737,116 +581,29 @@ export default function RoomEquipmentStatus() {
               <span className={`text-[10px] font-medium ${allRooms4.some(r=>roomStatus[r]==='in_use')?'text-red-500':'text-slate-400'}`}>ชั้น 4</span>
             </div>
             <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
-            {/* ชั้น 3: หูฟัง */}
-            <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[2px]">
-                {allHeadphones3.map(h => {
-                  const s = (equipmentStatus.headphones || {})[h];
-                  const c = equipmentConditions[h];
-                  let color = 'bg-emerald-400';
-                  if (s === 'in_use') color = 'bg-red-400';
-                  else if (c === 'damaged') color = 'bg-amber-400';
-                  else if (c === 'lost') color = 'bg-slate-400';
-                  return <div key={h} className={`w-1 h-1 rounded-full ${color}`} />;
-                })}
+            {[...equipmentGroups].map(([label, items]) => (
+              <div key={label} className="flex items-center gap-1 shrink-0">
+                <div className="flex gap-[2px]">
+                  {items.map(item => <span key={item.id} className={`w-1 h-1 rounded-full ${equipmentDot(item)}`} />)}
+                </div>
+                <span className={`text-[10px] font-medium ${items.some(item => item.inUse) ? 'text-red-500' : items.some(item => ['damaged', 'lost'].includes(item.condition)) ? 'text-amber-500' : 'text-slate-400'}`}>{label}</span>
               </div>
-              <span className={`text-[10px] font-medium ${
-                allHeadphones3.some(h => (equipmentStatus.headphones || {})[h] === 'in_use') ? 'text-red-500' : 
-                allHeadphones3.some(h => equipmentConditions[h] === 'damaged' || equipmentConditions[h] === 'lost') ? 'text-amber-500' : 'text-slate-400'
-              }`}>หูฟัง</span>
-            </div>
-            <span className="text-slate-200 text-[10px] shrink-0">|</span>
-            {/* ชั้น 3: ปลั๊ก */}
-            <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">
-                {allPower3.map(p => {
-                  const s = (equipmentStatus.power || {})[p];
-                  const c = equipmentConditions[p];
-                  let color = 'bg-emerald-400';
-                  if (s === 'in_use') color = 'bg-red-400';
-                  else if (c === 'damaged') color = 'bg-amber-400';
-                  else if (c === 'lost') color = 'bg-slate-400';
-                  return <div key={p} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
-                })}
-              </div>
-              <span className={`text-[10px] font-medium ${
-                allPower3.some(p => (equipmentStatus.power || {})[p] === 'in_use') ? 'text-red-500' : 
-                allPower3.some(p => equipmentConditions[p] === 'damaged' || equipmentConditions[p] === 'lost') ? 'text-amber-500' : 'text-slate-400'
-              }`}>ปลั๊ก</span>
-            </div>
-            <span className="text-slate-200 text-[10px] shrink-0">|</span>
-            {/* ชั้น 3: USB */}
-            <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">
-                {allUsb3.map(u => {
-                  const s = (equipmentStatus.usb || {})[u];
-                  const c = equipmentConditions[u];
-                  let color = 'bg-emerald-400';
-                  if (s === 'in_use') color = 'bg-red-400';
-                  else if (c === 'damaged') color = 'bg-amber-400';
-                  else if (c === 'lost') color = 'bg-slate-400';
-                  return <div key={u} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
-                })}
-              </div>
-              <span className={`text-[10px] font-medium ${
-                allUsb3.some(u => (equipmentStatus.usb || {})[u] === 'in_use') ? 'text-red-500' : 
-                allUsb3.some(u => equipmentConditions[u] === 'damaged' || equipmentConditions[u] === 'lost') ? 'text-amber-500' : 'text-slate-400'
-              }`}>USB</span>
-            </div>
-            <span className="text-slate-300 text-[10px] shrink-0 mx-0.5">┊</span>
-            {/* Finn: หูฟัง */}
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[9px] text-slate-300 font-medium">Finn</span>
-              <div className="flex gap-[2px]">
-                {allHeadphonesFinn.map(h => {
-                  const s = (equipmentStatus.headphones || {})[h];
-                  const c = equipmentConditions[h];
-                  let color = 'bg-emerald-400';
-                  if (s === 'in_use') color = 'bg-red-400';
-                  else if (c === 'damaged') color = 'bg-amber-400';
-                  else if (c === 'lost') color = 'bg-slate-400';
-                  return <div key={h} className={`w-1 h-1 rounded-full ${color}`} />;
-                })}
-              </div>
-              <span className={`text-[10px] font-medium ${
-                allHeadphonesFinn.some(h => (equipmentStatus.headphones || {})[h] === 'in_use') ? 'text-red-500' : 
-                allHeadphonesFinn.some(h => equipmentConditions[h] === 'damaged' || equipmentConditions[h] === 'lost') ? 'text-amber-500' : 'text-slate-400'
-              }`}>หูฟัง</span>
-            </div>
-            <span className="text-slate-200 text-[10px] shrink-0">|</span>
-            {/* Finn: ปลั๊ก */}
-            <div className="flex items-center gap-1 shrink-0">
-              <div className="flex gap-[3px]">
-                {allPowerFinn.map(p => {
-                  const s = (equipmentStatus.power || {})[p];
-                  const c = equipmentConditions[p];
-                  let color = 'bg-emerald-400';
-                  if (s === 'in_use') color = 'bg-red-400';
-                  else if (c === 'damaged') color = 'bg-amber-400';
-                  else if (c === 'lost') color = 'bg-slate-400';
-                  return <div key={p} className={`w-1.5 h-1.5 rounded-full ${color}`} />;
-                })}
-              </div>
-              <span className={`text-[10px] font-medium ${
-                allPowerFinn.some(p => (equipmentStatus.power || {})[p] === 'in_use') ? 'text-red-500' : 
-                allPowerFinn.some(p => equipmentConditions[p] === 'damaged' || equipmentConditions[p] === 'lost') ? 'text-amber-500' : 'text-slate-400'
-              }`}>ปลั๊ก</span>
-            </div>
+            ))}
           </div>
         )}
 
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          {!loading && (
+          {!loading && !statusError && (
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
               anyInUse
                 ? 'bg-red-50 text-red-500'
                 : 'bg-emerald-50 text-emerald-600'
             }`}>
-              {anyInUse ? 'มีการใช้งาน' : 'ว่างทั้งหมด'}
+              {anyInUse ? 'มีการใช้งาน' : equipmentItems.some(item => item.unknown) ? 'มีรายการที่ต้องตรวจ' : 'ว่างทั้งหมด'}
             </span>
           )}
           {/* [SE/SA] Export CSV button for admin - iOS minimal style */}
-          {isAdmin && expanded && (
+          {isAdmin && expanded && !statusError && (
             <div
               onClick={(e) => { e.stopPropagation(); exportToCSV(); }}
               className="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-slate-50 text-slate-500 text-[10px] font-medium rounded-md transition-all cursor-pointer border border-slate-200/60 shadow-sm"
@@ -865,7 +622,7 @@ export default function RoomEquipmentStatus() {
       </button>
 
       {/* ── Expanded detail: 2-column layout ── */}
-      {expanded && !loading && (
+      {expanded && !loading && !statusError && (
         <div className="border-t border-slate-100">
           {/* SE: Date range picker and export for admin - iOS minimal style */}
           {isAdmin && (
@@ -907,15 +664,7 @@ export default function RoomEquipmentStatus() {
                 <button
                   onClick={() => { 
                     setActiveView('rooms'); 
-                    // Default to room 303
-                    setSelectedItem({
-                      type: 'room',
-                      id: '303',
-                      label: '303',
-                      location: 'ห้องบริการ ชั้น 3',
-                      inUse: roomStatus['303'] === 'in_use',
-                      os: roomOsMap['303']
-                    });
+                    setSelectedId(roomItems[0].id);
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all ${
                     activeView === 'rooms'
@@ -931,19 +680,7 @@ export default function RoomEquipmentStatus() {
                 <button
                   onClick={() => { 
                     setActiveView('equipment'); 
-                    // Default to ICIT01 (first headphones)
-                    const defaultId = allHeadphones3[0];
-                    const inUse = (equipmentStatus.headphones||{})[defaultId] === 'in_use';
-                    const cond = equipmentConditions[defaultId];
-                    setSelectedItem({
-                      type: 'headphones',
-                      id: defaultId,
-                      label: `หูฟัง 01`,
-                      num: 1,
-                      location: 'ชั้น 3',
-                      inUse,
-                      condition: cond
-                    });
+                    setSelectedId(equipmentItems[0]?.id ?? null);
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all ${
                     activeView === 'equipment'
@@ -969,7 +706,7 @@ export default function RoomEquipmentStatus() {
                         {allRooms3.map(r => {
                           const inUse = roomStatus[r] === 'in_use';
                           return (
-                            <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 3',inUse,os:roomOsMap[r]})}
+                            <button key={r} onClick={() => setSelectedId(r)}
                               className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
                                 selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
                               }`}>
@@ -988,7 +725,7 @@ export default function RoomEquipmentStatus() {
                         {allRooms4.map(r => {
                           const inUse = roomStatus[r] === 'in_use';
                           return (
-                            <button key={r} onClick={() => setSelectedItem({type:'room',id:r,label:r,location:'ห้องบริการ ชั้น 4',inUse,os:roomOsMap[r]})}
+                            <button key={r} onClick={() => setSelectedId(r)}
                               className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${
                                 selectedItem?.id===r ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : inUse ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'
                               }`}>
@@ -1004,152 +741,29 @@ export default function RoomEquipmentStatus() {
                     <ClassroomScheduleSection />
             </>
           ) : (
-            <>
-              {/* Section: หูฟัง ชั้น 3 */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง ชั้น 3</p>
+            equipmentGroups.size ? [...equipmentGroups].map(([label, items]) => (
+              <div key={label}>
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
                 <div className="grid grid-cols-6 sm:grid-cols-10 gap-0.5">
-                  {allHeadphones3.map(id => {
-                    const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
-                    const det = equipmentDetails[id];
-                    const cond = equipmentConditions[id];
-                    const num = parseInt(id.replace('ICIT',''),10);
-                    let bgClass = 'bg-slate-50 border-slate-100';
-                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
-                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
-                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
+                  {items.map(item => {
+                    const { id, inUse, condition } = item;
+                    const selected = selectedId === id;
+                    const colors = inUse ? 'bg-rose-50 border-rose-100 text-rose-700'
+                      : condition === 'damaged' ? 'bg-amber-50 border-amber-100 text-amber-700'
+                      : condition === 'lost' ? 'bg-slate-100 border-slate-200 text-slate-500'
+                      : 'bg-slate-50 border-slate-100 text-slate-500';
                     return (
-                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
-                        }`} />
-                        <span className={`text-[9px] font-bold ${
-                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>{num}</span>
+                      <button key={id} type="button" aria-label={`${id} · ${item.location}`} aria-pressed={selected}
+                        onClick={() => setSelectedId(id)}
+                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${selected ? 'ring-2 ring-blue-400 bg-blue-50 shadow-sm' : colors}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${equipmentDot(item)}`} />
+                        <span className="text-[9px] font-bold break-all">{id.slice(4)}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-
-              {/* Section: ปลั๊ก ชั้น 3 */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ปลั๊ก ชั้น 3</p>
-                <div className="grid grid-cols-5 sm:grid-cols-8 gap-0.5">
-                  {allPower3.map(id => {
-                    const inUse = (equipmentStatus.power||{})[id] === 'in_use';
-                    const det = equipmentDetails[id];
-                    const cond = equipmentConditions[id];
-                    const num = parseInt(id.replace('ICIT',''),10);
-                    let bgClass = 'bg-slate-50 border-slate-100';
-                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
-                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
-                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
-                    return (
-                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
-                        }`} />
-                        <span className={`text-[9px] font-bold ${
-                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>{num}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section: USB ชั้น 3 */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">USB ชั้น 3</p>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5">
-                  {allUsb3.map(id => {
-                    const inUse = (equipmentStatus.usb||{})[id] === 'in_use';
-                    const det = equipmentDetails[id];
-                    const cond = equipmentConditions[id];
-                    const num = parseInt(id.replace('ICIT',''),10);
-                    let bgClass = 'bg-slate-50 border-slate-100';
-                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
-                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
-                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
-                    return (
-                      <button key={id} onClick={() => setSelectedItem({type:'usb',id,label:`USB ${num}`,num,location:'ชั้น 3',inUse,detail:det,condition:cond})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
-                        }`} />
-                        <span className={`text-[9px] font-bold ${
-                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>{num}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section: หูฟัง Finn */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">หูฟัง Finn Space</p>
-                <div className="grid grid-cols-6 sm:grid-cols-10 gap-0.5">
-                  {allHeadphonesFinn.map(id => {
-                    const inUse = (equipmentStatus.headphones||{})[id] === 'in_use';
-                    const det = equipmentDetails[id];
-                    const cond = equipmentConditions[id];
-                    const num = parseInt(id.replace('ICIT',''),10);
-                    let bgClass = 'bg-slate-50 border-slate-100';
-                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
-                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
-                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
-                    return (
-                      <button key={id} onClick={() => setSelectedItem({type:'headphones',id,label:`หูฟัง ${num}`,num,location:'Finn Space',inUse,detail:det,condition:cond})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
-                        }`} />
-                        <span className={`text-[9px] font-bold ${
-                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>{num}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Section: ปลั๊ก Finn */}
-              <div>
-                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">ปลั๊ก Finn Space</p>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-0.5">
-                  {allPowerFinn.map(id => {
-                    const inUse = (equipmentStatus.power||{})[id] === 'in_use';
-                    const det = equipmentDetails[id];
-                    const cond = equipmentConditions[id];
-                    const num = parseInt(id.replace('ICIT',''),10);
-                    let bgClass = 'bg-slate-50 border-slate-100';
-                    if (selectedItem?.id === id) bgClass = 'ring-2 ring-blue-400 bg-blue-50 shadow-sm';
-                    else if (inUse) bgClass = 'bg-rose-50 border-rose-100';
-                    else if (cond === 'damaged') bgClass = 'bg-amber-50 border-amber-100';
-                    else if (cond === 'lost') bgClass = 'bg-slate-100 border-slate-200';
-                    return (
-                      <button key={id} onClick={() => setSelectedItem({type:'power',id,label:`ปลั๊ก ${num}`,num,location:'Finn Space',inUse,detail:det,condition:cond})}
-                        className={`rounded-md p-1 flex flex-col items-center gap-0.5 transition-all duration-200 ease-out active:scale-95 snap-start ${bgClass}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          inUse ? 'bg-rose-400' : cond === 'damaged' ? 'bg-amber-400' : cond === 'lost' ? 'bg-slate-400' : 'bg-emerald-400'
-                        }`} />
-                        <span className={`text-[9px] font-bold ${
-                          inUse ? 'text-rose-700' : cond === 'damaged' ? 'text-amber-700' : cond === 'lost' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>{num}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
+            )) : <p className="p-2 text-sm text-slate-500">ไม่มีรายการอุปกรณ์</p>
           )}
         </div>
       </div>
@@ -1159,7 +773,7 @@ export default function RoomEquipmentStatus() {
               {/* Navigation buttons */}
               <div className="absolute top-3 left-3 right-3 z-10 flex justify-between pointer-events-none">
                 <button
-                  onClick={navigatePrev}
+                  onClick={() => navigate(-1)}
                   disabled={!selectedItem}
                   className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 flex items-center justify-center transition-all pointer-events-auto ${
                     selectedItem ? 'hover:bg-white hover:shadow-md active:scale-95' : 'opacity-30 cursor-not-allowed'
@@ -1170,7 +784,7 @@ export default function RoomEquipmentStatus() {
                   </svg>
                 </button>
                 <button
-                  onClick={navigateNext}
+                  onClick={() => navigate(1)}
                   disabled={!selectedItem}
                   className={`w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 flex items-center justify-center transition-all pointer-events-auto ${
                     selectedItem ? 'hover:bg-white hover:shadow-md active:scale-95' : 'opacity-30 cursor-not-allowed'

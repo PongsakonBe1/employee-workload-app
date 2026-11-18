@@ -9,7 +9,7 @@ import { initializeApp, deleteApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { collection, connectFirestoreEmulator, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, limit, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { indexedWorklogEdit, withWorklogResourceIndex } from "../frontend/lib/resourceStatusIndex.js";
-import { backfillResourceStatus } from "../backend/src/services/resourceStatusBackfill.js";
+import { backfillResourceStatus, dryRunResourceStatusBackfill } from "../backend/src/services/resourceStatusBackfill.js";
 import { createResourceStatusHandler } from "../backend/src/services/resourceStatusHandler.js";
 import { createTrustedCalendarApp } from "../calendar-server/src/app.js";
 
@@ -151,7 +151,33 @@ try {
   await readStatus(unverified, 403);
   await readStatus(staff, 503);
   const fixtureDb = adminFirestore(server);
+  for (const [code, minorTask] of [[1, "ยืมหูฟัง"], [12, "ยืมหูฟัง"], [21, "ยืมปลั๊กไฟ"], [27, "ยืม USB"], [28, "ยืม USB"], [29, "ยืม USB"]]) {
+    const name = `ICIT${String(code).padStart(2, "0")}`;
+    await fixtureDb.doc(`equipmentItems/${name}`).create({ name, minorTask, active: true, location: "ห้องบริการชั้น 3", order: code });
+  }
   await populateLegacyHistory(fixtureDb, admin.uid);
+  const issueSamples = [
+    { minorTask: "ยืมหูฟัง", comment: "QA no resource code" },
+    { minorTask: "ยืมหูฟัง", equipment: "ICIT01", date: "2026-02-30" },
+    { minorTask: "ยืมหูฟัง", equipment: "ICIT99", date: "2026-10-01" }
+  ];
+  for (const [index, data] of issueSamples.entries()) await fixtureDb.doc(`worklogs/qa-dry-run-${index}`).create(data);
+  const beforeDryRun = await fixtureDb.doc("worklogs/qa-archive-room").get();
+  const preview = await dryRunResourceStatusBackfill(fixtureDb, FieldPath.documentId());
+  assert.deepEqual(preview, {
+    complete: true, inspected: 509, resourceTasks: 6, changesNeeded: 4,
+    issues: { missingResourceCode: 1, invalidRecordedDate: 1, equipmentMismatch: 1, assumedMidnight: 1 },
+    catalog: { inspected: 6, complete: true, invalid: 0, conflicts: 0 }
+  });
+  const capped = await dryRunResourceStatusBackfill(fixtureDb, FieldPath.documentId(), { documentLimit: 9, catalogLimit: 3 });
+  assert.equal(capped.inspected, 9);
+  assert.equal(capped.complete, false);
+  assert.equal(capped.catalog.inspected, 3);
+  assert.equal(capped.catalog.complete, false);
+  assert((await fixtureDb.doc("worklogs/qa-archive-room").get()).updateTime.isEqual(beforeDryRun.updateTime));
+  assert.equal((await fixtureDb.doc("resourceStatusIndex/v1").get()).exists, false);
+  for (const [index] of issueSamples.entries()) await fixtureDb.doc(`worklogs/qa-dry-run-${index}`).delete();
+  console.log("PASS dry-run respects document limits, categorizes legacy issues, and writes neither worklogs nor readiness");
   assert.deepEqual(await backfillResourceStatus(fixtureDb, FieldPath.documentId()), { inspected: 506, candidates: 3, indexed: 3 });
   assert.deepEqual(await backfillResourceStatus(fixtureDb, FieldPath.documentId()), { inspected: 506, candidates: 3, indexed: 0 });
   const historic = await readStatus(other, 200);
@@ -196,10 +222,23 @@ try {
   await writeResource(other, "qa-role-return-final", "คืน USB", { equipment: "ICIT28", recipient: student });
   await waitForStatus(staff, value => value.equipmentStatus.usb.ICIT28 === "available");
   console.log("PASS indexed edit, duplicate return and Undo recompute the affected assets");
+  const asset = client => doc(client.db, "equipmentItems", "qa-equipment-30");
+  const newHeadset = { name: "ICIT30", minorTask: "ยืมหูฟัง", location: "ห้องบริการชั้น 3", active: true, order: 30 };
+  await ensureDenied(setDoc(asset(staff), newHeadset));
+  await setDoc(asset(admin), newHeadset);
+  await waitForStatus(staff, value => value.equipmentCatalog.some(item => item.id === "ICIT30" && item.location === newHeadset.location) && value.equipmentStatus.headphones.ICIT30 === "available");
+  await writeResource(staff, "qa-role-catalog-borrow", "ยืมหูฟัง", { equipment: "ICIT30", recipient: student });
+  await updateDoc(asset(admin), { location: "Finn Space", active: false, updatedAt: serverTimestamp() });
+  const moved = await waitForStatus(other, value => value.equipmentCatalog.some(item => item.id === "ICIT30" && item.location === "Finn Space" && !item.active) && value.equipmentStatus.headphones.ICIT30 === "in_use");
+  assert.equal(moved.details.ICIT30.user, student);
+  await writeResource(other, "qa-role-catalog-return", "คืนหูฟัง", { equipment: "ICIT30", recipient: moved.details.ICIT30.user });
+  await waitForStatus(staff, value => value.equipmentStatus.headphones.ICIT30 === "available" && !value.details.ICIT30);
+  console.log("PASS Admin creates and moves an asset; cross-Staff return retains the same ID after deactivation");
   const templates = adminFirestore(server).collection("globalTemplates");
   const defaults = { isActive: true, active: true, department: null, usageCount: 0, mainDuty: "QA", dutyGroup: "main", isSmart: true };
   await templates.doc("qa-scope-room").create({ ...defaults, name: "QA ห้องชั้น 4", minorTask: "เปิดห้องเรียนชั้น 4" });
   await templates.doc("qa-scope-equipment").create({ ...defaults, name: "QA หูฟัง", minorTask: "ยืมหูฟัง", requireRecipient: true });
+  await templates.doc("qa-scope-equipment-finn").create({ ...defaults, name: "QA Finn หูฟัง", minorTask: "ยืมหูฟัง", requireRecipient: true });
   console.log("PASS active cross-account room/loan state without access to other Staff worklogs");
   for (const forbidden of [inactive, unverified]) {
     await ensureDenied(setDoc(profile(forbidden, `${forbidden.uid}-new`), roleDocument(staff.email, "staff")));
