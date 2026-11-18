@@ -6,7 +6,7 @@ const { chromium } = require(process.argv[2]);
 const origin = "http://127.0.0.1:4318";
 const auth = "http://127.0.0.1:19218";
 const firestore = "http://127.0.0.1:18218";
-const out = "output/playwright/worklog-access-boundary";
+const out = "output/playwright/resource-status-by-id";
 const student = "0000000000001";
 const report = { passed: false, source: "demo-worklog-workspace", physicalDevice: false };
 
@@ -57,19 +57,26 @@ async function equipmentModal(page) {
 }
 
 async function verifyWrites() {
-  const source = `${firestore}/v1/projects/demo-worklog-workspace/databases/(default)/documents/worklogs`;
-  const res = await fetch(source, {
-    headers: { Authorization: "Bearer owner" }, signal: AbortSignal.timeout(8000), redirect: "error"
-  });
-  assert(res.ok);
-  const rows = (await res.json()).documents.map(({ fields }) => Object.fromEntries(
-    Object.entries(fields).map(([key, value]) => [key, value.stringValue])
-  ));
-  const rooms = rows.filter(row => row.room === "401");
+  const source = `${firestore}/v1/projects/demo-worklog-workspace/databases/(default)/documents:runQuery`;
+  async function matching(fieldPath, stringValue) {
+    const res = await fetch(source, {
+      method: "POST", headers: { Authorization: "Bearer owner", "Content-Type": "application/json" },
+      body: JSON.stringify({ structuredQuery: {
+        from: [{ collectionId: "worklogs" }],
+        where: { fieldFilter: { field: { fieldPath }, op: "EQUAL", value: { stringValue } } }
+      } }),
+      signal: AbortSignal.timeout(8000), redirect: "error"
+    });
+    assert(res.ok);
+    const rows = await res.json();
+    return rows.filter(row => row.document).map(({ document: { fields } }) => Object.fromEntries(
+      Object.entries(fields).map(([key, value]) => [key, value.stringValue])
+    ));
+  }
+  const [rooms, loans] = await Promise.all([matching("room", "401"), matching("equipment", "ICIT01")]);
   assert.equal(rooms.length, 2);
   assert(rooms.some(row => row.employeeId === "qa-role-staff-a" && row.minorTask === "เปิดห้องเรียนชั้น 4"));
   assert(rooms.some(row => row.employeeId === "qa-role-staff-b" && row.minorTask === "ปิดห้องเรียนชั้น 4"));
-  const loans = rows.filter(row => row.equipment === "ICIT01");
   assert.equal(loans.length, 2);
   assert(loans.some(row => row.employeeId === "qa-role-staff-a" && row.minorTask === "ยืมหูฟัง"));
   assert(loans.some(row => row.employeeId === "qa-role-staff-b" && row.minorTask === "คืนหูฟัง"));

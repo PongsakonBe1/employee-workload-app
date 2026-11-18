@@ -35,11 +35,12 @@ import {
   limit,
   startAfter,
   getDocs,
-  updateDoc,
   deleteDoc,
   doc,
   writeBatch,
   getDoc,
+  runTransaction,
+  serverTimestamp,
   setDoc,
   addDoc,
 } from "firebase/firestore";
@@ -53,6 +54,7 @@ import {
   hasCommentSuggestions,
 } from "../../lib/commentSuggestions";
 import { normalizeStatus } from "../../lib/worklogUtils";
+import { indexedWorklogEdit } from "../../lib/resourceStatusIndex";
 import { isAdminRole } from "../../lib/authUtils";
 
 const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
@@ -389,15 +391,18 @@ function WorklogHistory({ user }) {
 
   async function saveEdit(id) {
     try {
-      await updateDoc(doc(db, "worklogs", id), {
-        ...editForm,
-        updatedAt: new Date(),
+      const ref = doc(db, "worklogs", id);
+      await runTransaction(db, async tx => {
+        const current = await tx.get(ref);
+        if (!current.exists()) throw Error("ไม่พบบันทึกงาน");
+        tx.update(ref, indexedWorklogEdit(current.data(), { ...editForm, updatedAt: serverTimestamp() }));
       });
+      window.dispatchEvent(new Event("worklogUpdated"));
 
       // Log action
       await logSystemAction(
         SystemActions.UPDATE_WORKLOG,
-        `Updated worklog: ${editForm.date} ${editForm.time} - ${editForm.recipient}`,
+        `Updated worklog ${id}`,
         user?.uid,
       );
       setEditingId(null);

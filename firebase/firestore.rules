@@ -86,6 +86,24 @@ service cloud.firestore {
              request.resource.data.mainDuty is string;
     }
 
+    // Index metadata is saved on the worklog in the same write as its event.
+    function hasResourceIndex(data) {
+      return data.resourceKeys is list && data.resourceKeys.size() <= 20 &&
+        data.resourceConditionKeys is list && data.resourceKeys.hasAll(data.resourceConditionKeys) &&
+        data.resourceConditionKeys.size() <= data.resourceKeys.size() &&
+        ((data.resourceKeys.size() == 0 && data.resourceRecordedAt == null) ||
+         (data.resourceKeys.size() > 0 && data.resourceRecordedAt is timestamp &&
+          (!(data.get('createdAt', null) is timestamp) || data.resourceRecordedAt == data.createdAt)));
+    }
+
+    function keepsResourceIndex() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'minorTask', 'room', 'equipment', 'comment', 'date', 'time',
+        'equipmentCondition', 'createdAt', 'resourceKeys', 'resourceConditionKeys', 'resourceRecordedAt'
+      ]) || (hasResourceIndex(request.resource.data) &&
+         request.resource.data.get('updatedAt', null) == request.time);
+    }
+
     function isValidWorkLogUpdate() {
       // Update ไม่จำเป็นต้องส่งทุกฟิลด์ — ตรวจเฉพาะฟิลด์ที่ส่งมาว่าถูกชนิด
       // SA Note: v2.3.0-replan — เพิ่ม equipmentCondition/equipmentNote (ITEM-1)
@@ -138,16 +156,15 @@ service cloud.firestore {
       allow read: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
       
       // Create: Staff can only create their own worklog, Admin can create for anyone
-      allow create: if isValidWorkLog() &&
+      allow create: if isValidWorkLog() && hasResourceIndex(request.resource.data) &&
         (isAdmin() || (isStaff() && request.resource.data.employeeId == request.auth.uid));
       
       // Update: Admin anytime (with validation), staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check
-      allow update: if (isAdmin() && isValidWorkLogUpdate()) ||
-        (isStaff() && resource.data.employeeId == request.auth.uid &&
+      allow update: if isValidWorkLogUpdate() && keepsResourceIndex() &&
+        (isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid &&
          resource.data.get('locked', false) != true &&
-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['employeeId', 'createdBy', 'createdAt', 'locked']) &&
-         isValidWorkLogUpdate());
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['employeeId', 'createdBy', 'createdAt', 'locked'])));
       
       // Delete: Admin anytime, staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check

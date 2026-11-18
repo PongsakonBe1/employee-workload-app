@@ -6,6 +6,9 @@ export function validateStagingCalendarRuntime(env) {
       ["FIRESTORE_EMULATOR_HOST", "FIREBASE_AUTH_EMULATOR_HOST", "CALENDAR_TRUSTED_EMULATOR", "FIREBASE_SERVICE_ACCOUNT_JSON", "FIREBASE_CONFIG"].some(key => Boolean(env[key]))) fail();
   const port = Number(env.PORT);
   if (!/^\d+$/.test(env.PORT || "") || !Number.isInteger(port) || port < 1024 || port > 65535 || ![undefined, "0", "1"].includes(env.CALENDAR_SERVER_WRITE) || ![undefined, "0", "1"].includes(env.CALENDAR_SERVER_CONNECTIVITY) || env.CALENDAR_SERVER_CONNECTIVITY === "1" && env.CALENDAR_SERVER_WRITE !== "0") fail();
+  const resourceStatus = env.STAGING_RESOURCE_STATUS === "1";
+  if (![undefined, "0", "1"].includes(env.STAGING_RESOURCE_STATUS) ||
+      resourceStatus && (env.CALENDAR_SERVER_WRITE !== "0" || env.CALENDAR_SERVER_CONNECTIVITY === "1")) fail();
   const origins = (env.CALENDAR_CLIENT_ORIGINS || "").split(",").map(value => value.trim());
   if (!origins.length || origins.length > 3 || new Set(origins).size !== origins.length) fail();
   for (const origin of origins) {
@@ -13,5 +16,5 @@ export function validateStagingCalendarRuntime(env) {
     if (url.origin !== origin || url.username || url.password || url.search || url.hash || url.pathname !== "/" ||
         !(["http://127.0.0.1:4311", "http://localhost:4311", `https://${STAGING_CALENDAR_PROJECT}.web.app`].includes(origin) || url.protocol === "https:" && /^[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com$/.test(url.hostname))) fail();
   }
-  return Object.freeze({ mode: "staging", projectId: STAGING_CALENDAR_PROJECT, port, host: "0.0.0.0", apiOrigin: STAGING_CALENDAR_API_ORIGIN, origins: Object.freeze(origins), writable: env.CALENDAR_SERVER_WRITE === "1", connectivity: env.CALENDAR_SERVER_CONNECTIVITY === "1" });
+  return Object.freeze({ mode: "staging", projectId: STAGING_CALENDAR_PROJECT, port, host: "0.0.0.0", apiOrigin: STAGING_CALENDAR_API_ORIGIN, origins: Object.freeze(origins), writable: env.CALENDAR_SERVER_WRITE === "1", connectivity: env.CALENDAR_SERVER_CONNECTIVITY === "1", resourceStatus });
 }

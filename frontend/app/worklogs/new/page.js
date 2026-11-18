@@ -36,6 +36,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { today, nowTime, getLockTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask } from "../../../lib/worklogUtils";
+import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
 
 const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
@@ -219,7 +220,7 @@ function WorklogRecord({ user }) {
         user?.fullName?.split(" ")?.[0] ||
         "";
 
-      await addDoc(collection(db, "worklogs"), {
+      const worklog = withWorklogResourceIndex({
         date: fields.date,
         time: fields.time,
         recipient: sanitizeInput(fields.recipient),
@@ -234,6 +235,8 @@ function WorklogRecord({ user }) {
         status: "บันทึกแล้ว",
         createdAt: serverTimestamp(),
       });
+      await addDoc(collection(db, "worklogs"), worklog);
+      if (worklog.resourceKeys.length) window.dispatchEvent(new Event("worklogUpdated"));
 
       // Log action
       await logSystemAction(

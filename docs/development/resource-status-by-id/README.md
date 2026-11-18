@@ -1,0 +1,27 @@
+# สถานะห้องและอุปกรณ์ตามรหัส
+
+Branch `codex/resource-status-by-id` จาก `ea5dd69` ให้ API เดิมอ่านเหตุการณ์ล่าสุดตามรหัสห้องหรืออุปกรณ์ สถานะห้องเปิด อุปกรณ์ที่ยังยืมอยู่ และสภาพที่รายงานตอนคืนจึงคงอยู่แม้มีบันทึกประเภทอื่นใหม่เข้ามา
+
+- บันทึก Quick Log, Combo, กรอกเอง, บันทึกแทน และ import บันทึกรหัสค้นหาพร้อมกับ worklog การแก้ผ่านประวัติปรับข้อมูลค้นหาเป็น transaction เดียวกับรายการเดิม การลบหรือ Undo ทำให้ API ใช้เหตุการณ์ล่าสุดที่เหลือของรหัสนั้น
+- Backend ใช้ดัชนีสองชุดสำหรับเหตุการณ์ล่าสุดและสภาพล่าสุดตอนคืน เริ่มฟัง 66 queries แบบ `limit(1)` ร่วมกันต่อ instance และหยุดเมื่อไม่มีคำขอ 6 นาที ตัวเลขนี้เป็นจำนวน queries ที่สร้าง ส่วน billed reads และการใช้หน่วยความจำต้องตรวจที่ staging
+- ผลตอบกลับมีสถานะห้อง สภาพอุปกรณ์ และรหัสของผู้ยืมเฉพาะช่วงที่ยืมอยู่
+- Backfill ใน Emulator ตรวจเวลาเดิมก่อน ถ้า worklog เก่าไม่มี `createdAt` จึงใช้วันที่และเวลาที่บันทึกตามเวลาไทย ตัว backfill ตรวจ revision ก่อนเขียน และ API ตอบ `503` จนกว่าขั้นเตรียมข้อมูลจะรายงาน `resourceStatusIndex/v1` พร้อม
+
+## ตรวจในเครื่อง
+
+- 48 targeted Unit tests และ production-mode export ผ่าน
+- Firebase Emulator ยืนยันว่าห้อง 406 ยังเปิด หูฟัง ICIT12 ยังยืมอยู่ และปลั๊กไฟ ICIT21 ยังเป็นสูญหายหลังเพิ่มบันทึกอื่นที่ใหม่กว่า 503 รายการ Backfill ตรวจ 506 เอกสารและใส่ดัชนีให้ 3 รายการ การรันซ้ำแก้ไข worklog เพิ่ม 0 รายการ
+- ตรวจการแก้รหัสอุปกรณ์ การบันทึกคืนซ้ำ การลบรายการล่าสุดเพื่อ Undo และสิทธิ์อ่านเฉพาะเจ้าของ SDK ใช้บัญชีสังเคราะห์สองบัญชีในการตรวจสถานะร่วม
+- ทดสอบการตั้งค่า HTTP ของ staging ในเครื่อง เมื่อปิด flag route ตอบ `404` เมื่อเปิดและไม่มี session ตอบ `401` ส่วน Calendar writer ยังตอบว่าไม่พร้อมใช้งาน
+- Edge บน desktop และ viewport 390 พิกเซล ผ่านเปิด–ปิดห้อง 401 และยืม–คืนหูฟัง ICIT01 ข้ามบัญชี ตรวจกลับตรงกันทั้งรหัสผู้ยืม จำนวนบันทึก และขอบเขตประวัติเจ้าหน้าที่ [ผล Browser QA](../../../output/playwright/resource-status-by-id/browser-report.json)
+
+ใช้ `node scripts/worklog-workspace-smoke.mjs build --analytics` ตามด้วย `emulators` และ `serve` แล้วรัน `node scripts/verify-worklog-access-emulator.mjs` ใน Emulator ใหม่ สคริปต์เตรียมข้อมูลสังเคราะห์และรัน backfill เฉพาะในเครื่อง จากนั้นใช้ `node scripts/verify-resource-status-browser.cjs <playwright-runtime> <edge-executable>` เพื่อทดสอบ Quick Log สองบัญชี
+
+## เตรียม rollout แบบอ่านอย่างเดียว
+
+1. ใช้ Render `labboy-calendar-staging` และ Firebase project `labboy-workload-app-staging` เดิม ตรวจให้สอง index ของ `worklogs` พร้อมก่อนเปิด route เก็บ `STAGING_RESOURCE_STATUS=0` ระหว่างเตรียม จัดข้อมูลทดสอบสังเคราะห์และ marker ด้วยคำสั่งที่ได้รับอนุมัติสำหรับ staging โดยเฉพาะ
+2. เมื่ออนุมัติแยกสำหรับ push และ deploy แล้ว จึง deploy commit ที่ตรวจบน branch นี้ เปิด `STAGING_RESOURCE_STATUS=1` โดยให้ `CALENDAR_SERVER_WRITE=0` และ `CALENDAR_SERVER_CONNECTIVITY=0` การตั้งค่าปฏิเสธหากเปิดพร้อม writer หรือ probe
+3. ตรวจ `GET /health` ตอบ `200` และ `GET /api/resource-status` ตอบ `401` เมื่อยังไม่เข้าสู่ระบบ จากนั้นใช้บัญชีทดสอบ staging ที่ active อ่านสถานะสังเคราะห์ให้ตรงกับรายการที่เตรียม และตรวจว่า Calendar writer ยังปิด
+4. หากต้องย้อนการทดลอง ให้ปิด flag ของ route กลับเป็น `0` การติดตั้งดัชนีและตั้งต้นข้อมูล production แยกตรวจและอนุมัติอีกครั้ง ก่อนใช้กฎ write ชุดนี้ต้องให้ frontend รุ่นที่เขียนดัชนีพร้อมและตรวจ worklog เก่าที่แยกรหัสหรือวันเวลาไม่ได้
+
+สำหรับ smoke บน staging ใช้เพียง 3 worklogs สังเคราะห์ ได้แก่ ห้อง 406 เปิดอยู่ หูฟัง ICIT12 ยืมอยู่ และปลั๊กไฟ ICIT21 คืนโดยรายงานว่าสูญหาย ใช้ snapshot ที่ผ่านการตรวจใน Emulator เทียบผล และตั้ง marker หลังตรวจข้อมูลครบ ส่วนการจำลองบันทึกทั่วไป 503 รายการเก็บไว้ทดสอบในเครื่อง

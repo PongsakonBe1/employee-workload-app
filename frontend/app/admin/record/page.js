@@ -43,6 +43,7 @@ import {
 import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
 import { today, nowTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask, dispatchEquipmentStatusEvents } from "../../../lib/worklogUtils";
+import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { isAdminRole } from "../../../lib/authUtils";
 import { useLoadingTimeout } from "../../../hooks/useLoadingTimeout";
 import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
@@ -241,7 +242,7 @@ export default function AdminRecordPage() {
         selectedStaff?.fullName?.split(" ")?.[0] ||
         "";
 
-      const worklogData = {
+      const worklogData = withWorklogResourceIndex({
         date: form.date,
         time: form.time,
         employeeId: form.employeeId,
@@ -260,7 +261,7 @@ export default function AdminRecordPage() {
         createdByEmail: user.email,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      };
+      });
 
       await addDoc(collection(db, "worklogs"), worklogData);
 
@@ -280,6 +281,7 @@ export default function AdminRecordPage() {
       
       // Trigger refresh ของ RoomEquipmentStatus หลังบันทึกปกติ
       dispatchEquipmentStatusEvents(form.minorTask, form.comment);
+      if (worklogData.resourceKeys.length) window.dispatchEvent(new Event("worklogUpdated"));
       
       setTimeout(() => {
         setSuccess(false);

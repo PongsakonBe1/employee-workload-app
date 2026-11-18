@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../../../lib/firebase";
 import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
+import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { NotificationBell } from "../../../components/NotificationBell";
 import {
   CheckCircle,
@@ -617,7 +618,7 @@ export default function SystemManagementPage() {
         importPreview.map(async (row) => {
           try {
             const uid = usersMap[row.employeeDisplayName] || "";
-            await addDoc(collection(db, "worklogs"), {
+            await addDoc(collection(db, "worklogs"), withWorklogResourceIndex({
               date: row.date,
               time: row.time,
               employeeId: uid,
@@ -632,7 +633,7 @@ export default function SystemManagementPage() {
               createdBy: user.uid,
               createdByName: user.displayName || user.email,
               source: "import",
-            });
+            }));
             success++;
           } catch {
             failed++;

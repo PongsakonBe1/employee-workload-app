@@ -5,19 +5,22 @@ import { TRUSTED_CALENDAR_PROJECT, TRUSTED_CALENDAR_ORIGIN, TRUSTED_CALENDAR_POR
 import { CALENDAR_SERVER_PROTOCOL } from "../../frontend/lib/calendarServerProtocol.js";
 import { createCalendarLimits } from "../../backend/src/calendar/limits.js";
 const errorResponse = (res, status, code, message) => res.status(status).json({ code, message });
-export function createTrustedCalendarApp({ auth, execute, probe, runtime = { mode: "emulator", projectId: TRUSTED_CALENDAR_PROJECT, apiOrigin: `http://127.0.0.1:${TRUSTED_CALENDAR_PORT}`, origins: [TRUSTED_CALENDAR_ORIGIN], writable: true }, limits = createCalendarLimits(runtime.mode === "emulator" ? { globalLimit: 600, userLimit: 120 } : {}), log = () => {} }) {
+export function createTrustedCalendarApp({ auth, execute, probe, resourceStatus, runtime = { mode: "emulator", projectId: TRUSTED_CALENDAR_PROJECT, apiOrigin: `http://127.0.0.1:${TRUSTED_CALENDAR_PORT}`, origins: [TRUSTED_CALENDAR_ORIGIN], writable: true }, limits = createCalendarLimits(runtime.mode === "emulator" ? { globalLimit: 600, userLimit: 120 } : {}), log = () => {} }) {
   if (runtime.connectivity && runtime.writable) throw new Error("Connectivity cannot run alongside writes");
+  if (runtime.resourceStatus && (runtime.connectivity || runtime.writable || typeof resourceStatus !== "function")) throw new Error("Staging resource status must be read-only");
   const app = express();app.disable("x-powered-by");app.use(helmet());
   app.use((req, res, next) => {
     res.set("Cache-Control", "no-store");
     const host = new URL(runtime.apiOrigin).host;
     if (req.headers.host !== host || req.headers.origin && !runtime.origins.includes(req.headers.origin)) return errorResponse(res, 403, "permission-denied", "Origin ไม่ตรงกับพื้นที่ทดลอง");
     if (req.headers.origin) res.set("Access-Control-Allow-Origin", req.headers.origin);
-    res.set("Vary", "Origin");res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.set("Vary", "Origin");res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.set("Access-Control-Allow-Methods", runtime.resourceStatus && req.path === "/api/resource-status" ? "GET, OPTIONS" : "POST, OPTIONS");
     if (req.method === "OPTIONS") return res.sendStatus(204);
     next();
   });
   app.get("/health", (_req, res) => res.json({ ok: true, projectId: runtime.projectId, mode: runtime.mode, protocol: CALENDAR_SERVER_PROTOCOL, writesEnabled: runtime.writable, connectivityEnabled: runtime.connectivity === true, emulator: runtime.mode === "emulator" }));
+  if (runtime.resourceStatus) app.get("/api/resource-status", resourceStatus);
   // The browser sends plain JSON. Reject encoded bodies before creating a decompressor (GHSA-27r3-jxmh-p828).
   app.use(express.json({ limit: "256kb", strict: true, inflate: false }));
   for (const kind of ["create", "mutate", "connectivity"]) app.post(`/api/calendar/${kind}`, async (req, res, next) => {

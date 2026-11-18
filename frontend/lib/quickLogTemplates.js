@@ -1,4 +1,5 @@
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from "firebase/firestore";
+import { withWorklogResourceIndex } from "./resourceStatusIndex";
 import { db } from "./firebase";
 import { templateCreateFields } from "./templatePayload";
 
@@ -193,7 +194,7 @@ export async function logFromTemplate(templateId, userId, extraData) {
       createdAt: serverTimestamp()
     };
     
-    const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+    const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
     
     // บันทึกการใช้ template
     await recordTemplateUsage(templateId);
@@ -254,7 +255,7 @@ export async function logFromComboTemplate(templateId, userId, extraData) {
         createdAt: serverTimestamp()
       };
       
-      const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+      const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
       return worklogRef.id;
     });
     
@@ -325,7 +326,7 @@ export async function logFromComboCheckbox(templateId, userId, selectedItems, ex
         createdAt: serverTimestamp()
       };
 
-      const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+      const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
       return worklogRef.id;
     });
 

@@ -33,5 +33,7 @@ services:
         value: "0"
       - key: CALENDAR_SERVER_CONNECTIVITY
         value: "0"
+      - key: STAGING_RESOURCE_STATUS
+        value: "0"
 # The operator must supply the staging-only secret file separately after explicit IAM/key approval.
 # Never paste its contents into this file, source control, logs, screenshots or chat.

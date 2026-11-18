@@ -1,6 +1,7 @@
 // Preparation entry: validation first, lazy staging SDK, writes disabled by default. No dotenv/FCM/MongoDB.
 import { validateStagingCalendarRuntime } from "../../backend/src/calendar/stagingConfig.js";
 import { createTrustedCalendarApp } from "./app.js";
+import { createResourceStatusHandler } from "../../backend/src/services/resourceStatusHandler.js";
 let runtime;
 try { runtime = validateStagingCalendarRuntime(process.env); }
 catch { console.error("Staging calendar configuration rejected");process.exit(1); }
@@ -20,7 +21,11 @@ async function sdk() {
   })();
   return sdkPromise;
 }
-const app = createTrustedCalendarApp({ runtime, auth: { verifyIdToken: async (...args) => (await sdk()).auth.verifyIdToken(...args) }, execute: async (...args) => (await sdk()).execute(...args), probe: async uid => (await sdk()).probe(uid), log: event => console.log(JSON.stringify(event)) });
+const resourceStatus = runtime.resourceStatus ? createResourceStatusHandler(async () => {
+  const current = await sdk();
+  return { auth: () => current.auth, firestore: () => current.db };
+}) : undefined;
+const app = createTrustedCalendarApp({ runtime, resourceStatus, auth: { verifyIdToken: async (...args) => (await sdk()).auth.verifyIdToken(...args) }, execute: async (...args) => (await sdk()).execute(...args), probe: async uid => (await sdk()).probe(uid), log: event => console.log(JSON.stringify(event)) });
 const server = app.listen(runtime.port, runtime.host, () => console.log(JSON.stringify({ event: "calendar-start", mode: runtime.mode, writesEnabled: runtime.writable })));
 async function stop() {
   await new Promise(resolve => server.close(resolve));
