@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "contextHash": "fbc37be6e2148afb9caba350a193de7a6dc7e671a151c21791a0f9ecdcdeb6d7",
+  "completed": 5,
+  "revision": 22,
+  "gateDigest": "4d0bbe7f667c5f6e2fb6b4ad8f468314b1e67e80e68dff770dc8f8b4d57dd77b",
+  "schedules": [
+    {
+      "reference": "classroomSchedules/cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+      "version": 2,
+      "active": false,
+      "createdAt": "2026-11-18T15:35:53.647Z",
+      "createTime": "2026-11-18T15:35:53.711369Z",
+      "digest": "de9d593c5691db93b85cd4cc1c20906d8a434a6e86588282293c4f698b88bc7b"
+    },
+    {
+      "reference": "classroomSchedules/cal-60748f3e337fe4ec2a03a3ab41e329acbf577456fa1ac5de28fec3fa02010738",
+      "version": 0,
+      "active": true,
+      "createdAt": "2026-11-18T15:35:55.477Z",
+      "createTime": "2026-11-18T15:35:55.488857Z",
+      "digest": "622b739a5d0e3295079789b0663e2fd8695a6d19fcf6887e5d0979c4cc0360e3"
+    },
+    {
+      "reference": "classroomSchedules/cal-aafeee83e5fddea9d9c5bba4f8063d33aab4be04fa3abc8b8f992bbd53a4308c",
+      "version": 0,
+      "active": true,
+      "createdAt": "2026-11-18T15:35:55.477Z",
+      "createTime": "2026-11-18T15:35:55.488857Z",
+      "digest": "543f68778f140a4d8621c488931ca6b7b8f14eeca1c1f8b44c0388922d85dc6b"
+    },
+    {
+      "reference": "dlExamSchedules/cal-57fd032622f7b537e9e13f278369a9c434f3577df6d37e1bbc2f48e38249f38a",
+      "version": 0,
+      "active": true,
+      "createdAt": "2026-11-18T15:35:56.150Z",
+      "createTime": "2026-11-18T15:35:56.170096Z",
+      "digest": "c1b3f748e959b62f05c857a34289926279fbe3e1a1902f8a3885b26ae41cbc98"
+    },
+    {
+      "reference": "dlExamSchedules/cal-bdf367ee6f06b56c0e70744fcb56b799bc38f71c3f1ffb20b16f4b98ca6a2ef1",
+      "version": 0,
+      "active": true,
+      "createdAt": "2026-11-18T15:35:56.150Z",
+      "createTime": "2026-11-18T15:35:56.170096Z",
+      "digest": "51528276320b78ba80eaed9f779de6a18c098fbb547f432bd5bc9271fe2eab27"
+    }
+  ],
+  "receipts": [
+    {
+      "reference": "calendarWriteOperations/op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b",
+      "digest": "cacc8f85918a164a13cc6297dcf7ae6e97547d491695bc4734c5896fde44030d"
+    },
+    {
+      "reference": "calendarWriteOperations/op-6df382f40575f5264f5bc8c4bc400460e73f29f06e77bf5b52141ae18c6c69ec",
+      "digest": "a3a7ec1628b0c1aadeb119feaf508761cb69a574d71368ece93d9b5e20ac0021"
+    },
+    {
+      "reference": "calendarWriteOperations/op-7a2033d3505e5c8424ce3c86b654f7e725e35d730a61069ec06046a62592c76b",
+      "digest": "e6327f8ffa00a7d5447dc88e4cb5dd656af23da1f13bf5ac23cfff5987633469"
+    },
+    {
+      "reference": "calendarWriteOperations/op-7aabd48c8c9057213bcbb2541e1612f03cb4b746dd871f5c8776aebd031a6198",
+      "digest": "4f23b967a41422c903c843fd7c0bb8556457bf95a3a335ef9d0facae13b9c4ed"
+    },
+    {
+      "reference": "calendarWriteOperations/op-e8c2dd699d6ff9465e291d35a5d239f4f01237b97046ce4539b397f48473b4ac",
+      "digest": "a7ddeda3223ba4a6090b05ae7463684bec7f330afcdfbf2e28027e2fd94213ab"
+    }
+  ],
+  "profileVersions": {
+    "staff": "2dfa5fc23918e5dc76ca2acf3b6c383ee0fe08477c924f05abb8fcad3347f76e",
+    "superadmin": "9e1fc7fffbbccf080a70881adb1c3864d353b82471abf15e48ea7107c1bd388c"
+  },
+  "protectedDigests": {
+    "users": "d3aca231bab4c0d56afcfffe3522e385abd92ebff5e86051d16f200a59aa2f28",
+    "classroomSchedules": "baee440495299fa436b4169d89ac9d3a1f2123a7b2a75696559c5d6a3a3fb894",
+    "dlExamSchedules": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "cloudRecordsWritten": 0,
+  "privilegedAuditIsNotRulesEvidence": true,
+  "checkedAt": "2026-11-18T15:37:19.004Z",
+  "attempt": 8,
+  "beforeCutover": false,
+  "auditWindow": "writer-smoke",
+  "deployedRulesHash": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "candidateRulesHash": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "readApiRequests": 7,
+  "countsAreNotBilledReads": true,
+  "productionAccessed": false,
+  "rulesChanged": false,
+  "profilesChanged": false
+}

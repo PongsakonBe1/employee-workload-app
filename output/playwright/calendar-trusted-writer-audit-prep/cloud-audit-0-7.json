@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "contextHash": "fbc37be6e2148afb9caba350a193de7a6dc7e671a151c21791a0f9ecdcdeb6d7",
+  "completed": 0,
+  "revision": 17,
+  "gateDigest": "16cff0fc18b8fe5754bfc38dedab238d21f901eac5b8b9ac62dbb4fadf722157",
+  "schedules": [],
+  "receipts": [],
+  "profileVersions": {
+    "staff": "2dfa5fc23918e5dc76ca2acf3b6c383ee0fe08477c924f05abb8fcad3347f76e",
+    "superadmin": "9e1fc7fffbbccf080a70881adb1c3864d353b82471abf15e48ea7107c1bd388c"
+  },
+  "protectedDigests": {
+    "users": "d3aca231bab4c0d56afcfffe3522e385abd92ebff5e86051d16f200a59aa2f28",
+    "classroomSchedules": "baee440495299fa436b4169d89ac9d3a1f2123a7b2a75696559c5d6a3a3fb894",
+    "dlExamSchedules": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "cloudRecordsWritten": 0,
+  "privilegedAuditIsNotRulesEvidence": true,
+  "checkedAt": "2026-11-18T15:34:12.895Z",
+  "attempt": 7,
+  "beforeCutover": false,
+  "auditWindow": "writer-smoke",
+  "deployedRulesHash": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "candidateRulesHash": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+  "readApiRequests": 7,
+  "countsAreNotBilledReads": true,
+  "productionAccessed": false,
+  "rulesChanged": false,
+  "profilesChanged": false
+}

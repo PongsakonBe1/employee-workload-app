@@ -2,6 +2,10 @@
 
 ชุดนี้ใช้ผล Rules cutover ที่ผ่านแล้วและลดการเรียก API จาก 13 เหลือ 8 ครั้ง ใช้ payload ที่ตรึงจากชุดเดิมทุกครั้ง การทดสอบ PDF และ DL ใช้ผลจากหน้าตรวจนำเข้าที่ผ่าน staging มาแล้ว เพื่อทดสอบ backend writer โดยตรง เจ้าของงานอนุมัติ [manifest](review.json) แล้ว
 
+**ผลบน staging ผ่าน 8/8 เมื่อ 18 พ.ย. 2569** Staff ได้ 403 และชุดตารางชนได้ 400 การส่งคาบกรอกเองซ้ำคืน `repeated=true` โดยเพิ่ม 0 รายการ เพิ่มเอง ผลนำเข้า PDF/DL แก้เวลา และยกเลิกผ่านครบ [Audit หลังปิด writer](../../../output/playwright/calendar-trusted-writer-audit-prep/cloud-audit-5-8.json) ยืนยัน gate 17 → 22, ตารางใหม่ 5 รายการ (4 active และเก็บคาบที่ยกเลิกไว้ 1 รายการ), receipts 5 รายการ และข้อมูลในขอบเขตตรวจตรง baseline
+
+คืน writer และ connectivity เป็น 0 แล้ว ยืนยันจาก deploy Live และ public health บน Render Free ที่ commit `2aa1bd2` ใช้คำขอ API 8 ครั้งและ audit 14 คำขออ่านตามวงที่อนุมัติ ระหว่างเตรียมฟอร์ม เมนู Render ทำให้ deploy revision เดิมซ้ำหนึ่งครั้งขณะ writer ยังปิด ดู [บันทึกดำเนินการ](../../../output/playwright/calendar-staging-writer-smoke/execution-progress.json)
+
 | คำขอ | ผลที่ต้องเห็น |
 |---|---|
 | Staff ส่ง payload เดียวกับคาบกรอกเอง | HTTP 403 `permission-denied` |
