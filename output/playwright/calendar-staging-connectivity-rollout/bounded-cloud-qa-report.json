@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T09:29:39.222Z",
+  "scope": "approved bounded staging connectivity rollout",
+  "sourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "qaDeployId": "dep-dbumss2fngtc73d9bi90",
+  "restoreDeployId": "dep-dbumusijnfac73doa1f0",
+  "projectId": "labboy-workload-app-staging",
+  "anonymousProbeRequests": 1,
+  "anonymousResult": 401,
+  "authenticatedProbeRequests": 2,
+  "signedProbeResults": [
+    {
+      "number": 1,
+      "reservedAt": "2026-11-18T09:25:43.977Z",
+      "via": "Calendar UI",
+      "actor": "existing-approved-superadmin",
+      "status": "verified-in-ui",
+      "healthGetReserved": true,
+      "verifiedAt": "2026-11-18T09:26:08.173Z"
+    },
+    {
+      "number": 2,
+      "reservedAt": "2026-11-18T09:26:08.174Z",
+      "via": "Calendar UI",
+      "actor": "existing-approved-superadmin",
+      "status": "verified-in-ui",
+      "healthGetReserved": true,
+      "verifiedAt": "2026-11-18T09:26:24.493Z"
+    }
+  ],
+  "staffBrowserControl": {
+    "verifiedAt": "2026-11-18T09:28:48.646Z",
+    "visibleRole": "Staff",
+    "calendarReadSucceeded": true,
+    "classroomCount": 32,
+    "dlExamCount": 18,
+    "connectivityButtonDisabled": true,
+    "createButtonDisabled": true,
+    "importButtonDisabled": true,
+    "authenticatedHttpProbeRequests": 0
+  },
+  "healthGetRequests": 10,
+  "healthCounterIncludesBlockedDnsAttempt": true,
+  "finalPeer": {
+    "ok": true,
+    "projectId": "labboy-workload-app-staging",
+    "mode": "staging",
+    "protocol": 1,
+    "writesEnabled": false,
+    "connectivityEnabled": false,
+    "emulator": false
+  },
+  "cloudDataWrites": 0,
+  "credentialsReadByAgent": false,
+  "productionChanged": false,
+  "billingChanged": false,
+  "iamChanged": false,
+  "rulesChanged": false,
+  "profilesChanged": false,
+  "liveTokenRevocationTested": false,
+  "staffHttpEndpointDenialTestedInCloud": false,
+  "negativeAuthAndCapabilityChecks": "existing Emulator evidence; no cloud role or token changes",
+  "frontendSdkReadsSeparateFromProbeBounds": true,
+  "billedReadsGuaranteed": false
+}

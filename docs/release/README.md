@@ -40,8 +40,8 @@ Release นี้คือ **เว็บแอป UI ที่รับรอ�
 | ขอบเขต | สิ่งที่ผ่านแล้ว | ไม่ได้ยืนยันอะไร |
 |---|---|---|
 | Calendar local runtime | SDK14 clean install, Unit 671 tests, Emulator SIT, compatibility build | ไม่ใช่ full app production/UAT |
-| Calendar Render staging | rollout revision `2aa1bd2` Live บน Free, HTTPS/CORS และ anonymous 401 ผ่าน; คืน writer/probe ปิดและยืนยัน health แล้ว | เจ้าของเพิ่ม Secret File แล้ว; รอ Google session เพื่อ signed probe ยังไม่ยืนยัน Firebase connection ของ server |
-| Staging identity | service account + custom role 7 permissions, binding เดียว; metadata หลัง owner handoff พบ enabled user-managed key 1 ตัว และ billing=false | ยังไม่ทดสอบ effective access ด้วย credential ของ identity นี้ ไม่เปิด key material |
+| Calendar Render staging | rollout revision `2aa1bd2` Live บน Free; anonymous 401, signed probe 2 ครั้ง และ Staff UI control ผ่าน; คืน writer/probe ปิดและยืนยัน health แล้ว | รอผู้ใช้ตรวจรับ bounded connectivity QA; trusted writer cloud QA/negative-auth coverage ที่เหลือยังไม่เสร็จ |
+| Staging identity | service account + custom role 7 permissions, binding เดียว; owner เพิ่ม enabled user-managed key 1 ตัว, billing=false; server signed probe อ่าน staging ผ่าน | พิสูจน์เฉพาะ access ใน bounded probe ไม่รับรองทุก permission/collection และไม่เปิด key material |
 | UI previews | หลาย flow ตรวจด้วย synthetic ledger และ review reference แล้ว | preview/fixture ไม่เท่ากับ persistent data integration |
 | Production | รอบนี้ไม่ได้ deploy หรือเปลี่ยนข้อมูล/สิทธิ์ production | ต้องทำ baseline/schema/index/role/rollback review ก่อน cutover |
 
@@ -98,7 +98,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 
 ### G1 — Calendar/Auth ทำงานจริงใน staging
 
-- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว ผู้ใช้อนุมัติ [rollout manifest](../../deploy/calendar-staging/connectivity-rollout.review.json), push/deploy `2aa1bd2` และ owner เพิ่ม credentials แล้ว Anonymous probe ได้ 401 ตามคาดและคืน probe ปิดพร้อมยืนยัน health ยังรอเลือกบัญชี Google เพื่อ signed Cloud QA (ใช้ 0/2 ครั้ง) ตาม [execution record](../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) จึงยังไม่ผ่าน gate นี้
+- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) ตรวจด้วย Emulator แล้ว และ [bounded Cloud QA](../../output/playwright/calendar-staging-connectivity-rollout/bounded-cloud-qa-report.json) ผ่านตาม [rollout manifest](../../deploy/calendar-staging/connectivity-rollout.review.json): anonymous 1 ครั้งได้ 401, Superadmin signed 2 ครั้งสำเร็จ, Staff อ่านได้แต่ปุ่ม probe/เพิ่ม/นำเข้าปิด และคืน flags 0/0 พร้อม health ยืนยัน รอผู้ใช้ตรวจรับและทบทวน revocation/negative-auth coverage ที่เหลือกับ AUTH gate โดยไม่อ้างว่าทดสอบ revoked token หรือ Staff HTTP denial บน cloud แล้ว
 - [ ] **CAL-WRITE** trusted server ผ่าน approved synthetic cloud manifest: manual/PDF/DL, edit/soft-cancel, duplicate/replay, lost response/read-back failure, concurrency/atomic failure, room/proctor conflicts; จำนวนและ IDs ถูกตรวจ ไม่เขียนนอกชุดเพื่อแก้ผลทดสอบ
 - [ ] **CAL-CUTOVER** เตรียม Rules ที่ปิด direct client writes ทุกทางที่เกี่ยวข้อง ตรวจ hash/ผลกระทบ/คำขอค้าง/reader queries แล้วอนุมัติ cutover ก่อน trusted writer; รักษา collection อื่นของ production ไม่ deploy staging prototype ทั้งไฟล์ทับ production
 - [ ] **AUTH** Anonymous/pending/inactive/Staff/Admin-no-capability/Admin-writer/Superadmin ถูก allow/deny ตาม contract ทั้งเรียกตรง backend/SDK และ UI; ไม่เปลี่ยน profile/role เพื่อให้เทสต์ผ่านโดยไม่อนุมัติ

@@ -14,14 +14,14 @@
   "writerEnabled": false,
   "probeEnabled": false,
   "anonymousProbeRequests": 1,
-  "authenticatedProbeRequests": 0,
+  "authenticatedProbeRequests": 2,
   "privateKeyMaterialRead": false,
   "cloudDataWrites": 0,
   "productionChanged": false,
   "blueprintSyncApproved": true,
   "deployId": "dep-dbug3emc6qcc73dlok6g",
   "deployDurationSeconds": 96,
-  "healthGetRequests": 5,
+  "healthGetRequests": 10,
   "initialHttpsPreflightPassed": true,
   "healthPeer": {
     "ok": true,
@@ -34,7 +34,7 @@
   },
   "keyMetadataObservedAt": "2026-11-18T01:41:21.856Z",
   "stagingUserManagedKeysBeforeHandoff": 0,
-  "status": "paused-probe-off-awaiting-google-selection",
+  "status": "bounded-cloud-qa-passed-awaiting-review",
   "autoDeployOffObserved": true,
   "blueprintAutoSyncOffObserved": true,
   "renderPlanObserved": "free",
@@ -57,7 +57,7 @@
   "iamChanged": false,
   "rulesChanged": false,
   "profilesChanged": false,
-  "cloudQaComplete": false,
+  "cloudQaComplete": true,
   "noCostConstraint": {
     "requiredByOwner": true,
     "stagingBillingEnabled": false,
@@ -97,10 +97,12 @@
   "anonymousProbePassed": true,
   "googlePopup": {
     "account": "existing-approved-superadmin",
-    "userSelectionRequired": true,
+    "userSelectionRequired": false,
     "technicalReason": "Popup window minimized; pointer action timed out and Enter left account chooser unchanged",
     "popupTabId": "28676944",
-    "calendarTabId": "28676941"
+    "calendarTabId": "28676941",
+    "completedByOwner": true,
+    "superadminVisible": true
   },
   "probeOffRestoreRequested": true,
   "restoreRequestedAt": "2026-11-18T04:43:02.803Z",
@@ -109,5 +111,56 @@
     "connectivity": "0"
   },
   "probeOffRestoreVerified": true,
-  "restoreDeployId": "dep-dbuipf49v7es738mnor0"
+  "restoreDeployId": "dep-dbumusijnfac73doa1f0",
+  "signedQaResume": {
+    "startedAt": "2026-11-18T09:23:15.266Z",
+    "sourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+    "writerFlag": "0",
+    "probeFlag": "1",
+    "authenticatedRequestLimit": 2,
+    "deployId": "dep-dbumss2fngtc73d9bi90",
+    "deployLive": true,
+    "healthRequestReservedAt": "2026-11-18T09:25:19.302Z",
+    "sandboxHealthAttempt": "DNS blocked; counted conservatively",
+    "healthVerifiedAt": "2026-11-18T09:25:35.621Z",
+    "authenticatedProbeRequests": 2,
+    "restoreDeployId": "dep-dbumusijnfac73doa1f0",
+    "restoreFlagsSaved": {
+      "writer": "0",
+      "connectivity": "0"
+    },
+    "restoreVerifiedAt": "2026-11-18T09:29:39.222Z"
+  },
+  "signedProbeAttempts": [
+    {
+      "number": 1,
+      "reservedAt": "2026-11-18T09:25:43.977Z",
+      "via": "Calendar UI",
+      "actor": "existing-approved-superadmin",
+      "status": "verified-in-ui",
+      "healthGetReserved": true,
+      "verifiedAt": "2026-11-18T09:26:08.173Z"
+    },
+    {
+      "number": 2,
+      "reservedAt": "2026-11-18T09:26:08.174Z",
+      "via": "Calendar UI",
+      "actor": "existing-approved-superadmin",
+      "status": "verified-in-ui",
+      "healthGetReserved": true,
+      "verifiedAt": "2026-11-18T09:26:24.493Z"
+    }
+  ],
+  "signedFirebaseConnectionVerified": true,
+  "staffBrowserControl": {
+    "verifiedAt": "2026-11-18T09:28:48.646Z",
+    "visibleRole": "Staff",
+    "calendarReadSucceeded": true,
+    "classroomCount": 32,
+    "dlExamCount": 18,
+    "connectivityButtonDisabled": true,
+    "createButtonDisabled": true,
+    "importButtonDisabled": true,
+    "authenticatedHttpProbeRequests": 0
+  }
 }

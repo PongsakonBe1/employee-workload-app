@@ -2,7 +2,7 @@
 
 วันที่ 18 พฤศจิกายน 2569 · branch `codex/calendar-staging-connectivity-rollout` จาก `786bfb8`
 
-**สถานะดำเนินการ: เจ้าของเพิ่ม credentials แล้ว, deploy สำเร็จ, anonymous probe ผ่าน และคืน writer/probe เป็นปิดพร้อมยืนยัน health แล้ว ยังรอเลือกบัญชี Google สำหรับ signed Cloud QA** [manifest ที่ตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json) คงไฟล์ snapshot เดิมเพื่อรักษา digest การอนุมัติจริงและสถานะดำเนินการเก็บใน [execution record](../../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) แยกจาก snapshot ที่เดิมยังระบุ pending
+**สถานะดำเนินการ: bounded Cloud QA ผ่านตาม manifest แล้ว รอผู้ใช้ตรวจรับ** Anonymous ถูกปฏิเสธ, Superadmin ตรวจ signed API ผ่าน 2 ครั้ง, Staff อ่านปฏิทินได้แต่ปุ่ม probe/เพิ่ม/นำเข้าปิด และคืน writer/probe เป็นปิดพร้อมยืนยัน health แล้ว [manifest ที่ตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json) คงไฟล์ snapshot เดิมเพื่อรักษา digest การอนุมัติจริงและสถานะดำเนินการเก็บใน [execution record](../../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) แยกจาก snapshot ที่เดิมยังระบุ pending
 
 ## ผลดำเนินการหลังอนุมัติ
 
@@ -17,7 +17,20 @@
 
 อัปเดต credentials: [IAM metadata](../../../output/playwright/calendar-staging-connectivity-rollout/owner-key-metadata.json) ยืนยัน staging มี enabled key 1 ตัว และ billingEnabled=false ช่วงแรก Secret Files ยังไม่ปรากฏหลัง reload ต่อมาเจ้าของเพิ่มใหม่และเห็นไฟล์ที่ใช้ชื่อดาวน์โหลด จึงเปลี่ยนเฉพาะชื่อเป็น `calendar-staging-admin.json` โดยไม่เปิด Contents และยืนยันว่าชื่อคงอยู่หลัง reload ไม่สร้าง key เพิ่ม
 
-รอบ QA: deploy `dep-dbuikbifngtc73ctll30` ของ `2aa1bd2` เป็น Live และ health ยืนยัน probe=true, writer=false [anonymous probe](../../../output/playwright/calendar-staging-connectivity-rollout/anonymous-probe-report.json) 1 ครั้งได้ 401 ตามคาด ไม่ได้ทดสอบ signed probe ยังติดการเลือกบัญชี Google ใน popup ที่ถูกย่อ เครื่องมือ pointer/Enter ไม่ทำให้หน้าเลือกบัญชีเปลี่ยน จึงส่ง handoff ให้เจ้าของเลือก Superadmin เดิม ระหว่างรอคืน flags เป็น 0/0 และ deploy revision เดิม `dep-dbuipf49v7es738mnor0` เป็น Live แล้ว [ผลตรวจ HTTPS หลังคืนค่า](../../../output/playwright/calendar-staging-connectivity-rollout/probe-off-restore-report.json) เวลา 11:44 น. ไทย ยืนยัน connectivity=false และ writes=false ใช้ health GET รวม 5/30 ครั้ง, anonymous 1/1 และ authenticated 0/2 ครั้ง ไม่ถือว่าการตรวจ Firebase ผ่าน เมื่อ session พร้อมจึงเปิด probe เฉพาะรอบ QA ที่อนุมัติและคืนปิดเมื่อจบ
+รอบ QA แรก: deploy `dep-dbuikbifngtc73ctll30` ของ `2aa1bd2` เป็น Live และ health ยืนยัน probe=true, writer=false [anonymous probe](../../../output/playwright/calendar-staging-connectivity-rollout/anonymous-probe-report.json) 1 ครั้งได้ 401 ตามคาด ช่วงนั้นยังติด Google popup จึงคืน flags เป็น 0/0 และ deploy revision เดิม `dep-dbuipf49v7es738mnor0` เป็น Live [ผลตรวจ HTTPS หลังคืนค่ารอบแรก](../../../output/playwright/calendar-staging-connectivity-rollout/probe-off-restore-report.json) เวลา 11:44 น. ไทย เป็นหลักฐานการหยุดรออย่างปลอดภัย ไม่ใช่ผล QA สุดท้าย
+
+## ผล Cloud QA หลังเจ้าของเลือกบัญชี
+
+- เปิด probe=1 / writer=0 และ deploy `dep-dbumss2fngtc73d9bi90` จาก revision เดิม `2aa1bd2`; ตรวจ health ตรง project staging, protocol 1 และไม่ใช่ Emulator ก่อนส่ง token ผ่าน UI
+- Superadmin บน `/calendar` กดตรวจผ่าน UI 2 ครั้ง ทั้งสองครั้งขึ้น “ตรวจ Auth, สิทธิ์ และการอ่านปฏิทินผ่าน API สำเร็จ · ไม่บันทึกข้อมูล” และปุ่มเพิ่ม/นำเข้าปิดตลอด ไม่อ่านหรือคัดลอก token ออกจาก browser ไม่ส่ง probe เพิ่มเมื่อใช้ครบ 2/2 ครั้ง
+- สลับ Google session เป็น Staff เดิม เมนูบัญชีแสดง Staff และอ่าน staging สำเร็จ 32 ตารางเรียน / 18 รอบสอบ ปุ่ม probe/เพิ่ม/นำเข้าปิด ไม่ส่ง authenticated HTTP probe ด้วย Staff
+- คืน probe=0 / writer=0 และ deploy `dep-dbumusijnfac73doa1f0` เป็น Live; GET `/health` ยืนยัน connectivity=false และ writes=false หลัง deploy ไม่อาศัยเพียงค่าที่บันทึกใน Dashboard
+- วงคำขอรวม: anonymous 1/1, signed 2/2 และ health counter 10/30 โดยนับความพยายามที่ sandbox ปิด DNS ไว้ด้วยอย่างเผื่อขอบเขต Frontend SDK อ่านข้อมูลตาม reader เดิมแยกจาก probe ไม่ใช่จำนวน billed reads
+- ไม่มี cloud data writes, create/mutate requests, IAM/Rules/profile/production/billing changes หรือการสร้าง key เพิ่ม ไม่อ่าน private key material ไม่รัน Unit/build ใหม่เพราะไม่มี runtime source change
+
+ผลรวมและข้อจำกัดอยู่ใน [bounded Cloud QA report](../../../output/playwright/calendar-staging-connectivity-rollout/bounded-cloud-qa-report.json) พร้อม [ภาพ signed probe ผ่าน](../../../output/playwright/calendar-staging-connectivity-rollout/signed-connectivity-verified.jpg), [Staff ปุ่มปิด](../../../output/playwright/calendar-staging-connectivity-rollout/staff-readonly-connectivity-disabled.jpg) และ [deploy คืน probe-off สุดท้าย](../../../output/playwright/calendar-staging-connectivity-rollout/render-probe-off-final.jpg)
+
+**ขอบเขตการรับรอง:** ผ่านการเชื่อม Firebase ผ่าน credential ของ server และ signed user ใน staging ตาม manifest ไม่ใช่ UAT ทั้งระบบ ไม่ใช่ trusted writer cloud QA และไม่ใช่การตรวจ revoked token/ทุกบทบาทบน cloud กรณี Staff endpoint denial และ capability revocation มีหลักฐาน Emulator เดิม รอบนี้ไม่เปลี่ยน role/profile หรือ revoke session เพื่อทดสอบเพิ่ม การปิด probe ไม่ได้เพิกถอน key หรือปิด direct SDK writers ทั้งระบบ
 
 หลักฐาน Live: [ภาพ Dashboard แรก](../../../output/playwright/calendar-staging-connectivity-rollout/render-live-initial.jpg) และ [หลังคืน probe-off](../../../output/playwright/calendar-staging-connectivity-rollout/render-probe-off-awaiting-login.jpg) รอบนี้ยังไม่แก้ IAM/Rules/profile/billing หรือบริการ production ไม่รัน Unit/build ใหม่เพราะไม่มี runtime source change จากชุดที่ตรวจแล้ว
 
@@ -59,7 +72,14 @@
 
 คง `WRITE=0` ทุกขั้น ปิด `CONNECTIVITY=0` และ redeploy เฉพาะ staging หรือกลับ revision ที่ review `8ea0c91` หากจำเป็น ไม่เปิด key เก่าหรือ SDK writers เพิ่ม ไม่แก้บริการเดิม `employee-workload-app`
 
-ผ่านเมื่อ revision/plan/flags ตรง manifest, key ถูกเก็บเฉพาะ Secret File ของ identity ที่ระบุ, probe ผ่านขอบเขตที่อนุมัติ, Staff ปุ่มปิด และคืน probe-off ได้พร้อมหลักฐาน แยกผล Auth/Firestore จริงออกจาก health; **CAL-CONNECT ยัง pending จนกว่าจะทดสอบจริง** และทั้งหมดนี้ไม่ใช่ production cutover หรือ UAT ทั้งระบบ
+ผ่านเมื่อ revision/plan/flags ตรง manifest, key ถูกเก็บใน Secret File ของ identity ที่ระบุ, probe ผ่านขอบเขตที่อนุมัติ, Staff ปุ่มปิด และคืน probe-off ได้พร้อมหลักฐาน เงื่อนไข bounded rollout นี้ตรวจผ่านแล้ว แยกผล signed Auth/Firestore จริงออกจาก health; gate CAL-CONNECT/AUTH ของ release ยังคงต้องตรวจรับและทบทวน negative-auth coverage ที่เหลือ ไม่ถือว่าทั้งหมดนี้เป็น production cutover หรือ UAT ทั้งระบบ
+
+## ขั้นต่อไปที่เสนอหลังตรวจรับ
+
+1. แยก branch สำหรับเตรียม trusted writer cloud QA ตรวจ runtime/Rules/cutover contract และจัด manifest ข้อมูลสังเคราะห์พร้อม IDs, จำนวน operations และผลที่คาด ก่อนเปิด writer
+2. ใช้ trusted server เพื่อพิสูจน์ business invariants ในสภาพ staging จริงต่อจาก Emulator ลดความเสี่ยง direct client writes และไม่เอาผล writer pilot เดิมมาแทนหลักฐาน server ตัวใหม่
+3. คง writer ปิดระหว่างเตรียม และกำหนด rollback/receipt/replay/ผลเมื่อ response หายอย่างชัดเจน ไม่เปิด Rules, แก้สิทธิ์ หรือส่ง cloud write ก่อนอนุมัติขอบเขตเฉพาะ
+4. ตรวจ manifest/guards/Unit/SIT ตาม code ที่เปลี่ยน ก่อน cloud QA แบบจำกัด และให้ผู้ใช้ตรวจรับแต่ละ gate การเตรียมนี้ยังไม่ใช่การอนุมัติ production deploy
 
 ## การตรวจในเฟสเตรียมนี้
 
