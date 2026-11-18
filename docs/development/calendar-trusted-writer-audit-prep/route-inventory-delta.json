@@ -1,0 +1,29 @@
+{
+  "dateBangkok": "2026-11-18",
+  "phaseParentCommit": "90a5b89",
+  "frozenInventorySourceCommit": "316e6c5",
+  "previousCounts": {
+    "totalRoutes": 42,
+    "applicationRoutes": 24,
+    "developmentRoutes": 17,
+    "stagingEntryRoutes": 1,
+    "approvedViews": 30
+  },
+  "currentCounts": {
+    "totalRoutes": 43,
+    "applicationRoutes": 24,
+    "developmentRoutes": 18,
+    "stagingEntryRoutes": 1,
+    "approvedViews": 30
+  },
+  "added": [
+    {
+      "route": "/dev/calendar-trusted-cutover",
+      "source": "frontend/app/dev/calendar-trusted-cutover/page.js",
+      "kind": "development"
+    }
+  ],
+  "productionQaRendered": false,
+  "applicationFeatureScopeChanged": false,
+  "productionReady": false
+}

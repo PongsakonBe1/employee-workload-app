@@ -1,0 +1,37 @@
+.root {
+  max-width: 840px;
+  margin: 24px auto;
+  padding: 24px;
+  font-family: system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.root h1 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+.root p { margin-bottom: 12px; }
+.root fieldset {
+  min-width: 0;
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+.root legend { padding: 0 8px; font-weight: 650; }
+.root input[type="file"] { display: block; max-width: 100%; margin-top: 8px; font-size: 16px; }
+.root input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; accent-color: #0a84ff; vertical-align: middle; }
+.root button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.root button:disabled { opacity: .42; cursor: default; }
+.root button:focus-visible, .root input:focus-visible { outline: 3px solid #0a84ff; outline-offset: 3px; }
+.root [role="status"] { padding: 12px; border-radius: 12px; background: color-mix(in srgb, currentColor 6%, transparent); }
+@media (max-width: 480px) { .root { margin: 12px auto; padding: 16px; } .root h1 { font-size: 24px; } }

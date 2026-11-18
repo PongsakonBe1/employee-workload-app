@@ -1,0 +1,25 @@
+// Local approval-packet preparation only; no cloud requests or credential access.
+import fs from "node:fs";
+import path from "node:path";
+import assert from "node:assert/strict";
+import { reviewValueHash } from "./calendar-trusted-cloud-plan.mjs";
+const args = process.argv.slice(2);
+assert(args.every(value => ["--approve-readers", "--approve-sdk-denial"].includes(value)) && new Set(args).size === args.length);
+const directory = ".tools/calendar-staging/trusted-writer-audit";
+const snapshot = JSON.parse(fs.readFileSync(".tools/calendar-staging/trusted-writer-baseline/prepared.json", "utf8"));
+const baseline = JSON.parse(fs.readFileSync("output/playwright/calendar-trusted-writer-baseline/baseline-report.json", "utf8"));
+const latest = JSON.parse(fs.readFileSync(path.join(directory, "latest.json"), "utf8"));
+assert.equal(reviewValueHash(snapshot), baseline.privateSnapshotHash);assert.equal(reviewValueHash(snapshot.frozen), baseline.frozenHash);
+assert.equal(latest.auditHash, reviewValueHash(latest.audit));assert.equal(latest.audit.contextHash, baseline.privateSnapshotHash);assert.equal(latest.audit.completed, 0);assert.equal(latest.audit.revision, 17);
+assert.match(latest.report, /^cloud-audit-0-\d+\.json$/);
+const report = JSON.parse(fs.readFileSync(path.join("output/playwright/calendar-trusted-writer-audit-prep", latest.report), "utf8"));
+assert.equal(report.passed, true);assert.equal(report.contextHash, latest.audit.contextHash);assert.equal(report.candidateRulesHash, snapshot.candidateRulesHash);
+assert.equal(report.beforeCutover, false);assert.equal(report.deployedRulesHash, snapshot.candidateRulesHash);
+assert.equal(report.auditWindow, "cutover");
+assert.equal(reviewValueHash(Object.fromEntries(Object.keys(latest.audit).map(key => [key, report[key]]))), latest.auditHash);
+const age = Date.now() - Date.parse(report.checkedAt);assert(Number.isFinite(age) && age >= -5000 && age <= 120000, "A fresh post-cutover checkpoint 0 is required");
+const proof = { target: snapshot.target, frozenHash: baseline.frozenHash, snapshotHash: baseline.privateSnapshotHash, candidateRulesHash: snapshot.candidateRulesHash, sourceCommit: snapshot.sourceCommit, completed: 0, gateRevision: 17, auditHash: latest.auditHash, auditedAt: report.checkedAt, readerChecksApproved: args.includes("--approve-readers"), directWriteProbeApproved: args.includes("--approve-sdk-denial") };
+const label = [proof.readerChecksApproved ? "readers" : "", proof.directWriteProbeApproved ? "sdk" : ""].filter(Boolean).join("-") || "unapproved";
+const filename = path.join(directory, `cutover-proof-${report.attempt}-${label}.json`);
+fs.writeFileSync(filename, JSON.stringify(proof, null, 2) + "\n", { flag: "wx" });
+console.log(JSON.stringify({ prepared: true, filename, readerChecksApproved: proof.readerChecksApproved, directWriteProbeApproved: proof.directWriteProbeApproved, cloudRequests: 0, note: "Approval flags must be supplied only after explicit operator authorization; they do not change Firebase permissions" }));

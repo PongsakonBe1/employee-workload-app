@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "project": "demo-calendar-cutover",
+  "cloudUsed": false,
+  "namespaceReset": false,
+  "installedPackages": false,
+  "credentialFilesRead": false,
+  "cleanupOwnedFixturesPassed": true,
+  "checks": [
+    "Legacy append-only Rules compile and accept the exact frozen manual/receipt/gate-increment batch",
+    "Candidate Rules compile; Staff/Superadmin actual reader queries pass and SDK gate/receipt reads deny",
+    "Candidate denies the same valid atomic batch; gate, profiles and all fixture data remain byte-equivalent"
+  ]
+}

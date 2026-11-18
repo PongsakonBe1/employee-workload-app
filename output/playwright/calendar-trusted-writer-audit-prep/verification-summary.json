@@ -1,0 +1,76 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T13:30:49.948Z",
+  "phaseParentCommit": "90a5b89",
+  "branch": "codex/calendar-trusted-writer-audit-prep",
+  "unit": {
+    "passed": 735,
+    "failed": 0,
+    "files": 48,
+    "newControllerAndSdkTests": 16,
+    "firstSandboxRun": {
+      "passed": 725,
+      "failed": 10,
+      "reason": "EACCES loopback blocked; unchanged full suite rerun successfully outside sandbox"
+    }
+  },
+  "nodeToolsUnit": {
+    "passed": 15,
+    "failed": 0,
+    "newAuditTests": 8
+  },
+  "targetedLintPassed": true,
+  "syntaxChecksPassed": true,
+  "compatibilityBuildPassed": true,
+  "productionQaRendered": false,
+  "emulatorSitPassed": true,
+  "legacyPositiveControlPassed": true,
+  "candidateAtomicDenialPassed": true,
+  "ownedEmulatorCleanupPassed": true,
+  "namespaceReset": false,
+  "browser": {
+    "desktopChecked": true,
+    "checkedCheckboxCannotEnableActions": true,
+    "reloadDefaultsDisabled": true,
+    "mobileViewport": {
+      "width": 390,
+      "height": 844,
+      "documentWidth": 380
+    },
+    "viewportReset": true,
+    "googleLoginPerformed": false,
+    "uidBoundFilesLoaded": false,
+    "sdkCloudProbeSent": false,
+    "indexedDbPersistenceTest": "mocked unit; no real cloud attempt reservation used"
+  },
+  "privateSnapshotIntegrityPassed": true,
+  "frozenPayloadIntegrityPassed": true,
+  "actualUidsAbsentFromReviewJson": true,
+  "manifestSha256": "fc3c8b4a161941707dda95f0e6178b37b811d50555854678bd9dbc3df6b135a3",
+  "localRuntimePortsVerifiedClosed": [
+    4315,
+    18220,
+    19220,
+    14430,
+    14530,
+    9150
+  ],
+  "cloudRequestsByQaToolsThisPhase": 0,
+  "cloudDataWrites": 0,
+  "cloudRulesChanged": false,
+  "profilesChanged": false,
+  "iamChanged": false,
+  "billingChanged": false,
+  "productionChanged": false,
+  "packagesInstalled": false,
+  "pushed": false,
+  "deployed": false,
+  "readyForCloudApprovalReview": true,
+  "cloudVerificationExecuted": false,
+  "localDeploymentConfigPrepared": true,
+  "timestampPrecisionRegressionPassed": true,
+  "finalVerifiedAt": "2026-11-18T13:37:08.568Z",
+  "cliRequestRetriesDisabled": true,
+  "browserPacketPinsMatchCapturedFrozen": true,
+  "actualPacketWithoutApprovalStopsBeforeAuth": true
+}

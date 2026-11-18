@@ -1,0 +1,94 @@
+// Read-only audit command. No deployment, Firestore commit, credential-file or token access.
+import fs from "node:fs";
+import path from "node:path";
+import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { assertTrustedReviewRead, reviewTextHash, reviewValueHash, TRUSTED_REVIEW_PROJECT } from "./calendar-trusted-cloud-plan.mjs";
+import { auditTrustedCheckpoint } from "./calendar-trusted-audit-plan.mjs";
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."), target = TRUSTED_REVIEW_PROJECT;
+const [operator, checkpoint, mode, ...extra] = process.argv.slice(2), completed = Number(checkpoint), beforeCutover = mode === "--before-cutover", trustedWindow = mode === "--trusted-window";
+assert.match(operator || "", /^[^\s@]+@[^\s@]+\.[^\s@]+$/);assert.match(checkpoint || "", /^[0-5]$/);
+assert(extra.length === 0 && [undefined, "--before-cutover", "--trusted-window"].includes(mode));assert(trustedWindow || completed === 0);
+const base = path.join(root, ".tools/calendar-staging/trusted-writer-baseline");
+const snapshot = JSON.parse(fs.readFileSync(path.join(base, "prepared.json"), "utf8"));
+const baseline = JSON.parse(fs.readFileSync(path.join(root, "output/playwright/calendar-trusted-writer-baseline/baseline-report.json"), "utf8"));
+assert.equal(reviewValueHash(snapshot), baseline.privateSnapshotHash);assert.equal(reviewValueHash(snapshot.frozen), baseline.frozenHash);
+assert.equal(snapshot.target, target);assert.equal(snapshot.database, "(default)");
+assert.equal(snapshot.candidateRulesHash, "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7");
+const directory = path.join(root, ".tools/calendar-staging/trusted-writer-audit");fs.mkdirSync(directory, { recursive: true });
+const latestPath = path.join(directory, "latest.json"), ledgerPath = path.join(directory, "read-ledger.json");
+assert(!beforeCutover || !fs.existsSync(latestPath), "Never return to the legacy baseline after a candidate checkpoint");
+const latest = fs.existsSync(latestPath) ? JSON.parse(fs.readFileSync(latestPath, "utf8")) : null;
+if (latest) assert.equal(reviewValueHash(latest.audit), latest.auditHash);
+assert(latest ? [latest.audit.completed, latest.audit.completed + 1].includes(completed) : completed === 0);
+const ledger = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : { target, contextHash: baseline.privateSnapshotHash, attempts: [] };
+assert.equal(ledger.target, target);assert.equal(ledger.contextHash, baseline.privateSnapshotHash);
+assert(ledger.attempts.length < 13, "Audit window exhausted; obtain renewed review before more reads");
+assert(ledger.attempts.filter(row => Boolean(row.beforeCutover) === beforeCutover).length < (beforeCutover ? 1 : 12));
+const auditWindow = beforeCutover ? "before-cutover" : trustedWindow ? "trusted-window" : "cutover";
+assert(auditWindow !== "cutover" || ledger.attempts.filter(row => row.auditWindow === "cutover").length < 2);
+const lockPath = path.join(directory, "audit.lock"), lock = fs.openSync(lockPath, "wx");
+const attempt = { number: ledger.attempts.length + 1, completed, beforeCutover, auditWindow, startedAt: new Date().toISOString(), requests: [] };
+ledger.attempts.push(attempt);
+const save = () => fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + "\n");save();
+const decode = value => value.stringValue ?? value.timestampValue ?? (value.integerValue !== undefined ? Number(value.integerValue) : value.booleanValue !== undefined ? value.booleanValue : value.arrayValue ? (value.arrayValue.values || []).map(decode) : value.mapValue ? decodeFields(value.mapValue.fields || {}) : null);
+const decodeFields = fields => Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, decode(value)]));
+const prefix = `projects/${target}/databases/(default)/documents`;
+try {
+  delete process.env.FIREBASE_TOKEN;delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  const require = createRequire(path.join(process.env.APPDATA, "npm/node_modules/firebase-tools/package.json"));
+  assert.equal(require("./package.json").version, "15.18.0");
+  const { Command } = require("./lib/command"), { requireAuth } = require("./lib/requireAuth"), { Client } = require("./lib/apiv2");
+  const clients = { store: new Client({ urlPrefix: "https://firestore.googleapis.com", apiVersion: "v1" }), rules: new Client({ urlPrefix: "https://firebaserules.googleapis.com", apiVersion: "v1" }) };
+  const command = new Command("calendar-trusted-readonly-audit").before(options => { assert.equal(options.project, target);assert.equal(options.user?.email, operator); }).before(requireAuth).action(async () => {
+    async function read(api, method, resource, body, label) {
+      assertTrustedReviewRead(api, method, resource, body);assert(attempt.requests.length < 7);
+      const request = { label, api, method, reservedAt: new Date().toISOString() };attempt.requests.push(request);save();
+      const options = { retries: 0, timeout: 20000, skipLog: { body: true, resBody: true, queryParams: true } };
+      const response = method === "GET" ? await clients[api].get(resource, options) : await clients[api].post(resource, body, options);
+      request.finishedAt = new Date().toISOString();save();return response.body;
+    }
+    const release = await read("rules", "GET", `/projects/${target}/releases/cloud.firestore`, undefined, "deployed Rules release");
+    assert(release.rulesetName?.startsWith(`projects/${target}/rulesets/`));
+    const rules = await read("rules", "GET", "/" + release.rulesetName, undefined, "candidate Rules source");
+    assert.equal(rules.source?.files?.length, 1);const expectedRulesHash = beforeCutover ? snapshot.baselineRulesHash : snapshot.candidateRulesHash;
+    assert.equal(reviewTextHash(rules.source.files[0].content), expectedRulesHash, "Rules do not match the selected baseline/candidate audit window");
+    const references = [...snapshot.frozen.references, "calendarWriteState/main"];
+    const records = await read("store", "POST", `/${prefix}:batchGet`, { documents: references.map(reference => prefix + "/" + reference) }, "owned records, receipts and gate");
+    const observation = { documents: Object.fromEntries(references.map(reference => [reference, null])), profiles: {}, protected: {} };
+    const expectedNames = new Set(references.map(reference => prefix + "/" + reference));
+    for (const row of records) {
+      const name = row.found?.name || row.missing;assert(expectedNames.has(name));
+      if (row.found) observation.documents[name.slice(prefix.length + 1)] = { data: decodeFields(row.found.fields || {}), updateTime: row.found.updateTime, createTime: row.found.createTime };
+    }
+    assert.equal(new Set(records.map(row => row.found?.name || row.missing)).size, references.length);
+    const profileNames = Object.entries(snapshot.identities).map(([alias, uid]) => [alias, prefix + "/users/" + uid]);
+    const profiles = await read("store", "POST", `/${prefix}:batchGet`, { documents: profileNames.map(([, name]) => name), mask: { fieldPaths: ["role", "active", "calendarWriter"] } }, "approved actor profile versions");
+    for (const [alias, name] of profileNames) {
+      const row = profiles.find(record => record.found?.name === name)?.found;assert(row);
+      observation.profiles[alias] = { fields: decodeFields(row.fields || {}), updateTime: row.updateTime };
+    }
+    const field = (name, op, value) => ({ fieldFilter: { field: { fieldPath: name }, op, value } });
+    for (const collection of ["users", "classroomSchedules", "dlExamSchedules"]) {
+      const filters = [field(collection === "users" ? "active" : "isActive", "EQUAL", { booleanValue: true })];
+      if (collection === "users") filters.push(field("role", "IN", { arrayValue: { values: ["staff", "admin", "superadmin"].map(stringValue => ({ stringValue })) } }));
+      if (collection === "dlExamSchedules") filters.push(field("date", "GREATER_THAN_OR_EQUAL", { stringValue: "2027-06-07" }), field("date", "LESS_THAN_OR_EQUAL", { stringValue: "2027-06-11" }));
+      const response = await read("store", "POST", `/${prefix}:runQuery`, { structuredQuery: { from: [{ collectionId: collection }], select: { fields: (collection === "users" ? ["role", "active"] : collection === "dlExamSchedules" ? ["isActive", "date"] : ["isActive"]).map(fieldPath => ({ fieldPath })) }, where: filters.length === 1 ? filters[0] : { compositeFilter: { op: "AND", filters } }, ...(collection === "dlExamSchedules" ? { orderBy: [{ field: { fieldPath: "date" }, direction: "ASCENDING" }] } : {}), limit: 201 } }, collection + " protected versions");
+      observation.protected[collection] = response.filter(row => row.document).map(row => ({ id: row.document.name.split("/").at(-1), updateTime: row.document.updateTime }));
+    }
+    const audit = await auditTrustedCheckpoint({ snapshot, observation, completed, previous: latest?.audit || null });
+    const report = { ...audit, checkedAt: new Date().toISOString(), attempt: attempt.number, beforeCutover, auditWindow, deployedRulesHash: expectedRulesHash, candidateRulesHash: snapshot.candidateRulesHash, readApiRequests: attempt.requests.length, countsAreNotBilledReads: true, productionAccessed: false, rulesChanged: false, profilesChanged: false };
+    const output = path.join(root, "output/playwright/calendar-trusted-writer-audit-prep");fs.mkdirSync(output, { recursive: true });
+    const filename = `${beforeCutover ? "precutover-audit" : "cloud-audit"}-${completed}-${attempt.number}.json`;
+    fs.writeFileSync(path.join(output, filename), JSON.stringify(report, null, 2) + "\n", { flag: "wx" });
+    if (!beforeCutover) fs.writeFileSync(latestPath, JSON.stringify({ audit, auditHash: reviewValueHash(audit), report: filename }, null, 2) + "\n");
+    attempt.passed = true;attempt.finishedAt = report.checkedAt;save();return report;
+  });
+  process.chdir(directory);
+  const result = await command.runner()({ project: target, account: operator, json: true, nonInteractive: true, cwd: directory });
+  console.log(JSON.stringify({ passed: result.passed, completed, revision: result.revision, schedules: result.schedules.length, receipts: result.receipts.length, cloudRecordsWritten: 0 }));
+} catch {
+  attempt.passed = false;attempt.finishedAt = new Date().toISOString();save();
+  console.log(JSON.stringify({ passed: false, completed, readRequestsReserved: attempt.requests.length, cloudRecordsWritten: 0, noAutomaticRetry: true, rawProviderDataPrinted: false }));process.exitCode = 1;
+} finally { fs.closeSync(lock);fs.unlinkSync(lockPath); }

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed-not-approved-for-cloud",
+  "phaseParentCommit": "90a5b89",
+  "target": {
+    "projectId": "labboy-workload-app-staging",
+    "databaseId": "(default)",
+    "renderServiceId": "srv-dbu3qvdckfvc73b16ku0",
+    "apiOrigin": "https://labboy-calendar-staging.onrender.com",
+    "renderRuntimeCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+    "localQaUrl": "http://127.0.0.1:4311/dev/calendar-trusted-cutover",
+    "renderPlan": "free"
+  },
+  "pins": {
+    "baselineRulesRawSha256": "360f18769fc93b3642af26b5aae5fbdada29780116503e36b145fe8a98548195",
+    "candidateRulesPath": "deploy/calendar-staging/firestore.review.rules",
+    "localDeployConfigPath": ".tools/calendar-staging/trusted-writer-audit-prep/firebase.cutover.review.json",
+    "localCandidateCopyPath": ".tools/calendar-staging/trusted-writer-audit-prep/candidate.firestore.rules",
+    "candidateRulesRawSha256": "4762054e74b3723bc4345f351b01bb43ee450ae8c7e6a399c4fd6473b717a1c7",
+    "frozenPayloadHash": "6c6b85f57289cdc2be618d690014fa073ee0fc5eb87e219be7473f6b01758f31",
+    "privateSnapshotHash": "fbc37be6e2148afb9caba350a193de7a6dc7e671a151c21791a0f9ecdcdeb6d7",
+    "gateRevision": 17,
+    "manualTarget": "classroomSchedules/cal-243f284d20db1177c4803856e245007ba43c5d03106455808da63dc5ec12262c",
+    "manualReceipt": "calendarWriteOperations/op-0e1541aeccab4d6912d36016d3984a20bdbfb964768173999845fc93311bc74b"
+  },
+  "approvals": {
+    "freshPrecutoverReads": false,
+    "deployExactStagingRules": false,
+    "browserReaderChecks": false,
+    "sdkAtomicDenialProbe": false,
+    "loadLocalUidBoundQaFiles": false,
+    "enableApiWriter": false,
+    "trustedApiWriteWindow": false
+  },
+  "proposedFirstCloudPhase": {
+    "description": "Rules cutover and read-only/denial verification while server/UI writers and connectivity remain off; not the 13-request trusted write window",
+    "beforeCutover": "Revalidate Render ownership/source/Free and writer=0/connectivity=0; one guarded CLI baseline checkpoint 0 must match Rules hash, gate 17, profiles, protected versions and absence of prospective targets",
+    "rulesAction": "Deploy only the exact candidate Firestore Rules to the staging default database; no indexes/Auth/IAM/profile changes",
+    "afterCutover": "Guarded candidate checkpoint 0, fresh local proof, Staff/Superadmin reader verification, one Superadmin SDK batch expected to deny, candidate checkpoint 0 again",
+    "maximumRulesDeployments": 1,
+    "maximumTrustedCreateOrMutatePostRequests": 0,
+    "maximumPrecutoverAuditAttempts": 1,
+    "maximumCandidateAuditAttempts": 2,
+    "maximumAuditApiReadRequests": 21,
+    "maximumHealthGetRequests": 4,
+    "keepServerWriteFlag": "0",
+    "keepConnectivityFlag": "0"
+  },
+  "sdkVerification": {
+    "readerAliases": ["staff", "superadmin"],
+    "maximumReaderChecksPerAlias": 1,
+    "maximumLogicalFirestoreReadCalls": 14,
+    "logicalReadsAreNotBilledReadsOrNetworkPacketCount": true,
+    "readerScope": "Own profile, active staff/admin/superadmin directory <=200, active classroom schedules <=200, active DL in June 2027 <=200 using the existing monthly reader/cache contract",
+    "denialActorAlias": "superadmin",
+    "maximumAtomicBatchAttempts": 1,
+    "atomicBatchDocumentWrites": 3,
+    "expectedOutcome": "permission-denied with zero committed documents, unchanged gate 17 and unchanged prospective receipts/targets",
+    "possibleUnexpectedCommit": "One fixed manual schedule on 2027-06-07 room 401 09:00-10:00, its fixed receipt and gate increment +1; stop immediately and preserve all evidence if this occurs",
+    "physicalDeleteAttempts": 0,
+    "rawSdkReadDenialsBeforeBatch": ["calendarWriteState/main", "the fixed manual receipt"],
+    "durableReservation": "IndexedDB add-only record before any test RPC, fixed review hash and action key, exact localhost:4311 origin; blocked storage and consumed slots fail closed",
+    "reservationIsNotServerAuthorization": true,
+    "crossBrowserOrClearedStorageRetryApproved": false,
+    "freshProofMaximumAgeMs": 120000
+  },
+  "localFileUse": {
+    "destination": "http://127.0.0.1:4311/dev/calendar-trusted-cutover",
+    "files": [
+      ".tools/calendar-staging/trusted-writer-baseline/reviewed-operations.json",
+      ".tools/calendar-staging/trusted-writer-audit/cutover-proof-<audit-attempt>-readers-sdk.json"
+    ],
+    "contains": "Frozen staging directory UIDs and synthetic QA inputs; fresh audit hashes and explicit action approvals; no password, private key or token",
+    "behavior": "Read in browser memory, not upload whole files to an application server; only the approved SDK batch fields can be sent to Firebase staging when explicitly authorized"
+  },
+  "laterTrustedWriteWindowStillSeparate": {
+    "approved": false,
+    "maximumTrustedCreateOrMutatePostRequests": 13,
+    "maximumNewSchedules": 5,
+    "maximumNewReceipts": 5,
+    "expectedGateRevisionAfter": 22,
+    "maximumCandidateAuditAttemptsAcrossTheFullWindow": 12,
+    "maximumTotalAuditAttemptsIncludingPrecutover": 13,
+    "maximumTotalAuditApiReadRequests": 91,
+    "newApprovalRequiredBeforeEnablingWriter": true
+  },
+  "stopAndFallback": [
+    "Stop on source/hash/profile/gate drift, a reader failure, expired proof, consumed reservation or ambiguous SDK result; never clear local storage or re-arm a probe to make QA pass",
+    "Unexpected SDK success is a defect, even if it matches the future manual fixture; do not proceed to trusted API writes or delete the evidence",
+    "Keep server/UI writers and connectivity off; retain deny-client-write candidate Rules if already deployed; never restore legacy SDK writes as rollback",
+    "No billing enablement, card, upgrade, new key, IAM/profile change, physical deletion, production access or application push/deploy is authorized by this proposal"
+  ]
+}
