@@ -27,7 +27,7 @@ switch (process.argv[2]) {
     fs.mkdirSync(artifact, { recursive: true });
     const result = spawnSync(process.execPath, [path.join(root, "node_modules/next/dist/bin/next"), "build", "--no-lint"], {
       cwd: frontend,
-      env: { ...process.env, ...uiDevelopmentEnvironment, NODE_ENV: "production", UI_BUILD_CHECK: "1", NEXT_PUBLIC_WORKLOG_WORKSPACE: "1", NEXT_PUBLIC_ANALYTICS_WORKSPACE: process.argv.includes("--analytics") ? "1" : "0", NEXT_PUBLIC_FIREBASE_PROJECT_ID: project, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: `${project}.firebaseapp.com`, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: `${project}.appspot.com`, CALENDAR_TRUSTED_DENIAL_UI: "1" },
+      env: { ...process.env, ...uiDevelopmentEnvironment, NODE_ENV: "production", UI_BUILD_CHECK: "1", NEXT_PUBLIC_WORKLOG_WORKSPACE: "1", NEXT_PUBLIC_ANALYTICS_WORKSPACE: process.argv.includes("--analytics") ? "1" : "0", NEXT_PUBLIC_API_URL: "http://127.0.0.1:4318", NEXT_PUBLIC_FIREBASE_PROJECT_ID: project, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: `${project}.firebaseapp.com`, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: `${project}.appspot.com`, CALENDAR_TRUSTED_DENIAL_UI: "1" },
       encoding: "utf8", maxBuffer: 8 * 1024 * 1024
     });
     fs.writeFileSync(path.join(artifact, "build.log"), (result.stdout ?? "") + (result.stderr ?? ""));
@@ -70,6 +70,19 @@ switch (process.argv[2]) {
       res.set("Content-Security-Policy", "connect-src 'self' http://127.0.0.1:19218 http://127.0.0.1:18218; form-action 'self' http://127.0.0.1:19218");
       next();
     });
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:19218";
+    process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:18218";
+    process.env.GCLOUD_PROJECT = project;
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const { initializeApp } = await import("firebase-admin/app");
+    const { getAuth } = await import("firebase-admin/auth");
+    const { getFirestore } = await import("firebase-admin/firestore");
+    const { createResourceStatusRouter } = await import("../backend/src/routes/resourceStatus.js");
+    const firebase = initializeApp({ projectId: project });
+    app.use("/api/resource-status", createResourceStatusRouter(() => ({
+      auth: () => getAuth(firebase),
+      firestore: () => getFirestore(firebase)
+    })));
     // Match the Hosting cleanUrls/trailingSlash policy when a page also has child routes.
     app.use((req, res, next) => {
       if (!["GET", "HEAD"].includes(req.method) || !/^\/[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\/?$/.test(req.path)) return next();

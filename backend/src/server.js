@@ -10,6 +10,8 @@ import { workLogsRouter } from "./routes/worklogs.js";
 import { statsRouter } from "./routes/stats.js";
 import { exportRouter } from "./routes/export.js";
 import { notifyRouter } from "./routes/notify.js";
+import { createResourceStatusRouter } from "./routes/resourceStatus.js";
+import { initFirebase } from "./services/fcm.js";
 
 const app = express();
 
@@ -51,6 +53,7 @@ app.use("/api/worklogs", workLogsRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/export", exportRouter);
 app.use("/api/notify", notifyRouter);
+app.use("/api/resource-status", createResourceStatusRouter(initFirebase));
 
 app.use((req, res) => {
   res

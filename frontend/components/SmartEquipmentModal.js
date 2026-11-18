@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Headphones, Plug, Usb, User, Clock, RotateCcw, AlertTriangle, Ban } from 'lucide-react';
-import { getFirestore } from 'firebase/firestore';
+import { useSharedResourceStatus } from "../hooks/useSharedResourceStatus";
 import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode, STUDENT_CODE_HINT } from '../lib/equipmentLoan';
 
 export default function SmartEquipmentModal({ 
@@ -15,10 +15,6 @@ export default function SmartEquipmentModal({
   isSmart
 }) {
   const [selectedEquipment, setSelectedEquipment] = useState('');
-  const [equipmentStatus, setEquipmentStatus] = useState({});
-  const [equipmentDetails, setEquipmentDetails] = useState({});
-  const [equipmentConditionMap, setEquipmentConditionMap] = useState({}); // ITEM-1: { ICIT01: 'damaged', ... }
-  const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState('');
   const [mounted, setMounted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -40,6 +36,10 @@ export default function SmartEquipmentModal({
   const equipmentType = equipmentLoanKind({ name: tName, minorTask: tTask, isSmart });
   const isHeadphones = equipmentType === 'headphones';
   const isUsb = equipmentType === 'usb';
+  const { status, loading, error: statusError, retry } = useSharedResourceStatus({ enabled: isOpen });
+  const equipmentStatus = status?.equipmentStatus?.[equipmentType] ?? {};
+  const equipmentDetails = status?.details ?? {};
+  const equipmentConditionMap = status?.equipmentConditions ?? {};
   const selectedStatus = equipmentStatus[selectedEquipment];
   const returning = selectedStatus === 'in_use';
   const originalBorrower = equipmentDetails[selectedEquipment]?.user || '';
@@ -71,196 +71,6 @@ export default function SmartEquipmentModal({
     if (isFloor3) return ['ICIT21','ICIT22','ICIT23'];
     return ALL_PW;
   };
-
-  // คำนวณสถานะจาก worklogs
-  useEffect(() => {
-    const calculateStatusFromWorklogs = async () => {
-      setLoading(true);
-      try {
-        const db = getFirestore();
-        const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-        const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(500));
-        const querySnapshot = await getDocs(worklogsQuery);
-        const logs = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          logs.push({ ...data, date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0,10) || '' });
-        });
-
-        const status = {
-          headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
-          power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
-          usb:        Object.fromEntries(ALL_USB.map(e => [e,'available'])),
-        };
-        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
-        const details = {};
-
-        // [SA] reverse เป็น asc (เก่า→ใหม่) เพื่อให้ log ใหม่ override ได้ถูกต้อง
-        const sortedLogs = [...logs].reverse();
-
-        // Pass 1: scan เฉพาะ log "คืน" เพื่อหา equipmentCondition ล่าสุดของแต่ละตัว
-        // [FIX] condition (damaged/lost/normal) ถูกรายงานตอน "คืน" เท่านั้น
-        // log "ยืม" ต้องไม่ override condition — เพราะการยืมออกไปไม่ได้หมายความว่าอุปกรณ์ปกติ
-        const conditionMap = {};
-        sortedLogs.forEach(log => {
-          const minorTask = (log.minorTask || '').toLowerCase();
-          const commentLower = (log.comment || '').toLowerCase();
-          const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') || minorTask.includes('คืน usb');
-          if (!isReturnLog) return;
-
-          // ตรวจ field equipment ตรง (จาก SmartEquipmentModal log) ก่อน
-          if (log.equipment && log.equipmentCondition) {
-            conditionMap[log.equipment] = log.equipmentCondition;
-            return;
-          }
-          // fallback: parse จาก comment
-          [...ALL_HP, ...ALL_PW, ...ALL_USB].forEach(eq => {
-            if (commentLower.includes(eq.toLowerCase()) && log.equipmentCondition) {
-              conditionMap[eq] = log.equipmentCondition;
-            }
-          });
-        });
-        setEquipmentConditionMap(conditionMap);
-
-        // Pass 2: scan เฉพาะวันนี้เพื่อคำนวณ in_use / available
-        const todayLogs = sortedLogs.filter(l => l.date === today);
-        todayLogs.forEach(log => {
-          const commentLower = (log.comment || '').toLowerCase();
-          const minorTask = (log.minorTask || '').toLowerCase();
-          const userName = log.recipient || log.employeeDisplayName || log.employeeNickname || log.employeeFullName || '-';
-          const userTime = log.time || '';
-
-          if (minorTask.includes('ยืมหูฟัง')) {
-            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
-          }
-          if (minorTask.includes('คืนหูฟัง')) {
-            ALL_HP.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.headphones[eq]='available'; delete details[eq]; } });
-          }
-          if (minorTask.includes('ยืมปลั๊กไฟ')) {
-            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
-          }
-          if (minorTask.includes('คืนปลั๊กไฟ')) {
-            ALL_PW.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.power[eq]='available'; delete details[eq]; } });
-          }
-          if (minorTask.includes('ยืม usb')) {
-            ALL_USB.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.usb[eq]='in_use'; details[eq]={user:userName,time:userTime}; } });
-          }
-          if (minorTask.includes('คืน usb')) {
-            ALL_USB.forEach(eq => { if (commentLower.includes(eq.toLowerCase())) { status.usb[eq]='available'; delete details[eq]; } });
-          }
-        });
-
-        setEquipmentStatus(status[equipmentType] || {});
-        setEquipmentDetails(details);
-      } catch (error) {
-        const fallback = isHeadphones
-          ? Object.fromEntries(ALL_HP.map(e=>[e,'available']))
-          : isUsb
-          ? Object.fromEntries(ALL_USB.map(e=>[e,'available']))
-          : Object.fromEntries(ALL_PW.map(e=>[e,'available']));
-        setEquipmentStatus(fallback);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (equipmentType && isOpen) calculateStatusFromWorklogs();
-  }, [equipmentType, isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (event) => {
-      const { equipmentType: updatedType, equipment, status, user: userName, time: userTime } = event.detail;
-      if (updatedType !== equipmentType) return;
-      setEquipmentStatus(prev => ({ ...prev, [equipment]: status }));
-      if (status === 'in_use' && userName) {
-        setEquipmentDetails(prev => ({ ...prev, [equipment]: { user: userName, time: userTime || '' } }));
-      } else if (status === 'available') {
-        setEquipmentDetails(prev => { const next = { ...prev }; delete next[equipment]; return next; });
-      }
-    };
-    window.addEventListener('equipmentStatusUpdated', handler);
-    return () => window.removeEventListener('equipmentStatusUpdated', handler);
-  }, [equipmentType, isOpen]);
-
-  // Listen for worklogDeleted events to recalculate status
-  useEffect(() => {
-    if (!isOpen || !equipmentType) return;
-
-    const handleWorklogDeleted = (event) => {
-      const { minorTask, equipment } = event.detail;
-      // Check if this is equipment-related
-      const isEquipmentRelated = minorTask && (
-        minorTask.includes('หูฟัง') ||
-        minorTask.includes('ปลั๊กไฟ') ||
-        minorTask.includes('ยืม') ||
-        minorTask.includes('คืน') ||
-        equipment
-      );
-
-      if (isEquipmentRelated) {
-        console.log('🗑️ SmartEquipmentModal: Recalculating after worklog deletion');
-        // Trigger recalculation by toggling a dependency
-        // We need to call calculateStatusFromWorklogs again
-        const recalculate = async () => {
-          setLoading(true);
-          try {
-            const db = getFirestore();
-            const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
-            const worklogsQuery = query(collection(db, 'worklogs'), orderBy('createdAt', 'desc'), limit(500));
-            const querySnapshot = await getDocs(worklogsQuery);
-            const logs = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              logs.push({ ...data, date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0,10) || '' });
-            });
-
-            const newStatus = {
-              headphones: Object.fromEntries(ALL_HP.map(e => [e,'available'])),
-              power:      Object.fromEntries(ALL_PW.map(e => [e,'available'])),
-              usb:        Object.fromEntries(ALL_USB.map(e => [e,'available'])),
-            };
-            const today = new Date().toLocaleDateString('en-CA');
-            const newDetails = {};
-            const sortedLogs = [...logs].reverse();
-
-            // Recalculate status
-            sortedLogs.forEach(log => {
-              const logDate = log.date || '';
-              const isToday = logDate === today;
-              const minorTask = (log.minorTask || '').toLowerCase();
-              const comment = (log.comment || '').toLowerCase();
-              const isBorrow = minorTask.includes('ยืม') || comment.includes('ยืม');
-              const isReturn = minorTask.includes('คืน') || comment.includes('คืน');
-
-              const allEquipment = [...ALL_HP, ...ALL_PW, ...ALL_USB];
-              allEquipment.forEach(eq => {
-                const eqLower = eq.toLowerCase();
-                const hasEq = comment.includes(eqLower) || log.equipment === eq;
-                if (hasEq) {
-                  const bucket = ALL_HP.includes(eq) ? 'headphones' : ALL_USB.includes(eq) ? 'usb' : 'power';
-                  if (isBorrow) newStatus[bucket][eq] = 'in_use';
-                  if (isReturn) newStatus[bucket][eq] = 'available';
-                  if (log.recipient) newDetails[eq] = { user: log.recipient, time: log.time || '' };
-                }
-              });
-            });
-
-            setEquipmentStatus(isHeadphones ? newStatus.headphones : isUsb ? newStatus.usb : newStatus.power);
-            setEquipmentDetails(newDetails);
-          } catch (error) {
-            console.error('Error recalculating status:', error);
-          } finally {
-            setLoading(false);
-          }
-        };
-        recalculate();
-      }
-    };
-
-    window.addEventListener('worklogDeleted', handleWorklogDeleted);
-    return () => window.removeEventListener('worklogDeleted', handleWorklogDeleted);
-  }, [equipmentType, isOpen, isHeadphones]);
 
   const equipmentList = getEquipmentRange();
 
@@ -354,7 +164,7 @@ export default function SmartEquipmentModal({
 
         {/* Equipment List */}
         <div className="px-6 pt-2 pb-2 flex-1 overflow-y-auto">
-          {loading ? (
+          {statusError ? <p role="alert" className="py-4 text-sm text-slate-600">โหลดสถานะล่าสุดไม่สำเร็จ <button type="button" className="underline" onClick={retry}>ลองอีกครั้ง</button></p> : loading ? (
             <div className="flex items-center justify-center py-10">
               <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
             </div>

@@ -500,7 +500,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (onLogSuccess) {
         onLogSuccess('กรุณาเลือกห้องเรียน', 'error');
       }
-      return;
+      throw new Error("Missing room selection");
     }
 
     setLoggingTemplate(selectedTemplate.id);
@@ -530,13 +530,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       
       // อัปเดตใน RoomEquipmentStatus collection
       const statusRef = doc(db, 'RoomEquipmentStatus', 'equipment');
-      await setDoc(statusRef, {
+      void setDoc(statusRef, {
         [`rooms.${room}`]: newStatus,
         [`rooms.${room}_user`]: user.uid,
         [`rooms.${room}_timestamp`]: new Date().toISOString()
-      }, { merge: true });
-      
-      console.log(`✅ Updated room ${room} status to ${newStatus}`);
+      }, { merge: true }).catch(() => {});
       
       // Trigger refresh ของสถานะห้องเรียนโดยการส่ง custom event
       window.dispatchEvent(new CustomEvent('roomStatusUpdated', {
@@ -544,7 +542,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       }));
 
       // บันทึก system log
-      await logSystemAction(
+      void logSystemAction(
         SystemActions.WORKLOG_CREATE,
         `Smart log from template: ${selectedTemplate.name} - ${room} (${minorTask})`,
         { templateId: selectedTemplate.id, room, minorTask }
@@ -564,6 +562,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (onLogSuccess) {
         onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
       }
+      throw error;
     } finally {
       setLoading(false);
       setLoggingTemplate(null);

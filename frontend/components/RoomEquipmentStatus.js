@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSharedResourceStatus } from '../hooks/useSharedResourceStatus';
 import { Monitor, Headphones, Plug, Wifi, Activity, Download, AlertTriangle, Wrench, Ban, Usb } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useAuth } from './AuthProvider';
@@ -331,13 +332,13 @@ export default function RoomEquipmentStatus() {
   const { user } = useAuth();
   const isAdmin = isAdminRole(user);
 
-  const [roomStatus, setRoomStatus] = useState({});
-  const [equipmentStatus, setEquipmentStatus] = useState({});
-  const [equipmentConditions, setEquipmentConditions] = useState({}); // [SE] Track condition: normal/damaged/lost
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  const [equipmentDetails, setEquipmentDetails] = useState({});
+  const [exporting, setExporting] = useState(false);
+  const { status, updatedAt: lastUpdated, loading, error: statusError, retry } = useSharedResourceStatus({ refreshEveryMs: 5 * 60_000 });
+  const roomStatus = status?.roomStatus ?? {};
+  const equipmentStatus = status?.equipmentStatus ?? {};
+  const equipmentConditions = status?.equipmentConditions ?? {};
+  const equipmentDetails = status?.details ?? {};
   const [selectedItem, setSelectedItem] = useState(null);
   
   // [SE] View toggle: 'rooms' | 'equipment'
@@ -353,306 +354,9 @@ export default function RoomEquipmentStatus() {
     return today.toISOString().slice(0, 10);
   });
 
-  // ข้อมูลเริ่มต้นทั้งหมดว่าง - เริ่มต้นที่ 'available' (ไม่ได้ใช้งาน)
-  const initialRoomStatus = {
-    "303": "available",
-    "304": "available",
-    "305": "available",
-    "306": "available",
-    "401": "available",
-    "402": "available",
-    "406": "available",
-    "407": "available"
-  };
-
   const roomOsMap = {
     "303": "Windows", "304": "iOS", "305": "Android", "306": "Linux"
   };
-
-  const initialEquipmentStatus = {
-    headphones: Object.fromEntries(
-      Array.from({length:20}, (_,i) => [`ICIT${String(i+1).padStart(2,'0')}`, 'available'])
-    ),
-    power: {
-      "ICIT21": "available", "ICIT22": "available", "ICIT23": "available",
-      "ICIT24": "available", "ICIT25": "available"
-    },
-    usb: {
-      "ICIT26": "available", "ICIT27": "available", "ICIT28": "available", "ICIT29": "available"
-    }
-  };
-
-  // ฟังก์ชันตรวจสอบสถานะจาก worklogs
-  const calculateStatusFromWorklogs = (worklogs) => {
-    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local timezone
-
-    // [SA] worklogs มาเรียง desc จาก Firestore → reverse เป็น asc ก่อน process
-    const sortedLogs = [...worklogs].reverse();
-
-    const roomStatus = { ...initialRoomStatus };
-    const equipmentStatus = JSON.parse(JSON.stringify(initialEquipmentStatus));
-    const details = {};
-    // [SA] conditions: ดูจาก log equipment ล่าสุดทุกวัน (ไม่จำกัดวันนี้)
-    // เพราะ damaged/lost อาจถูก set เมื่อวานหรือก่อนหน้า และยังคงอยู่จนกว่าจะมี log ใหม่เปลี่ยน
-    const conditions = {};
-
-    // Pass 1: scan ทุก log เพื่อหา equipmentCondition ล่าสุดของแต่ละ equipment
-    // [FIX] condition (damaged/lost/normal) ถูกรายงานตอน "คืน" เท่านั้น
-    // log "ยืม" ต้องไม่ override condition — เพราะการยืมออกไปไม่ได้หมายความว่าอุปกรณ์ปกติ
-    sortedLogs.forEach(log => {
-      const minorTask = (log.minorTask || '').toLowerCase();
-      const comment = (log.comment || '').toLowerCase();
-      const isReturnLog = minorTask.includes('คืนหูฟัง') || minorTask.includes('คืนปลั๊กไฟ') || minorTask.includes('คืน usb');
-      if (!isReturnLog) return;
-
-      // ตรวจ field equipment ตรง (จาก SmartEquipmentModal) ก่อน
-      if (log.equipment && log.equipmentCondition) {
-        conditions[log.equipment] = log.equipmentCondition;
-        return;
-      }
-
-      // fallback: parse จาก comment
-      const allEquipment = [
-        ...Array.from({length:20}, (_,i) => `ICIT${String(i+1).padStart(2,'0')}`),
-        ...['ICIT21','ICIT22','ICIT23','ICIT24','ICIT25'],
-        ...['ICIT26','ICIT27','ICIT28','ICIT29']
-      ];
-      for (const eq of allEquipment) {
-        if (comment.includes(eq.toLowerCase()) && log.equipmentCondition) {
-          conditions[eq] = log.equipmentCondition;
-        }
-      }
-    });
-
-    // [SA] Pass 2A: scan room logs เพื่อหา room status ล่าสุดของแต่ละห้อง
-    // room status (in_use/available) คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
-    const roomLogs = sortedLogs.filter(log => {
-      const mt = (log.minorTask || '').toLowerCase();
-      return mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
-             mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
-    });
-
-    roomLogs.forEach(log => {
-      const comment = (log.comment || '').toLowerCase();
-      const minorTask = (log.minorTask || '').toLowerCase();
-
-      // ชั้น 3: เช็คอินห้องแลกเปลี่ยนความรู้ / ปิดห้องแลกเปลี่ยนความรู้
-      if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
-        const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
-        if (comment.includes('303')) roomStatus['303'] = isOpenAction ? 'in_use' : 'available';
-        if (comment.includes('304')) roomStatus['304'] = isOpenAction ? 'in_use' : 'available';
-        if (comment.includes('305')) roomStatus['305'] = isOpenAction ? 'in_use' : 'available';
-        if (comment.includes('306')) roomStatus['306'] = isOpenAction ? 'in_use' : 'available';
-      }
-      // ชั้น 4: เปิดห้องเรียนชั้น 4 / ปิดห้องเรียนชั้น 4
-      if (minorTask.includes('เปิดห้องเรียนชั้น 4') || minorTask.includes('ปิดห้องเรียนชั้น 4')) {
-        const isOpenAction = minorTask.includes('เปิด');
-        if (/\b401\b/.test(comment)) roomStatus['401'] = isOpenAction ? 'in_use' : 'available';
-        if (/\b402\b/.test(comment)) roomStatus['402'] = isOpenAction ? 'in_use' : 'available';
-        if (/\b406\b/.test(comment)) roomStatus['406'] = isOpenAction ? 'in_use' : 'available';
-        if (/\b407\b/.test(comment)) roomStatus['407'] = isOpenAction ? 'in_use' : 'available';
-      }
-    });
-
-    // [SA] Pass 2B: scan equipment logs เพื่อหา equipment status ล่าสุด (ยืม/คืน)
-    // [FIX] แยก filter สำหรับ equipment ออกจาก roomLogs — เพราะ roomLogs กรองเฉพาะ
-    // log ห้อง ทำให้ log ยืม/คืนอุปกรณ์ถูกตัดออกไปหมด → สถานะ equipment กลับเป็น available เสมอ
-    const equipmentLogs = sortedLogs.filter(log => {
-      const mt = (log.minorTask || '').toLowerCase();
-      return mt.includes('ยืมหูฟัง') || mt.includes('คืนหูฟัง') ||
-             mt.includes('ยืมปลั๊กไฟ') || mt.includes('คืนปลั๊กไฟ') ||
-             mt.includes('ยืม usb') || mt.includes('คืน usb');
-    });
-
-    equipmentLogs.forEach(log => {
-      const comment = (log.comment || '').toLowerCase();
-      const minorTask = (log.minorTask || '').toLowerCase();
-      const userName = log.recipient || log.employeeDisplayName || log.userName || '-';
-      const userTime = log.time || '';
-
-      // ตรวจสอบหูฟัง ICIT01-20
-      if (minorTask.includes('ยืมหูฟัง')) {
-        for (let i = 1; i <= 20; i++) {
-          const equipment = `ICIT${String(i).padStart(2, '0')}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.headphones[equipment] = 'in_use';
-            details[equipment] = { user: userName, time: userTime, action: 'ยืม' };
-          }
-        }
-      }
-      if (minorTask.includes('คืนหูฟัง')) {
-        for (let i = 1; i <= 20; i++) {
-          const equipment = `ICIT${String(i).padStart(2, '0')}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.headphones[equipment] = 'available';
-            delete details[equipment];
-          }
-        }
-      }
-
-      // ตรวจสอบปลั๊กไฟ ICIT21-25
-      if (minorTask.includes('ยืมปลั๊กไฟ')) {
-        for (let i = 21; i <= 25; i++) {
-          const equipment = `ICIT${i}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.power[equipment] = 'in_use';
-            details[equipment] = { user: userName, time: userTime, action: 'ยืม' };
-          }
-        }
-      }
-      if (minorTask.includes('คืนปลั๊กไฟ')) {
-        for (let i = 21; i <= 25; i++) {
-          const equipment = `ICIT${i}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.power[equipment] = 'available';
-            delete details[equipment];
-          }
-        }
-      }
-
-      // ตรวจสอบ USB ICIT26-29
-      if (minorTask.includes('ยืม usb')) {
-        for (let i = 26; i <= 29; i++) {
-          const equipment = `ICIT${i}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.usb[equipment] = 'in_use';
-            details[equipment] = { user: userName, time: userTime, action: 'ยืม' };
-          }
-        }
-      }
-      if (minorTask.includes('คืน usb')) {
-        for (let i = 26; i <= 29; i++) {
-          const equipment = `ICIT${i}`;
-          if (comment.includes(equipment.toLowerCase())) {
-            equipmentStatus.usb[equipment] = 'available';
-            delete details[equipment];
-          }
-        }
-      }
-    });
-
-    return { roomStatus, equipmentStatus, details, conditions };
-  };
-
-  useEffect(() => {
-    const loadStatus = async () => {
-      try {
-        setLoading(true);
-        const db = getFirestore();
-        
-        // ดึงข้อมูล worklogs จาก Firestore (desc แล้ว reverse เป็น asc ใน JS)
-        // [FIX] ใช้ limit 500 เพื่อให้ครอบคลุม condition logs ที่อาจเก่ากว่า 2 สัปดาห์
-        const worklogsQuery = query(
-          collection(db, 'worklogs'),
-          orderBy('createdAt', 'desc'),
-          limit(500)
-        );
-        
-        const querySnapshot = await getDocs(worklogsQuery);
-        const worklogs = [];
-        
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          worklogs.push({
-            id: doc.id,
-            ...data,
-            date: data.date || data.createdAt?.toDate?.()?.toISOString?.()?.slice(0, 10) || ''
-          });
-        });
-        
-        const { roomStatus: calculatedRoomStatus, equipmentStatus: calculatedEquipmentStatus, details, conditions } =
-          calculateStatusFromWorklogs(worklogs);
-
-        setRoomStatus(calculatedRoomStatus);
-        setEquipmentStatus(calculatedEquipmentStatus);
-        setEquipmentConditions(conditions);
-        setEquipmentDetails(details);
-        setLastUpdated(new Date());
-      } catch (error) {
-        console.error('Error loading status:', error);
-        setRoomStatus(initialRoomStatus);
-        setEquipmentStatus(initialEquipmentStatus);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Event listeners สำหรับรับการอัปเดตจาก QuickLogButtons
-    const handleEquipmentStatusUpdate = (event) => {
-      console.log('🎧 RoomEquipmentStatus: Received equipment status update', event.detail);
-      const { equipmentType, equipment, status } = event.detail;
-      
-      setEquipmentStatus(prev => ({
-        ...prev,
-        [equipmentType]: {
-          ...prev[equipmentType],
-          [equipment]: status
-        }
-      }));
-      
-      setLastUpdated(new Date());
-    };
-
-    const handleRoomStatusUpdate = (event) => {
-      console.log('🏠 RoomEquipmentStatus: Received room status update', event.detail);
-      const { room, status } = event.detail;
-
-      setRoomStatus(prev => ({
-        ...prev,
-        [room]: status
-      }));
-
-      setLastUpdated(new Date());
-    };
-
-    // Handler สำหรับเมื่อ worklog ถูกลบ - ต้อง recalculate status
-    const handleWorklogDeleted = (event) => {
-      console.log('🗑️ RoomEquipmentStatus: Worklog deleted, recalculating status', event.detail);
-      const { minorTask, room, equipment } = event.detail;
-
-      // ถ้าเป็นงานที่เกี่ยวข้องกับห้องหรืออุปกรณ์ ให้ recalculate status
-      const isRoomRelated = minorTask && (
-        minorTask.includes('ห้อง') ||
-        minorTask.includes('เปิด') ||
-        minorTask.includes('ปิด') ||
-        minorTask.includes('เช็คอิน') ||
-        minorTask.includes('เช็คเอาท์') ||
-        room
-      );
-
-      const isEquipmentRelated = minorTask && (
-        minorTask.includes('หูฟัง') ||
-        minorTask.includes('ปลั๊กไฟ') ||
-        minorTask.includes('ยืม') ||
-        minorTask.includes('คืน') ||
-        equipment
-      );
-
-      if (isRoomRelated || isEquipmentRelated) {
-        console.log('🔄 Recalculating status after worklog deletion...');
-        loadStatus(); // Recalculate จาก worklogs ใหม่
-      }
-    };
-
-    // เพิ่ม event listeners
-    window.addEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
-    window.addEventListener('roomStatusUpdated', handleRoomStatusUpdate);
-    window.addEventListener('worklogDeleted', handleWorklogDeleted);
-
-    // Load initial status
-    loadStatus();
-
-    // อัปเดตทุก 5 นาที
-    const interval = setInterval(loadStatus, 5 * 60 * 1000);
-
-    // Cleanup
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('equipmentStatusUpdated', handleEquipmentStatusUpdate);
-      window.removeEventListener('roomStatusUpdated', handleRoomStatusUpdate);
-      window.removeEventListener('worklogDeleted', handleWorklogDeleted);
-    };
-  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -750,7 +454,7 @@ export default function RoomEquipmentStatus() {
   // SE: Export transaction history (borrow/return) for date range
   const exportTransactionHistory = async () => {
     try {
-      setLoading(true);
+      setExporting(true);
       const db = getFirestore();
       const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore');
 
@@ -867,7 +571,7 @@ export default function RoomEquipmentStatus() {
       console.error('Error exporting transaction history:', error);
       alert('เกิดข้อผิดพลาดในการส่งออก: ' + error.message);
     } finally {
-      setLoading(false);
+      setExporting(false);
     }
   };
 
@@ -1014,7 +718,7 @@ export default function RoomEquipmentStatus() {
         }}
         className="w-full flex items-center gap-0 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
       >
-        {loading ? (
+        {statusError ? <p role="alert" className="py-4 text-sm text-slate-600">โหลดสถานะล่าสุดไม่สำเร็จ <button type="button" className="underline" onClick={retry}>ลองอีกครั้ง</button></p> : loading ? (
           <div className="flex items-center gap-2 flex-1">
             <Activity className="w-3.5 h-3.5 text-slate-300 animate-pulse" />
             <span className="text-xs text-slate-400">กำลังโหลด...</span>
@@ -1185,6 +889,7 @@ export default function RoomEquipmentStatus() {
                 </div>
                 <button
                   onClick={exportTransactionHistory}
+                  disabled={exporting}
                   className="flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 text-[10px] font-medium rounded-md transition-all border border-slate-200/60 shadow-sm active:scale-95"
                 >
                   <Download size={11} strokeWidth={1.5} />
