@@ -11,6 +11,8 @@ import {
 import {
   doc,
   getDoc,
+  getDocFromServer,
+  getDocsFromServer,
   addDoc,
   collection,
   setDoc,
@@ -19,6 +21,7 @@ import {
   query,
   where,
   getDocs,
+  runTransaction,
 } from "firebase/firestore";
 import { auth, db, googleProvider, authReady } from "../lib/firebase";
 import { logSystemAction, SystemActions } from "../lib/systemLog";
@@ -102,32 +105,41 @@ export function AuthProvider({ children }) {
           // รอให้ Auth state พร้อม (สำคัญ!)
           await new Promise((resolve) => setTimeout(resolve, 500));
 
-          await firebaseUser.getIdTokenResult();
+          const { claims } = await firebaseUser.getIdTokenResult();
+          if (claims.email_verified !== true || !firebaseUser.email || claims.email !== firebaseUser.email) {
+            localStorage.removeItem("icit_user");
+            setUser(null);
+            setPendingApproval(false);
+            setLoading(false);
+            await signOut(auth);
+            return;
+          }
 
           // 1. ลองหา user ด้วย UID ก่อน
-          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          const userDoc = await getDocFromServer(doc(db, "users", firebaseUser.uid));
           let userData = userDoc.exists() ? userDoc.data() : null;
 
           // 2. ถ้าไม่เจอ ให้ลองหาด้วย email
           if (!userData) {
             const usersRef = collection(db, "users");
             const q = query(usersRef, where("email", "==", firebaseUser.email));
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await getDocsFromServer(q);
 
             if (!querySnapshot.empty) {
               const existingUser = querySnapshot.docs[0];
               const oldUid = existingUser.id; // UID เก่าจาก seed
               userData = existingUser.data();
 
-              // สร้าง document ใหม่ด้วย uid จาก Google
-              await setDoc(doc(db, "users", firebaseUser.uid), {
-                ...userData,
-                uid: firebaseUser.uid,
-                lastLoginAt: new Date(),
-                migratedFrom: oldUid,
-              });
-              // Migrate worklogs จาก old UID ไป new UID
-              await migrateWorklogs(oldUid, firebaseUser.uid);
+              if (userData.active && ["staff", "admin", "superadmin"].includes(userData.role)) {
+                await setDoc(doc(db, "users", firebaseUser.uid), {
+                  ...userData,
+                  uid: firebaseUser.uid,
+                  lastLoginAt: new Date(),
+                  migratedFrom: oldUid,
+                });
+                // Only administrators already have authority to move legacy worklogs.
+                if (userData.role !== "staff") await migrateWorklogs(oldUid, firebaseUser.uid);
+              }
             }
           } else {
             // อัพเดต lastLoginAt (ไม่ให้ block login ถ้า fail)
@@ -138,11 +150,12 @@ export function AuthProvider({ children }) {
 
           // 3. ถ้ามี user data แล้ว
           if (userData) {
-            if (userData.active) {
+            if (userData.active && ["staff", "admin", "superadmin"].includes(userData.role) &&
+                (userData.role !== "superadmin" || userData.email === firebaseUser.email)) {
               const fullUser = {
+                ...userData,
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                ...userData,
               };
               setUser(fullUser);
               // บันทึกลง localStorage สำหรับ restore เร็วขึ้น
@@ -206,10 +219,10 @@ export function AuthProvider({ children }) {
               status: "pending",
             };
 
-            await setDoc(
-              doc(db, "pendingUsers", firebaseUser.uid),
-              pendingUser,
-            );
+            const pendingRef = doc(db, "pendingUsers", firebaseUser.uid);
+            await runTransaction(db, async tx => {
+              if (!(await tx.get(pendingRef)).exists()) tx.set(pendingRef, pendingUser);
+            });
             setPendingApproval(true);
             localStorage.removeItem("icit_user");
             setUser(null);
@@ -219,6 +232,9 @@ export function AuthProvider({ children }) {
             setPendingApproval(false);
           }
         } catch (err) {
+          localStorage.removeItem("icit_user");
+          setUser(null);
+          setPendingApproval(false);
           console.error("[Auth] Error:", err);
           console.log("[Auth] Error details:", {
             code: err.code,

@@ -1,27 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // A user profile's document ID identifies its Firebase Auth UID. Legacy
+    // profiles may omit the duplicate uid field. Role and active are authority
+    // fields, and pendingUsers is a request rather than an access grant.
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function isAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    function verifiedEmail() {
+      return isAuthenticated() && request.auth.token.get('email_verified', false) == true &&
+        request.auth.token.get('email', null) is string;
     }
-    
-    // Check if authenticated user can create their own user document (first time login)
-    function canCreateOwnUser(userId) {
-      return isAuthenticated() && 
-        request.auth.uid == userId;
+
+    function hasActiveRole(roles) {
+      return verifiedEmail() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        profileGrantsRole(get(/databases/$(database)/documents/users/$(request.auth.uid)).data, roles);
+    }
+
+    function profileGrantsRole(profile, roles) {
+      return profile.get('active', false) == true && profile.get('role', '') in roles &&
+        (profile.role != 'superadmin' || profile.get('email', null) == request.auth.token.email);
+    }
+
+    function isAdmin() {
+      return hasActiveRole(['admin', 'superadmin']);
     }
     
     function isSuperAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      return hasActiveRole(['superadmin']);
     }
     
     function isOwner(userId) {
@@ -29,9 +38,31 @@ service cloud.firestore {
     }
     
     function isStaff() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff';
+      return hasActiveRole(['staff']);
+    }
+
+    function isValidUser(data, userId) {
+      return data.email is string && data.email.size() <= 254 &&
+        data.email.matches('^[^@ ]+@[^@ ]+$') &&
+        data.role in ['staff', 'admin', 'superadmin'] && data.active is bool &&
+        data.get('uid', userId) == userId;
+    }
+
+    function isAllowedBootstrap(data) {
+      return data.role == 'superadmin' && !('migratedFrom' in data) &&
+        request.auth.token.email in ['pongsagon.be1@gmail.com', 'pongsakon.be1@gmail.com'];
+    }
+
+    function isApprovedMigration(data, userId) {
+      let legacy = data.get('migratedFrom', '');
+      return legacy is string && legacy.matches('^[a-zA-Z0-9_-]{1,128}$') && legacy != userId &&
+        exists(/databases/$(database)/documents/users/$(legacy)) &&
+        sameProfileAuthority(get(/databases/$(database)/documents/users/$(legacy)).data, data);
+    }
+
+    function sameProfileAuthority(original, candidate) {
+      return original.get('active', false) == true && original.get('email', null) == request.auth.token.email &&
+        original.get('role', '') == candidate.role;
     }
     
     function isWorkLogOwner(worklog) {
@@ -75,42 +106,26 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      // Allow all authenticated users to read
-      allow read: if isAuthenticated();
-      
-      // Allow authenticated user to create their own document
-      // Case 1: Without role (first time login, role set later by system)
-      // Case 2: With role 'superadmin' only for specific whitelisted emails
-      // Case 3: Admin/Superadmin can create users for others (for approval system)
-      allow create: if 
-        // กรณีสร้างให้ตัวเอง
-        (canCreateOwnUser(userId) &&
-          (
-            !request.resource.data.keys().hasAny(['role'])
-            ||
-            (request.resource.data.role == 'superadmin' &&
-             request.resource.data.email in ['pongsagon.be1@gmail.com', 'pongsakon.be1@gmail.com'])
-            ||
-            request.resource.data.role == 'staff'
-          )
-        )
-        ||
-        // กรณี Admin/Superadmin สร้างให้คนอื่น (อนุมัติ user)
-        (isAdmin() && request.resource.data.role in ['admin', 'staff']);
-      
-      // Superadmin can update/delete any user and set any role
-      allow update, delete: if isSuperAdmin();
-      
-      // Admin can update users (but cannot create superadmin or update other admins)
-      allow update: if isAdmin() && 
-        request.resource.data.role != 'superadmin' &&
-        !(resource.data.role == 'admin' && request.auth.uid != userId);
-      
-      // Users can update their own profile (except role and displayName)
-      // SA Note: v2.3.0-replan — ล็อค displayName ไม่ให้ staff แก้เอง (ITEM-3A)
-      // SA Note: fcmToken อนุญาติให้ user บันทึก token สำหรับ push notification
-      allow update: if isOwner(userId) && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken']);
+      allow get: if isOwner(userId);
+      // First sign-in can look up only the verified email; active users retain
+      // access to the team directory used by existing screens.
+      allow read: if hasActiveRole(['staff', 'admin', 'superadmin']) ||
+        (verifiedEmail() && resource.data.email == request.auth.token.email);
+
+      allow create: if isValidUser(request.resource.data, userId) &&
+        ((isOwner(userId) && verifiedEmail() &&
+          request.resource.data.email == request.auth.token.email && request.resource.data.active == true &&
+          (isAllowedBootstrap(request.resource.data) || isApprovedMigration(request.resource.data, userId))) ||
+         (isAdmin() && request.resource.data.role in ['admin', 'staff']));
+
+      allow delete: if isSuperAdmin();
+      allow update: if isValidUser(request.resource.data, userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'email']) &&
+        (isSuperAdmin() ||
+         (isAdmin() && request.resource.data.role in ['admin', 'staff'] &&
+          (resource.data.role == 'staff' || (isOwner(userId) && resource.data.role == 'admin'))) ||
+         (isOwner(userId) && verifiedEmail() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken'])));
     }
 
     // Worklogs collection
@@ -164,13 +179,14 @@ service cloud.firestore {
 
     // Pending users collection (for approval system)
     match /pendingUsers/{userId} {
-      // Admin can read all pending users
+      allow get: if isOwner(userId) && verifiedEmail();
       allow read: if isAdmin();
       
       // Authenticated users can create their own pending request
-      allow create: if isAuthenticated() && 
-        request.auth.uid == userId &&
-        request.resource.data.email.matches('.*@icit\\.kmutnb\\.ac\\.th');
+      allow create: if isOwner(userId) && verifiedEmail() &&
+        request.resource.data.uid == userId && request.resource.data.status == 'pending' &&
+        request.resource.data.email == request.auth.token.email &&
+        request.auth.token.email.matches('^[^@ ]+@icit\\.kmutnb\\.ac\\.th$');
       
       // Admin can delete (approve/reject)
       allow delete: if isAdmin();
