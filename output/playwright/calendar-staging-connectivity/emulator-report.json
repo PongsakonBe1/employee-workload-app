@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "checks": [
+    "Admin/Superadmin verified through HTTP and real Auth/Firestore Emulator SDKs",
+    "Staff/missing token denied",
+    "Both write routes remain disabled",
+    "All five collections unchanged by every probe/write-denial attempt",
+    "Capability revocation observed on next request",
+    "Invalid gate fails closed without writes"
+  ],
+  "cloudUsed": false,
+  "credentialFilesRead": false,
+  "probeWrites": 0,
+  "fixtureSetup": "synthetic Emulator accounts/profiles/gate only",
+  "browserFixturesReady": true
+}

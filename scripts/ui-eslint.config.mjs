@@ -15,7 +15,7 @@ export default [{
   languageOptions: { ecmaVersion:2022,sourceType:"module",globals:globals.browser },
   rules: {"no-undef":"error","no-unused-vars":"error"},
 }, {
-  files: ["frontend/lib/calendarTrusted*.js", "frontend/lib/calendarServer*.js", "frontend/lib/calendarStagingServerConfig.js"],
+  files: ["frontend/lib/calendarConnectivity.js", "frontend/lib/calendarTrusted*.js", "frontend/lib/calendarServer*.js", "frontend/lib/calendarStagingServerConfig.js"],
   languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: globals.browser },
   rules: { "no-undef": "error", "no-unused-vars": "error" },
 }, {

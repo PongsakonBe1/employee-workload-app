@@ -13,13 +13,14 @@ async function sdk() {
     const { getAuth } = await import("firebase-admin/auth");
     const { getFirestore, FieldValue } = await import("firebase-admin/firestore");
     const { createTrustedCalendarService } = await import("../../backend/src/calendar/service.js");
+    const { createCalendarConnectivityProbe } = await import("../../backend/src/calendar/connectivity.js");
     const app = initializeApp({ projectId: runtime.projectId, credential: applicationDefault() }, "calendar-staging-server");
     const db = getFirestore(app);
-    return { app, db, auth: getAuth(app), execute: createTrustedCalendarService({ db, projectId: runtime.projectId, timestamp: () => FieldValue.serverTimestamp() }) };
+    return { app, db, auth: getAuth(app), probe: createCalendarConnectivityProbe({ db, projectId: runtime.projectId }), execute: createTrustedCalendarService({ db, projectId: runtime.projectId, timestamp: () => FieldValue.serverTimestamp() }) };
   })();
   return sdkPromise;
 }
-const app = createTrustedCalendarApp({ runtime, auth: { verifyIdToken: async (...args) => (await sdk()).auth.verifyIdToken(...args) }, execute: async (...args) => (await sdk()).execute(...args), log: event => console.log(JSON.stringify(event)) });
+const app = createTrustedCalendarApp({ runtime, auth: { verifyIdToken: async (...args) => (await sdk()).auth.verifyIdToken(...args) }, execute: async (...args) => (await sdk()).execute(...args), probe: async uid => (await sdk()).probe(uid), log: event => console.log(JSON.stringify(event)) });
 const server = app.listen(runtime.port, runtime.host, () => console.log(JSON.stringify({ event: "calendar-start", mode: runtime.mode, writesEnabled: runtime.writable })));
 async function stop() {
   await new Promise(resolve => server.close(resolve));

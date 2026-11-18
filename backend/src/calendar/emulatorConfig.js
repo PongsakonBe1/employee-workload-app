@@ -9,5 +9,6 @@ export function validateTrustedCalendarRuntime(env) {
       env.FIREBASE_AUTH_EMULATOR_HOST !== "127.0.0.1:19199") {
     throw new Error("Trusted calendar requires the dedicated development Emulator runtime");
   }
-  return { projectId: TRUSTED_CALENDAR_PROJECT, port: TRUSTED_CALENDAR_PORT, origin: TRUSTED_CALENDAR_ORIGIN };
+  if (![undefined, "0", "1"].includes(env.CALENDAR_SERVER_CONNECTIVITY) || ![undefined, "0", "1"].includes(env.CALENDAR_SERVER_WRITE) || env.CALENDAR_SERVER_CONNECTIVITY === "1" && env.CALENDAR_SERVER_WRITE !== "0") throw new Error("Connectivity requires an explicitly read-only Emulator");
+  return { mode: "emulator", projectId: TRUSTED_CALENDAR_PROJECT, port: TRUSTED_CALENDAR_PORT, origin: TRUSTED_CALENDAR_ORIGIN, apiOrigin: `http://127.0.0.1:${TRUSTED_CALENDAR_PORT}`, origins: [TRUSTED_CALENDAR_ORIGIN], writable: env.CALENDAR_SERVER_WRITE !== "0", connectivity: env.CALENDAR_SERVER_CONNECTIVITY === "1" };
 }

@@ -1,0 +1,50 @@
+{
+  "branch": "codex/calendar-staging-connectivity-probe",
+  "baseline": "40e95de",
+  "scope": "local read-only connectivity probe",
+  "unit": {
+    "passed": 713,
+    "files": 45,
+    "failed": 0
+  },
+  "lint": "passed targeted source checks",
+  "syntax": "passed launcher and SIT script checks",
+  "http": "passed live loopback requests with mocked SDK boundary",
+  "emulator": {
+    "passed": true,
+    "groups": 6,
+    "probeWrites": 0,
+    "ownedFixtureCleanup": true
+  },
+  "browser": {
+    "engine": "Edge",
+    "route": "/calendar",
+    "adminDesktop": "verified",
+    "superadminMobile": "verified",
+    "staffMobile": "read allowed; probe/create/import disabled",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "navigation": "session and verified status retained",
+    "reload": "in-memory session reset; sign-in and probe verified again",
+    "realIosSafariTested": false
+  },
+  "build": {
+    "compiled": true,
+    "developmentPreviewRendered": false,
+    "productionOutUntouched": true
+  },
+  "launcherGuards": 3,
+  "cloudReads": 0,
+  "cloudWrites": 0,
+  "credentialsProvisioned": false,
+  "credentialContentsInspected": false,
+  "pushed": false,
+  "deployed": false,
+  "productionReady": false,
+  "releaseGates": {
+    "SEC": "pending: owner confirmed historical real key and elected to inspect/revoke independently; revocation result not received",
+    "CAL_CONNECT": "pending cloud credentials and real-cloud verification"
+  }
+}

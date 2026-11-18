@@ -71,6 +71,16 @@ beforeEach(() => {
   }));
 });
 describe("staging client session lifecycle with mocked SDK boundaries", () => {
+  it("never initializes a probe client in production or alongside writes", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    expect(() => createCalendarStagingClient(config, { connectivity: true, stagingServer: true })).toThrow();expect(sdk.initializeApp).not.toHaveBeenCalled();
+    vi.stubEnv("NODE_ENV", "development");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_ENTRY", "1");vi.stubEnv("NEXT_PUBLIC_CALENDAR_CONNECTIVITY", "1");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_WRITE", "0");
+    expect(() => createCalendarStagingClient(config, { connectivity: true, writer: true, stagingServer: true })).toThrow();expect(sdk.initializeApp).not.toHaveBeenCalled();vi.unstubAllEnvs();
+  });
+  it("exposes only the probe method in the explicit read-only staging API runtime", async () => {
+    vi.stubEnv("NODE_ENV", "development");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_ENTRY", "1");vi.stubEnv("NEXT_PUBLIC_CALENDAR_CONNECTIVITY", "1");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_WRITE", "0");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_SERVER", "1");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_API_ORIGIN", STAGING_CALENDAR_API_ORIGIN);
+    const client = createCalendarStagingClient(config, { connectivity: true, stagingServer: true });expect(typeof client.checkConnectivity).toBe("function");expect(client).not.toHaveProperty("create");expect(client).not.toHaveProperty("mutate");await client.close();vi.unstubAllEnvs();
+  });
   it("fails before SDK initialization unless the staging HTTP runtime is explicit and isolated", async () => {
     vi.stubEnv("NODE_ENV", "development");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_SERVER", "0");vi.stubEnv("NEXT_PUBLIC_CALENDAR_STAGING_API_ORIGIN", STAGING_CALENDAR_API_ORIGIN);
     try {

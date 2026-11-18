@@ -16,9 +16,11 @@ import { createMutationReceiptReplay, validateMutationReplayPacket } from "./cal
 import { validateTrustedCalendarConfig, trustedCalendarRuntimeEnabled } from "./calendarTrustedConfig.js";
 import { createTrustedCalendarTransport } from "./calendarTrustedTransport.js";
 import { stagingCalendarServerEnabled } from "./calendarStagingServerConfig.js";
-import { STAGING_CALENDAR_API_ORIGIN } from "./calendarServerProtocol.js";
+import { STAGING_CALENDAR_API_ORIGIN, EMULATOR_CALENDAR_API_ORIGIN } from "./calendarServerProtocol.js";
+import { calendarConnectivityEnabled, createCalendarConnectivityTransport } from "./calendarConnectivity.js";
 let sequence = 0;
-export function createCalendarStagingClient(config, { writer = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null, trustedServer = false, stagingServer = false } = {}) {
+export function createCalendarStagingClient(config, { writer = false, connectivity = false, roleQa = false, roleWriteQa = false, mutations = false, emulatorAccount = null, trustedServer = false, stagingServer = false } = {}) {
+  if (connectivity && (!calendarConnectivityEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_ENTRY, process.env.NEXT_PUBLIC_CALENDAR_CONNECTIVITY, process.env.NEXT_PUBLIC_CALENDAR_STAGING_WRITE) || writer || mutations || roleQa || roleWriteQa || !(trustedServer || stagingServer))) throw new Error("Connectivity requires its isolated read-only runtime");
   if (stagingServer && (!stagingCalendarServerEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_STAGING_SERVER, Boolean(emulatorAccount), process.env.NEXT_PUBLIC_CALENDAR_STAGING_API_ORIGIN) || trustedServer || roleQa || roleWriteQa)) throw new Error("Staging HTTP writer requires its explicit reviewed runtime");
   if (trustedServer && (!trustedCalendarRuntimeEnabled(process.env.NODE_ENV, process.env.NEXT_PUBLIC_CALENDAR_TRUSTED_SERVER, Boolean(emulatorAccount), typeof window === "undefined" ? null : window.location) || roleQa || roleWriteQa)) throw new Error("Trusted server requires its dedicated loopback runtime");
   if (mutations && (!writer || roleWriteQa)) throw new Error("Mutations require the ordinary writer client");
@@ -42,6 +44,7 @@ export function createCalendarStagingClient(config, { writer = false, roleQa = f
   const mutate = writer && mutations ? serverWriter?.mutate || createCalendarMutationWriter(db, () => closed ? null : auth.currentUser?.uid, () => reader.refresh()) : null;
   return {
     reader,
+    ...(connectivity ? { checkConnectivity: createCalendarConnectivityTransport({ getUser: () => closed ? null : auth.currentUser, origin: stagingServer ? STAGING_CALENDAR_API_ORIGIN : EMULATOR_CALENDAR_API_ORIGIN }) } : {}),
     ...(serverWriter?.prepareWrite ? { prepareWrite: serverWriter.prepareWrite } : {}),
     async identity() {
       const current = session, uid = closed ? null : auth.currentUser?.uid;

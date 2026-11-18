@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "launcher": "scripts/dev-calendar-trusted.mjs",
+      "args": [
+        "--connectivity",
+        "--writer"
+      ],
+      "rejected": true
+    },
+    {
+      "launcher": "scripts/dev-staging-ui.mjs",
+      "args": [
+        "--connectivity",
+        "--writer"
+      ],
+      "rejected": true
+    },
+    {
+      "launcher": "scripts/dev-staging-ui.mjs",
+      "args": [
+        "--connectivity",
+        "--legacy"
+      ],
+      "rejected": true
+    }
+  ],
+  "processesStarted": false,
+  "cloudUsed": false
+}

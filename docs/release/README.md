@@ -89,16 +89,16 @@ Views ที่ไม่เป็น route แยกยังต้องตร�
 ### G0 — ยืนยันความปลอดภัยและ baseline
 
 - [x] **SCOPE** Freeze ตาม baseline และเก็บ inventory/application routes/views ครบในเอกสารนี้
-- [ ] **SEC** เจ้าของตรวจไฟล์ชื่อคล้าย credential ที่ Git track 1 ไฟล์: ยังไม่ได้เปิดเนื้อหา/พิสูจน์ว่าเป็น secret จริงหรือ key ยัง active ถ้าจริงให้ revoke/rotate และตกลงวิธีจัดการ repo/history แยก การลบไฟล์เฉย ๆ ไม่เท่ากับเพิกถอน key ห้ามอ่าน/แสดง key เพื่อทำ checklist นี้
+- [ ] **SEC** เจ้าของยืนยันว่าไฟล์ credential ที่ Git track เคยเป็น key จริง และเลือกตรวจ/เพิกถอนเอง ยังไม่ยืนยันสถานะ active หรือผลเพิกถอน ต้องยืนยันผลและประเมินบริการที่ได้รับผลก่อน release รวมถึงตกลงวิธีจัดการ repo/history แยก การลบไฟล์เฉย ๆ ไม่เท่ากับเพิกถอน key ห้ามอ่าน/แสดง key เพื่อทำ checklist นี้
 - [ ] **DATA** ได้รับอนุญาตอ่าน baseline production ที่จำเป็นแล้ว ตรวจ schema, stable employee/resource IDs, เวลา/ปีงบ/ภาคเรียน, legacy missing fields, indexes และปริมาณจริง พร้อม backup/restore plan ไม่แก้ชื่อหรือจับคู่ด้วยชื่อคล้ายกันอัตโนมัติ
 - [ ] **ENV** วาง production identity/project/hostname/config แยกจาก staging และทดสอบป้องกันข้าม project; ไม่เอา guard ที่ hard-code staging ไปเปิด production โดยเพียงสลับ flag
 - [ ] **DEPENDENCIES** ตรวจ dependency graph ของ frontend/legacy backend/runtime ที่ release ใช้จริงและ triage advisory ที่เกี่ยวข้อง ไม่ถือ audit 0 ของ Calendar เท่ากับทั้ง repo; Critical/High ที่ยืนยันและยังไม่ได้แก้/mitigate ต้องมีข้อสรุปก่อน Go
 
-SEC มีเพียง **filename metadata finding** ไม่ใช่ผลตรวจ key/การยืนยันการรั่วไหล ชื่อไฟล์สำหรับเจ้าของตรวจเก็บใน `.tools/calendar-staging/release-freeze-sensitive-paths.json` ที่ไม่ commit ไม่อ่าน credential contents ในงานนี้
+SEC มีหลักฐานจาก filename/Git metadata และคำยืนยันเจ้าของว่าเคยเป็น key จริง ยังไม่ได้ตรวจ key status หรือพิสูจน์การนำไปใช้โดยบุคคลอื่น ชื่อไฟล์สำหรับเจ้าของตรวจเก็บใน `.tools/calendar-staging/release-freeze-sensitive-paths.json` ที่ไม่ commit ไม่อ่าน credential contents ในงานนี้ ผู้ใช้เลือกจัดการเอง จึงไม่ตรวจ production IAM/Render เพิ่ม
 
 ### G1 — Calendar/Auth ทำงานจริงใน staging
 
-- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด วิธีที่เสนอคือ local connectivity probe แยก flag แต่ยังไม่เริ่มเขียนโค้ดหรือออก key จากการอนุมัติเอกสาร freeze นี้
+- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว แต่ยังไม่ push/deploy/ออก key/เชื่อม Firebase cloud จึงยังไม่ผ่าน gate นี้
 - [ ] **CAL-WRITE** trusted server ผ่าน approved synthetic cloud manifest: manual/PDF/DL, edit/soft-cancel, duplicate/replay, lost response/read-back failure, concurrency/atomic failure, room/proctor conflicts; จำนวนและ IDs ถูกตรวจ ไม่เขียนนอกชุดเพื่อแก้ผลทดสอบ
 - [ ] **CAL-CUTOVER** เตรียม Rules ที่ปิด direct client writes ทุกทางที่เกี่ยวข้อง ตรวจ hash/ผลกระทบ/คำขอค้าง/reader queries แล้วอนุมัติ cutover ก่อน trusted writer; รักษา collection อื่นของ production ไม่ deploy staging prototype ทั้งไฟล์ทับ production
 - [ ] **AUTH** Anonymous/pending/inactive/Staff/Admin-no-capability/Admin-writer/Superadmin ถูก allow/deny ตาม contract ทั้งเรียกตรง backend/SDK และ UI; ไม่เปลี่ยน profile/role เพื่อให้เทสต์ผ่านโดยไม่อนุมัติ
