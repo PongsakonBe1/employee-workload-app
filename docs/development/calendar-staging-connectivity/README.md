@@ -45,6 +45,8 @@
 
 Probe นี้พิสูจน์เฉพาะ Auth/profile/gate และ query access จำกัด ไม่พิสูจน์ business invariants, indexes ของ writer ทุก query, cloud write/replay/concurrency หรือความพร้อมของเว็บแอปทั้งระบบ Limits ยังเป็น per-process pilot และ browser test เป็น viewport emulation ไม่ใช่ Safari/iPhone จริง
 
-**SEC ยัง pending**: เจ้าของยืนยันว่า credential ที่ Git track เคยเป็น key จริงและเลือกตรวจ/เพิกถอนเอง ยังไม่มีผลยืนยันการเพิกถอนหรือสถานะบริการ ห้ามถือว่าลบไฟล์แล้วปลอดภัย และไม่เปิดอ่าน key เพื่อจัดทำรายงานนี้ ไม่ตรวจ production metadata เพิ่มตามคำตอบผู้ใช้
+**อัปเดตหลัง `786bfb8`**: ตรวจ IAM metadata ตามการมอบหมายใหม่แล้ว key ที่ตรง filename prefix เป็น disabled อยู่ก่อนแล้ว นำ credential ออกจาก Git ปัจจุบันและเพิ่ม ignore แต่ไม่ rewrite history/remote ดูสถานะ SEC ปัจจุบันใน [release checklist](../../release/README.md) ผลตรวจในเอกสารนี้เป็นผลของเฟส local probe เดิม
 
 หลังตรวจรับ local probe และยืนยันเรื่อง key แล้ว จึงจัดทำรายการ deploy/provisioning และ read-only cloud QA ที่ตรวจทานได้ก่อนขออนุมัติจริง ดู [release checklist กลาง](../../release/README.md)
+
+แผนขั้นถัดไปที่เตรียมแล้ว: [staging connectivity rollout](../calendar-staging-connectivity-rollout/README.md) ยังไม่อนุมัติ cloud mutation จากการเตรียมเอกสาร

@@ -98,7 +98,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 
 ### G1 — Calendar/Auth ทำงานจริงใน staging
 
-- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว แต่ยังไม่ push/deploy/ออก key/เชื่อม Firebase cloud จึงยังไม่ผ่าน gate นี้
+- [ ] **CAL-CONNECT** จัด credentials ผ่านช่องทางที่อนุมัติและทดสอบ connection/signed token/revocation/profile แบบอ่านอย่างเดียว ขณะ writer ปิด [local connectivity probe](../development/calendar-staging-connectivity/README.md) พัฒนาและตรวจด้วย Emulator แล้ว และเตรียม [rollout manifest](../../deploy/calendar-staging/connectivity-rollout.review.json) สำหรับตรวจรับ แต่ยังไม่ push/deploy/ออก key/เชื่อม Firebase cloud จึงยังไม่ผ่าน gate นี้
 - [ ] **CAL-WRITE** trusted server ผ่าน approved synthetic cloud manifest: manual/PDF/DL, edit/soft-cancel, duplicate/replay, lost response/read-back failure, concurrency/atomic failure, room/proctor conflicts; จำนวนและ IDs ถูกตรวจ ไม่เขียนนอกชุดเพื่อแก้ผลทดสอบ
 - [ ] **CAL-CUTOVER** เตรียม Rules ที่ปิด direct client writes ทุกทางที่เกี่ยวข้อง ตรวจ hash/ผลกระทบ/คำขอค้าง/reader queries แล้วอนุมัติ cutover ก่อน trusted writer; รักษา collection อื่นของ production ไม่ deploy staging prototype ทั้งไฟล์ทับ production
 - [ ] **AUTH** Anonymous/pending/inactive/Staff/Admin-no-capability/Admin-writer/Superadmin ถูก allow/deny ตาม contract ทั้งเรียกตรง backend/SDK และ UI; ไม่เปลี่ยน profile/role เพื่อให้เทสต์ผ่านโดยไม่อนุมัติ

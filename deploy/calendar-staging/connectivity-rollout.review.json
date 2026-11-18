@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "status": "prepared-pending-approval",
+  "preparedOn": "2026-11-18",
+  "baselineCommit": "786bfb8",
+  "source": {
+    "repository": "https://github.com/PongsakonBe1/employee-workload-app",
+    "branch": "codex/calendar-staging-connectivity-rollout",
+    "pushMain": false,
+    "forcePush": false,
+    "rewriteHistory": false
+  },
+  "target": {
+    "projectId": "labboy-workload-app-staging",
+    "databaseId": "(default)",
+    "renderServiceId": "srv-dbu3qvdckfvc73b16ku0",
+    "renderServiceName": "labboy-calendar-staging",
+    "renderBlueprintId": "exs-dbu3q8rl550s739rnu50",
+    "renderApiOrigin": "https://labboy-calendar-staging.onrender.com",
+    "renderPlan": "free",
+    "renderRegion": "singapore",
+    "blueprintPath": "deploy/calendar-staging/render.yaml",
+    "clientOrigin": "http://127.0.0.1:4311"
+  },
+  "identity": {
+    "serviceAccountEmail": "calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+    "existingRole": "projects/labboy-workload-app-staging/roles/calendarStagingServerPilot",
+    "changeIam": false,
+    "credentialHasExistingCreateUpdatePermissions": true,
+    "collectionLevelIamSandbox": false,
+    "keyProvisioning": {
+      "performedBy": "owner-handoff",
+      "createNewUserManagedKeysMaximum": 1,
+      "expectedKeysBefore": 0,
+      "agentReadsOrHandlesPrivateKey": false,
+      "storeOutsideRepository": true,
+      "secretFilename": "calendar-staging-admin.json",
+      "runtimeCredentialPath": "/etc/secrets/calendar-staging-admin.json",
+      "shareWithProductionOrOtherServices": false,
+      "saveSecretFileMayTriggerDeploy": true
+    }
+  },
+  "runtime": {
+    "nodeVersion": "24.15.0",
+    "buildCommand": "npm ci --omit=dev --ignore-scripts --workspace calendar-server --include-workspace-root=false",
+    "startCommand": "node calendar-server/src/staging-server.js",
+    "autoDeployTrigger": "off",
+    "blueprintAutoSync": false,
+    "initialWriteFlag": "0",
+    "initialConnectivityFlag": "0",
+    "qaWriteFlag": "0",
+    "qaConnectivityFlag": "1",
+    "afterQaConnectivityFlag": "0"
+  },
+  "cloudQa": {
+    "endpoint": "/api/calendar/connectivity",
+    "method": "POST",
+    "payload": {},
+    "maxAnonymousProbeRequests": 1,
+    "maxAuthenticatedProbeRequests": 2,
+    "maxDocumentsPerAuthenticatedProbe": 4,
+    "reads": ["users/{signedInUid}", "calendarWriteState/main", "classroomSchedules.limit(1)", "dlExamSchedules.limit(1)"],
+    "identity": "existing-approved-active-superadmin-with-calendarWriter",
+    "staffBrowserControl": "existing calendar reads allowed; probe/create/import disabled; no authenticated HTTP probe from Staff",
+    "frontendCalendarReads": "existing staging SDK reader and cache unchanged; separate from probe bounds",
+    "billedReadsGuaranteed": false,
+    "writes": 0,
+    "returnDocumentContents": false,
+    "refreshTokensOrRevokeSessions": false,
+    "healthGetBudgetMs": 90000,
+    "healthGetMaximumAttempts": 30
+  },
+  "changeRules": false,
+  "changeProfiles": false,
+  "enableWriter": false,
+  "changeProduction": false,
+  "changeBilling": false,
+  "newCron": false,
+  "keyMaterialInSourceLogsChatOrScreenshots": false,
+  "approvals": {"pushBranch": false, "deployStaging": false, "ownerKeyProvisioning": false, "limitedCloudProbe": false},
+  "rollback": "Keep writer=0; set connectivity=0 and redeploy staging, or restore reviewed 8ea0c91 if necessary. This does not revoke the mounted credential or existing Firebase SDK writers. Do not re-enable any old/production key."
+}

@@ -1,0 +1,35 @@
+{
+  "prepared": true,
+  "branch": "codex/calendar-staging-connectivity-rollout",
+  "baseline": "786bfb8",
+  "yamlValid": true,
+  "jsonValid": true,
+  "singleExistingStagingTarget": true,
+  "writeOff": true,
+  "probeOffByDefault": true,
+  "qaProbeRequiresExplicitOptIn": true,
+  "negativeGuards": 4,
+  "localDocLinks": 2,
+  "manifestSha256": "7ba003c7879e8d7e24a81cc44946c131219ae6ebf29eefc208e77b22bb7eb1ae",
+  "blueprintSha256": "c45be50a48b9b12ec33559da9da6ababba61bd529311dc29220db787b1140973",
+  "snapshot": {
+    "renderLiveRevision": "8ea0c916f4559acde08602e0857eb05750f46ff7",
+    "stagingIdentityObservedAt": "2026-11-18T00:48:34.893Z",
+    "stagingUserManagedKeys": 0,
+    "directProjectBindings": 1,
+    "rolePermissionsMatchApprovedDraft": true,
+    "inheritedPermissionsEvaluated": false
+  },
+  "cloudDataRead": false,
+  "cloudChanged": false,
+  "newKeysCreated": 0,
+  "pushed": false,
+  "deployed": false,
+  "approvalsPending": [
+    "pushBranch",
+    "deployStaging",
+    "ownerKeyProvisioning",
+    "limitedCloudProbe"
+  ],
+  "runtimeTests": "Not repeated: only rollout config/docs changed; baseline 786bfb8 passed 719 tests / 46 files"
+}

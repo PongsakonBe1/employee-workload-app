@@ -5,7 +5,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    branch: codex/calendar-runtime-hardening
+    branch: codex/calendar-staging-connectivity-rollout
     autoDeployTrigger: "off"
     buildCommand: npm ci --omit=dev --ignore-scripts --workspace calendar-server --include-workspace-root=false
     startCommand: node calendar-server/src/staging-server.js
@@ -30,6 +30,8 @@ services:
       - key: GOOGLE_APPLICATION_CREDENTIALS
         value: /etc/secrets/calendar-staging-admin.json
       - key: CALENDAR_SERVER_WRITE
+        value: "0"
+      - key: CALENDAR_SERVER_CONNECTIVITY
         value: "0"
 # The operator must supply the staging-only secret file separately after explicit IAM/key approval.
 # Never paste its contents into this file, source control, logs, screenshots or chat.
