@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T04:44:51.251Z",
+  "deployId": "dep-dbuipf49v7es738mnor0",
+  "sourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "peer": {
+    "ok": true,
+    "projectId": "labboy-workload-app-staging",
+    "mode": "staging",
+    "protocol": 1,
+    "writesEnabled": false,
+    "connectivityEnabled": false,
+    "emulator": false
+  },
+  "anonymousProbeRequests": 1,
+  "authenticatedProbeRequests": 0,
+  "healthGetRequests": 5,
+  "cloudWrites": 0,
+  "privateKeyMaterialRead": false,
+  "signedFirebaseConnectionVerified": false
+}

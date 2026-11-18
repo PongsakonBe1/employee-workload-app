@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-11-18T02:45:45.223Z",
+  "project": "labboy-workload-app-staging",
+  "serviceAccount": "calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+  "userManagedKeyCount": 1,
+  "keyEnabled": true,
+  "keyCreatedAt": "2026-11-18T02:40:41Z",
+  "billingEnabled": false,
+  "keyMaterialRead": false,
+  "cloudChangedByAgent": false,
+  "ownerReportedSecretAdded": true
+}

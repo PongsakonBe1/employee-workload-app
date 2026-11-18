@@ -2,7 +2,7 @@
 
 วันที่ 18 พฤศจิกายน 2569 · branch `codex/calendar-staging-connectivity-rollout` จาก `786bfb8`
 
-**สถานะดำเนินการ: ผู้ใช้อนุมัติ manifest แล้ว และ deploy แรกสำเร็จ ขณะ writer/probe ปิด ยังรอ owner credentials และ Cloud QA** [manifest ที่ตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json) คงไฟล์ snapshot เดิมเพื่อรักษา digest การอนุมัติจริงและสถานะดำเนินการเก็บใน [execution record](../../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) แยกจาก snapshot ที่เดิมยังระบุ pending
+**สถานะดำเนินการ: เจ้าของเพิ่ม credentials แล้ว, deploy สำเร็จ, anonymous probe ผ่าน และคืน writer/probe เป็นปิดพร้อมยืนยัน health แล้ว ยังรอเลือกบัญชี Google สำหรับ signed Cloud QA** [manifest ที่ตรวจรับ](../../../deploy/calendar-staging/connectivity-rollout.review.json) คงไฟล์ snapshot เดิมเพื่อรักษา digest การอนุมัติจริงและสถานะดำเนินการเก็บใน [execution record](../../../output/playwright/calendar-staging-connectivity-rollout/execution-progress.json) แยกจาก snapshot ที่เดิมยังระบุ pending
 
 ## ผลดำเนินการหลังอนุมัติ
 
@@ -15,7 +15,11 @@
 - เตรียม Google Console ด้วยบัญชี ICIT ที่มีสิทธิ์ บนแท็บ Keys ของ service account ที่ถูกต้อง ซึ่งแสดง No rows to display และ Render Secret Files เตรียมเฉพาะชื่อ `calendar-staging-admin.json` ไม่เปิด Contents หรือกด Save แทนเจ้าของ
 - ให้เจ้าของสร้าง key และกรอก Contents เอง บันทึก Save only และออกจากฟอร์มค่าลับก่อนแจ้งเสร็จ หลังยืนยันจะตรวจ metadata/Live และ deploy ต่อหากจำเป็น ยังไม่ถือว่า Firebase connection ผ่าน
 
-หลักฐาน Live: [ภาพ Dashboard](../../../output/playwright/calendar-staging-connectivity-rollout/render-live-initial.jpg) รอบนี้ยังไม่แก้ IAM/Rules/profile/billing หรือบริการ production ไม่รัน Unit/build ใหม่เพราะไม่มี runtime source change จากชุดที่ตรวจแล้ว
+อัปเดต credentials: [IAM metadata](../../../output/playwright/calendar-staging-connectivity-rollout/owner-key-metadata.json) ยืนยัน staging มี enabled key 1 ตัว และ billingEnabled=false ช่วงแรก Secret Files ยังไม่ปรากฏหลัง reload ต่อมาเจ้าของเพิ่มใหม่และเห็นไฟล์ที่ใช้ชื่อดาวน์โหลด จึงเปลี่ยนเฉพาะชื่อเป็น `calendar-staging-admin.json` โดยไม่เปิด Contents และยืนยันว่าชื่อคงอยู่หลัง reload ไม่สร้าง key เพิ่ม
+
+รอบ QA: deploy `dep-dbuikbifngtc73ctll30` ของ `2aa1bd2` เป็น Live และ health ยืนยัน probe=true, writer=false [anonymous probe](../../../output/playwright/calendar-staging-connectivity-rollout/anonymous-probe-report.json) 1 ครั้งได้ 401 ตามคาด ไม่ได้ทดสอบ signed probe ยังติดการเลือกบัญชี Google ใน popup ที่ถูกย่อ เครื่องมือ pointer/Enter ไม่ทำให้หน้าเลือกบัญชีเปลี่ยน จึงส่ง handoff ให้เจ้าของเลือก Superadmin เดิม ระหว่างรอคืน flags เป็น 0/0 และ deploy revision เดิม `dep-dbuipf49v7es738mnor0` เป็น Live แล้ว [ผลตรวจ HTTPS หลังคืนค่า](../../../output/playwright/calendar-staging-connectivity-rollout/probe-off-restore-report.json) เวลา 11:44 น. ไทย ยืนยัน connectivity=false และ writes=false ใช้ health GET รวม 5/30 ครั้ง, anonymous 1/1 และ authenticated 0/2 ครั้ง ไม่ถือว่าการตรวจ Firebase ผ่าน เมื่อ session พร้อมจึงเปิด probe เฉพาะรอบ QA ที่อนุมัติและคืนปิดเมื่อจบ
+
+หลักฐาน Live: [ภาพ Dashboard แรก](../../../output/playwright/calendar-staging-connectivity-rollout/render-live-initial.jpg) และ [หลังคืน probe-off](../../../output/playwright/calendar-staging-connectivity-rollout/render-probe-off-awaiting-login.jpg) รอบนี้ยังไม่แก้ IAM/Rules/profile/billing หรือบริการ production ไม่รัน Unit/build ใหม่เพราะไม่มี runtime source change จากชุดที่ตรวจแล้ว
 
 ## Baseline ที่ตรวจแบบอ่านอย่างเดียว
 

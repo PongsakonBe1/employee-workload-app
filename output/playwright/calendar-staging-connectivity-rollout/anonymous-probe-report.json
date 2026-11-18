@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "observedAt": "2026-11-18T04:34:39.221Z",
+  "healthPeer": {
+    "ok": true,
+    "projectId": "labboy-workload-app-staging",
+    "mode": "staging",
+    "protocol": 1,
+    "writesEnabled": false,
+    "connectivityEnabled": true,
+    "emulator": false
+  },
+  "anonymousProbeRequests": 1,
+  "status": 401,
+  "responseCode": "unauthenticated",
+  "idTokenSent": false,
+  "firebaseDataRead": false,
+  "cloudWrites": 0
+}

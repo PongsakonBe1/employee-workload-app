@@ -13,7 +13,7 @@
   "deployVerified": true,
   "writerEnabled": false,
   "probeEnabled": false,
-  "anonymousProbeRequests": 0,
+  "anonymousProbeRequests": 1,
   "authenticatedProbeRequests": 0,
   "privateKeyMaterialRead": false,
   "cloudDataWrites": 0,
@@ -21,7 +21,7 @@
   "blueprintSyncApproved": true,
   "deployId": "dep-dbug3emc6qcc73dlok6g",
   "deployDurationSeconds": 96,
-  "healthGetRequests": 3,
+  "healthGetRequests": 5,
   "initialHttpsPreflightPassed": true,
   "healthPeer": {
     "ok": true,
@@ -34,12 +34,12 @@
   },
   "keyMetadataObservedAt": "2026-11-18T01:41:21.856Z",
   "stagingUserManagedKeysBeforeHandoff": 0,
-  "status": "in-progress-owner-credential-handoff",
+  "status": "paused-probe-off-awaiting-google-selection",
   "autoDeployOffObserved": true,
   "blueprintAutoSyncOffObserved": true,
   "renderPlanObserved": "free",
   "renderSourceBranchObserved": "codex/calendar-staging-connectivity-rollout",
-  "credentialProvisioningStatus": "awaiting-owner-confirmation",
+  "credentialProvisioningStatus": "one staging key and persisted Secret File confirmed; signed probe still pending",
   "ownerHandoff": {
     "googleAccount": "approved-ICIT-account",
     "googleKeysTab": "28676919",
@@ -50,11 +50,64 @@
     "secretFilenamePrepared": "calendar-staging-admin.json",
     "secretContentsEnteredByAgent": false,
     "saveSubmittedByAgent": false,
-    "instructions": "Owner creates one JSON key, enters the secret privately, saves only and leaves Contents form before reporting completion"
+    "instructions": "Owner creates one JSON key, enters the secret privately, saves only and leaves Contents form before reporting completion",
+    "nextAction": "Owner secret handoff completed; agent deploys reviewed code and performs bounded QA"
   },
   "billingChanged": false,
   "iamChanged": false,
   "rulesChanged": false,
   "profilesChanged": false,
-  "cloudQaComplete": false
+  "cloudQaComplete": false,
+  "noCostConstraint": {
+    "requiredByOwner": true,
+    "stagingBillingEnabled": false,
+    "stagingBillingObservedAt": "2026-11-18T02:38:31.543Z",
+    "renderWorkspacePlanObserved": "Hobby",
+    "renderPaymentMethodObserved": "No card on file",
+    "renderServicePlan": "Free (last verified during deployment)",
+    "billingChanged": false,
+    "paymentMethodChanged": false,
+    "upgradeAllowed": false,
+    "guard": "Do not enable billing, add a payment method, upgrade, or use paid-only features; stop if a required step would do so.",
+    "screenshotIssue": "Owner screenshot shows access denied for unrelated redhat-marketplace-public project; use staging project with ICIT account."
+  },
+  "ownerReportedSecretAdded": true,
+  "ownerKeyMetadata": {
+    "observedAt": "2026-11-18T02:45:45.223Z",
+    "project": "labboy-workload-app-staging",
+    "serviceAccount": "calendar-staging-server@labboy-workload-app-staging.iam.gserviceaccount.com",
+    "userManagedKeyCount": 1,
+    "keyEnabled": true,
+    "keyCreatedAt": "2026-11-18T02:40:41Z",
+    "billingEnabled": false,
+    "keyMaterialRead": false,
+    "cloudChangedByAgent": false,
+    "ownerReportedSecretAdded": true
+  },
+  "renderPersistedSecretFileObserved": true,
+  "renderSecretFilenameObserved": true,
+  "qaFlagsSaved": {
+    "writer": "0",
+    "connectivity": "1"
+  },
+  "qaSourceCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "qaDeployRequestedAt": "2026-11-18T04:32:14.461Z",
+  "qaDeployId": "dep-dbuikbifngtc73ctll30",
+  "qaDeployVerified": true,
+  "anonymousProbePassed": true,
+  "googlePopup": {
+    "account": "existing-approved-superadmin",
+    "userSelectionRequired": true,
+    "technicalReason": "Popup window minimized; pointer action timed out and Enter left account chooser unchanged",
+    "popupTabId": "28676944",
+    "calendarTabId": "28676941"
+  },
+  "probeOffRestoreRequested": true,
+  "restoreRequestedAt": "2026-11-18T04:43:02.803Z",
+  "restoreFlagsSaved": {
+    "writer": "0",
+    "connectivity": "0"
+  },
+  "probeOffRestoreVerified": true,
+  "restoreDeployId": "dep-dbuipf49v7es738mnor0"
 }
