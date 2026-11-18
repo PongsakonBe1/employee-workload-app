@@ -6,6 +6,7 @@ import { initializeFirestore, terminate } from "firebase/firestore";
 import { validateCalendarStagingConfig } from "./calendarStagingConfig.js";
 import { createCalendarDirectDenialQa } from "./calendarDirectDenialQa.js";
 import { calendarDirectDenialTransport } from "./calendarDirectDenialSdk.js";
+import { runCalendarTrustedSmoke } from "./calendarTrustedSmoke.js";
 let sequence = 0;
 export function createCalendarDirectDenialClient(config) {
   if (process.env.NODE_ENV !== "development" || globalThis.location?.origin !== "http://127.0.0.1:4311") throw new Error("Cutover QA requires development on localhost:4311");
@@ -19,6 +20,7 @@ export function createCalendarDirectDenialClient(config) {
     },
     alias: frozen => closed ? null : Object.entries(frozen.identities).find(([, uid]) => uid === auth.currentUser?.uid)?.[0] || null,
     controller: packet => { if (closed) throw new Error("QA session closed");return createCalendarDirectDenialQa(calendarDirectDenialTransport(db, () => closed ? null : auth.currentUser), packet); },
+    writerSmoke: (packet, onStep) => runCalendarTrustedSmoke({ ...packet, onStep, getUser: () => closed ? null : auth.currentUser }),
     logout: () => signOut(auth),
     async close() { if (closed) return;closed = true;await terminate(db);await deleteApp(app); }
   };

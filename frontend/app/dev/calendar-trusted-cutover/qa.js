@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { calendarDirectDenialProofFresh, resumeCalendarDirectDenialSession } from "../../../lib/calendarDirectDenialQa.js";
 import { createCalendarDirectDenialClient } from "../../../lib/calendarDirectDenialClient.js";
+import { calendarSmokeApproved, calendarSmokeFresh } from "../../../lib/calendarTrustedSmoke.js";
 import styles from "./qa.module.css";
 
 export default function CutoverQa() {
@@ -9,17 +10,19 @@ export default function CutoverQa() {
   const [origin, setOrigin] = useState(""), [frozen, setFrozen] = useState(null), [proof, setProof] = useState(null);
   const [ready, setReady] = useState(false), [busy, setBusy] = useState(false), [alias, setAlias] = useState(null), [confirmed, setConfirmed] = useState(false), [status, setStatus] = useState("ยังไม่ได้โหลดไฟล์ ไม่มีการเชื่อม Firebase");
   const [fresh, setFresh] = useState(false);
+  const [smokeFresh, setSmokeFresh] = useState(false), [smokeResults, setSmokeResults] = useState([]);
   useEffect(() => { setOrigin(window.location.origin);return () => { const client = clientRef.current;clientRef.current = null;qaRef.current = null;client?.close().catch(() => {}); }; }, []);
   useEffect(() => {
-    const update = () => setFresh(calendarDirectDenialProofFresh(proof));update();
+    const update = () => { setFresh(calendarDirectDenialProofFresh(proof));setSmokeFresh(calendarSmokeFresh(proof)); };update();
     const timer = setInterval(update, 1000);return () => clearInterval(timer);
   }, [proof]);
   useEffect(() => {
     let active = true;setReady(false);setConfirmed(false);setAlias(null);qaRef.current = null;
     if (frozen && proof) resumeCalendarDirectDenialSession(clientRef.current, { frozen, proof }).then(session => {
       if (active) {
-        setReady(true);setAlias(session?.alias || null);qaRef.current = session?.controller || null;
-        setStatus(session ? "ใช้ Google session เดิม " + session.alias + " · ยังไม่ตรวจสิทธิ์หรือส่งคำขอทดสอบ" : "ไฟล์ตรง frozen review · ยังไม่ส่งคำขอทดสอบ");
+        const role = session?.alias || (calendarSmokeApproved(proof) ? clientRef.current?.alias(frozen) : null);
+        setReady(true);setAlias(role || null);qaRef.current = session?.controller || null;
+        setStatus(role ? "ใช้ Google session เดิม " + role + " · ยังไม่ตรวจสิทธิ์หรือส่งคำขอทดสอบ" : "ไฟล์ตรง frozen review · ยังไม่ส่งคำขอทดสอบ");
       }
     }).catch(() => { if (active) setStatus("ไฟล์ไม่ตรง review จึงปิดคำสั่งทั้งหมด"); });
     return () => { active = false; };
@@ -33,7 +36,7 @@ export default function CutoverQa() {
   async function login() {
     setBusy(true);
     try {
-      if (!ready || origin !== "http://127.0.0.1:4311" || !(proof.readerChecksApproved || proof.directWriteProbeApproved)) throw new Error("Not approved");
+      if (!ready || origin !== "http://127.0.0.1:4311" || !(proof.readerChecksApproved || proof.directWriteProbeApproved || calendarSmokeApproved(proof))) throw new Error("Not approved");
       if (!clientRef.current) {
         const response = await fetch("/dev-staging-config.json", { cache: "no-store", credentials: "omit" });if (!response.ok) throw new Error("Config unavailable");
         clientRef.current = createCalendarDirectDenialClient(await response.json());
@@ -54,6 +57,16 @@ export default function CutoverQa() {
     } catch { setStatus("หยุดก่อนยืนยันผล: เงื่อนไข ไฟล์ session หรือสิทธิ์ทดลองไม่ผ่าน · ไม่ส่งซ้ำอัตโนมัติ"); }
     finally { setBusy(false);setConfirmed(false); }
   }
+  async function runSmoke() {
+    setBusy(true);
+    try {
+      if (!ready || !confirmed || !calendarSmokeFresh(proof)) throw new Error("Not ready");
+      const results = await clientRef.current.writerSmoke({ frozen, proof }, setSmokeResults);
+      setStatus(results.length === 8 ? "Writer smoke ผ่าน 8/8 · ปิด writer และตรวจ audit" : "Staff ได้ HTTP 403 · ต่อที่แท็บ Superadmin");
+    } catch {
+      setStatus("หยุด writer smoke · ตรวจผลที่ยืนยันได้และปิด writer · ห้ามส่งซ้ำ");
+    } finally { setBusy(false);setConfirmed(false); }
+  }
   const allowedOrigin = origin === "http://127.0.0.1:4311";
   return <main data-trusted-cutover-qa className={styles.root}>
     <h1>Trusted Calendar · Cutover QA</h1>
@@ -65,15 +78,21 @@ export default function CutoverQa() {
     </fieldset>
     {!allowedOrigin && <p>คำสั่ง Firebase ปิด: ต้องใช้ http://127.0.0.1:4311 เท่านั้น</p>}
     <p>Reader approval: {proof?.readerChecksApproved === true ? "มีใน proof" : "ยังไม่มี"} · SDK batch approval: {proof?.directWriteProbeApproved === true ? "มีใน proof" : "ยังไม่มี"}</p>
-    <button disabled={!ready || !allowedOrigin || busy || !(proof?.readerChecksApproved || proof?.directWriteProbeApproved)} onClick={login}>เข้าสู่ Google staging / สลับบัญชี</button>
+    <button disabled={!ready || !allowedOrigin || busy || !(proof?.readerChecksApproved || proof?.directWriteProbeApproved || calendarSmokeApproved(proof))} onClick={login}>เข้าสู่ Google staging / สลับบัญชี</button>
     <p>บัญชีทดสอบที่ตรงกับไฟล์: {alias || "ยังไม่เข้าสู่ QA"} · ตรวจสิทธิ์จริงก่อนเริ่มแต่ละคำสั่ง</p>
-    {ready && !fresh && <p role="status">Proof หมดอายุหรือเวลายังไม่ถูกต้อง · ปิดคำสั่งทดสอบไว้ โหลด proof จาก audit รอบที่อนุมัติใหม่ได้โดยใช้ Google session เดิม</p>}
+    {ready && !(calendarSmokeApproved(proof) ? smokeFresh : fresh) && <p role="status">Proof หมดอายุหรือเวลายังไม่ถูกต้อง · ปิดคำสั่งทดสอบไว้ โหลด proof จาก audit รอบที่อนุมัติใหม่ได้โดยใช้ Google session เดิม</p>}
     <button disabled={!ready || !fresh || !alias || busy || proof?.readerChecksApproved !== true} onClick={() => run("reader")}>ตรวจ reader หนึ่งครั้ง · ไม่เขียนข้อมูล</button>
-    <fieldset disabled={busy}><legend>SDK batch ที่คาดว่าต้องถูกปฏิเสธ</legend>
+    {!calendarSmokeApproved(proof) && <fieldset disabled={busy}><legend>SDK batch ที่คาดว่าต้องถูกปฏิเสธ</legend>
       <p>หนึ่ง batch: manual 7 มิ.ย. 2570 ห้อง 401 09:00–10:00, receipt เดิมที่ตรึงไว้ และ gate +1 หาก Rules ผิดอาจ commit ทั้งสามเอกสาร ต้องหยุดและ audit ทันที ไม่มีคำสั่งลบหรือย้อนข้อมูล</p>
       <label><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} /> มีคำอนุมัติเฉพาะ batch นี้และพร้อมตรวจ audit หลังส่ง</label>
       <p><button disabled={!ready || !fresh || alias !== "superadmin" || !confirmed || busy || proof?.directWriteProbeApproved !== true} onClick={() => run("denial")}>ทดลอง SDK denial หนึ่งครั้ง</button></p>
-    </fieldset>
+    </fieldset>}
+    {calendarSmokeApproved(proof) && <fieldset disabled={busy}><legend>Trusted writer smoke · staging</legend>
+      <p>Staff 1 คำขอ · Superadmin 7 คำขอ · หยุดทันทีหากผลผิดคาด</p>
+      <label><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} /> ยืนยันช่วงทดสอบที่อนุมัติและพร้อมปิด writer หลังส่ง</label>
+      <p><button disabled={!ready || !smokeFresh || !allowedOrigin || !alias || !confirmed || smokeResults.length > 0} onClick={runSmoke}>ส่งชุด smoke ด้วยบัญชี {alias || "ทดสอบ"}</button></p>
+      {smokeResults.length > 0 && <ul>{smokeResults.map(result => <li key={result.id}>{result.id} · HTTP {result.status}</li>)}</ul>}
+    </fieldset>}
     <p role="status" aria-live="polite" aria-busy={busy}>{busy ? "กำลังตรวจ · ปุ่มทดลองปิดระหว่างรอผล" : status}</p>
     <p>Attempt จองใน IndexedDB ก่อนคำขอแรก Reload ไม่คืนสิทธิ์ทดลอง หาก slot ถูกใช้หรือ storage ใช้ไม่ได้จะหยุด ไม่มีปุ่ม reset</p>
   </main>;

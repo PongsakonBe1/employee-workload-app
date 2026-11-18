@@ -1,0 +1,19 @@
+{
+  "approval": "approve",
+  "reviewHash": "e6699885c178e982b8a08b2dc0865e9ce04b8201e6d2d7f3d0b23360884a711c",
+  "status": "waiting-for-google-sessions",
+  "project": "labboy-workload-app-staging",
+  "renderServiceId": "srv-dbu3qvdckfvc73b16ku0",
+  "renderRuntimeCommit": "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5",
+  "renderPlan": "free",
+  "healthGetAttempts": 1,
+  "healthVerified": true,
+  "writesEnabled": false,
+  "connectivityEnabled": false,
+  "writerFlagChanges": 0,
+  "additionalCliAuditRequests": 0,
+  "calendarPostRequests": 0,
+  "targetedUnitTestsPassed": 24,
+  "targetedLintPassed": true,
+  "localQaRenderedInEdge": true
+}
