@@ -14,6 +14,20 @@ export async function validateCalendarDirectDenialPacket(frozen, proof, { expect
   if (await cutoverValueHash(frozen) !== expectedFrozenHash || frozen.target !== "labboy-workload-app-staging" || frozen.database !== "(default)" || frozen.cloudExecutionApproved !== false || frozen.operations?.length !== 5 || frozen.operations[0]?.id !== "manual" || frozen.operations[0]?.kind !== "create" || frozen.operations[0]?.entries?.length !== 1) throw fail("cutover-frozen-mismatch");
   if (proof.target !== frozen.target || proof.frozenHash !== expectedFrozenHash || proof.snapshotHash !== expectedSnapshotHash || proof.candidateRulesHash !== TRUSTED_CUTOVER_RULES_HASH || proof.sourceCommit !== "2aa1bd27f1795890871297d1ffdf0d1d6acdd2e5" || proof.completed !== 0 || proof.gateRevision !== 17 || !/^[0-9a-f]{64}$/.test(proof.auditHash || "") || typeof proof.auditedAt !== "string" || typeof proof.readerChecksApproved !== "boolean" || typeof proof.directWriteProbeApproved !== "boolean") throw fail("cutover-proof-mismatch");
 }
+export function calendarDirectDenialProofFresh(proof, now = Date.now()) {
+  const age = now - Date.parse(proof?.auditedAt);
+  return Number.isFinite(age) && age >= -5000 && age <= 120000;
+}
+// Rebind a reviewed packet to an existing Auth session without login, RPCs or reservations.
+// Freshness, profile and durable attempt checks remain mandatory inside each action.
+export async function resumeCalendarDirectDenialSession(client, packet) {
+  const reviewed = structuredClone(packet);
+  await validateCalendarDirectDenialPacket(reviewed.frozen, reviewed.proof, reviewed);
+  if (!client || !(reviewed.proof.readerChecksApproved || reviewed.proof.directWriteProbeApproved)) return null;
+  const alias = client.alias(reviewed.frozen);
+  if (!["staff", "superadmin"].includes(alias)) return null;
+  return { alias, controller: client.controller(reviewed) };
+}
 export function createCalendarDirectDenialQa(transport, { frozen: input, proof: inputProof, expectedFrozenHash = TRUSTED_CUTOVER_FROZEN_HASH, expectedSnapshotHash = TRUSTED_CUTOVER_SNAPSHOT_HASH, now = Date.now }) {
   if (transport.projectId !== "labboy-workload-app-staging" || transport.origin !== "http://127.0.0.1:4311") throw fail("cutover-target-mismatch");
   const frozen = structuredClone(input), proof = structuredClone(inputProof), attempted = new Set();let busy = false;
@@ -21,8 +35,7 @@ export function createCalendarDirectDenialQa(transport, { frozen: input, proof: 
   // Keep rejected preparation promises observable only through the action, avoiding an unhandled rejection.
   ready.catch(() => {});
   const freshness = () => {
-    const age = now() - Date.parse(proof.auditedAt);
-    if (!Number.isFinite(age) || age < -5000 || age > 120000) throw fail("cutover-proof-expired");
+    if (!calendarDirectDenialProofFresh(proof, now())) throw fail("cutover-proof-expired");
   };
   async function action(kind) {
     await ready;freshness();

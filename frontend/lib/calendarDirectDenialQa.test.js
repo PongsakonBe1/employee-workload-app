@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { createCalendarDirectDenialQa, cutoverValueHash, TRUSTED_CUTOVER_RULES_HASH } from "./calendarDirectDenialQa.js";
+import { createCalendarDirectDenialQa, cutoverValueHash, resumeCalendarDirectDenialSession, TRUSTED_CUTOVER_RULES_HASH } from "./calendarDirectDenialQa.js";
 const N = Date.parse("2027-06-01T10:00:00Z");
 async function fixture() {
   const frozen = { target: "labboy-workload-app-staging", database: "(default)", cloudExecutionApproved: false, identities: { staff: "synthetic-staff", superadmin: "synthetic-superadmin" }, operations: [{ id: "manual", kind: "create", operationId: "op-" + "a".repeat(64), entries: [{ collection: "classroomSchedules", id: "cal-" + "b".repeat(64), value: { subject: "Synthetic manual" } }] }, {}, {}, {}, {}] };
@@ -18,7 +18,7 @@ async function fixture() {
   };
   let now = N;
   const make = () => createCalendarDirectDenialQa(transport, { frozen, proof, expectedFrozenHash, expectedSnapshotHash, now: () => now });
-  return { frozen, proof, transport, make, user: value => { user = value; }, time: value => { now = value; } };
+  return { frozen, proof, transport, make, expectedFrozenHash, expectedSnapshotHash, user: value => { user = value; }, time: value => { now = value; } };
 }
 describe("direct SDK cutover denial controller", () => {
   it("accepts only a confirmed explicit denial, with fresh profile/peer and two denied restricted reads", async () => {
@@ -88,5 +88,50 @@ describe("direct SDK cutover denial controller", () => {
   it("freezes loaded inputs instead of re-reading mutable objects at commit time", async () => {
     const f = await fixture(), qa = f.make();f.frozen.operations[0].entries[0].value.subject = "Changed after load";
     await qa.probeDenial();expect(f.transport.rawCommit.mock.calls[0][0].entries[0].value.subject).toBe("Synthetic manual");
+  });
+});
+
+describe("renewing a reviewed packet with an existing Auth session", () => {
+  const packet = f => ({ frozen: f.frozen, proof: f.proof, expectedFrozenHash: f.expectedFrozenHash, expectedSnapshotHash: f.expectedSnapshotHash });
+  const client = f => ({ alias: vi.fn(() => "superadmin"), login: vi.fn(), controller: vi.fn(value => createCalendarDirectDenialQa(f.transport, { ...value, now: () => N })) });
+  it("reuses authenticated identity without login, RPCs or reserving an attempt", async () => {
+    const f = await fixture(), c = client(f), session = await resumeCalendarDirectDenialSession(c, packet(f));
+    expect(session.alias).toBe("superadmin");expect(c.login).not.toHaveBeenCalled();
+    for (const name of ["reserve", "profile", "reader", "health", "schedule", "restrictedRead", "rawCommit"]) expect(f.transport[name]).not.toHaveBeenCalled();
+    expect(await session.controller.verifyReader()).toEqual({ outcome: "reader-verified", alias: "superadmin", writes: 0 });
+  });
+  it("allows Auth preparation with an expired proof but keeps actions closed before IO", async () => {
+    const f = await fixture();f.proof.auditedAt = new Date(N - 120001).toISOString();
+    const session = await resumeCalendarDirectDenialSession(client(f), packet(f));
+    await expect(session.controller.verifyReader()).rejects.toHaveProperty("code", "cutover-proof-expired");
+    expect(f.transport.reserve).not.toHaveBeenCalled();expect(f.transport.profile).not.toHaveBeenCalled();
+  });
+  it("rejects malformed renewed packets and does not reuse unreviewed, closed or missing clients", async () => {
+    const f = await fixture(), c = client(f);f.proof.candidateRulesHash = "changed";
+    await expect(resumeCalendarDirectDenialSession(c, packet(f))).rejects.toHaveProperty("code", "cutover-proof-mismatch");
+    expect(c.alias).not.toHaveBeenCalled();expect(c.controller).not.toHaveBeenCalled();
+    const valid = await fixture();
+    for (const alias of [null, "admin", "foreign"]) {
+      const unavailable = client(valid);unavailable.alias.mockReturnValue(alias);
+      expect(await resumeCalendarDirectDenialSession(unavailable, packet(valid))).toBeNull();expect(unavailable.controller).not.toHaveBeenCalled();
+    }
+    expect(await resumeCalendarDirectDenialSession(null, packet(valid))).toBeNull();
+    valid.proof.readerChecksApproved = false;valid.proof.directWriteProbeApproved = false;
+    const unapproved = client(valid);expect(await resumeCalendarDirectDenialSession(unapproved, packet(valid))).toBeNull();expect(unapproved.alias).not.toHaveBeenCalled();
+  });
+  it("preserves durable attempt consumption across a renewed proof and controller", async () => {
+    const f = await fixture(), c = client(f);
+    const first = await resumeCalendarDirectDenialSession(c, packet(f));await first.controller.verifyReader();
+    f.proof.auditHash = "e".repeat(64);
+    const renewed = await resumeCalendarDirectDenialSession(c, packet(f));
+    await expect(renewed.controller.verifyReader()).rejects.toThrow("Durable slot used");expect(f.transport.reader).toHaveBeenCalledTimes(1);
+  });
+  it("checks current identity and profile again after resuming instead of treating an alias as authorization", async () => {
+    const f = await fixture(), session = await resumeCalendarDirectDenialSession(client(f), packet(f));
+    f.user({ uid: "unreviewed" });await expect(session.controller.verifyReader()).rejects.toHaveProperty("code", "cutover-actor-mismatch");
+    expect(f.transport.profile).not.toHaveBeenCalled();
+    const disabled = await fixture(), resumed = await resumeCalendarDirectDenialSession(client(disabled), packet(disabled));
+    disabled.transport.profile.mockResolvedValue({ role: "superadmin", active: false, calendarWriter: true });
+    await expect(resumed.controller.verifyReader()).rejects.toHaveProperty("code", "cutover-profile-drift");expect(disabled.transport.reader).not.toHaveBeenCalled();
   });
 });

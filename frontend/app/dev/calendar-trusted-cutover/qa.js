@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { validateCalendarDirectDenialPacket } from "../../../lib/calendarDirectDenialQa.js";
+import { calendarDirectDenialProofFresh, resumeCalendarDirectDenialSession } from "../../../lib/calendarDirectDenialQa.js";
 import { createCalendarDirectDenialClient } from "../../../lib/calendarDirectDenialClient.js";
 import styles from "./qa.module.css";
 
@@ -8,11 +8,19 @@ export default function CutoverQa() {
   const clientRef = useRef(null), qaRef = useRef(null);
   const [origin, setOrigin] = useState(""), [frozen, setFrozen] = useState(null), [proof, setProof] = useState(null);
   const [ready, setReady] = useState(false), [busy, setBusy] = useState(false), [alias, setAlias] = useState(null), [confirmed, setConfirmed] = useState(false), [status, setStatus] = useState("ยังไม่ได้โหลดไฟล์ ไม่มีการเชื่อม Firebase");
-  useEffect(() => { setOrigin(window.location.origin);return () => { clientRef.current?.close().catch(() => {}); }; }, []);
+  const [fresh, setFresh] = useState(false);
+  useEffect(() => { setOrigin(window.location.origin);return () => { const client = clientRef.current;clientRef.current = null;qaRef.current = null;client?.close().catch(() => {}); }; }, []);
+  useEffect(() => {
+    const update = () => setFresh(calendarDirectDenialProofFresh(proof));update();
+    const timer = setInterval(update, 1000);return () => clearInterval(timer);
+  }, [proof]);
   useEffect(() => {
     let active = true;setReady(false);setConfirmed(false);setAlias(null);qaRef.current = null;
-    if (frozen && proof) validateCalendarDirectDenialPacket(frozen, proof).then(() => {
-      if (active) { setReady(true);setStatus("ไฟล์ตรง frozen review · ยังไม่ส่งคำขอทดสอบ"); }
+    if (frozen && proof) resumeCalendarDirectDenialSession(clientRef.current, { frozen, proof }).then(session => {
+      if (active) {
+        setReady(true);setAlias(session?.alias || null);qaRef.current = session?.controller || null;
+        setStatus(session ? "ใช้ Google session เดิม " + session.alias + " · ยังไม่ตรวจสิทธิ์หรือส่งคำขอทดสอบ" : "ไฟล์ตรง frozen review · ยังไม่ส่งคำขอทดสอบ");
+      }
     }).catch(() => { if (active) setStatus("ไฟล์ไม่ตรง review จึงปิดคำสั่งทั้งหมด"); });
     return () => { active = false; };
   }, [frozen, proof]);
@@ -32,13 +40,13 @@ export default function CutoverQa() {
       }
       await clientRef.current.login();const role = clientRef.current.alias(frozen);if (!role) throw new Error("Unreviewed identity");
       setAlias(role);qaRef.current = clientRef.current.controller({ frozen, proof });setStatus("เข้าสู่ session " + role + " แล้ว · ยังไม่ส่ง SDK write probe");
-    } catch { setAlias(null);setStatus("เข้าสู่ QA ไม่สำเร็จ ตรวจไฟล์ บัญชี และ origin ที่อนุมัติ"); }
+    } catch { setAlias(null);qaRef.current = null;setStatus("เข้าสู่ QA ไม่สำเร็จ ตรวจไฟล์ บัญชี และ origin ที่อนุมัติ"); }
     finally { setBusy(false); }
   }
   async function run(kind) {
     setBusy(true);
     try {
-      if (!ready || !qaRef.current || kind === "denial" && !confirmed) throw new Error("Not ready");
+      if (!ready || !calendarDirectDenialProofFresh(proof) || !qaRef.current || kind === "denial" && !confirmed) throw new Error("Not ready");
       const result = await (kind === "reader" ? qaRef.current.verifyReader() : qaRef.current.probeDenial());
       if (result.outcome === "reader-verified") setStatus("Reader " + result.alias + " ผ่าน · ไม่เขียนข้อมูล");
       else if (result.outcome === "permission-denied") setStatus("SDK batch ถูกปฏิเสธ · ต้อง audit checkpoint 0 ซ้ำเพื่อยืนยันว่าไม่มีข้อมูลเปลี่ยน" + (result.stop ? " · session เปลี่ยน ให้หยุด" : ""));
@@ -58,12 +66,13 @@ export default function CutoverQa() {
     {!allowedOrigin && <p>คำสั่ง Firebase ปิด: ต้องใช้ http://127.0.0.1:4311 เท่านั้น</p>}
     <p>Reader approval: {proof?.readerChecksApproved === true ? "มีใน proof" : "ยังไม่มี"} · SDK batch approval: {proof?.directWriteProbeApproved === true ? "มีใน proof" : "ยังไม่มี"}</p>
     <button disabled={!ready || !allowedOrigin || busy || !(proof?.readerChecksApproved || proof?.directWriteProbeApproved)} onClick={login}>เข้าสู่ Google staging / สลับบัญชี</button>
-    <p>บทบาทปัจจุบัน: {alias || "ยังไม่เข้าสู่ QA"}</p>
-    <button disabled={!ready || !alias || busy || proof?.readerChecksApproved !== true} onClick={() => run("reader")}>ตรวจ reader หนึ่งครั้ง · ไม่เขียนข้อมูล</button>
+    <p>บัญชีทดสอบที่ตรงกับไฟล์: {alias || "ยังไม่เข้าสู่ QA"} · ตรวจสิทธิ์จริงก่อนเริ่มแต่ละคำสั่ง</p>
+    {ready && !fresh && <p role="status">Proof หมดอายุหรือเวลายังไม่ถูกต้อง · ปิดคำสั่งทดสอบไว้ โหลด proof จาก audit รอบที่อนุมัติใหม่ได้โดยใช้ Google session เดิม</p>}
+    <button disabled={!ready || !fresh || !alias || busy || proof?.readerChecksApproved !== true} onClick={() => run("reader")}>ตรวจ reader หนึ่งครั้ง · ไม่เขียนข้อมูล</button>
     <fieldset disabled={busy}><legend>SDK batch ที่คาดว่าต้องถูกปฏิเสธ</legend>
       <p>หนึ่ง batch: manual 7 มิ.ย. 2570 ห้อง 401 09:00–10:00, receipt เดิมที่ตรึงไว้ และ gate +1 หาก Rules ผิดอาจ commit ทั้งสามเอกสาร ต้องหยุดและ audit ทันที ไม่มีคำสั่งลบหรือย้อนข้อมูล</p>
       <label><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} /> มีคำอนุมัติเฉพาะ batch นี้และพร้อมตรวจ audit หลังส่ง</label>
-      <p><button disabled={!ready || alias !== "superadmin" || !confirmed || busy || proof?.directWriteProbeApproved !== true} onClick={() => run("denial")}>ทดลอง SDK denial หนึ่งครั้ง</button></p>
+      <p><button disabled={!ready || !fresh || alias !== "superadmin" || !confirmed || busy || proof?.directWriteProbeApproved !== true} onClick={() => run("denial")}>ทดลอง SDK denial หนึ่งครั้ง</button></p>
     </fieldset>
     <p role="status" aria-live="polite" aria-busy={busy}>{busy ? "กำลังตรวจ · ปุ่มทดลองปิดระหว่างรอผล" : status}</p>
     <p>Attempt จองใน IndexedDB ก่อนคำขอแรก Reload ไม่คืนสิทธิ์ทดลอง หาก slot ถูกใช้หรือ storage ใช้ไม่ได้จะหยุด ไม่มีปุ่ม reset</p>

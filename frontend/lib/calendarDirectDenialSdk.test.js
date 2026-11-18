@@ -43,6 +43,9 @@ describe("cutover SDK adapter", () => {
   });
   it("keeps a developer Auth session isolated and terminates it once", async () => {
     vi.stubEnv("NODE_ENV", "development");const client = createCalendarDirectDenialClient({ projectId: "labboy-workload-app-staging", appId: "1:299459134462:web:5f1bd25089a933cdf7b6af", authDomain: "labboy-workload-app-staging.firebaseapp.com", apiKey: "synthetic-public-config" });
-    await client.login();expect(mocks.popup).toHaveBeenCalledTimes(1);await client.close();await client.close();expect(mocks.terminate).toHaveBeenCalledTimes(1);expect(mocks.deleteApp).toHaveBeenCalledTimes(1);
+    await client.login();expect(mocks.popup).toHaveBeenCalledTimes(1);
+    const frozen = { identities: { superadmin: "synthetic-superadmin" } };expect(client.alias(frozen)).toBe("superadmin");
+    await client.close();await client.close();expect(mocks.terminate).toHaveBeenCalledTimes(1);expect(mocks.deleteApp).toHaveBeenCalledTimes(1);
+    expect(client.alias(frozen)).toBeNull();expect(() => client.controller({})).toThrow("QA session closed");await expect(client.login()).rejects.toThrow("QA session closed");expect(mocks.popup).toHaveBeenCalledTimes(1);
   });
 });

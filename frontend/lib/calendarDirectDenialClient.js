@@ -17,8 +17,8 @@ export function createCalendarDirectDenialClient(config) {
       if (closed) throw new Error("QA session closed");const provider = new GoogleAuthProvider();provider.setCustomParameters({ prompt: "select_account" });
       await signInWithPopup(auth, provider);if (closed) throw new Error("QA session changed");
     },
-    alias: frozen => Object.entries(frozen.identities).find(([, uid]) => uid === auth.currentUser?.uid)?.[0] || null,
-    controller: packet => createCalendarDirectDenialQa(calendarDirectDenialTransport(db, () => closed ? null : auth.currentUser), packet),
+    alias: frozen => closed ? null : Object.entries(frozen.identities).find(([, uid]) => uid === auth.currentUser?.uid)?.[0] || null,
+    controller: packet => { if (closed) throw new Error("QA session closed");return createCalendarDirectDenialQa(calendarDirectDenialTransport(db, () => closed ? null : auth.currentUser), packet); },
     logout: () => signOut(auth),
     async close() { if (closed) return;closed = true;await terminate(db);await deleteApp(app); }
   };
