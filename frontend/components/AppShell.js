@@ -8,7 +8,7 @@ import { Breadcrumb } from "./Breadcrumb";
 import { NotificationBell } from "./NotificationBell";
 import { WorkspaceFrame } from "./ui/WorkspaceFrame";
 
-export function AppShell({ children }) {
+export function AppShell({ children, showBreadcrumb = true }) {
   const pathname = usePathname(), router = useRouter();
   const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
@@ -25,7 +25,7 @@ export function AppShell({ children }) {
     user={user} pathname={pathname}
     onLogout={logout} notificationSlot={<NotificationBell />}
   >
-    <Breadcrumb />
+    {showBreadcrumb && <Breadcrumb />}
     {children}
   </WorkspaceFrame>;
 }

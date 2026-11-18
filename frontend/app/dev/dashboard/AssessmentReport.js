@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Copy, FileText } from "lucide-react";
 import { Dialog } from "../../../components/ui/Dialog";
 import { GlassButton } from "../../../components/ui/GlassControls";
+import { useAnalyticsPages } from "../../../hooks/useAnalyticsPages";
 import { usePreviewState } from "../previewState";
 import { SourceRecords } from "./PlanningDialogs";
 import { planningAdmin, planningFiscalYear } from "../../../lib/planningPreview";
@@ -11,6 +12,8 @@ import { calendarLabel, validCalendarDate } from "../../../lib/calendarView";
 import { ASSESSMENT_ROUNDS, ASSESSMENT_SECTIONS, assessmentResult, assessmentSection, assessmentTaskCatalog, assessmentText, validateAssessment } from "../../../lib/assessmentPreview";
 export function AssessmentReport({
   rawLogs,
+  reader,
+  preview = false,
   people,
   actor,
   initialRange,
@@ -38,6 +41,7 @@ export function AssessmentReport({
   const [applied, setApplied] = useState(null),
     [limit, setLimit] = useState(1000),
     [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [selection, setSelection] = useState(null),
     [mappingDraft, setMappingDraft] = useState(mapping),
     [mappingOpen, setMappingOpen] = useState(false);
@@ -49,7 +53,14 @@ export function AssessmentReport({
     focusTarget = useRef(null),
     form = useRef(null);
   const admin = planningAdmin(actor);
-  const result = useMemo(() => applied ? assessmentResult(rawLogs, people, applied, actor, catalog, mapping, limit) : null, [rawLogs, people, applied, actor, catalog, mapping, limit]);
+  const page = useAnalyticsPages(reader, applied, applied?.personId, limit / 1000, retry);
+  const result = useMemo(() => {
+    if (!applied || reader && !page.pages) return null;
+    const data = assessmentResult(reader ? page.rows : rawLogs, people, applied, actor, catalog, mapping, reader ? page.pages * 1000 : limit);
+    if (!reader) return data;
+    return { ...data, partial: Boolean(page.cursor), canCopy: data.canCopy && !page.cursor && !page.error };
+  }, [rawLogs, reader, page.rows, page.pages, page.cursor, page.error, people, applied, actor, catalog, mapping, limit]);
+  const hasResult = Boolean(result);
   const dirty = Boolean(applied && Object.keys(applied).some(key => String(applied[key]) !== String(draft[key])));
   const person = people.find(item => item.id === (applied?.personId || draft.personId));
   const catalogRows = assessmentTaskCatalog(result?.rows || [], catalog);
@@ -62,7 +73,7 @@ export function AssessmentReport({
     });
   }, [selection]);
   useEffect(() => {
-    if (applied) {
+    if (hasResult) {
       resultHeading.current?.focus({
         preventScroll: true
       });
@@ -71,7 +82,7 @@ export function AssessmentReport({
         behavior: "auto"
       });
     }
-  }, [applied, limit]);
+  }, [applied, hasResult, page.pages, limit]);
   useEffect(() => {
     if (text) copyField.current?.focus();
   }, [text]);
@@ -96,7 +107,7 @@ export function AssessmentReport({
       setSelection(null);
       setText("");
       setError("");
-      setStatus("แสดงสรุปจากช่วงวันที่ที่เลือกแล้ว");
+      setStatus(reader ? "" : "แสดงสรุปจากช่วงวันที่ที่เลือกแล้ว");
     } catch (err) {
       setError(err.message);
       form.current?.querySelector(`[name="${err.field}"]`)?.focus();
@@ -138,13 +149,15 @@ export function AssessmentReport({
         <div className="planning-form-grid"><label className="ui-field"><span>ผู้ปฏิบัติงาน</span>{admin ? <select name="personId" aria-label="เจ้าหน้าที่ในแบบประเมิน" className="apple-input" value={draft.personId} onChange={event => update("personId", event.target.value)}>{people.map(item => <option value={item.id} key={item.id}>{item.displayName}</option>)}</select> : <input className="apple-input" aria-label="เจ้าหน้าที่ในแบบประเมิน" readOnly value={person?.displayName || ""} />}</label><label className="ui-field"><span>รอบประเมิน</span><select name="round" className="apple-input" aria-label="รอบประเมิน" value={draft.round} onChange={event => update("round", event.target.value)}>{Object.entries(ASSESSMENT_ROUNDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></div>
         <div className="planning-form-grid"><label className="ui-field"><span>เริ่มวันที่</span><input name="start" className="apple-input" type="date" required value={draft.start} onChange={event => update("start", event.target.value)} /></label><label className="ui-field"><span>สิ้นสุดวันที่</span><input name="end" className="apple-input" type="date" required value={draft.end} onChange={event => update("end", event.target.value)} /></label></div>
         <div className="assessment-form-last"><label className="ui-field"><span>ปีงบประมาณตามวันสิ้นสุด</span><input name="year" className="apple-input" type="number" min="2444" max="3543" required value={draft.year} onChange={event => update("year", event.target.value)} /></label><GlassButton mode="quick" variant="prominent" type="submit"><FileText size={17} aria-hidden="true" />แสดงสรุป</GlassButton></div>
-        <p className="ui-caption">ระบุช่วงตามรอบที่หน่วยงานแจ้งหรือสัญญาจ้าง · ข้อมูลสังเคราะห์สำหรับตรวจแบบ</p>
+        <p className="ui-caption">ระบุช่วงตามรอบที่หน่วยงานแจ้งหรือสัญญาจ้าง{preview ? " · ข้อมูลสังเคราะห์สำหรับตรวจแบบ" : " · ตรวจผังหัวข้อกับแบบประเมินก่อนนำไปใช้"}</p>
         <p className="planning-error" role="alert">{error}</p>
       </form>
       {dirty && <p className="planning-warning" role="status">มีการเปลี่ยนตัวเลือก กดแสดงสรุปเพื่อใช้ช่วงข้อมูลใหม่ก่อนคัดลอก</p>}
+      {page.loading && <p role="status">กำลังโหลดบันทึกสำหรับแบบประเมิน…</p>}
+      {page.error && <p className="planning-warning" role="alert">โหลดบันทึกสำหรับแบบประเมินไม่สำเร็จ <button className="planning-link" onClick={() => setRetry(value => value + 1)}>ลองอีกครั้ง</button></p>}
       {result && <section className="assessment-result" aria-label="ผลสรุปตามแบบประเมิน">
         <div className="assessment-report-header"><h3 ref={resultHeading} tabIndex={-1}>{person.displayName}</h3><p>ปีงบ {applied.year} · {ASSESSMENT_ROUNDS[applied.round]}</p><p>{calendarLabel(applied.start)} – {calendarLabel(applied.end)}</p><strong data-assessment-total>{result.rows.length.toLocaleString("th-TH")} ครั้ง{result.partial ? " · ยังโหลดไม่ครบ" : " ตามบันทึกที่พบ"}</strong></div>
-        {result.partial && <div className="planning-warning"><p>ยังโหลดไม่ครบช่วง ยอดเป็นข้อมูลบางส่วน ต้องโหลดครบก่อนคัดลอกสรุป</p><GlassButton mode="quick" onClick={() => setLimit(value => value + 1000)}>โหลดสรุปเพิ่ม 1,000 รายการ</GlassButton></div>}
+        {result.partial && <div className="planning-warning"><p>ยังโหลดไม่ครบช่วง ยอดเป็นข้อมูลบางส่วน ต้องโหลดครบก่อนคัดลอกสรุป</p>{!page.error && <GlassButton mode="quick" disabled={page.loading} onClick={() => setLimit(reader ? (page.pages + 1) * 1000 : limit + 1000)}>โหลดสรุปเพิ่ม 1,000 รายการ</GlassButton>}</div>}
         {result.invalid > 0 && <p className="planning-warning">พบ {result.invalid} บันทึกของบุคคลนี้ที่วันที่ไม่ถูกต้อง ยังระบุไม่ได้ว่าอยู่ในรอบใด กรุณาตรวจข้อมูลก่อนคัดลอก</p>}
         {planningFiscalYear(applied.start) !== applied.year && <p className="ui-caption">ช่วงนี้คร่อมปีงบประมาณ ยอดนับตามวันเริ่ม–สิ้นสุดที่ระบุทั้งหมด</p>}
         <p className="assessment-count-rule">1 บันทึกหัวข้อรอง = 1 ครั้ง รวมแต่ละรายการย่อยใน Combo · 0 หมายถึงไม่พบบันทึกในช่วงนี้</p>
@@ -159,7 +172,7 @@ export function AssessmentReport({
           }
         }}>แสดงข้อความสรุป</GlassButton>
       </section>}
-      {admin && <details className="assessment-mapping" open={mappingOpen} onToggle={event => setMappingOpen(event.currentTarget.open)}><summary>ตรวจผังหัวข้อรอง → ข้อในแบบประเมิน</summary><p className="ui-caption">ผังตั้งต้นเพื่อทบทวน ใช้ร่วมกันทั้งทีมในต้นแบบ แยกจากน้ำหนัก JD · กำหนดเฉพาะหัวข้อที่จัดหมวดได้แน่นอน</p>{catalogRows.map(task => <label className="ui-field" key={task.task}><span>{task.task}</span><select aria-label={`จับคู่ ${task.task}`} className="apple-input" value={mappingDraft[task.task] || "unmapped"} onChange={event => setMappingDraft(current => ({
+      {admin && onMapping && <details className="assessment-mapping" open={mappingOpen} onToggle={event => setMappingOpen(event.currentTarget.open)}><summary>ตรวจผังหัวข้อรอง → ข้อในแบบประเมิน</summary><p className="ui-caption">ผังตั้งต้นเพื่อทบทวน ใช้ร่วมกันทั้งทีมในต้นแบบ แยกจากน้ำหนัก JD · กำหนดเฉพาะหัวข้อที่จัดหมวดได้แน่นอน</p>{catalogRows.map(task => <label className="ui-field" key={task.task}><span>{task.task}</span><select aria-label={`จับคู่ ${task.task}`} className="apple-input" value={mappingDraft[task.task] || "unmapped"} onChange={event => setMappingDraft(current => ({
             ...current,
             [task.task]: event.target.value
           }))}><option value="unmapped">ยังไม่จับคู่</option>{ASSESSMENT_SECTIONS.map(section => <option key={section.id} value={section.id}>{section.id} {section.label}</option>)}</select></label>)}<GlassButton mode="quick" onClick={() => {

@@ -1,0 +1,23 @@
+{
+  "commitMode": "production export with flag enabled",
+  "source": "demo-worklog-workspace",
+  "passed": true,
+  "staff": {
+    "weekly": 3,
+    "drillDown": 3,
+    "assessmentIndependentRange": 4,
+    "staffAnalyticsBlocked": true
+  },
+  "admin": {
+    "weekly": 5,
+    "unknown": 1,
+    "filteredCsv": 3,
+    "fiscal": 4,
+    "cursor": [
+      1000,
+      1002
+    ],
+    "reloadDefault": true
+  },
+  "flagOffLegacyRoutes": true
+}

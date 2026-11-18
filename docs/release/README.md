@@ -68,8 +68,8 @@ Inventory ปัจจุบันจาก source: **43 routes = application 24
 | `/calendar` | development-only staging entry + legacy production path | trusted read/write, imports, production runtime แยกชัด | CAL, ENV |
 | `/admin/classroom-schedules` | legacy + Calendar review | manager/import/recurrence ใช้ backend เดียวกับปฏิทินและสิทธิ์จริง | CAL, UI |
 | `/admin/dl-exam-schedules` | legacy + Calendar review | ผู้คุม/75 คนต่อรอบ/รอบเย็น/conflicts/นำเข้าภาพจริง | CAL, UI |
-| `/dashboard` | legacy + `/dev/dashboard` | ข้อมูลจริง/ทุกหัวข้อ/ช่วงเวลา/รายงานและ drill-down ตรงกัน | ANALYTICS |
-| `/admin/staff-analytics` | legacy + `/dev/staff` | ปีงบ/รายเดือน/ช่วงเอง/JD ทั้งทีม/identity mapping จริง | ANALYTICS |
+| `/dashboard` | opt-in Analytics workspace + legacy fallback | รายสัปดาห์ ช่วงเอง และ drill-down ผ่าน Emulator รอตรวจ production Rules/index | ANALYTICS |
+| `/admin/staff-analytics` | opt-in Analytics workspace + legacy fallback | ปีงบ/CSV/โหลดหลายหน้าผ่าน Emulator รอตรวจชุด JD และ production Rules/index | ANALYTICS |
 | `/profile` | legacy / design reference | profile จริง + Radar Top 8 minorTask + role/empty/error | UI, AUTH |
 | `/export` | legacy / design reference | ขอบเขตบุคลากร/ช่วง/CSV/สูตร/ข้อมูลส่วนบุคคล/รายงานที่ตกลง | CORE, UI |
 | `/admin` | legacy / design reference | ทุกทางคลิกไปฟีเจอร์จริงตามบทบาท ไม่มี placeholder ที่ดูเหมือนทำงาน | UI, AUTH |
@@ -132,7 +132,7 @@ SEC มีหลักฐานจาก filename/Git metadata, คำยืน�
 | U06 | ประวัติ list/calendar/detail/edit/ยกเลิก/CSV | เปิดรายละเอียดไม่เด้งกลับ list; ข้อมูล/สิทธิ์/ยอดตรงกัน |
 | U07 | PDF เรียนต่างช่วง + DL ภาพ/ผู้คุม/รอบเย็น/75 คน | review ถูก; ไม่สร้างชื่อผู้คุมชั่วคราว; ตรวจ conflict จริง ไม่เขียนบางส่วน |
 | U08 | Calendar วัน/สัปดาห์/เดือน/list/filter/holidays/light-dark | แสดงช่วง recurrence/สี/รายละเอียดตรงกัน และ mobile ไม่ล้น |
-| U09 | Weekly default → fiscal year/month/quarter/custom → drill-down/report | ยอดตามชุดเดียวกัน; JD/unknown/partial ถูกสื่อ; ไม่อ้างคะแนนประสิทธิภาพจากความถี่ |
+| U09 | Weekly default → fiscal year/month/quarter/custom → drill-down/report | [Browser smoke บน Emulator](../development/analytics-production-workspace/README.md) เทียบยอดสัปดาห์ ปีงบ ช่วงเอง รายละเอียด แบบประเมิน และ CSV ผ่าน ส่วน JD จริงรอตรวจชุดน้ำหนัก |
 | U10 | เมนูผู้ดูแล/profile/export/audit/notifications/help | ทำงานตาม role/reference จริง ไม่มี preview placeholder |
 | U11 | Net loss, reply lost, reload, stale draft, duplicate/concurrent | แจ้ง uncertain/committed/read-back failure ถูก; retry ชุดเดิมไม่เพิ่มข้อมูล |
 | U12 | iOS date/time/keyboard, scanner, PWA install/update, reduced motion/zoom | งานหลักใช้ได้บนเครื่องจริง; cache ไม่แสดงรุ่น/ข้อมูล/สิทธิ์เก่าปะปน |
