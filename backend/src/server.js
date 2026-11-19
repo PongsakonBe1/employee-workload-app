@@ -12,6 +12,7 @@ import { exportRouter } from "./routes/export.js";
 import { notifyRouter } from "./routes/notify.js";
 import { createResourceStatusRouter } from "./routes/resourceStatus.js";
 import { initFirebase } from "./services/fcm.js";
+import { mountProductionCalendar } from "./calendar-runtime/backend/src/calendar/production.js";
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use(
     credentials: true,
   }),
 );
+mountProductionCalendar(app, { getFirebase: initFirebase, log: event => console.log(JSON.stringify(event)) });
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
