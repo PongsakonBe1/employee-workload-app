@@ -10,10 +10,13 @@ import { workLogsRouter } from "./routes/worklogs.js";
 import { statsRouter } from "./routes/stats.js";
 import { exportRouter } from "./routes/export.js";
 import { notifyRouter } from "./routes/notify.js";
+import { createResourceStatusRouter } from "./routes/resourceStatus.js";
+import { initFirebase } from "./services/fcm.js";
 
 const app = express();
 
 app.use(helmet());
+app.use("/api/resource-status", createResourceStatusRouter(initFirebase));
 // Allow multiple frontend ports for development
 const allowedOrigins = [
   env.clientOrigin,
