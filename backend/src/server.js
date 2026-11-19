@@ -18,6 +18,7 @@ const app = express();
 
 app.use(helmet());
 app.use("/api/resource-status", createResourceStatusRouter(initFirebase));
+mountProductionCalendar(app, { getFirebase: initFirebase, log: event => console.log(JSON.stringify(event)) });
 // Allow multiple frontend ports for development
 const allowedOrigins = [
   env.clientOrigin,
@@ -42,7 +43,6 @@ app.use(
     credentials: true,
   }),
 );
-mountProductionCalendar(app, { getFirebase: initFirebase, log: event => console.log(JSON.stringify(event)) });
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
