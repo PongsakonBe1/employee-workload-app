@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { projectIndexedResourceStatus } from "./resourceStatus.js";
+import { describe, expect, it, vi } from "vitest";
+import { createResourceStatusFeed, projectIndexedResourceStatus } from "./resourceStatus.js";
+import { createResourceStatusHandler } from "./resourceStatusHandler.js";
 import { equipmentCatalog, visibleEquipment } from "../../../frontend/lib/equipmentCatalog.js";
 import { indexedWorklogEdit, worklogResourceIndex, withWorklogResourceIndex } from "../../../frontend/lib/resourceStatusIndex.js";
 
@@ -78,5 +79,67 @@ describe("shared resource status by ID", () => {
     const status = projectIndexedResourceStatus(new Map([["ICIT01", { ...loan, minorTask: "ยืม USB" }]]), new Map(), inventory);
     expect(status.equipmentStatus.headphones).toEqual({ ICIT01: "unknown", ICIT02: "available" });
     expect(status.details).toEqual({});
+  });
+});
+
+describe("resource status shutdown", () => {
+  function subscriptions() {
+    const listeners = [];
+    const onSnapshot = vi.fn(next => {
+      const unsubscribe = vi.fn();
+      listeners.push({ next, unsubscribe });
+      return unsubscribe;
+    });
+    const query = { where: () => query, orderBy: () => query, limit: () => query, onSnapshot };
+    return { listeners, db: { collection: () => query } };
+  }
+
+  it("unsubscribes every listener once after returning resource status", async () => {
+    const { db, listeners } = subscriptions();
+    const feed = createResourceStatusFeed(db);
+    const read = feed.read();
+    listeners[0].next({ docs: [{ data: () => ({ name: "ICIT01", minorTask: "ยืมหูฟัง" }) }] });
+    for (const listener of listeners.slice(1)) listener.next({ docs: [] });
+    await expect(read).resolves.toMatchObject({ equipmentStatus: { headphones: { ICIT01: "available" } } });
+
+    expect(listeners).toHaveLength(11);
+    feed.close();
+    feed.close();
+    for (const { unsubscribe } of listeners) expect(unsubscribe).toHaveBeenCalledTimes(1);
+    await expect(feed.read()).rejects.toThrow("closed");
+    expect(listeners).toHaveLength(11);
+  });
+
+  it("releases callers waiting for the first snapshot when the feed closes", async () => {
+    const { db, listeners } = subscriptions();
+    const feed = createResourceStatusFeed(db);
+    const result = expect(feed.read()).rejects.toThrow("closed");
+
+    feed.close();
+    await result;
+    listeners[0].next({ docs: [] });
+    expect(listeners).toHaveLength(1);
+    expect(listeners[0].unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not start a feed for a request that reaches readiness after the handler is closed", async () => {
+    const awaitingReady = Promise.withResolvers();
+    const ready = Promise.withResolvers();
+    const collection = vi.fn(() => ({ doc: () => ({ get: async () => ({ data: () => ({ role: "staff", active: true }) }) }) }));
+    const getFirebase = vi.fn(async () => ({
+      auth: () => ({ verifyIdToken: async () => ({ uid: "qa", email: "qa@example.test", email_verified: true }) }),
+      firestore: () => ({ collection, doc: () => ({ get() { awaitingReady.resolve(); return ready.promise; } }) })
+    }));
+    const handler = createResourceStatusHandler(getFirebase);
+    const res = { set: vi.fn(), sendStatus: vi.fn(), json: vi.fn() };
+    const reading = handler({ get: () => "Bearer synthetic" }, res);
+    await awaitingReady.promise;
+    handler.close();
+    ready.resolve({ data: () => ({ version: 1, ready: true }) });
+    await reading;
+
+    expect(res.sendStatus).toHaveBeenCalledWith(503);
+    expect(collection.mock.calls).toEqual([["users"]]);
+    expect(res.json).not.toHaveBeenCalled();
   });
 });

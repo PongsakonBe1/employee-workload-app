@@ -45,6 +45,7 @@ const lookupKey = (id, condition) => `${id}:${condition}`;
 export function createResourceStatusFeed(db) {
   let stream = null;
   let idle;
+  let closed = false;
 
   function stop(error) {
     clearTimeout(idle);
@@ -127,7 +128,8 @@ export function createResourceStatusFeed(db) {
     });
   }
 
-  return async function readStatus() {
+  async function read() {
+    if (closed) throw Error("Resource status feed is closed");
     const current = stream ?? subscribe();
     clearTimeout(idle);
     idle = setTimeout(() => stop(Error("Resource state disconnected")), 6 * 60_000);
@@ -136,6 +138,7 @@ export function createResourceStatusFeed(db) {
       if (stream !== current) throw Error("Resource state disconnected");
       await waitForSnapshots(current);
     }
+    if (stream !== current) throw Error("Resource state disconnected");
     const latest = new Map();
     const lastConditions = new Map();
     for (const lookup of current.lookups.values()) {
@@ -144,5 +147,12 @@ export function createResourceStatusFeed(db) {
       }
     }
     return projectIndexedResourceStatus(latest, lastConditions, current.equipment);
-  };
+  }
+
+  function close() {
+    closed = true;
+    stop(Error("Resource status feed is closed"));
+  }
+
+  return { read, close };
 }

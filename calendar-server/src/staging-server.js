@@ -2,6 +2,7 @@
 import { validateStagingCalendarRuntime } from "../../backend/src/calendar/stagingConfig.js";
 import { createTrustedCalendarApp } from "./app.js";
 import { createResourceStatusHandler } from "../../backend/src/services/resourceStatusHandler.js";
+import { closeStagingServer } from "./staging-shutdown.js";
 let runtime;
 try { runtime = validateStagingCalendarRuntime(process.env); }
 catch { console.error("Staging calendar configuration rejected");process.exit(1); }
@@ -27,8 +28,18 @@ const resourceStatus = runtime.resourceStatus ? createResourceStatusHandler(asyn
 }) : undefined;
 const app = createTrustedCalendarApp({ runtime, resourceStatus, auth: { verifyIdToken: async (...args) => (await sdk()).auth.verifyIdToken(...args) }, execute: async (...args) => (await sdk()).execute(...args), probe: async uid => (await sdk()).probe(uid), log: event => console.log(JSON.stringify(event)) });
 const server = app.listen(runtime.port, runtime.host, () => console.log(JSON.stringify({ event: "calendar-start", mode: runtime.mode, writesEnabled: runtime.writable })));
+let stopping = false;
 async function stop() {
-  await new Promise(resolve => server.close(resolve));
-  if (sdkPromise) { const current = await sdkPromise.catch(() => null);if (current) { await current.db.terminate();const { deleteApp } = await import("firebase-admin/app");await deleteApp(current.app); } }
+  if (stopping) return;
+  stopping = true;
+  try {
+    await closeStagingServer(server, resourceStatus, () => sdkPromise);
+  } catch {
+    console.error(JSON.stringify({ event: "calendar-shutdown-error" }));
+    process.exitCode = 1;
+  } finally {
+    process.exit();
+  }
 }
-process.on("SIGTERM", () => stop().finally(() => process.exit()));process.on("SIGINT", () => stop().finally(() => process.exit()));
+process.on("SIGTERM", stop);
+process.on("SIGINT", stop);
