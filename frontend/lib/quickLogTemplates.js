@@ -205,7 +205,7 @@ export async function logFromTemplate(templateId, userId, extraData) {
     if (round) {
       // The create payload has no updatedAt. A second write to the same ID fails
       // the existing history-update rules instead of replacing the first log.
-      await setDoc(worklogRef, withWorklogResourceIndex({ ...worklogData, dlProctoring: round.selection }));
+      await setDoc(worklogRef, withWorklogResourceIndex({ ...worklogData, dlRoundKey: round.key, dlProctoring: round.selection }));
     }
     
     // บันทึกการใช้ template

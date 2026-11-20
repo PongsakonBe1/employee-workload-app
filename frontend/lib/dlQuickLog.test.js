@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { adaptLegacyCalendarForDisplay } from "./calendarDataAdapter";
-import { assignedDlRounds, combineDlRoundTemplates, dlRoundLabel } from "./dlQuickLog";
+import { assignedDlRounds, combineDlRoundTemplates, dlRoundLabel, dlRoundSlot, validateDlWorklogDate } from "./dlQuickLog";
 
 describe("DL Quick Log", () => {
   it("shows one card at the first DL position and prefers the exact task template", () => {
@@ -29,5 +29,29 @@ describe("DL Quick Log", () => {
     expect(rounds.map(round => round.id)).toEqual(["morning", "evening"]);
     expect(dlRoundLabel({ ...rounds[1], roundId: rounds[1].id })).toBe("17:00–18:30 · ห้อง 406 + 407");
     expect(dlRoundLabel({ shift: "evening" })).toBe("เย็น");
+  });
+
+  it("uses the worklog date range in Bangkok with strict calendar dates", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-19T17:01:00Z"));
+      expect(validateDlWorklogDate("2026-11-20")).toEqual({ valid: true });
+      expect(validateDlWorklogDate("2026-11-21")).toEqual({ valid: true });
+      expect(validateDlWorklogDate("2026-11-22")).toMatchObject({ valid: false, error: "ไม่สามารถบันทึกล่วงหน้าเกิน 1 วันได้" });
+      expect(validateDlWorklogDate("2025-02-30")).toMatchObject({ valid: false });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("allocates a new ID after edits without treating released logs as duplicates", () => {
+    const key = "dl-quick-test";
+    const date = "2026-11-20";
+    const selection = { roundId: "evening" };
+    const old = { id: key, minorTask: "แก้ไขปัญหาการปริ้น", date, dlRoundKey: key };
+    const moved = { id: `${key}-1`, minorTask: "คุมสอบ DL", date: "2026-11-19", dlRoundKey: key, dlProctoring: selection };
+    const current = { ...moved, id: `${key}-2`, date };
+    expect(dlRoundSlot([old, moved], key, date, selection)).toEqual({ writeId: `${key}-2` });
+    expect(dlRoundSlot([old, moved, current], key, date, selection)).toEqual({ duplicate: current });
   });
 });

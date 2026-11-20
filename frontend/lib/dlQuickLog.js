@@ -1,5 +1,31 @@
+import { validCalendarDate } from "./calendarView";
+import { validateDate } from "./validation";
+
 export const DL_WORKLOG_TASK = "คุมสอบ DL";
 export const DL_SHIFTS = { morning: "เช้า", afternoon: "บ่าย", evening: "เย็น" };
+
+export function validateDlWorklogDate(date) {
+  const validation = validateDate(date);
+  return validation.valid && !validCalendarDate(date) ? { valid: false, error: "วันที่ไม่ถูกต้อง" } : validation;
+}
+
+export function isDlRoundWorklog(log) {
+  return log.minorTask === DL_WORKLOG_TASK && Boolean(log.dlRoundKey && log.dlProctoring);
+}
+
+export function dlRoundSlot(worklogs, key, date, selection) {
+  const duplicate = worklogs.find(log => isDlRoundWorklog(log) && log.date === date && (
+    selection.roundId ? log.dlProctoring.roundId === selection.roundId : log.dlProctoring.shift === selection.shift
+  ));
+  if (duplicate) return { duplicate };
+
+  // Keep retired worklog IDs available to history and audit. New attempts for
+  // the same round still choose the same ID when racing across sessions.
+  const usedIds = new Set(worklogs.map(log => log.id));
+  let writeId = key;
+  for (let revision = 1; usedIds.has(writeId); revision++) writeId = `${key}-${revision}`;
+  return { writeId };
+}
 
 export function isDlRoundTemplate(template) {
   return !template.isCombo && template.minorTask?.trim() === DL_WORKLOG_TASK;

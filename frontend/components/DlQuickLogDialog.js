@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { calendarLabel, validCalendarDate } from "../lib/calendarView";
-import { DL_SHIFTS, DL_WORKLOG_TASK, dlRoundLabel } from "../lib/dlQuickLog";
+import { DL_SHIFTS, DL_WORKLOG_TASK, dlRoundLabel, validateDlWorklogDate } from "../lib/dlQuickLog";
 import { saveDlQuickLog } from "../lib/dlQuickLogFirestore";
 import { logSystemAction, SystemActions } from "../lib/systemLog";
 import { Dialog } from "./ui/Dialog";
@@ -18,6 +18,8 @@ export function DlQuickLogDialog({ request, context, onClose, onSaved }) {
   const [duplicate, setDuplicate] = useState(null);
   const [scheduleChanged, setScheduleChanged] = useState(false);
   const currentDate = request.date === context.date;
+  const dateValidation = validateDlWorklogDate(request.date);
+  const dateError = currentDate ? dateValidation.error : "วันที่เปลี่ยนแล้ว กรุณาปิดแล้วเลือกรอบใหม่";
   const loading = currentDate && context.status === "loading";
   const rounds = currentDate ? context.rounds : [];
   const options = rounds.length
@@ -33,7 +35,7 @@ export function DlQuickLogDialog({ request, context, onClose, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
-    if (lock.current || !selected || duplicate || scheduleChanged || !currentDate) return;
+    if (lock.current || !selected || duplicate || scheduleChanged || dateError) return;
     lock.current = true;
     setBusy(true);
     setError("");
@@ -41,6 +43,8 @@ export function DlQuickLogDialog({ request, context, onClose, onSaved }) {
       const result = await saveDlQuickLog({ ...request, round: selected.round, shift: selected.shift, note });
       if (result.status === "duplicate") {
         setDuplicate(result.worklog);
+      } else if (result.status === "invalid-date") {
+        setError(result.message);
       } else if (result.status === "schedule-changed") {
         setScheduleChanged(true);
         setError("ตารางสอบเปลี่ยนแล้ว กรุณาโหลดหน้าใหม่และตรวจรอบอีกครั้ง");
@@ -57,15 +61,14 @@ export function DlQuickLogDialog({ request, context, onClose, onSaved }) {
     }
   }
 
-  const validDate = validCalendarDate(request.date);
-  const dateLabel = validDate ? calendarLabel(request.date) : "";
+  const dateLabel = validCalendarDate(request.date) ? calendarLabel(request.date) : "";
   return <Dialog open onClose={onClose} busy={busy} title={DL_WORKLOG_TASK}
     description={busy ? "กำลังตรวจและบันทึกรอบสอบ…" : [request.person?.label, dateLabel].filter(Boolean).join(" · ")}
     className="record-dialog" footer={<>
       <GlassButton onClick={onClose} disabled={busy}>ปิด</GlassButton>
-      <GlassButton type="submit" form={formId} variant="prominent" disabled={!selected || busy || Boolean(duplicate) || scheduleChanged || !currentDate || !validDate}>บันทึกรอบนี้</GlassButton>
+      <GlassButton type="submit" form={formId} variant="prominent" disabled={!selected || busy || Boolean(duplicate) || scheduleChanged || Boolean(dateError)}>บันทึกรอบนี้</GlassButton>
     </>}>
-    {!currentDate || !validDate ? <p role="alert" className="record-error">{validDate ? "วันที่เปลี่ยนแล้ว กรุณาปิดแล้วเลือกรอบใหม่" : "กรุณาระบุวันที่ก่อนบันทึก"}</p> : <form id={formId} onSubmit={submit}>
+    {dateError ? <p role="alert" className="record-error">{dateError}</p> : <form id={formId} onSubmit={submit}>
       {loading ? <p role="status" className="ui-caption">กำลังหารอบสอบจากตาราง…</p> : <>
         {!rounds.length && <p className="ui-caption">{context.status === "error" ? "โหลดตารางสอบไม่สำเร็จ เลือกช่วงเวลาที่คุมจริงได้" : "ไม่พบรอบของผู้ปฏิบัติงานในวันที่เลือก เลือกช่วงเวลาที่คุมจริง"}</p>}
         <fieldset className={`record-combo record-dl-options${rounds.length ? "" : " record-dl-shifts"}`}>
