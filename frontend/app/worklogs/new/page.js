@@ -1,43 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, Zap, X } from "lucide-react";
+import { Clock, Zap } from "lucide-react";
 import { Toast } from "../../../components/Toast";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
-import { apiFetch } from "../../../lib/api";
+import { RecordHeading, WorklogRecordReview, WorklogRecordWorkspace } from "../../../components/WorklogRecordWorkspace";
 import { MinorTaskSelector } from "../../../components/MinorTaskSelector";
 import { CommentSuggestions } from "../../../components/CommentSuggestions";
 import QuickLogButtons from "../../../components/QuickLogButtons";
-import QuickColorLog from "../../../components/QuickColorLog";
 import { Calendar as CalendarIcon } from "lucide-react";
 import RoomEquipmentStatus from "../../../components/RoomEquipmentStatus";
-import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import ICloudCalendarStrip from "../../../components/iCloudCalendarStrip";
-import TodayRoomSchedule from "../../../components/TodayRoomSchedule";
-import AddMissingTemplates from "../../../components/AddMissingTemplates";
-import SmartTemplatesSeeder from "../../../components/SmartTemplatesSeeder";
 import ScheduleAlertBanner from "../../../components/ScheduleAlertBanner";
-import {
-  getCommentSuggestions,
-  getMainDutyFromMinorTask,
-  hasCommentSuggestions,
-} from "../../../lib/commentSuggestions";
+import { getMainDutyFromMinorTask } from "../../../lib/commentSuggestions";
 import { validateWorklogForm, sanitizeInput } from "../../../lib/validation";
-import { db } from "../../../lib/firebase";
+import { auth, db } from "../../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
-import { today, nowTime, getLockTime } from "../../../lib/dateUtils";
+import { today, nowTime } from "../../../lib/dateUtils";
 import { getDutyGroupFromMinorTask } from "../../../lib/worklogUtils";
+import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
+import { worklogEntryPath } from "../../../lib/authUtils";
+
+const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
 
 export default function NewWorkLogPage() {
+  const { user } = useAuth();
+  return <WorklogRecord key={user?.uid || "anonymous"} user={user} />;
+}
+
+function WorklogRecord({ user }) {
   const t = useTranslations("worklog");
   const router = useRouter();
-  const { user } = useAuth();
-  const [categories, setCategories] = useState(null);
   const [form, setForm] = useState({
     date: today(),
     time: nowTime(),
@@ -51,25 +49,38 @@ export default function NewWorkLogPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [lastSaved, setLastSaved] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [mode, setMode] = useState("quick");
+  const [review, setReview] = useState(null);
+  const [recordRevision, setRecordRevision] = useState(0);
+  const submitLock = useRef(false);
+  const employeeLabel = user?.displayName || user?.nickname || user?.fullName || "ผู้ใช้งาน";
+  const draftKey = workspaceEnabled ? (user?.uid ? `worklogDraft:${user.uid}` : null) : "worklogDraft";
   
   // Mobile toggle: show form or calendar
   const [showCalendarMobile, setShowCalendarMobile] = useState(false);
 
   // Auto-update date/time every minute on desktop mode
-  useAutoUpdateDateTime(setForm);
+  useAutoUpdateDateTime(setForm, !workspaceEnabled || (mode === "quick" && !form.dateTimeEdited));
 
-  // Redirect admin users - they don't record worklogs
+  useEffect(() => {
+    if (!message) return;
+    const timeout = setTimeout(() => setMessage(""), 3000);
+    return () => clearTimeout(timeout);
+  }, [message]);
+
+  // Send Admins arriving through the personal form to their recording workspace.
   useEffect(() => {
     if (user?.role === "admin") {
-      router.replace("/dashboard");
+      router.replace(worklogEntryPath(user.role));
     }
   }, [user, router]);
 
   // Restore draft from localStorage on mount
   useEffect(() => {
-    const savedDraft = localStorage.getItem("worklogDraft");
+    if (!draftKey) return;
+    let savedDraft;
+    try { savedDraft = localStorage.getItem(draftKey); } catch { return; }
     if (savedDraft) {
       try {
         const draft = JSON.parse(savedDraft);
@@ -91,10 +102,11 @@ export default function NewWorkLogPage() {
         console.error("Failed to restore draft:", e);
       }
     }
-  }, []);
+  }, [draftKey]);
 
   // Auto-save draft every 30 seconds or when form changes significantly
   useEffect(() => {
+    if (!draftKey || !(form.recipient || form.minorTask || form.comment)) return;
     const saveDraft = () => {
       const draft = {
         recipient: form.recipient,
@@ -104,14 +116,16 @@ export default function NewWorkLogPage() {
         comment: form.comment,
         timestamp: Date.now(),
       };
-      localStorage.setItem("worklogDraft", JSON.stringify(draft));
-      setLastSaved(new Date());
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+      } catch { /* An unavailable local draft store must not block Firestore writes. */ }
     };
 
     // Save immediately if recipient, minorTask, or comment changed
     const timeoutId = setTimeout(saveDraft, 2000);
     return () => clearTimeout(timeoutId);
   }, [
+    draftKey,
     form.recipient,
     form.minorTask,
     form.comment,
@@ -121,16 +135,8 @@ export default function NewWorkLogPage() {
 
   // Clear draft after successful submit
   const clearDraft = () => {
-    localStorage.removeItem("worklogDraft");
-    setLastSaved(null);
+    try { if (draftKey) localStorage.removeItem(draftKey); } catch { /* Save already committed. */ }
   };
-
-  // Fetch categories on mount
-  useEffect(() => {
-    apiFetch("/categories").then((data) => {
-      setCategories(data);
-    });
-  }, []);
 
   // Auto-update mainDuty and dutyGroup when minorTask changes
   const handleMinorTaskChange = useCallback((minorTask) => {
@@ -155,29 +161,31 @@ export default function NewWorkLogPage() {
     }));
   }, []);
 
-  // Get suggestions for current minor task
-  const suggestions = useMemo(() => {
-    return getCommentSuggestions(form.minorTask);
-  }, [form.minorTask]);
-
-  // Check if current minor task has suggestions
-  const hasSuggestions = useMemo(() => {
-    return hasCommentSuggestions(form.minorTask);
-  }, [form.minorTask]);
-
-  // Calculate lock deadline
-  const lockDeadline = useMemo(() => {
-    return getLockTime(form.date);
-  }, [form.date]);
-
-  async function onSubmit(event) {
+  function onSubmit(event) {
     event.preventDefault();
+    if (submitLock.current) return;
+    const validation = validateWorklogForm(form);
+    if (!validation.valid) {
+      setError(Object.values(validation.errors)[0]);
+      return;
+    }
+    setError("");
+    if (workspaceEnabled) setReview({ fields: { ...form }, employeeId: user?.uid, employeeLabel });
+    else void save(form, user?.uid);
+  }
+
+  async function save(fields, employeeId) {
+    if (submitLock.current) return;
+    submitLock.current = true;
     setSaving(true);
     setError("");
     setMessage("");
 
     try {
-      const validation = validateWorklogForm(form);
+      if (!employeeId || auth.currentUser?.uid !== employeeId || user?.uid !== employeeId || user.role === "admin") {
+        throw new Error("บัญชีเปลี่ยนหรือยังไม่พร้อมบันทึกงาน กรุณาเข้าสู่ระบบอีกครั้ง");
+      }
+      const validation = validateWorklogForm(fields);
       if (!validation.valid) {
         throw new Error(Object.values(validation.errors)[0]);
       }
@@ -189,14 +197,14 @@ export default function NewWorkLogPage() {
         user?.fullName?.split(" ")?.[0] ||
         "";
 
-      await addDoc(collection(db, "worklogs"), {
-        date: form.date,
-        time: form.time,
-        recipient: sanitizeInput(form.recipient),
-        dutyGroup: form.dutyGroup,
-        mainDuty: form.mainDuty,
-        minorTask: form.minorTask,
-        comment: sanitizeInput(form.comment),
+      const worklog = withWorklogResourceIndex({
+        date: fields.date,
+        time: fields.time,
+        recipient: sanitizeInput(fields.recipient),
+        dutyGroup: fields.dutyGroup,
+        mainDuty: fields.mainDuty,
+        minorTask: fields.minorTask,
+        comment: sanitizeInput(fields.comment),
         employeeId: user.uid,
         employeeNickname: user.nickname || "",
         employeeDisplayName: employeeDisplayName,
@@ -204,15 +212,19 @@ export default function NewWorkLogPage() {
         status: "บันทึกแล้ว",
         createdAt: serverTimestamp(),
       });
+      await addDoc(collection(db, "worklogs"), worklog);
+      setRecordRevision(current => current + 1);
+      if (worklog.resourceKeys.length) window.dispatchEvent(new Event("worklogUpdated"));
 
       // Log action
       await logSystemAction(
         SystemActions.CREATE_WORKLOG,
-        `Created worklog: ${form.date} ${form.time} - ${form.recipient}`,
+        `Created worklog: ${fields.date} ${fields.time}`,
         user.uid,
       );
 
       clearDraft();
+      setReview(null);
       setMessage(t("form.saved"));
       setForm((current) => ({
         ...current,
@@ -224,10 +236,10 @@ export default function NewWorkLogPage() {
         time: nowTime(),
       }));
 
-      setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       setError(err.message);
     } finally {
+      submitLock.current = false;
       setSaving(false);
     }
   }
@@ -236,12 +248,7 @@ export default function NewWorkLogPage() {
   const formRef = useRef(null);
   const minorTaskRef = useRef(null);
 
-  const scrollToForm = () => {
-    const el = minorTaskRef.current || formRef.current;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  // Auto-grow textarea
+  // Auto-grow the legacy textarea.
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -249,11 +256,28 @@ export default function NewWorkLogPage() {
     el.style.height = `${Math.max(80, el.scrollHeight)}px`;
   }, [form.comment]);
 
+  if (workspaceEnabled) {
+    return <AppShell showBreadcrumb={false}>
+      <RecordHeading />
+      <ScheduleAlertBanner />
+      <Toast message={message} error={review ? "" : error} info={draftRestored ? "กู้คืนร่างอัตโนมัติแล้ว" : ""} onDismissMessage={() => setMessage("")} onDismissError={() => setError("")} />
+      <WorklogRecordWorkspace form={form} setForm={setForm} mode={mode} setMode={setMode} person={{ id: user?.uid, label: employeeLabel }}
+        busy={saving} onReview={onSubmit} revision={recordRevision}
+        onQuickResult={(value, type) => {
+          if (type === "error") { setError(value); return; }
+          setError("");
+          setMessage(value || "บันทึกสำเร็จ");
+          setRecordRevision(current => current + 1);
+        }} />
+      <WorklogRecordReview review={review} saving={saving} error={review ? error : ""}
+        onClose={() => { if (!submitLock.current) { setReview(null); setError(""); } }}
+        onConfirm={() => { if (review) void save(review.fields, review.employeeId); }} />
+    </AppShell>;
+  }
+
   return (
     <AppShell>
       <ScheduleAlertBanner />
-      <AddMissingTemplates />
-      <SmartTemplatesSeeder />
 
       <Toast
         message={message}

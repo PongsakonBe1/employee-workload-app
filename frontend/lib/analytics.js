@@ -1,3 +1,4 @@
+import { calendarToday, addCalendarMonths } from "./calendarView";
 /**
  * Analytics Functions for Dashboard & Reports
  * v2.3.0 Re-plan — ITEM-2: Seasonal Pattern + Prediction
@@ -708,93 +709,34 @@ export function detectOutliers(worklogs) {
  * @param {number} monthsAhead - how many months to predict ahead (capped at 6)
  * @returns {Object} - prediction result
  */
-export function predictNextPeak(historicalPattern, monthsAhead = 3) {
-  // ITEM-2 FIX: Cap at 6 months
-  const cappedMonths = Math.min(monthsAhead, 6);
-  
+export function predictNextPeak(historicalPattern, monthsAhead = 3, referenceDate = new Date(), level = 'bachelor') {
+  const cappedMonths = Math.max(0, Math.min(Number.isFinite(monthsAhead) ? Math.trunc(monthsAhead) : 3, 6));
   const { pattern, yearsOfData, peakMonth } = historicalPattern;
-  
-  if (!pattern || Object.keys(pattern).length === 0) {
+  if (!pattern || Object.keys(pattern).length === 0) return { nextPeakLabel: "ไม่มีข้อมูล", nextPeakPeriod: null, confidence: "none", reason: "no_data", cappedMonths };
+  const today = calendarToday(referenceDate), horizon = addCalendarMonths(today, cappedMonths);
+  const limited = cappedMonths >= 6 || (yearsOfData === 1 && cappedMonths > 3);
+  if (limited || yearsOfData < 2 || !peakMonth) {
+    // Use only dated exam periods present in the repository, never obsolete aliases
+    // or an invented recurrence beyond the known academic calendars.
+    const next = getExamPeriods(level).filter(period => period.end >= today && period.start <= horizon).sort((a, b) => a.start.localeCompare(b.start))[0] || null;
+    const reason = limited ? "limited_data_use_academic_calendar" : "single_year_use_academic_calendar";
     return {
-      nextPeakLabel: "ไม่มีข้อมูล",
-      nextPeakPeriod: null,
-      confidence: "none",
-      reason: "no_data",
+      nextPeakLabel: next?.label || "ยังไม่มีช่วงสอบที่ยืนยันในระยะที่เลือก",
+      nextPeakPeriod: next,
+      confidence: next ? "low" : "none",
+      reason: next ? reason : reason + "_no_known_period",
+      note: next ? `อ้างอิงตารางการศึกษาใน repo (ข้อมูล ${yearsOfData} ปี ไม่เพียงพอสำหรับ statistical prediction)` : "ไม่มีช่วงสอบที่ยืนยันในปฏิทินที่มีอยู่ ไม่คาดเดาวันสอบของปีถัดไป",
       cappedMonths
     };
   }
-
-  // ITEM-2 FIX: If predicting > 6 months or insufficient data
-  if (cappedMonths >= 6 || (yearsOfData === 1 && cappedMonths > 3)) {
-    // Use academic period fallback
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1; // 1-12
-    
-    // Find next academic period
-    const periods = [
-      { month: 10, key: "opening", label: "เปิดภาคเรียน" },
-      { month: 1, key: "exam1", label: "สอบกลางภาค" },
-      { month: 3, key: "opening2", label: "เปิดภาคเรียนที่ 2" },
-      { month: 6, key: "exam2", label: "สอบปลายภาค" }
-    ];
-    
-    // Find next period
-    let nextPeriod = periods.find(p => p.month > currentMonth);
-    if (!nextPeriod) {
-      nextPeriod = periods[0]; // Wrap to next year's first period
-    }
-    
-    const periodInfo = ACADEMIC_PERIODS_2569[nextPeriod.key];
-    
-    return {
-      nextPeakLabel: nextPeriod.label,
-      nextPeakPeriod: periodInfo,
-      confidence: "low",
-      reason: "limited_data_use_academic_calendar",
-      note: `จากตารางการศึกษา (ข้อมูล ${yearsOfData} ปี ไม่เพียงพอสำหรับ statistical prediction)`,
-      cappedMonths
-    };
-  }
-
-  // If we have multiple years of data, use historical pattern
-  if (yearsOfData >= 2 && peakMonth) {
-    // Extract month from peakMonth (format: YYYY-MM)
-    const peakMonthNum = parseInt(peakMonth.slice(5, 7), 10);
-    
-    // Predict same month next year
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const nextYear = currentYear + 1;
-    const predictedMonth = `${nextYear}-${String(peakMonthNum).padStart(2, "0")}`;
-    
-    return {
-      nextPeakLabel: `ช่วง ${PERIOD_LABELS.exam || "สอบ"} (เดือน ${peakMonthNum})`,
-      nextPeakPeriod: {
-        month: predictedMonth,
-        predictedWorkload: pattern[peakMonth] || 0
-      },
-      confidence: "medium",
-      reason: "historical_pattern",
-      basedOn: peakMonth,
-      cappedMonths
-    };
-  }
-
-  // Single year data, use academic calendar fallback
-  const today = new Date();
-  const currentMonth = today.getMonth() + 1;
-  
-  // Predict next exam period
-  const nextExamMonth = currentMonth <= 1 ? 1 : (currentMonth <= 6 ? 6 : 13);
-  const examLabel = nextExamMonth === 1 ? "สอบกลางภาค" : "สอบปลายภาค";
-  
+  const month = peakMonth.slice(5, 7);
+  let predictedMonth = today.slice(0, 4) + "-" + month;
+  if (predictedMonth < today.slice(0, 7)) predictedMonth = String(Number(today.slice(0, 4)) + 1) + "-" + month;
+  if (predictedMonth > horizon.slice(0, 7)) return { nextPeakLabel: "ช่วงสูงสุดเดิมอยู่นอกระยะที่เลือก", nextPeakPeriod: null, confidence: "none", reason: "historical_peak_outside_horizon", basedOn: peakMonth, cappedMonths };
   return {
-    nextPeakLabel: examLabel,
-    nextPeakPeriod: nextExamMonth <= 6 ? ACADEMIC_PERIODS_2569.exam2 : ACADEMIC_PERIODS_2569.exam1,
-    confidence: "low",
-    reason: "single_year_use_academic_calendar",
-      note: `จากตารางการศึกษา (ข้อมูล 1 ปี ไม่เพียงพอสำหรับ statistical prediction)`,
-    cappedMonths
+    nextPeakLabel: `ช่วง ${PERIOD_LABELS.exam || "สอบ"} (เดือน ${Number(month)})`,
+    nextPeakPeriod: { month: predictedMonth, predictedWorkload: pattern[peakMonth] || 0 },
+    confidence: "medium", reason: "historical_pattern", basedOn: peakMonth, cappedMonths
   };
 }
 

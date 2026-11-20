@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { db } from "../lib/firebase";
+import { classroomAppliesOn, timeMinutes } from "../lib/calendarView";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { ChevronLeft, ChevronRight, MapPin, User, Clock } from "lucide-react";
 
@@ -128,7 +129,7 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
   const events = useMemo(() => {
     const list = [];
     classroomSchedules.forEach((s) => {
-      if (s.dayOfWeek !== viewDow) return;
+      if (s.dayOfWeek !== viewDow || !classroomAppliesOn(s, viewStr)) return;
       list.push({ id: s.id, type: "classroom", room: s.room,
         subject: s.subject || "ตารางเรียน", teacher: s.teacher || "",
         startTime: s.startTime, endTime: s.endTime,
@@ -137,7 +138,8 @@ export default function ICloudCalendarStrip({ showCompactCards = true }) {
     dlExams.forEach((e) => {
       if (e.date !== viewStr) return;
       const slotMap = { morning:{s:"09:00",e:"10:30"}, afternoon:{s:"13:00",e:"14:30"}, fullday:{s:"09:00",e:"14:30"} };
-      const slot = slotMap[e.timeSlot] || slotMap.morning;
+      const slot = timeMinutes(e.endTime) > timeMinutes(e.startTime)
+        ? { s: e.startTime, e: e.endTime } : slotMap[e.timeSlot] || slotMap.morning;
       const rooms = (e.locations || []).map((l) => l.replace("ห้อง ","").trim());
       const proctors = (e.proctors || []).map((p) => {
         const id = typeof p === "string" ? p : p?.id || p?.userId;

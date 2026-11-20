@@ -1,0 +1,75 @@
+.equipment-loan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 4.1rem), 1fr));
+  gap: 8px;
+}
+
+.equipment-loan-dialog [data-tone="green"] { --loan-bg: var(--ui-green); --loan-ink: var(--ui-green-ink); }
+.equipment-loan-dialog [data-tone="amber"] { --loan-bg: var(--ui-amber); --loan-ink: var(--ui-amber-ink); }
+.equipment-loan-dialog [data-tone="red"] { --loan-bg: var(--ui-red); --loan-ink: var(--ui-red-ink); }
+.equipment-loan-dialog [data-tone="neutral"] { --loan-bg: var(--ui-soft); --loan-ink: var(--ui-sub); }
+
+.equipment-loan-card {
+  min-width: 0;
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 13px;
+  background: var(--loan-bg);
+  color: var(--loan-ink);
+  text-align: center;
+}
+
+.equipment-loan-card strong { font-size: 1rem; font-variant-numeric: tabular-nums; }
+.equipment-loan-card span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: .6875rem;
+}
+.equipment-loan-card small { min-width: 0; max-width: 100%; font-size: .6875rem; overflow-wrap: anywhere; }
+.equipment-loan-card .equipment-loan-borrower { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-loan-card:disabled, .equipment-loan-condition:disabled { cursor: not-allowed; }
+.equipment-loan-card[aria-pressed="true"], .equipment-loan-condition[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px var(--ui-accent);
+}
+.equipment-loan-card:focus-visible, .equipment-loan-condition:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+.equipment-loan-card:not(:disabled):hover { border-color: var(--loan-ink); }
+
+.equipment-loan-condition {
+  min-height: 44px;
+  padding: 5px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: .8125rem;
+}
+.equipment-loan-condition[aria-pressed="true"] { color: var(--loan-ink); background: var(--loan-bg); }
+.equipment-loan-return-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--ui-amber);
+  color: var(--ui-amber-ink);
+  font-size: .8125rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .equipment-loan-dialog .ui-dialog-footer { flex-wrap: wrap; }
+  .equipment-loan-dialog .ui-dialog-footer button { white-space: normal; }
+}

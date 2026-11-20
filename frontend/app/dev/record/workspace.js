@@ -1,0 +1,722 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { usePreviewState } from "../previewState";
+import { Bell, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, DoorClosed, DoorOpen, FilePenLine, Headphones, Moon, Plug, ShieldAlert, Undo2, Usb, Zap } from "lucide-react";
+import { WorkspaceFrame } from "../../../components/ui/WorkspaceFrame";
+import { Dialog } from "../../../components/ui/Dialog";
+import { GlassButton, GlassControlGroup } from "../../../components/ui/GlassControls";
+import { useAppearance } from "../../../components/ui/AppearanceProvider";
+import { ReviewSymbol } from "../../../components/ui/ReviewSymbol";
+import { manualRecordEntry } from "../../../lib/recordPreview";
+import { combos, people, schedule, tasks } from "./fixtures";
+import { recordLedger, useRecordLedger } from "./store";
+import { canViewPreviewLog } from "../../../lib/previewLedger";
+import { canBorrowEquipment, canReturnEquipment, canUndoPreview, equipmentState } from "../../../lib/equipmentPreview";
+import { roomWorklog, deviceWorklog, roomState } from "../../../lib/resourceWorklog";
+import { previewDestination } from "../../../lib/previewNavigation";
+import { previewTemplateEntries } from "../../../lib/templatePreview";
+import { LoanFields } from "../resources/LoanFields";
+
+const deviceIcons = { headphones: Headphones, plug: Plug, usb: Usb };
+const quickItems = [
+  { id: "rooms3", title: "ห้องแลกเปลี่ยนความรู้", hint: "เลือกห้องเพื่อเปิด / ปิด", Icon: DoorOpen, tone: "purple" },
+  { id: "rooms4", title: "ห้องเรียน ชั้น 4", hint: "เลือกห้องเพื่อเปิด / ปิด", Icon: DoorClosed, tone: "purple" },
+  { id: "headphones", title: "ยืม / คืนหูฟัง", hint: "เลือกอุปกรณ์เพื่อยืม / คืน", Icon: Headphones, tone: "green" },
+  { id: "account", title: "เปิดใช้บัญชี", hint: "เลือกเฉพาะงานที่ทำ", tone: "blue", count: combos.account.tasks.length },
+  { id: "software", title: "ติดตั้งโปรแกรม", hint: "เลือกเฉพาะงานที่ทำ", tone: "purple", count: combos.software.tasks.length },
+  { id: "phone", title: "รับสายโทรศัพท์", hint: "ระบุผู้รับบริการและรายละเอียด", tone: "amber" },
+  { id: "plug", title: "ยืม / คืนปลั๊กไฟ", hint: "เลือกอุปกรณ์เพื่อยืม / คืน", Icon: Plug, tone: "green" },
+  { id: "usb", title: "ยืม / คืน USB", hint: "เลือกอุปกรณ์เพื่อยืม / คืน", Icon: Usb, tone: "blue" },
+  { id: "assigned", title: "งานที่ได้รับมอบหมาย", hint: "ระบุงานที่ดำเนินการ", tone: "amber" },
+];
+const thaiDate = value => value && Number.isFinite(Date.parse(`${value}T12:00:00+07:00`)) ? new Intl.DateTimeFormat("th-TH", { dateStyle: "long", timeZone: "Asia/Bangkok" }).format(new Date(`${value}T12:00:00+07:00`)) : "ยังไม่ระบุวันที่";
+
+function DailyAgenda({ date }) {
+  const events = schedule.filter(item => item.date === date);
+  return events.length ? events.map(item => <div className="record-agenda" key={item.id}>
+    <span>{item.start}</span>
+    <div>
+      <strong>{item.title}</strong>
+      <p>{`ห้อง ${item.room} · ${item.start}–${item.end}`}</p>
+    </div>
+  </div>) : <p className="ui-caption record-agenda-empty">ไม่มีตารางตัวอย่างในวันที่เลือก</p>;
+}
+
+export default function RecordPreview() {
+  const { resolved } = useAppearance();
+  const router = useRouter();
+  const [role, setRole] = usePreviewState("record.role", "staff"), [personId, setPersonId] = usePreviewState("record.person", people[0].id);
+  const [mode, setMode] = usePreviewState("record.mode", "quick"), [glassMode, setGlassMode] = useState("quick"), [quickPage, setQuickPage] = usePreviewState("record.quickPage", 0);
+  const [dateTime, setDateTime] = usePreviewState("record.datetime", { date: "2026-11-06", time: "10:55" }), [dateDraft, setDateDraft] = useState(dateTime);
+  const { data, undo, revision } = useRecordLedger();
+  const [status, setStatus] = useState("");
+  const [dialog, setDialog] = useState(null), [query, setQuery] = useState(""), [deviceId, setDeviceId] = useState(null);
+  const [openedTemplate, setOpenedTemplate] = useState(null), [templateReview, setTemplateReview] = useState([]);
+  const [quickSearch, setQuickSearch] = usePreviewState("record.quickSearch", "");
+  const reviewHeading = useRef(null);
+  const [selected, setSelected] = useState([]), [recipient, setRecipient] = useState(""), [notes, setNotes] = useState("");
+  const [step, setStep] = useState("edit"), [error, setError] = useState(""), [selectedLog, setSelectedLog] = useState(null);
+  const [manual, setManual] = usePreviewState("record.manual", { taskId: tasks[0].id, recipient: "", notes: "" });
+  const [returnCondition, setReturnCondition] = useState("unknown");
+  const [manualError, setManualError] = useState("");
+  const [manualField, setManualField] = useState(null), [manualReview, setManualReview] = useState(null);
+  const recipientRef = useRef(null), notesRef = useRef(null), firstChoiceRef = useRef(null), manualDateRef = useRef(null), manualTimeRef = useRef(null), taskSearchRef = useRef(null), requestId = useRef(null), expectedRevision = useRef(revision);
+  const person = people.find(item => item.id === personId), task = tasks.find(item => item.id === manual.taskId) || tasks[0];
+  const activeQuickItems = data.templates.filter(item=>item.isActive && item.name.toLocaleLowerCase().includes(quickSearch.trim().toLocaleLowerCase())).sort((a,b)=>a.order-b.order || a.name.localeCompare(b.name,"th")).map(item=>({...quickItems.find(core=>core.id===item.id),id:item.id,title:item.name,symbol:item.symbol,tone:item.tone || "blue",count:item.isCombo ? item.comboItems.length : null,hint:item.isCombo?"เลือกเฉพาะงานที่ทำ":item.isSmart?"เลือกห้องหรืออุปกรณ์":"กรอกข้อมูลแล้วตรวจรายการ"}));
+  const pageCount = Math.max(1,Math.ceil(activeQuickItems.length/6)), currentQuickPage = Math.min(quickPage,pageCount-1);
+  const device = data.devices.find(item => item.id === deviceId), combo = openedTemplate?.isCombo && dialog === openedTemplate.id ? {title:openedTemplate.name,tasks:openedTemplate.comboItems.map(item=>item.name),requireRecipient:openedTemplate.requireRecipient} : null;
+  const templateStandard = openedTemplate && dialog===openedTemplate.id && !openedTemplate.isCombo && !openedTemplate.isSmart && !["phone","assigned"].includes(openedTemplate.action);
+  const DeviceIcon = device ? deviceIcons[device.kind] : Headphones;
+  const floor = dialog === "rooms3" ? "3" : "4";
+  const deviceDialog = ["headphones", "plug", "usb"].includes(dialog);
+  const actor = { id: person.id, role };
+  const visibleLogs = data.logs.filter(log => canViewPreviewLog(log, actor));
+  const todayLogs = visibleLogs.filter(log => log.date === dateTime.date && log.employeeId === person.id);
+
+  useEffect(() => {
+    if (dialog === "task") taskSearchRef.current?.focus();
+  }, [dialog]);
+  useEffect(() => {
+    if (deviceId) recipientRef.current?.focus({ preventScroll: true });
+  }, [deviceId]);
+
+  function focusField(ref) {
+    requestAnimationFrame(() => { ref.current?.focus({ preventScroll: true });ref.current?.scrollIntoView({ block: "center", behavior: "instant" }); });
+  }
+  useEffect(()=>{if(step === "review") reviewHeading.current?.focus();},[step]);
+  function openDialog(value) {
+    setOpenedTemplate(data.templates.find(item=>item.id===value && item.isActive) || null);setTemplateReview([]);
+    requestId.current = crypto.randomUUID();expectedRevision.current = revision;
+    setError("");setQuery("");setSelected([]);setRecipient("");setNotes("");setStep("edit");setDeviceId(null);setReturnCondition("unknown");setDialog(value);
+    if (value === "datetime") setDateDraft(dateTime);
+  }
+  function commit(entries) {
+    try {
+      const source = openedTemplate && dialog === openedTemplate.id ? openedTemplate : null;
+      if(entries.some(entry=>(entry.comment || "").length>500)) throw Error("รายละเอียดรวมไม่เกิน 500 ตัวอักษร");
+      const result = recordLedger.transact({ actor, requestId: requestId.current, expectedRevision: expectedRevision.current, entries: entries.map(entry => ({ ...entry, ...(source?{templateId:source.id,templateVersion:source.version,templateNameAtRecord:source.name}:{}), ...dateTime, employeeId: person.id, person: person.displayName, minorTask: entry.minorTask || entry.title, recipient: entry.recipient || "", comment: entry.comment || entry.detail || "" })) });
+      setDialog(null);setStatus(`บันทึกตัวอย่าง ${result.count} รายการแล้ว`);return true;
+    } catch (failure) { setError(failure.message);setStatus(failure.message);return false; }
+  }
+  function toggleRoom(room) {
+    const result = roomWorklog(room, dateTime);
+    if (!result.entry) { setError(result.message);return; }
+    commit([result.entry]);
+  }
+
+  function reviewCombo(event) {
+    event.preventDefault();
+    if (!selected.length) { setError("เลือกอย่างน้อย 1 งานที่ทำจริง");focusField(firstChoiceRef);return; }
+    if (openedTemplate.requireRecipient && !recipient.trim()) { setError("ระบุผู้รับบริการก่อนตรวจรายการ");focusField(recipientRef);return; }
+    if (openedTemplate.requireComment && !notes.trim()) { setError("ระบุรายละเอียดเพิ่มเติม");focusField(notesRef);return; }
+    try { setTemplateReview(previewTemplateEntries(openedTemplate, selected, recipient, notes, dateTime)); } catch(failure) { setError(failure.message);return; }
+    setError("");setStep("review");
+  }
+  function submitDevice(event) {
+    event.preventDefault();
+    const result = deviceWorklog(device, recipient, returnCondition, dateTime);
+    if (!result.entry) { setError(result.message);focusField(recipientRef);return; }
+    commit([result.entry]);
+  }
+
+  function submitManual(event) {
+    event.preventDefault();
+    const result = manualRecordEntry({ ...manual, taskId: task.id }, dateTime);
+    if (!result.entry) { setManualError(result.message);setManualField(result.field);focusField(result.field === "date" ? manualDateRef : manualTimeRef);return; }
+    requestId.current = crypto.randomUUID();expectedRevision.current = revision;setError("");
+    setManualError("");setManualField(null);setManualReview(result.entry);setDialog("manualReview");
+  }
+  const dialogTitle = dialog?.startsWith("rooms") ? `เลือกห้อง ชั้น ${floor}` : deviceDialog ? device ? `${device.student ? "คืน" : "ยืม"}${device.name}` : quickItems.find(item => item.id === dialog).title : combo?.title || (templateStandard ? openedTemplate.name : null) || (["phone","assigned"].includes(dialog) ? openedTemplate?.name : null) || ({ datetime: "วันที่และเวลา", task: "เลือกหัวข้อรอง", person: "ผู้ปฏิบัติงาน", phone: "รับสายโทรศัพท์", assigned: "งานที่ได้รับมอบหมาย", manualReview: "ตรวจรายการก่อนบันทึก", history: "ประวัติงานตัวอย่าง", log: selectedLog?.title, schedule: "ตารางวันที่เลือก", notifications: "การแจ้งเตือน" }[dialog] || "");
+  const visibleTasks = tasks.filter(item => `${item.label} ${item.major} ${item.label === "คุมสอบ DL" ? "Digital Literacy" : ""}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+
+  return <WorkspaceFrame
+    user={{ uid: person.id, displayName: person.displayName, initial: person.initial, role }} pathname={role === "staff" ? "/worklogs/new" : "/admin/record"}
+    glassMode={glassMode}
+    onNavigate={href => { if (previewDestination(href) && previewDestination(href) !== "/dev/record") router.push(previewDestination(href));else if (href === "/profile") openDialog("person");else if (href === "/calendar") router.push("/dev/calendar");else if (!["/worklogs/new", "/admin/record"].includes(href)) setStatus("หน้านี้ยังไม่ได้ย้ายตามแบบ — ดูสถานะรายหน้าในรายงาน QC"); }}
+    notificationSlot={<button
+      type="button" className="ui-icon-button"
+      aria-label="การแจ้งเตือนตัวอย่าง" onClick={() => openDialog("notifications")}
+    >
+      <Bell size={20} aria-hidden="true" />
+    </button>}
+  >
+    <div className="ui-page-heading record-heading">
+      <h1>บันทึกงาน</h1>
+      <p>เลือกงานที่ทำ แล้วกลับไปทำงานต่อได้ทันที</p>
+      <small className="record-preview-badge">Development · ข้อมูลตัวอย่าง</small>
+    </div>
+    <div className="record-layout">
+      <div className="record-column">
+        <section aria-label="บันทึกงานของคุณ">
+          <div className="record-panel-title">
+            <div>
+              <h2>
+                งานของ
+                {role === "staff" ? "ฉัน" : "ทีม"}
+              </h2>
+              <p>
+                {`บันทึกสำหรับ ${thaiDate(dateTime.date)}`}
+              </p>
+            </div>
+            <button
+              className="record-person" type="button"
+              onClick={() => openDialog("person")} aria-label="ผู้ปฏิบัติงาน"
+            >
+              <span className="ui-avatar">{person.initial}</span>
+              <span>
+                <small>ผู้ปฏิบัติงาน</small>
+                <strong>{person.displayName}</strong>
+              </span>
+              <ChevronDown size={14} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="record-meta">
+            <GlassControlGroup
+              mode={glassMode} label="วิธีบันทึกงาน"
+              className="record-mode"
+            >
+              {[["quick", "บันทึกด่วน", Zap], ["manual", "กรอกเอง", FilePenLine]].map(([id, label, Icon]) => <button
+                key={id} type="button"
+                aria-pressed={mode === id} onClick={() => setMode(id)}
+              >
+                <Icon size={17} aria-hidden="true" />
+                {label}
+              </button>)}
+            </GlassControlGroup>
+            <button
+              type="button" className="record-time"
+              onClick={() => openDialog("datetime")} aria-label="เปลี่ยนวันที่และเวลา"
+            >
+              <Clock3 size={17} aria-hidden="true" />
+              <span>{dateTime.time}</span>
+              <ChevronDown size={13} aria-hidden="true" />
+            </button>
+          </div>
+          <div hidden={mode !== "quick"}>
+            <label className="ui-field"><span>ค้นหาบันทึกด่วน</span><input className="apple-input" type="search" aria-label="ค้นหาบันทึกด่วน" value={quickSearch} onChange={event=>{setQuickSearch(event.target.value);setQuickPage(0);}} /></label>
+            <div className="record-quick-grid">
+              {activeQuickItems.slice(currentQuickPage * 6, currentQuickPage * 6 + 6).map(({ id, title, hint, tone, count, symbol }) => <button
+                key={id} type="button"
+                className="record-quick-card" onClick={() => openDialog(id)}
+              >
+                <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={symbol || "templates"} size={29} /></span>
+                {count && <span className="record-quick-count">
+                  {count}
+                  {' '}
+                  งาน
+                </span>}
+                <strong>{title}</strong>
+                <small>{hint}</small>
+              </button>)}
+            </div>
+            {!activeQuickItems.length && <p className="ui-caption">ไม่พบบันทึกด่วนตรงกับคำค้นหาหรือสถานะเปิดใช้</p>}
+            <div className="record-pagination" aria-label="หน้าบันทึกด่วน">
+              <button
+                type="button" disabled={currentQuickPage === 0}
+                onClick={() => setQuickPage(currentQuickPage-1)}
+              >
+                <ChevronLeft size={16} aria-hidden="true" />
+                ก่อนหน้า
+              </button>
+              <span>
+                {currentQuickPage + 1}
+                {' '}
+                / {pageCount}
+              </span>
+              <button
+                type="button" disabled={currentQuickPage >= pageCount-1}
+                onClick={() => setQuickPage(currentQuickPage+1)}
+              >
+                ถัดไป
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <form
+            hidden={mode !== "manual"} className="record-form"
+            aria-label="กรอกบันทึกงาน" onSubmit={submitManual}
+            noValidate
+          >
+            <button type="button" className="record-task-picker" aria-label="เลือกหัวข้อรอง" onClick={() => openDialog("task")}>
+              <ReviewSymbol name="history" size={23} />
+              <span className="record-task-title"><small>หัวข้อรอง</small><strong>{task.label}</strong></span>
+              <ChevronDown size={17} aria-hidden="true" />
+            </button>
+            <div className="record-manual-fields">
+              <label className="ui-field"><span>วันที่ <small>จำเป็น</small></span>
+                <input className="apple-input" type="date" name="record-manual-date" ref={manualDateRef} required value={dateTime.date} aria-invalid={manualField === "date"} aria-describedby={manualField === "date" ? "record-manual-error" : undefined} onChange={event => { setDateTime({ ...dateTime, date: event.target.value });setManualError("");setManualField(null); }} />
+              </label>
+              <label className="ui-field"><span>เวลา <small>จำเป็น</small></span>
+                <input className="apple-input" type="time" name="record-manual-time" ref={manualTimeRef} required value={dateTime.time} aria-invalid={manualField === "time"} aria-describedby={manualField === "time" ? "record-manual-error" : undefined} onChange={event => { setDateTime({ ...dateTime, time: event.target.value });setManualError("");setManualField(null); }} />
+              </label>
+              <label className="ui-field record-field-full"><span>งานหลัก</span><input className="apple-input" value={task.major} readOnly /></label>
+              <label className="ui-field record-field-full"><span>กลุ่มงาน</span><input className="apple-input" value={task.group} readOnly /></label>
+              <label className="ui-field record-field-full"><span>ผู้รับบริการ <small>ถ้ามี</small></span><input className="apple-input" name="record-manual-recipient" value={manual.recipient} onChange={event => setManual({ ...manual, recipient: event.target.value })} /></label>
+              <label className="ui-field record-field-full"><span>รายละเอียด</span><textarea className="apple-input" name="record-manual-notes" rows={3} placeholder="สิ่งที่ดำเนินการหรือสิ่งที่ต้องติดตาม" value={manual.notes} onChange={event => setManual({ ...manual, notes: event.target.value })} /></label>
+            </div>
+            {task.suggestions.length > 0 && <div className="record-suggestions" role="group" aria-label="ข้อความแนะนำ">
+              {task.suggestions.map(suggestion => <button type="button" key={suggestion} aria-pressed={manual.notes === suggestion} onClick={() => setManual(current => ({ ...current, notes: suggestion }))}>{suggestion}</button>)}
+            </div>}
+            {manualError && <p id="record-manual-error" className="record-error" role="alert">{manualError}</p>}
+            <GlassButton mode={glassMode} type="submit" className="record-manual-submit">ตรวจรายการก่อนบันทึก<ChevronRight size={18} aria-hidden="true" /></GlassButton>
+          </form>
+          <details className="record-inline-schedule">
+            <summary>
+              <CalendarDays size={17} aria-hidden="true" />
+              <span>ตารางวันที่เลือก</span>
+              <small>{thaiDate(dateTime.date)}</small>
+            </summary>
+            <DailyAgenda date={dateTime.date} />
+            <small>ตารางตัวอย่างสำหรับตรวจแบบ ไม่ใช่ตารางจริง</small>
+          </details>
+        </section>
+        {canUndoPreview(undo, actor) && !undo.kind.startsWith("template-") && <div
+          className="record-undo" role="region"
+          aria-label="เลิกทำรายการล่าสุด"
+        >
+          <span>
+            <Check size={18} aria-hidden="true" />
+            บันทึกตัวอย่าง
+            {' '}
+            {undo.count}
+            {' '}
+            รายการแล้ว
+          </span>
+          <GlassButton mode={glassMode} onClick={() => { try { recordLedger.undo(actor, undo.id);setStatus("เลิกทำรายการล่าสุดแล้ว"); } catch (failure) { setStatus(failure.message); } }}>
+            <Undo2 size={16} aria-hidden="true" />
+            เลิกทำ
+          </GlassButton>
+        </div>}
+        <section className="record-recent" aria-labelledby="record-recent-title">
+          <div className="record-section-head">
+            <h2 id="record-recent-title">บันทึกล่าสุด</h2>
+            <button
+              type="button" className="record-link"
+              onClick={() => router.push("/dev/history")}
+            >
+              ดูประวัติ
+              <ChevronRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {visibleLogs.slice(0, 3).map(log => <button
+            type="button" className="record-log-row"
+            key={log.id} onClick={() => { setSelectedLog(log);setDialog("log"); }}
+          >
+            <Check size={17} aria-hidden="true" />
+            <span>
+              <strong>{log.title}</strong>
+              <small>
+                {log.person}
+                {' '}
+                ·
+                {' '}
+                {log.time}
+                {' '}
+                ·
+                {' '}
+                {log.detail}
+              </small>
+            </span>
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>)}
+        </section>
+      </div>
+      <aside className="record-context" aria-label="ข้อมูลประกอบการบันทึก">
+        <section>
+          <div className="record-section-head">
+            <h2>วันนี้ของคุณ</h2>
+            <CalendarDays size={18} aria-hidden="true" />
+          </div>
+          <p className="record-context-date">{thaiDate(dateTime.date)}</p>
+          <div className="record-context-count">
+            <strong>{todayLogs.length}</strong>
+            <span>
+              รายการที่บันทึก
+              <br />
+              <small>ข้อมูลตัวอย่างของผู้ปฏิบัติงานที่เลือก</small>
+            </span>
+          </div>
+        </section>
+        <section>
+          <div className="record-section-head">
+            <h2>ตารางวันที่เลือก</h2>
+            <button
+              type="button" className="record-link"
+              onClick={() => openDialog("schedule")}
+            >
+              ดูตาราง
+              <ChevronRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+          <DailyAgenda date={dateTime.date} />
+          <p className="ui-caption">ตัวอย่างเพื่อเทียบ layout</p>
+        </section>
+        <p className="record-preview-note">
+          Development · Review 10
+          <br />
+          ทดลองบันทึกและเลิกทำได้ในหน้านี้
+          <br />
+          ไม่เชื่อมข้อมูล production
+        </p>
+      </aside>
+    </div>
+    <details className="record-inspector">
+      <summary>ตัวเลือกตรวจแบบ · Development</summary>
+      <div className="record-inspector-controls">
+        <label>
+          บทบาทตัวอย่าง
+          <select
+            className="apple-input" value={role}
+            onChange={event => { setRole(event.target.value);setPersonId(people[0].id); }}
+          >
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Superadmin</option>
+          </select>
+        </label>
+        <div
+          className="ui-glass-comparison" role="group"
+          aria-label="เปรียบเทียบวัสดุกระจก"
+        >
+          {[["css", "CSS เดิม"], ["quick", "QuickLiquid"]].map(([value, label]) => <button
+            type="button" className="ui-choice"
+            key={value} aria-pressed={glassMode === value}
+            onClick={() => setGlassMode(value)}
+          >
+            {label}
+          </button>)}
+        </div>
+        <a href="/dev/ui">เปิดห้องทดสอบส่วนกลาง</a>
+      </div>
+      <p className="ui-caption">
+        {resolved.solid ? "ใช้พื้นทึบตามการตั้งค่าของคุณ" : "QuickLiquid สำหรับ controls ที่เลือก · Safari ใช้ CSS fallback"}
+        {' '}
+        · ทุกธุรกรรมอยู่ในหน่วยความจำ เมื่อ refresh จะเริ่มใหม่
+      </p>
+      <p className="ui-caption">ใช้ข้อมูลใน repo ตามขอบเขตที่เลือก: Combo อ้างอิงแบบ Review 10 ส่วนหัวข้อรองและข้อความแนะนำใช้ catalog เดิมในโค้ด ไม่ได้อ่านฐานข้อมูลสด</p>
+      <button type="button" className="ui-choice" onClick={() => { recordLedger.failNext();setStatus("ตั้งให้การบันทึกครั้งถัดไปล้มเหลวในข้อมูลจำลองแล้ว"); }}>จำลองบันทึกไม่สำเร็จครั้งถัดไป</button>
+    </details>
+    <p
+      className="record-live-status" role="status"
+      aria-live="polite"
+    >
+      {status}
+    </p>
+    <Dialog
+      open={Boolean(dialog)} onClose={() => setDialog(null)}
+      title={dialogTitle} className={`record-dialog ${dialog?.startsWith("rooms") ? "record-room-dialog" : ""}`}
+      description={dialog?.startsWith("rooms") ? "กดเปิดหรือปิดห้องเพื่อบันทึกทันที แล้วเลิกทำได้จากหน้าบันทึก" : "ข้อมูลสังเคราะห์สำหรับตรวจแบบ — ไม่มีการบันทึกไปยังระบบจริง"}
+    >
+      {error && ((!combo && !["phone", "assigned", "account", "software", "headphones", "plug", "usb"].includes(dialog)) || (combo && step === "review")) && <p className="record-error" role="alert">{error}</p>}
+      {dialog?.startsWith("rooms") && <div className="record-room-grid">
+        {data.rooms.filter(room => room.floor === floor).map(room => { const Icon = room.open ? DoorOpen : DoorClosed;return <button
+          key={room.id} type="button"
+          className="record-resource-tile" data-state={room.open ? "open" : "closed"}
+          onClick={() => toggleRoom(room)}
+        >
+          <Icon size={30} aria-hidden="true" />
+          <strong>
+            {`ห้อง ${room.id}`}
+          </strong>
+          <span className="record-badge" data-tone={roomState(room).tone}>
+            {room.open ? <Check size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
+            {roomState(room).label}
+          </span>
+          <small>{room.detail}</small>
+          <span className="record-resource-action">
+            {room.open ? "ปิดห้อง" : "เปิดห้อง"}
+            <ChevronRight size={16} aria-hidden="true" />
+          </span>
+        </button>; })}
+      </div>}
+      {deviceDialog && !device && <div className="record-device-grid">
+        {data.devices.filter(item => item.kind === dialog && (item.active !== false || item.student)).sort((a,b) => a.order - b.order || a.assetCode.localeCompare(b.assetCode)).map(item => { const Icon = deviceIcons[item.kind], state = equipmentState(item), StateIcon = item.student ? Clock3 : !canBorrowEquipment(item) ? ShieldAlert : Check;return <button
+          type="button" className="record-resource-tile"
+          key={item.id} disabled={!canBorrowEquipment(item) && !canReturnEquipment(item)}
+          data-state={state.id} onClick={() => { setDeviceId(item.id);setReturnCondition("unknown");setError(""); }}
+        >
+          <Icon size={30} aria-hidden="true" />
+          <strong>{item.name}</strong>
+          <span className="record-badge" data-tone={state.tone}>
+            <StateIcon size={14} aria-hidden="true" />
+            {state.id === "unavailable" ? "ไม่พร้อมใช้" : state.label}
+          </span>
+          <small>{item.location}</small>
+          <span className="record-resource-action">{item.student ? "คืนรายการนี้" : !canBorrowEquipment(item) ? "ตรวจสภาพก่อนใช้" : "ยืมรายการนี้"}</span>
+        </button>; })}
+      </div>}
+      {deviceDialog && device && <form onSubmit={submitDevice} noValidate>
+        <button
+          type="button" className="record-link record-back"
+          onClick={() => { setDeviceId(null);setError(""); }}
+        >
+          <ChevronLeft size={16} aria-hidden="true" />
+          เลือกอุปกรณ์อื่น
+        </button>
+        <div className="record-device-summary">
+          <span className="record-tile ui-nav-symbol" data-tone="green"><DeviceIcon size={28} aria-hidden="true" /></span>
+          <div>
+            <strong>{device.name}</strong>
+            <p>{device.location}</p>
+          </div>
+        </div>
+        <LoanFields device={device} recipient={recipient} inputRef={recipientRef} condition={returnCondition} onCondition={setReturnCondition} error={error} onRecipient={value => { if (/^[0-9]*$/.test(value)) { setRecipient(value);setError(""); } else { setRecipient("");setError("ช่องนี้รับเฉพาะตัวเลข 0–9 กรุณาตรวจภาษาแป้นพิมพ์"); } }} />
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
+          <GlassButton
+            mode={glassMode} type="submit"
+            variant="prominent"
+          >
+            <Check size={18} aria-hidden="true" />
+            {device.student ? "บันทึกคืน" : "บันทึกยืม"}
+          </GlassButton>
+        </div>
+      </form>}
+      {combo && step === "edit" && <form onSubmit={reviewCombo} noValidate>
+        <p className="ui-caption">เลือกเฉพาะงานที่ทำจริง ทุกครั้งเริ่มโดยไม่เลือกรายการ</p>
+        <div className="record-choice-actions">
+          <button
+            type="button" className="record-link"
+            onClick={() => setSelected(combo.tasks.map((_, i) => i))}
+          >
+            เลือกทั้งหมด
+          </button>
+          <button
+            type="button" className="record-link"
+            onClick={() => setSelected([])}
+          >
+            ล้างการเลือก
+          </button>
+        </div>
+        <fieldset className="record-combo">
+          <legend className="record-sr-only">งานที่ทำจริง</legend>
+          {combo.tasks.map((label, i) => <label
+            key={label} className="record-check-row"
+            data-selected={selected.includes(i)}
+          >
+            <input
+              ref={i === 0 ? firstChoiceRef : undefined} type="checkbox"
+              checked={selected.includes(i)} onChange={event => { setSelected(event.target.checked ? [...selected, i].sort((a, b) => a - b) : selected.filter(value => value !== i));setError(""); }}
+            />
+            <span>{label}</span>
+          </label>)}
+        </fieldset>
+        <label className="ui-field record-recipient">
+          <span>
+            ผู้รับบริการ
+            <small>{openedTemplate?.requireRecipient ? "จำเป็น" : "ถ้ามี"}</small>
+          </span>
+          <input
+            className="apple-input" name="record-combo-recipient" maxLength={50}
+            value={recipient} ref={recipientRef}
+            aria-required={openedTemplate?.requireRecipient} aria-invalid={Boolean(error) && openedTemplate?.requireRecipient && !recipient.trim()}
+            aria-describedby="record-combo-error" onChange={event => { setRecipient(event.target.value);setError(""); }}
+          />
+        </label>
+        <label className="ui-field"><span>รายละเอียดเพิ่มเติม {openedTemplate?.requireComment ? "(จำเป็น)" : "(ถ้ามี)"}</span><textarea className="apple-input" aria-label="รายละเอียด Combo" value={notes} ref={notesRef} maxLength={500} onChange={event=>{setNotes(event.target.value);setError("");}} /></label>
+        <p
+          className="record-error" id="record-combo-error"
+          role="alert"
+        >
+          {error}
+        </p>
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
+          <GlassButton
+            mode={glassMode} variant="prominent"
+            type="submit"
+          >
+            {`ตรวจ ${selected.length} รายการ`}
+            <ChevronRight size={16} aria-hidden="true" />
+          </GlassButton>
+        </div>
+      </form>}
+      {combo && step === "review" && <div>
+        <p className="record-review-count" ref={reviewHeading} tabIndex={-1}>
+          {selected.length}
+          {' '}
+          <span>รายการที่เลือก</span>
+        </p>
+        <p className="ui-caption">
+          ผู้รับบริการ:
+          {recipient || "ไม่ระบุ"}
+          {' '}
+          ·
+          {dateTime.time}
+        </p>
+        <ul className="record-review-list">
+          {templateReview.map((entry, i) => <li key={i}>
+            <Check size={16} aria-hidden="true" />
+            <span><strong>{entry.title}</strong><small style={{display:"block"}}>{entry.minorTask}</small>{entry.comment !== entry.title && <span style={{display:"block"}}>{entry.comment}</span>}</span>
+          </li>)}
+        </ul>
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => {setStep("edit");requestAnimationFrame(()=>firstChoiceRef.current?.focus());}}>
+            <ChevronLeft size={16} aria-hidden="true" />
+            แก้ไขรายการ
+          </GlassButton>
+          <GlassButton
+            mode={glassMode} variant="prominent"
+            onClick={() => commit(templateReview)}
+          >
+            {`บันทึก ${selected.length} รายการ`}
+          </GlassButton>
+        </div>
+      </div>}
+      {templateStandard && step === "edit" && <form noValidate onSubmit={event=>{event.preventDefault();try{setTemplateReview(previewTemplateEntries(openedTemplate,[],recipient,notes,dateTime));setError("");setStep("review");}catch(failure){setError(failure.message);focusField(failure.field === "recipient" ? recipientRef : notesRef);}}}>
+        <p className="ui-caption">{openedTemplate.minorTask}{openedTemplate.comment ? " · "+openedTemplate.comment : ""}</p>
+        <label className="ui-field"><span>ผู้รับบริการ {openedTemplate.requireRecipient ? "(จำเป็น)" : "(ถ้ามี)"}</span><input className="apple-input" name="template-recipient" ref={recipientRef} value={recipient} maxLength={50} onChange={event=>setRecipient(event.target.value)} /></label>
+        <label className="ui-field"><span>รายละเอียดเพิ่มเติม {openedTemplate.requireComment ? "(จำเป็น)" : "(ถ้ามี)"}</span><textarea className="apple-input" aria-label="รายละเอียดเทมเพลต" ref={notesRef} value={notes} maxLength={500} onChange={event=>setNotes(event.target.value)} /></label><GlassButton mode={glassMode} type="submit" variant="prominent">ตรวจ 1 รายการ</GlassButton>
+      </form>}
+      {templateStandard && step === "review" && <section><h3 ref={reviewHeading} tabIndex={-1}>ตรวจ 1 รายการ</h3><p>{templateReview[0]?.minorTask}</p><p>{templateReview[0]?.recipient || "ไม่ระบุผู้รับบริการ"}</p><p>{templateReview[0]?.comment || "ไม่ระบุรายละเอียด"}</p><div className="record-form-actions"><GlassButton mode={glassMode} onClick={()=>{setStep("edit");requestAnimationFrame(()=>recipientRef.current?.focus());}}>แก้ไขรายการ</GlassButton><GlassButton mode={glassMode} variant="prominent" onClick={()=>commit(templateReview)}>บันทึก 1 รายการ</GlassButton></div></section>}
+      {dialog === "task" && <div>
+        <label className="ui-field">
+          <span>ค้นหาหัวข้อรอง</span>
+          <input
+            className="apple-input" type="search"
+            value={query} onChange={event => setQuery(event.target.value)}
+            ref={taskSearchRef}
+          />
+        </label>
+        <div className="record-task-results">
+          {visibleTasks.length ? visibleTasks.map(item => <button
+            type="button" key={item.id}
+            aria-pressed={manual.taskId === item.id} onClick={() => { setManual({ ...manual, taskId: item.id });setDialog(null); }}
+          >
+            <span>
+              <strong>{item.label}</strong>
+              <small>{item.major}</small>
+            </span>
+            {manual.taskId === item.id && <Check size={18} aria-hidden="true" />}
+          </button>) : <p className="ui-caption">ไม่พบหัวข้อ ลองค้นด้วยคำอื่น</p>}
+        </div>
+      </div>}
+      {dialog === "datetime" && <form onSubmit={event => { event.preventDefault();setDateTime(dateDraft);setDialog(null); }}>
+        <div className="record-date-grid">
+          <label className="ui-field">
+            <span>วันที่</span>
+            <input
+              className="apple-input" type="date"
+              required value={dateDraft.date}
+              onChange={event => setDateDraft({ ...dateDraft, date: event.target.value })}
+            />
+          </label>
+          <label className="ui-field">
+            <span>เวลา</span>
+            <input
+              className="apple-input" type="time"
+              required value={dateDraft.time}
+              onChange={event => setDateDraft({ ...dateDraft, time: event.target.value })}
+            />
+          </label>
+        </div>
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
+          <GlassButton
+            mode={glassMode} variant="prominent"
+            type="submit"
+          >
+            ใช้วันที่และเวลานี้
+          </GlassButton>
+        </div>
+      </form>}
+      {dialog === "person" && <div>
+        <p className="ui-caption">{role === "staff" ? "Staff บันทึกให้บัญชีของตนเอง" : "คงชื่อที่ตั้งไว้ครบ เลือกด้วย ID ไม่ตัดชื่อต้น"}</p>
+        {(role === "staff" ? [person] : people).map(item => <button
+          key={item.id} type="button"
+          className="record-person-option" aria-pressed={personId === item.id}
+          onClick={() => { setPersonId(item.id);setDialog(null); }}
+        >
+          <span className="ui-avatar">{item.initial}</span>
+          <span>
+            <strong>{item.displayName}</strong>
+            <small>{item.fullName}</small>
+          </span>
+          {personId === item.id && <Check size={18} aria-hidden="true" />}
+        </button>)}
+      </div>}
+      {dialog === "manualReview" && manualReview && <div>
+        <p className="ui-caption">{person.displayName} · {thaiDate(manualReview.date)} · {manualReview.time}</p>
+        <h3 className="record-review-heading">{manualReview.minorTask}</h3>
+        <dl className="record-review-fields">
+          <dt>งานในหน้าที่หลัก</dt><dd>{manualReview.mainDuty}</dd>
+          <dt>กลุ่มงาน</dt><dd>{manualReview.dutyGroup}</dd>
+          <dt>ผู้รับบริการ</dt><dd>{manualReview.recipient || "ไม่ได้ระบุ"}</dd>
+          <dt>รายละเอียด</dt><dd>{manualReview.comment || "ไม่ได้ระบุ"}</dd>
+        </dl>
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => setDialog(null)}>แก้ไขรายการ</GlassButton>
+          <GlassButton mode={glassMode} variant="prominent" onClick={() => { if (commit([manualReview])) { setManual(current => ({ ...current, notes: "", recipient: "" }));setManualReview(null); } }}>ยืนยันบันทึก</GlassButton>
+        </div>
+      </div>}
+      {["phone", "assigned"].includes(dialog) && <form noValidate onSubmit={event => { event.preventDefault();try { commit(previewTemplateEntries(openedTemplate, [], recipient, notes, dateTime).map(entry => ({ ...entry, title: entry.minorTask }))); } catch(failure) { setError(failure.message);focusField(failure.field === "recipient" ? recipientRef : notesRef); } }}>
+        <p className="ui-caption">{openedTemplate?.minorTask}{openedTemplate?.comment ? " · " + openedTemplate.comment : ""}</p>
+        <label className="ui-field record-recipient">
+          <span>ผู้รับบริการ <small>{openedTemplate?.requireRecipient ? "จำเป็น" : "ถ้ามี"}</small></span>
+          <input className="apple-input" name="record-phone-recipient" maxLength={50} ref={recipientRef} value={recipient} aria-required={openedTemplate?.requireRecipient} aria-invalid={openedTemplate?.requireRecipient && Boolean(error) && !recipient.trim()} aria-describedby="record-phone-error" onChange={event => { setRecipient(event.target.value);setError(""); }} />
+        </label>
+        <label className="ui-field">
+          <span>
+            {dialog === "assigned" ? "รายละเอียดของงาน" : "รายละเอียดการให้บริการ"}
+            <small>จำเป็น</small>
+          </span>
+          <textarea
+            className="apple-input" rows={4} maxLength={500}
+            ref={notesRef} value={notes}
+            name="record-phone-notes" aria-required="true" aria-invalid={Boolean(error) && (dialog === "assigned" || Boolean(recipient.trim())) && !notes.trim()} aria-describedby="record-phone-error"
+            onChange={event => { setNotes(event.target.value);setError(""); }}
+          />
+        </label>
+        <p
+          id="record-phone-error" className="record-error"
+          role="alert"
+        >
+          {error}
+        </p>
+        <div className="record-form-actions">
+          <GlassButton mode={glassMode} onClick={() => setDialog(null)}>ยกเลิก</GlassButton>
+          <GlassButton
+            mode={glassMode} variant="prominent"
+            type="submit"
+          >
+            บันทึกงาน
+          </GlassButton>
+        </div>
+      </form>}
+      {dialog === "log" && selectedLog && <div>
+        <dl className="record-log-detail">
+          <div>
+            <dt>ผู้ปฏิบัติงาน</dt>
+            <dd>{selectedLog.person}</dd>
+          </div>
+          <div>
+            <dt>วันที่และเวลา</dt>
+            <dd>
+              {thaiDate(selectedLog.date)}
+              {' '}
+              ·
+              {' '}
+              {selectedLog.time}
+            </dd>
+          </div>
+          <div>
+            <dt>รายละเอียด</dt>
+            <dd>{selectedLog.detail}</dd>
+          </div>
+        </dl>
+        <GlassButton mode={glassMode} onClick={() => router.push("/dev/history")}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          กลับไปประวัติ
+        </GlassButton>
+      </div>}
+      {dialog === "schedule" && <div className="record-schedule-list">
+        <p>{thaiDate(dateTime.date)}</p>
+        <DailyAgenda date={dateTime.date} />
+        <GlassButton mode={glassMode} onClick={() => router.push("/dev/calendar")}>เปิดปฏิทิน</GlassButton>
+      </div>}
+      {dialog === "notifications" && <p className="ui-caption">ไม่มีการแจ้งเตือนตัวอย่างเพิ่มเติม</p>}
+    </Dialog>
+  </WorkspaceFrame>;
+}

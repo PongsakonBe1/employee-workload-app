@@ -1,27 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // A user profile's document ID identifies its Firebase Auth UID. Legacy
+    // profiles may omit the duplicate uid field. Role and active are authority
+    // fields, and pendingUsers is a request rather than an access grant.
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function isAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    function verifiedEmail() {
+      return isAuthenticated() && request.auth.token.get('email_verified', false) == true &&
+        request.auth.token.get('email', null) is string;
     }
-    
-    // Check if authenticated user can create their own user document (first time login)
-    function canCreateOwnUser(userId) {
-      return isAuthenticated() && 
-        request.auth.uid == userId;
+
+    function hasActiveRole(roles) {
+      return verifiedEmail() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        profileGrantsRole(get(/databases/$(database)/documents/users/$(request.auth.uid)).data, roles);
+    }
+
+    function isActiveOperator() {
+      return hasActiveRole(['staff', 'admin', 'superadmin']);
+    }
+
+    function profileGrantsRole(profile, roles) {
+      return profile.get('active', false) == true && profile.get('role', '') in roles &&
+        (profile.role != 'superadmin' || profile.get('email', null) == request.auth.token.email);
+    }
+
+    function isAdmin() {
+      return hasActiveRole(['admin', 'superadmin']);
     }
     
     function isSuperAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+      return hasActiveRole(['superadmin']);
     }
     
     function isOwner(userId) {
@@ -29,9 +42,67 @@ service cloud.firestore {
     }
     
     function isStaff() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff';
+      return hasActiveRole(['staff']);
+    }
+
+    function isValidUser(data, userId) {
+      return data.email is string && data.email.size() <= 254 &&
+        data.email.matches('^[^@ ]+@[^@ ]+$') &&
+        data.role in ['staff', 'admin', 'superadmin'] && data.active is bool &&
+        data.get('uid', userId) == userId &&
+        data.get('calendarWriter', false) is bool;
+    }
+
+    function optionalProfileText(data, key, maximum) {
+      return data.get(key, '') is string && data.get(key, '').size() <= maximum;
+    }
+
+    function validSelfProfileEdit() {
+      let data = request.resource.data;
+      let fields = data.diff(resource.data).affectedKeys();
+      return fields.hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken']) &&
+        (!fields.hasAny(['nickname']) || optionalProfileText(data, 'nickname', 200)) &&
+        (!fields.hasAny(['fullName']) || optionalProfileText(data, 'fullName', 200)) &&
+        (!fields.hasAny(['fcmToken']) || data.get('fcmToken', null) == null ||
+          optionalProfileText(data, 'fcmToken', 4096)) &&
+        (!fields.hasAny(['lastLoginAt']) || data.lastLoginAt is timestamp);
+    }
+
+    function isValidPendingRequest(data, userId) {
+      return data.keys().hasOnly(['uid', 'email', 'status', 'nickname', 'fullName', 'displayName', 'photoURL', 'requestedAt']) &&
+        data.uid == userId && data.status == 'pending' &&
+        data.email == request.auth.token.email && data.email.size() <= 254 &&
+        data.email.matches('^[^@ ]+@icit\\.kmutnb\\.ac\\.th$') &&
+        optionalProfileText(data, 'nickname', 200) && optionalProfileText(data, 'fullName', 200) &&
+        optionalProfileText(data, 'displayName', 200) && optionalProfileText(data, 'photoURL', 2048) &&
+        data.get('requestedAt', request.time) is timestamp;
+    }
+
+    function isAllowedBootstrap(data) {
+      return data.role == 'superadmin' && !('migratedFrom' in data) &&
+        data.get('calendarWriter', false) == false &&
+        request.auth.token.email in ['pongsagon.be1@gmail.com', 'pongsakon.be1@gmail.com'];
+    }
+
+    function isApprovedMigration(data, userId) {
+      let legacy = data.get('migratedFrom', '');
+      return legacy is string && legacy.matches('^[a-zA-Z0-9_-]{1,128}$') && legacy != userId &&
+        exists(/databases/$(database)/documents/users/$(legacy)) &&
+        sameProfileAuthority(get(/databases/$(database)/documents/users/$(legacy)).data, data);
+    }
+
+    function sameProfileAuthority(original, candidate) {
+      return original.get('active', false) == true && original.get('email', null) == request.auth.token.email &&
+        original.get('role', '') == candidate.role &&
+        original.get('calendarWriter', false) == candidate.get('calendarWriter', false);
+    }
+
+    function canApproveStaff(data, userId) {
+      let requestPath = /databases/$(database)/documents/pendingUsers/$(userId);
+      return isAdmin() && data.role == 'staff' && data.active == true &&
+        data.get('calendarWriter', false) == false &&
+        exists(requestPath) && get(requestPath).data.get('status', '') == 'pending' &&
+        get(requestPath).data.get('email', null) == data.email;
     }
     
     function isWorkLogOwner(worklog) {
@@ -45,11 +116,32 @@ service cloud.firestore {
     }
     
     function isValidWorkLog() {
-      return request.resource.data.keys().hasAll(['date', 'time', 'minorTask', 'mainDuty']) &&
+      return request.resource.data.keys().hasAll(['employeeId', 'date', 'time', 'minorTask', 'mainDuty']) &&
+             request.resource.data.employeeId is string &&
+             request.resource.data.employeeId.size() > 0 &&
+             request.resource.data.employeeId.size() <= 128 &&
              request.resource.data.date is string &&
              request.resource.data.time is string &&
              request.resource.data.minorTask is string &&
              request.resource.data.mainDuty is string;
+    }
+
+    // Index metadata is saved on the worklog in the same write as its event.
+    function hasResourceIndex(data) {
+      return data.resourceKeys is list && data.resourceKeys.size() <= 20 &&
+        data.resourceConditionKeys is list && data.resourceKeys.hasAll(data.resourceConditionKeys) &&
+        data.resourceConditionKeys.size() <= data.resourceKeys.size() &&
+        ((data.resourceKeys.size() == 0 && data.resourceRecordedAt == null) ||
+         (data.resourceKeys.size() > 0 && data.resourceRecordedAt is timestamp &&
+          (!(data.get('createdAt', null) is timestamp) || data.resourceRecordedAt == data.createdAt)));
+    }
+
+    function keepsResourceIndex() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'minorTask', 'room', 'equipment', 'comment', 'date', 'time',
+        'equipmentCondition', 'createdAt', 'resourceKeys', 'resourceConditionKeys', 'resourceRecordedAt'
+      ]) || (hasResourceIndex(request.resource.data) &&
+         request.resource.data.get('updatedAt', null) == request.time);
     }
 
     function isValidWorkLogUpdate() {
@@ -75,67 +167,50 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      // Allow all authenticated users to read
-      allow read: if isAuthenticated();
-      
-      // Allow authenticated user to create their own document
-      // Case 1: Without role (first time login, role set later by system)
-      // Case 2: With role 'superadmin' only for specific whitelisted emails
-      // Case 3: Admin/Superadmin can create users for others (for approval system)
-      allow create: if 
-        // กรณีสร้างให้ตัวเอง
-        (canCreateOwnUser(userId) &&
-          (
-            !request.resource.data.keys().hasAny(['role'])
-            ||
-            (request.resource.data.role == 'superadmin' &&
-             request.resource.data.email in ['pongsagon.be1@gmail.com', 'pongsakon.be1@gmail.com'])
-            ||
-            request.resource.data.role == 'staff'
-          )
-        )
-        ||
-        // กรณี Admin/Superadmin สร้างให้คนอื่น (อนุมัติ user)
-        (isAdmin() && request.resource.data.role in ['admin', 'staff']);
-      
-      // Superadmin can update/delete any user and set any role
-      allow update, delete: if isSuperAdmin();
-      
-      // Admin can update users (but cannot create superadmin or update other admins)
-      allow update: if isAdmin() && 
-        request.resource.data.role != 'superadmin' &&
-        !(resource.data.role == 'admin' && request.auth.uid != userId);
-      
-      // Users can update their own profile (except role and displayName)
-      // SA Note: v2.3.0-replan — ล็อค displayName ไม่ให้ staff แก้เอง (ITEM-3A)
-      // SA Note: fcmToken อนุญาติให้ user บันทึก token สำหรับ push notification
-      allow update: if isOwner(userId) && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'fullName', 'lastLoginAt', 'fcmToken']);
+      allow get: if isOwner(userId);
+      // First sign-in can look up only the verified email; active users retain
+      // access to the team directory used by existing screens.
+      allow read: if hasActiveRole(['staff', 'admin', 'superadmin']) ||
+        (verifiedEmail() && resource.data.email == request.auth.token.email);
+
+      allow create: if isValidUser(request.resource.data, userId) &&
+        ((isOwner(userId) && verifiedEmail() &&
+          request.resource.data.email == request.auth.token.email && request.resource.data.active == true &&
+          (isAllowedBootstrap(request.resource.data) || isApprovedMigration(request.resource.data, userId))) ||
+         canApproveStaff(request.resource.data, userId) ||
+         (isSuperAdmin() && request.resource.data.role in ['admin', 'staff']));
+
+      allow delete: if isSuperAdmin();
+      allow update: if isValidUser(request.resource.data, userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid', 'email']) &&
+        (isSuperAdmin() ||
+         (isAdmin() &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'calendarWriter', 'migratedFrom']) &&
+          (resource.data.role == 'staff' || (isOwner(userId) && resource.data.role == 'admin'))) ||
+         (isOwner(userId) && verifiedEmail() && validSelfProfileEdit()));
     }
 
     // Worklogs collection
     match /worklogs/{worklogId} {
-      // Read: All authenticated users (filter at client level)
-      // Temporary fix: isAdmin() causes circular dependency issues
-      allow read: if isAuthenticated();
+      // Staff list queries must constrain employeeId to their UID. Shared room
+      // and equipment status is provided by the authenticated projection.
+      allow read: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
       
       // Create: Staff can only create their own worklog, Admin can create for anyone
-      allow create: if isAuthenticated() && isValidWorkLog() &&
-        (request.resource.data.employeeId == request.auth.uid || isAdmin());
+      allow create: if isValidWorkLog() && hasResourceIndex(request.resource.data) &&
+        (isAdmin() || (isStaff() && request.resource.data.employeeId == request.auth.uid));
       
       // Update: Admin anytime (with validation), staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check
-      allow update: if (isAdmin() && isValidWorkLogUpdate()) ||
-        (isAuthenticated() &&
-         (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+      allow update: if isValidWorkLogUpdate() && keepsResourceIndex() &&
+        (isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid &&
          resource.data.get('locked', false) != true &&
-         isValidWorkLogUpdate());
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['employeeId', 'createdBy', 'createdAt', 'locked'])));
       
       // Delete: Admin anytime, staff/owner only if not locked
       // Note: same-day enforcement is handled client-side via canEdit() lockTime check
       allow delete: if isAdmin() ||
-         (isAuthenticated() && 
-          (resource.data.employeeId == request.auth.uid || resource.data.get('createdBy', '') == request.auth.uid) &&
+         (isStaff() && resource.data.employeeId == request.auth.uid &&
           resource.data.get('locked', false) != true);
     }
 
@@ -164,13 +239,12 @@ service cloud.firestore {
 
     // Pending users collection (for approval system)
     match /pendingUsers/{userId} {
-      // Admin can read all pending users
+      allow get: if isOwner(userId) && verifiedEmail();
       allow read: if isAdmin();
       
       // Authenticated users can create their own pending request
-      allow create: if isAuthenticated() && 
-        request.auth.uid == userId &&
-        request.resource.data.email.matches('.*@icit\\.kmutnb\\.ac\\.th');
+      allow create: if isOwner(userId) && verifiedEmail() &&
+        isValidPendingRequest(request.resource.data, userId);
       
       // Admin can delete (approve/reject)
       allow delete: if isAdmin();
@@ -179,38 +253,29 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // Notifications collection
+    function matchesNotificationAudience(recipient) {
+      return recipient == request.auth.uid || recipient == 'all' ||
+        (recipient == 'staff' && isStaff()) ||
+        (recipient == 'admin' && isAdmin()) ||
+        (recipient == 'superadmin' && isSuperAdmin());
+    }
+
+    // NotificationBell queries a single recipient or audience at a time.
     match /notifications/{notificationId} {
-      // get: Users can read their own notifications + broadcast to all + role-based
-      allow get: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         resource.data.userId == "staff" && isStaff() ||
-         resource.data.userId == "admin" && isAdmin() ||
-         resource.data.userId == "superadmin" && isSuperAdmin());
-      
-      // list: Allow all authenticated to list (filter at client side for quota optimization)
-      allow list: if isAuthenticated();
+      allow read: if isActiveOperator() && matchesNotificationAudience(resource.data.userId);
       
       // System/Admin/Superadmin can create notifications, or users creating personal notifications
-      allow create: if isAuthenticated() && (isAdmin() || request.resource.data.userId == request.auth.uid);
+      allow create: if isActiveOperator() &&
+        (isAdmin() || request.resource.data.userId == request.auth.uid);
       
       // Users can update (mark as read) their own + broadcast + role-based notifications
-      allow update: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         (resource.data.userId == "staff" && isStaff()) ||
-         (resource.data.userId == "admin" && isAdmin()) ||
-         isSuperAdmin()) &&
+      allow update: if isActiveOperator() &&
+        (matchesNotificationAudience(resource.data.userId) || isSuperAdmin()) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'readBy']);
       
       // Users can delete their own + broadcast + role-based notifications, superadmin can delete any
-      allow delete: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         (resource.data.userId == "staff" && isStaff()) ||
-         (resource.data.userId == "admin" && isAdmin()) ||
-         isSuperAdmin());
+      allow delete: if isActiveOperator() &&
+        (matchesNotificationAudience(resource.data.userId) || isSuperAdmin());
     }
 
     // Admin Promotion Requests collection
@@ -294,8 +359,8 @@ service cloud.firestore {
 
     // RoomEquipmentStatus collection (for tracking room and equipment status)
     match /RoomEquipmentStatus/{statusId} {
-      // All authenticated users can read status
-      allow read: if isAuthenticated();
+      // Keep the legacy mirror available only to approved operators.
+      allow read: if hasActiveRole(['staff', 'admin', 'superadmin']);
       
       // Staff and admin can update status (for borrowing/returning equipment, opening/closing rooms)
       allow update: if isAuthenticated() && (isStaff() || isAdmin());
@@ -304,22 +369,25 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
+    // Calendar writer state is server-owned. Once enabled, all browser
+    // versions must use the trusted API for schedule mutations.
+    function allowsLegacyCalendarWrite() {
+      let gate = /databases/$(database)/documents/calendarWriteState/main;
+      return !exists(gate) || get(gate).data.get('mode', '') == 'legacy';
+    }
+
     // Classroom Schedules collection (Floor 4 class schedules)
     match /classroomSchedules/{scheduleId} {
-      // All authenticated users can read schedules
-      allow read: if isAuthenticated();
+      allow read: if isActiveOperator();
       
-      // Only admin can create/update/delete schedules
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
 
     // DL Exam Schedules collection (Digital Literacy exam schedules)
     match /dlExamSchedules/{scheduleId} {
-      // All authenticated users can read exam schedules
-      allow read: if isAuthenticated();
+      allow read: if isActiveOperator();
       
-      // Only admin can create/update/delete exam schedules
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
 
     // Equipment Items collection (admin-managed equipment inventory)

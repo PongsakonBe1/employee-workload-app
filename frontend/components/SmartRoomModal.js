@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X, DoorOpen, DoorClosed, Clock } from 'lucide-react';
-import { getFirestore, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { useState, useRef } from 'react';
+import { Dialog } from './ui/Dialog';
+import { GlassButton } from './ui/GlassControls';
+import { ReviewSymbol } from './ui/ReviewSymbol';
+import '../app/dev/record/record.css';
+import { useSharedResourceStatus } from "../hooks/useSharedResourceStatus";
 
 export default function SmartRoomModal({ 
   isOpen, 
@@ -13,187 +15,11 @@ export default function SmartRoomModal({
   templateMinorTask 
 }) {
   const [selectedRoom, setSelectedRoom] = useState('');
-  const [roomStatus, setRoomStatus] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
-  // ดึงข้อมูลสถานะห้องจาก Firestore worklogs
-  useEffect(() => {
-    const loadRoomStatus = async () => {
-      if (!isOpen) return;
-      setLoading(true);
-      
-      const initialStatus = {
-        '303': 'closed', '304': 'closed', '305': 'closed', '306': 'closed',
-        '401': 'closed', '402': 'closed', '406': 'closed', '407': 'closed'
-      };
-
-      try {
-        const db = getFirestore();
-        const today = new Date().toLocaleDateString('en-CA'); // local timezone
-        const worklogsQuery = query(
-          collection(db, 'worklogs'),
-          orderBy('createdAt', 'desc'),
-          limit(200)
-        );
-        const querySnapshot = await getDocs(worklogsQuery);
-        const roomStatus = { ...initialStatus };
-        
-        // [SA] เก็บทุก log ที่เกี่ยวกับห้อง แล้ว reverse เป็น asc (เก่า→ใหม่)
-        // room status คงอยู่ข้ามวันจนกว่าจะมี log ใหม่เปลี่ยน
-        const roomLogs = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const mt = (data.minorTask || '').toLowerCase();
-          const isRoomLog = mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
-                            mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
-          if (isRoomLog) roomLogs.push(data);
-        });
-        roomLogs.reverse(); // asc order: เก่า→ใหม่ ให้ log ใหม่สุด override
-
-        roomLogs.forEach((data) => {
-
-          const comment = (data.comment || '').toLowerCase();
-          const minorTask = (data.minorTask || '').toLowerCase();
-
-          // ชั้น 3: เช็คอินห้องแลกเปลี่ยน / ปิดห้องแลกเปลี่ยน
-          if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
-            const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
-            if (comment.includes('303')) roomStatus['303'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('304')) roomStatus['304'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('305')) roomStatus['305'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('306')) roomStatus['306'] = isOpenAction ? 'open' : 'closed';
-          }
-          // รองรับ comment แบบ เช็คอิน 303/windows (key แบบเก่า)
-          if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
-            const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
-            if (comment.includes('303/windows')) roomStatus['303'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('304/ios')) roomStatus['304'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('305/android')) roomStatus['305'] = isOpenAction ? 'open' : 'closed';
-            if (comment.includes('306/linux')) roomStatus['306'] = isOpenAction ? 'open' : 'closed';
-          }
-          // ชั้น 4: เปิดห้องเรียนชั้น 4 / ปิดห้องเรียนชั้น 4
-          if (minorTask.includes('เปิดห้องเรียนชั้น 4') || minorTask.includes('ปิดห้องเรียนชั้น 4')) {
-            const isOpenAction = minorTask.includes('เปิด');
-            if (new RegExp('\\b401\\b').test(comment)) roomStatus['401'] = isOpenAction ? 'open' : 'closed';
-            if (new RegExp('\\b402\\b').test(comment)) roomStatus['402'] = isOpenAction ? 'open' : 'closed';
-            if (new RegExp('\\b406\\b').test(comment)) roomStatus['406'] = isOpenAction ? 'open' : 'closed';
-            if (new RegExp('\\b407\\b').test(comment)) roomStatus['407'] = isOpenAction ? 'open' : 'closed';
-          }
-        });
-
-        setRoomStatus(roomStatus);
-      } catch (error) {
-        console.error('SmartRoomModal: Error loading room status:', error);
-        setRoomStatus(initialStatus);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRoomStatus();
-  }, [isOpen]);
-
-  // รับ CustomEvent เมื่อ QuickLogButtons บันทึกสำเร็จ
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (event) => {
-      const { room, status } = event.detail;
-      if (room) setRoomStatus(prev => ({ ...prev, [room]: status }));
-    };
-    window.addEventListener('roomStatusUpdated', handler);
-    return () => window.removeEventListener('roomStatusUpdated', handler);
-  }, [isOpen]);
-
-  // Listen for worklogDeleted events to recalculate room status
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleWorklogDeleted = (event) => {
-      const { minorTask, room } = event.detail;
-      // Check if this is room-related
-      const isRoomRelated = minorTask && (
-        minorTask.includes('ห้อง') ||
-        minorTask.includes('เปิด') ||
-        minorTask.includes('ปิด') ||
-        minorTask.includes('เช็คอิน') ||
-        minorTask.includes('เช็คเอาท์') ||
-        room
-      );
-
-      if (isRoomRelated) {
-        console.log('🗑️ SmartRoomModal: Recalculating room status after worklog deletion');
-        // Recalculate by re-running loadRoomStatus logic
-        const recalculate = async () => {
-          setLoading(true);
-          try {
-            const db = getFirestore();
-            const today = new Date().toLocaleDateString('en-CA');
-            const worklogsQuery = query(
-              collection(db, 'worklogs'),
-              orderBy('createdAt', 'desc'),
-              limit(200)
-            );
-            const querySnapshot = await getDocs(worklogsQuery);
-            const initialStatus = {
-              '303': 'closed', '304': 'closed', '305': 'closed', '306': 'closed',
-              '401': 'closed', '402': 'closed', '406': 'closed', '407': 'closed'
-            };
-            const newRoomStatus = { ...initialStatus };
-
-            const roomLogs = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              const mt = (data.minorTask || '').toLowerCase();
-              const isRoomLog = mt.includes('เช็คอิน') || mt.includes('ปิดห้อง') ||
-                                mt.includes('เปิดห้องเรียน') || mt.includes('ปิดห้องเรียน');
-              if (isRoomLog) roomLogs.push(data);
-            });
-            roomLogs.reverse();
-
-            roomLogs.forEach((data) => {
-              const comment = (data.comment || '').toLowerCase();
-              const minorTask = (data.minorTask || '').toLowerCase();
-
-              if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
-                const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
-                if (comment.includes('303')) newRoomStatus['303'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('304')) newRoomStatus['304'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('305')) newRoomStatus['305'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('306')) newRoomStatus['306'] = isOpenAction ? 'open' : 'closed';
-              }
-              if (minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้' || minorTask === 'ปิดห้องแลกเปลี่ยนความรู้') {
-                const isOpenAction = minorTask === 'เช็คอินห้องแลกเปลี่ยนความรู้';
-                if (comment.includes('303/windows')) newRoomStatus['303'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('304/ios')) newRoomStatus['304'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('305/android')) newRoomStatus['305'] = isOpenAction ? 'open' : 'closed';
-                if (comment.includes('306/linux')) newRoomStatus['306'] = isOpenAction ? 'open' : 'closed';
-              }
-              if (minorTask.includes('เปิดห้องเรียนชั้น 4') || minorTask.includes('ปิดห้องเรียนชั้น 4')) {
-                const isOpenAction = minorTask.includes('เปิด');
-                if (new RegExp('\\b401\\b').test(comment)) newRoomStatus['401'] = isOpenAction ? 'open' : 'closed';
-                if (new RegExp('\\b402\\b').test(comment)) newRoomStatus['402'] = isOpenAction ? 'open' : 'closed';
-                if (new RegExp('\\b406\\b').test(comment)) newRoomStatus['406'] = isOpenAction ? 'open' : 'closed';
-                if (new RegExp('\\b407\\b').test(comment)) newRoomStatus['407'] = isOpenAction ? 'open' : 'closed';
-              }
-            });
-
-            setRoomStatus(newRoomStatus);
-          } catch (error) {
-            console.error('SmartRoomModal: Error recalculating status:', error);
-          } finally {
-            setLoading(false);
-          }
-        };
-        recalculate();
-      }
-    };
-
-    window.addEventListener('worklogDeleted', handleWorklogDeleted);
-    return () => window.removeEventListener('worklogDeleted', handleWorklogDeleted);
-  }, [isOpen]);
+  const { status, loading, error: statusError, retry } = useSharedResourceStatus({ enabled: isOpen });
+  const roomStatus = status?.roomStatus ?? {};
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const submitting = useRef(false);
 
   // กรองห้องตามชั้นที่เลือก
   const getFilteredRooms = () => {
@@ -211,8 +37,8 @@ export default function SmartRoomModal({
     }
 
     // หา action ที่เหมาะสม (เปิด/ปิด)
-    const openCount = roomList.filter(room => roomStatus[room] === 'closed').length;
-    const closedCount = roomList.filter(room => roomStatus[room] === 'open').length;
+    const openCount = roomList.filter(room => roomStatus[room] === 'available').length;
+    const closedCount = roomList.filter(room => roomStatus[room] === 'in_use').length;
 
     // ถ้ามีทั้งเปิดและปิดได้ แสดงทั้งหมด
     if (openCount > 0 && closedCount > 0) {
@@ -220,11 +46,11 @@ export default function SmartRoomModal({
     }
     // ถ้ามีแค่เปิดได้ แสดงแค่ที่ปิด
     if (openCount > 0) {
-      return roomList.filter(room => roomStatus[room] === 'closed');
+      return roomList.filter(room => roomStatus[room] === 'available');
     }
     // ถ้ามีแค่ปิดได้ แสดงแค่ที่เปิด
     if (closedCount > 0) {
-      return roomList.filter(room => roomStatus[room] === 'open');
+      return roomList.filter(room => roomStatus[room] === 'in_use');
     }
     
     return roomList;
@@ -235,8 +61,8 @@ export default function SmartRoomModal({
   // หา action ที่เหมาะสมสำหรับห้องนี้
   const getActionForRoom = (room) => {
     const status = roomStatus[room];
-    if (status === 'closed') return 'เปิดใช้งาน';
-    if (status === 'open') return 'ปิดการใช้งาน';
+    if (status === 'available') return 'เปิดใช้งาน';
+    if (status === 'in_use') return 'ปิดการใช้งาน';
     return 'เปิดใช้งาน'; // default
   };
 
@@ -259,8 +85,8 @@ export default function SmartRoomModal({
     setSelectedRoom(room);
   };
 
-  const handleConfirm = () => {
-    if (!selectedRoom) {
+  const handleConfirm = async () => {
+    if (!selectedRoom || !roomStatus[selectedRoom] || submitting.current) {
       return;
     }
     
@@ -277,122 +103,61 @@ export default function SmartRoomModal({
       comment = selectedRoom;
     }
     
-    onSelect(comment, selectedRoom, minorTask, null);
-    onClose();
-    setSelectedRoom('');
+    submitting.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      await onSelect(comment, selectedRoom, minorTask, null);
+      onClose();
+      setSelectedRoom('');
+    } catch {
+      setError("บันทึกสถานะห้องไม่สำเร็จ กรุณาลองอีกครั้ง");
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   };
 
   const handleClose = () => {
+    if (submitting.current) return;
     onClose();
+    setError("");
     setSelectedRoom('');
   };
 
-  // นับจำนวนแยกตามสถานะ
-  const openCount = filteredRooms.filter(room => roomStatus[room] === 'closed').length;
-  const closedCount = filteredRooms.filter(room => roomStatus[room] === 'open').length;
-
-  if (!isOpen || !mounted) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-950">{templateName}</h3>
-            <p className="text-sm text-slate-400 mt-0.5">เปิดได้ {openCount} · เปิดอยู่ {closedCount}</p>
-          </div>
-          <button onClick={handleClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Room List */}
-        <div className="px-6 pt-2 pb-2 flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Status Legend */}
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                  <span className="text-slate-500">ปิด (กดเพื่อเปิด)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2.5 bg-orange-400 rounded-full"></div>
-                  <span className="text-slate-500">เปิดอยู่ (กดเพื่อปิด)</span>
-                </div>
-              </div>
-
-              {/* Room Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {filteredRooms.map((room) => {
-                  const status = roomStatus[room];
-                  const action = getActionForRoom(room);
-                  const canOpen = status === 'closed';
-                  const roomInfo = getRoomInfo(room);
-                  
-                  return (
-                    <button
-                      key={room}
-                      onClick={() => handleSelect(room)}
-                      className={`p-4 rounded-2xl border-2 transition-all relative active:scale-95 ${
-                        selectedRoom === room
-                          ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                          : canOpen
-                          ? 'border-green-200 bg-green-50 hover:border-green-300'
-                          : 'border-orange-200 bg-orange-50 hover:border-orange-300'
-                      }`}
-                    >
-                      <div className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
-                        canOpen ? 'bg-green-500' : 'bg-orange-400'
-                      }`} />
-                      <div className="text-center">
-                        <div className={`text-xl font-bold ${
-                          selectedRoom === room ? 'text-purple-700'
-                          : canOpen ? 'text-green-700' : 'text-orange-700'
-                        }`}>{room}</div>
-                        {roomInfo && (
-                          <div className="text-xs font-medium text-blue-500 mt-0.5">{roomInfo}</div>
-                        )}
-                        <div className={`text-[11px] mt-1 flex items-center justify-center gap-1 ${
-                          selectedRoom === room ? 'text-purple-500'
-                          : canOpen ? 'text-green-500' : 'text-orange-500'
-                        }`}>
-                          {canOpen ? <DoorClosed className="w-3 h-3" /> : <DoorOpen className="w-3 h-3" />}
-                          {action}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-            </div>
-          )}
-        </div>
-
-        {/* Sticky footer */}
-        <div className="flex-shrink-0 border-t border-slate-100 bg-white px-6 py-4">
-          <div className="flex gap-2">
-            <button
-              onClick={handleConfirm}
-              disabled={!selectedRoom}
-              className="apple-button flex-1 disabled:opacity-40"
-            >
-              ยืนยัน{selectedRoom ? ` — ${getActionForRoom(selectedRoom)}ห้อง ${selectedRoom}` : ''}
-            </button>
-            <button onClick={handleClose} className="apple-button-secondary px-4">
-              ยกเลิก
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
+  return <Dialog
+    open={isOpen}
+    onClose={handleClose}
+    title={templateName}
+    className="record-dialog record-room-dialog"
+    busy={saving}
+    description={saving ? "กำลังบันทึกงาน…" : undefined}
+    footer={<>
+      <GlassButton onClick={handleClose} disabled={saving}>ยกเลิก</GlassButton>
+      <GlassButton variant="prominent" onClick={handleConfirm} disabled={!selectedRoom || !roomStatus[selectedRoom] || saving}>
+        {selectedRoom ? `ยืนยัน ${getActionForRoom(selectedRoom)}ห้อง ${selectedRoom}` : "ยืนยัน"}
+      </GlassButton>
+    </>}
+  >
+    {statusError ? <p role="alert" className="ui-caption">โหลดสถานะล่าสุดไม่สำเร็จ <button type="button" className="underline" onClick={retry}>ลองอีกครั้ง</button></p>
+      : loading ? <p role="status" className="ui-caption">กำลังโหลดสถานะห้อง…</p>
+      : <div className="record-room-grid">
+        {filteredRooms.map(room => {
+          const open = roomStatus[room] === "in_use";
+          const state = roomStatus[room] ? open ? "เปิดอยู่" : "ปิดอยู่" : "ยังไม่ทราบสถานะ";
+          return <button
+            type="button" className="record-resource-tile" key={room}
+            data-state={open ? "open" : "closed"} aria-pressed={selectedRoom === room}
+            onClick={() => handleSelect(room)} disabled={saving || !roomStatus[room]}
+          >
+            <span className="record-tile ui-nav-symbol" data-tone={open ? "green" : "purple"}><ReviewSymbol name="door" size={25} /></span>
+            <strong>ห้อง {room}</strong>
+            <span className="record-badge" data-tone={open ? "green" : "neutral"}>{state}</span>
+            {getRoomInfo(room) && <small>{getRoomInfo(room)}</small>}
+            {roomStatus[room] && <span className="record-resource-action">{getActionForRoom(room)}</span>}
+          </button>;
+        })}
+      </div>}
+    {error && <p role="alert" className="record-error">{error}</p>}
+  </Dialog>;
 }

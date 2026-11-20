@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import "../ui-detail-layouts.css";
+import { useState, useEffect, useCallback } from "react";
 import {
   Download,
   FileSpreadsheet,
@@ -20,9 +21,6 @@ import {
   getDoc,
   addDoc,
   doc,
-  updateDoc,
-  orderBy,
-  limit,
 } from "firebase/firestore";
 import { useAuth } from "../../components/AuthProvider";
 import { getThaiFiscalYearDates } from "../../lib/dateUtils";
@@ -56,7 +54,7 @@ export default function ExportPage() {
   const isStaff = user?.role === "staff";
 
   // Staff: โหลดคำขอส่งออกล่าสุดจาก localStorage (ไม่สามารถ query ได้ตาม rules)
-  async function loadPendingRequest() {
+  const loadPendingRequest = useCallback(async () => {
     if (!isStaff || !user) return;
 
     try {
@@ -81,14 +79,14 @@ export default function ExportPage() {
       console.error("Error loading request:", err);
       setPendingRequest(null);
     }
-  }
+  }, [isStaff, user]);
 
   useEffect(() => {
     loadPendingRequest();
     // Refresh ทุก 2 นาที (ประหยัด quota)
     const interval = setInterval(loadPendingRequest, 120000);
     return () => clearInterval(interval);
-  }, [isStaff, user]);
+  }, [loadPendingRequest]);
 
   // Staff: สร้างคำขอส่งออก
   async function createExportRequest() {
@@ -269,81 +267,65 @@ export default function ExportPage() {
 
   return (
     <AppShell>
-      <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="apple-panel p-8">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-950 text-white">
-            <FileSpreadsheet size={24} />
+      <section className="ui-management grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
+        <div className="apple-panel p-5 sm:p-7">
+          <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-[var(--ui-blue)] text-[var(--ui-blue-ink)]">
+            <FileSpreadsheet size={22} aria-hidden="true" />
           </div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Annual export
-          </p>
-          <h1 className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
-            Export fiscal-year CSV.
+          <h1 className="text-3xl font-semibold tracking-tight">
+            ส่งออกข้อมูลบันทึกงาน
           </h1>
-          <p className="mt-5 text-slate-600">
-            Export uses Thai fiscal-year boundaries. FY 2569 exports records
-            from 2025-10-01 through 2026-09-30.
+          <p className="mt-2 text-sm leading-relaxed text-[var(--ui-sub)]">
+            ดาวน์โหลดไฟล์ CSV ตามช่วงวันที่หรือตามปีงบประมาณไทย (1 ตุลาคม ถึง 30 กันยายน)
           </p>
         </div>
 
-        <div className="apple-panel p-8">
+        <div className="apple-panel p-5 sm:p-7">
           {error ? (
-            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div role="alert" className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           ) : null}
           {done ? (
-            <div className="mb-6 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">
+            <div role="status" className="mb-6 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">
               {done}
             </div>
           ) : null}
 
           {/* Admin: Export Scope Selection */}
           {isAdmin && (
-            <div className="mb-4 flex gap-2 rounded-2xl bg-indigo-50 p-2">
+            <div className="ui-option-group ui-option-group-pair mb-4" role="group" aria-label="ขอบเขตข้อมูล">
               <button
-                className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
-                  exportScope === "all"
-                    ? "bg-white text-slate-950 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                className="ui-option"
+                aria-pressed={exportScope === "all"}
                 onClick={() => setExportScope("all")}
               >
-                <Users size={16} className="inline mr-2" />
+                <Users size={16} aria-hidden="true" />
                 ข้อมูลทั้งหมด
               </button>
               <button
-                className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
-                  exportScope === "self"
-                    ? "bg-white text-slate-950 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                className="ui-option"
+                aria-pressed={exportScope === "self"}
                 onClick={() => setExportScope("self")}
               >
-                <User size={16} className="inline mr-2" />
+                <User size={16} aria-hidden="true" />
                 เฉพาะของตัวเอง
               </button>
             </div>
           )}
 
           {/* Export Mode Selection */}
-          <div className="mb-6 flex gap-2 rounded-2xl bg-slate-50 p-2">
+          <div className="ui-option-group ui-option-group-pair mb-6" role="group" aria-label="ช่วงเวลาส่งออก">
             <button
-              className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
-                exportMode === "fiscal"
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
+              className="ui-option"
+              aria-pressed={exportMode === "fiscal"}
               onClick={() => setExportMode("fiscal")}
             >
               ตามปีงบประมาณ
             </button>
             <button
-              className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${
-                exportMode === "range"
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
+              className="ui-option"
+              aria-pressed={exportMode === "range"}
               onClick={() => setExportMode("range")}
             >
               ตามช่วงวันที่
@@ -384,6 +366,7 @@ export default function ExportPage() {
               </h4>
               <textarea
                 className="apple-input w-full mb-3"
+                aria-label="เหตุผลในการส่งออกข้อมูล"
                 rows={3}
                 placeholder="ระบุเหตุผลในการส่งออกข้อมูล..."
                 value={requestReason}
@@ -393,13 +376,13 @@ export default function ExportPage() {
                 <button
                   onClick={createExportRequest}
                   disabled={loading}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                  className="apple-button"
                 >
                   {loading ? "กำลังส่ง..." : "ส่งคำขอ"}
                 </button>
                 <button
                   onClick={() => setShowRequestForm(false)}
-                  className="px-4 py-2 bg-white text-slate-600 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 transition"
+                  className="apple-button-secondary"
                 >
                   ยกเลิก
                 </button>
@@ -409,8 +392,9 @@ export default function ExportPage() {
 
           {exportMode === "fiscal" ? (
             <>
-              <label className="apple-label">ปีงบประมาณ (พ.ศ.)</label>
+              <label htmlFor="export-fiscal-year" className="apple-label">ปีงบประมาณ (พ.ศ.)</label>
               <input
+                id="export-fiscal-year"
                 className="apple-input"
                 value={fiscalYear}
                 onChange={(e) => setFiscalYear(e.target.value)}
@@ -426,11 +410,12 @@ export default function ExportPage() {
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="apple-label flex items-center gap-2">
-                    <Calendar size={14} />
+                  <label htmlFor="export-start" className="apple-label flex items-center gap-2">
+                    <Calendar size={14} aria-hidden="true" />
                     วันที่เริ่มต้น
                   </label>
                   <input
+                    id="export-start"
                     className="apple-input"
                     type="date"
                     value={startDate}
@@ -438,11 +423,12 @@ export default function ExportPage() {
                   />
                 </div>
                 <div>
-                  <label className="apple-label flex items-center gap-2">
-                    <Calendar size={14} />
+                  <label htmlFor="export-end" className="apple-label flex items-center gap-2">
+                    <Calendar size={14} aria-hidden="true" />
                     วันที่สิ้นสุด
                   </label>
                   <input
+                    id="export-end"
                     className="apple-input"
                     type="date"
                     value={endDate}
@@ -454,10 +440,10 @@ export default function ExportPage() {
           )}
 
           <div className="mt-6 rounded-3xl bg-slate-50 p-5 text-sm leading-6 text-slate-600">
-            <p className="font-semibold text-slate-950">CSV includes</p>
+            <p className="font-semibold text-slate-950">ข้อมูลในไฟล์ CSV</p>
             <p className="mt-2">
               วันที่, เวลา, ผู้ให้บริการ, ผู้รับบริการ, กลุ่มงาน,
-              หัวข้อการให้บริการ, หัวข้อรอง, Comment, สถานะ
+              หัวข้อการให้บริการ, หัวข้อรอง, หมายเหตุ, สถานะ
             </p>
           </div>
 
@@ -466,10 +452,10 @@ export default function ExportPage() {
             <button
               onClick={() => setShowRequestForm(true)}
               disabled={loading}
-              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+              className="apple-button mt-6 w-full"
             >
               <Clock size={18} />
-              ขออนุมาติส่งออกข้อมูล
+              ขออนุมัติส่งออกข้อมูล
             </button>
           )}
 
@@ -485,7 +471,7 @@ export default function ExportPage() {
                 )
               }
               disabled={loading}
-              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+              className="apple-button mt-6 w-full"
             >
               <CheckCircle size={18} />
               ดาวน์โหลดข้อมูล (อนุมัติแล้ว)
@@ -497,14 +483,14 @@ export default function ExportPage() {
             <button
               onClick={exportCsv}
               disabled={loading}
-              className="apple-button mt-8 inline-flex w-full items-center justify-center gap-2"
+              className="apple-button mt-6 w-full"
             >
               <Download size={18} />
               {loading
-                ? "Exporting…"
+                ? "กำลังส่งออก…"
                 : exportScope === "self"
-                  ? "Download My Data"
-                  : "Download All Data"}
+                  ? "ดาวน์โหลดข้อมูลของฉัน"
+                  : "ดาวน์โหลดข้อมูลทั้งหมด"}
             </button>
           )}
         </div>

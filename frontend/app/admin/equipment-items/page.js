@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import "../../ui-detail-layouts.css";
+import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
+
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Package,
@@ -30,6 +33,8 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { MINOR_TASKS } from "../../../lib/commentSuggestions";
+import { equipmentCode } from "../../../lib/equipmentCatalog";
+import { equipmentLoanKind } from "../../../lib/equipmentLoan";
 
 // Equipment tasks ที่ใช้ในระบบยืม/คืน
 const EQUIPMENT_MINOR_TASKS = MINOR_TASKS.filter(
@@ -64,10 +69,15 @@ export default function EquipmentItemsPage() {
   const [filterTask, setFilterTask] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const editorHeading = useRef(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
 
   const isAdmin = isAdminRole(user);
+
+  useEffect(() => {
+    if (showForm) editorHeading.current?.focus();
+  }, [showForm, editingItem?.id]);
 
   useEffect(() => {
     if (user && !isAdmin) {
@@ -77,7 +87,7 @@ export default function EquipmentItemsPage() {
 
   useEffect(() => {
     if (isAdmin) loadItems();
-  }, [user]);
+  }, [isAdmin, user]);
 
   async function loadItems() {
     setLoading(true);
@@ -109,22 +119,38 @@ export default function EquipmentItemsPage() {
       setError("กรุณากรอกชื่ออุปกรณ์และเลือกหัวข้อรอง");
       return;
     }
+    const previousCode = equipmentCode(editingItem?.name);
+    const nextCode = equipmentCode(formData.name);
+    if (previousCode && (nextCode !== previousCode || equipmentLoanKind(formData) !== equipmentLoanKind(editingItem))) {
+      setError("แก้สังกัดหรือสถานะได้ แต่รหัสและประเภทอุปกรณ์ต้องคงเดิมเพื่อเก็บประวัติยืม–คืน");
+      return;
+    }
+    if (!editingItem && equipmentLoanKind(formData) && !nextCode) {
+      setError("กรอกรหัสอุปกรณ์ เช่น ICIT30");
+      return;
+    }
+    if (!previousCode && nextCode && items.some(item => item.id !== editingItem?.id && equipmentCode(item.name) === nextCode)) {
+      setError("รหัสอุปกรณ์นี้มีอยู่แล้ว ให้แก้สังกัดจากรายการเดิม");
+      return;
+    }
+    const fields = { ...formData, name: nextCode ?? formData.name.trim() };
     setSaving(true);
     setError("");
     try {
       if (editingItem) {
         await updateDoc(doc(db, "equipmentItems", editingItem.id), {
-          ...formData,
+          ...fields,
           updatedAt: serverTimestamp(),
         });
       } else {
         await addDoc(collection(db, "equipmentItems"), {
-          ...formData,
+          ...fields,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: user.uid,
         });
       }
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       resetForm();
       await loadItems();
     } catch (err) {
@@ -140,6 +166,7 @@ export default function EquipmentItemsPage() {
         active: !item.active,
         updatedAt: serverTimestamp(),
       });
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       await loadItems();
     } catch (err) {
       setError("อัปเดตไม่สำเร็จ: " + err.message);
@@ -150,6 +177,7 @@ export default function EquipmentItemsPage() {
     if (!confirm(`ต้องการลบ "${item.name}" ใช่หรือไม่?`)) return;
     try {
       await deleteDoc(doc(db, "equipmentItems", item.id));
+      window.dispatchEvent(new Event("equipmentCatalogUpdated"));
       await loadItems();
     } catch (err) {
       setError("ลบไม่สำเร็จ: " + err.message);
@@ -220,6 +248,7 @@ export default function EquipmentItemsPage() {
 
   return (
     <AppShell>
+      <div className="ui-management">
       {/* Header */}
       <section className="mb-6">
         <div className="mb-2 flex items-center gap-3">
@@ -232,7 +261,7 @@ export default function EquipmentItemsPage() {
           </div>
         </div>
         <p className="text-sm text-slate-500 mt-1">
-          เพิ่ม/แก้ไข/ปิดการใช้งานอุปกรณ์ที่แสดงใน comment suggestions ของระบบยืม-คืน
+          เพิ่ม ย้ายสังกัด หรือหยุดใช้อุปกรณ์ที่แสดงในบันทึกด่วนและหน้าทรัพยากร
         </p>
       </section>
 
@@ -253,7 +282,7 @@ export default function EquipmentItemsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="management-filters mb-6">
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
           className="apple-button flex items-center gap-2"
@@ -261,16 +290,18 @@ export default function EquipmentItemsPage() {
           <Plus size={16} />
           เพิ่มอุปกรณ์
         </button>
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 max-w-xs management-search">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             className="apple-input pl-10 text-sm"
+            aria-label="ค้นหาอุปกรณ์"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ค้นหาอุปกรณ์..."
           />
         </div>
         <select
+          aria-label="หัวข้ออุปกรณ์"
           value={filterTask}
           onChange={(e) => setFilterTask(e.target.value)}
           className="apple-input text-sm max-w-[200px]"
@@ -290,7 +321,7 @@ export default function EquipmentItemsPage() {
       {showForm && (
         <div className="apple-panel p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 ref={editorHeading} tabIndex={-1} className="text-lg font-semibold text-slate-950">
               {editingItem ? "แก้ไขอุปกรณ์" : "เพิ่มอุปกรณ์ใหม่"}
             </h2>
             <button onClick={resetForm} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
@@ -299,8 +330,9 @@ export default function EquipmentItemsPage() {
           </div>
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="apple-label">ชื่ออุปกรณ์ *</label>
+              <label className="apple-label" htmlFor="equipment-code">รหัสอุปกรณ์ *</label>
               <input
+                id="equipment-code"
                 type="text"
                 className="apple-input"
                 value={formData.name}
@@ -310,8 +342,9 @@ export default function EquipmentItemsPage() {
               />
             </div>
             <div>
-              <label className="apple-label">หัวข้อรอง (minorTask) *</label>
+              <label className="apple-label" htmlFor="equipment-task">หัวข้อรอง (minorTask) *</label>
               <select
+                id="equipment-task"
                 className="apple-input"
                 value={formData.minorTask}
                 onChange={(e) => setFormData({ ...formData, minorTask: e.target.value })}
@@ -324,8 +357,9 @@ export default function EquipmentItemsPage() {
               </select>
             </div>
             <div>
-              <label className="apple-label">สถานที่ประจำ</label>
+              <label className="apple-label" htmlFor="equipment-location">สถานที่ประจำ</label>
               <input
+                id="equipment-location"
                 type="text"
                 className="apple-input"
                 value={formData.location}
@@ -340,8 +374,9 @@ export default function EquipmentItemsPage() {
               </datalist>
             </div>
             <div>
-              <label className="apple-label">ลำดับ (order)</label>
+              <label className="apple-label" htmlFor="equipment-order">ลำดับ (order)</label>
               <input
+                id="equipment-order"
                 type="number"
                 className="apple-input"
                 value={formData.order}
@@ -384,22 +419,22 @@ export default function EquipmentItemsPage() {
             <div className="px-5 py-3 bg-slate-50 border-b border-slate-100">
               <h3 className="text-sm font-semibold text-slate-700">{task} ({taskItems.length})</h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+            <div className="overflow-x-auto mobile-table-wrap">
+              <table role="table" aria-label="รายการอุปกรณ์" className="min-w-full text-left text-sm mobile-detail-table">
                 <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
-                  <tr>
-                    <th className="px-5 py-3">ชื่อ</th>
-                    <th className="px-5 py-3">สถานที่</th>
-                    <th className="px-5 py-3">สถานะ</th>
-                    <th className="px-5 py-3">ลำดับ</th>
-                    <th className="px-5 py-3">การจัดการ</th>
+                  <tr role="row">
+                    <th scope="col" className="px-5 py-3">ชื่อ</th>
+                    <th scope="col" className="px-5 py-3">สถานที่</th>
+                    <th scope="col" className="px-5 py-3">สถานะ</th>
+                    <th scope="col" className="px-5 py-3">ลำดับ</th>
+                    <th scope="col" className="px-5 py-3">การจัดการ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {taskItems.map((item) => (
-                    <tr key={item.id} className={`${item.active ? "bg-white/45" : "bg-red-50/30"}`}>
-                      <td className="px-5 py-3 font-medium text-slate-950">{item.name}</td>
-                      <td className="px-5 py-3 text-slate-600">
+                    <tr role="row" key={item.id} className={`${item.active ? "bg-white/45" : "bg-red-50/30"}`}>
+                      <MobileDetailCell primary className="px-5 py-3 font-medium text-slate-950">{item.name}</MobileDetailCell>
+                      <MobileDetailCell label="สถานที่" className="px-5 py-3 text-slate-600">
                         {item.location ? (
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={12} className="text-slate-400" />
@@ -408,8 +443,8 @@ export default function EquipmentItemsPage() {
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
-                      </td>
-                      <td className="px-5 py-3">
+                      </MobileDetailCell>
+                      <MobileDetailCell label="สถานะ" className="px-5 py-3">
                         {item.active ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
                             <ToggleRight size={14} />
@@ -421,9 +456,9 @@ export default function EquipmentItemsPage() {
                             ปิดใช้งาน
                           </span>
                         )}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">{item.order || 0}</td>
-                      <td className="px-5 py-3">
+                      </MobileDetailCell>
+                      <MobileDetailCell label="ลำดับ" className="px-5 py-3 text-slate-500">{item.order || 0}</MobileDetailCell>
+                      <MobileDetailCell actions className="px-5 py-3">
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => handleToggleActive(item)}
@@ -450,7 +485,7 @@ export default function EquipmentItemsPage() {
                             ลบ
                           </button>
                         </div>
-                      </td>
+                      </MobileDetailCell>
                     </tr>
                   ))}
                 </tbody>
@@ -467,6 +502,7 @@ export default function EquipmentItemsPage() {
             : "ไม่พบอุปกรณ์ตามเงื่อนไขที่เลือก"}
         </div>
       )}
+      </div>
     </AppShell>
   );
 }

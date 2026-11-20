@@ -283,13 +283,11 @@ app.use("/api/notify", notifyRouter);
 
 ---
 
-## QA-1: Playwright Auth State Injection — [QA]
+## QA-1 สำหรับทดสอบบทบาทด้วย Firebase Auth Emulator
 
-**ไฟล์:**
-- [ ] `frontend/tests/fixtures/auth-states/superadmin.json` — `pongsakon.be1@gmail.com`, displayName: `"Admin"`, role: `"superadmin"`
-- [ ] `frontend/tests/fixtures/auth-states/staff.json` — `pongsagon.r@icit.kmutnb.ac.th`, displayName: `"พงศกร"`, role: `"staff"`
-- [ ] `playwright.config.js` หรือ test fixtures — ใช้ `storageState` จาก JSON ข้างต้น
-- [ ] เขียน test BUG-5: staff login → worklog list → ปุ่มลบ/แก้ไขวันนี้กดได้
+- ใช้ fixture สังเคราะห์จาก `frontend/tests/fixtures/synthetic-auth.cjs` สำหรับ Staff และ Superadmin
+- ใช้ `frontend/playwright.emulator.config.js` กับเครื่องมือบน loopback ตามขั้นตอนใน `QA_REPORT.md`
+- ตรวจว่าพนักงานเปิดประวัติและเลือกแก้ไขรายการของตนเองได้ในวันบันทึก รวมถึงตรวจสิทธิ์หน้า Equipment Health
 
 ---
 

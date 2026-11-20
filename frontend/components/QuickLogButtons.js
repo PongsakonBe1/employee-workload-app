@@ -1,21 +1,47 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useTranslations } from 'next-intl';
+import { useState, useEffect, useId, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Dialog } from './ui/Dialog';
+import { GlassButton } from './ui/GlassControls';
+import { ReviewSymbol } from './ui/ReviewSymbol';
+import '../app/dev/record/record.css';
 import { getTemplatesForUser, logFromTemplate, logFromComboTemplate, logFromComboCheckbox } from '../lib/quickLogTemplates';
 import { useAuth } from './AuthProvider';
 import { logSystemAction, SystemActions } from '../lib/systemLog';
-import { doc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
+import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode } from '../lib/equipmentLoan';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
+const equipmentAppearance = {
+  headphones: ["headphones", "green"],
+  power: ["plug", "green"],
+  usb: ["usb", "blue"]
+};
+
+function templateAppearance(template, equipmentKind) {
+  if (equipmentKind) return equipmentAppearance[equipmentKind];
+  const text = `${template.name} ${template.minorTask}`;
+  if (/ชั้น [34]|เปิดห้อง|ปิดห้อง/.test(text)) return ["door", "purple"];
+  if (/โทรศัพท์|รับสาย/.test(text)) return ["phone", "amber"];
+  if (/โปรแกรม|Software/i.test(text)) return ["software", "purple"];
+  if (/บัญชี|account/i.test(text)) return ["account", "blue"];
+  return ["templates", "blue"];
+}
+
+function templateHint(template, equipmentKind, symbol) {
+  if (equipmentKind) return "เลือกอุปกรณ์";
+  if (symbol === "door") return "เลือกห้อง";
+  if (template.isCombo) return template.requireCheckbox ? "เลือกเฉพาะงานที่ทำ" : "บันทึกเป็นชุด";
+  if (template.requireComment) return template.requireRecipient ? "ระบุผู้รับบริการและรายละเอียด" : "ระบุรายละเอียด";
+  return template.requireRecipient ? "ระบุผู้รับบริการ" : "กดค้าง 3 วินาที";
+}
 
 export default function QuickLogButtons({ onLogSuccess, targetUser }) {
-  const t = useTranslations('worklog');
   const { user } = useAuth();
   const logAsUser = targetUser || user;
   const [templates, setTemplates] = useState([]);
@@ -25,7 +51,6 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [recipient, setRecipient] = useState('');
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
-  const [equipmentComment, setEquipmentComment] = useState('');
   const [showSmartEquipmentModal, setShowSmartEquipmentModal] = useState(false);
   const [showSmartRoomModal, setShowSmartRoomModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -43,9 +68,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const holdRafRef = useRef(null);
   const executingRef = useRef(false); // guard ป้องกัน double-log
   const [currentPage, setCurrentPage] = useState(0);
-  const [mounted, setMounted] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dialogError, setDialogError] = useState('');
+  const formId = useId();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => () => {
+    if (holdRafRef.current !== null) cancelAnimationFrame(holdRafRef.current);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -63,18 +92,10 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     loadTemplates();
   }, [user]);
 
-  const isReturnTemplate = (template) =>
-    template.minorTask.includes('คืนหูฟัง') || template.minorTask.includes('คืนปลั๊กไฟ') ||
-    template.name.includes('คืนหูฟัง') || template.name.includes('คืนปลั๊กไฟ');
-
   const isSmartOrEquipmentTemplate = (template) => {
-    return template.isSmart ||
+    return equipmentLoanKind(template) || template.isSmart ||
       template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4') ||
-      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
-      template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ') ||
-      template.minorTask.includes('หูฟัง') || template.minorTask.includes('ปลั๊กไฟ') ||
-      template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
-      template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ');
+      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4');
   };
 
   const isDirectLog = (template) => !isSmartOrEquipmentTemplate(template) && !template.requireRecipient && !template.isCombo;
@@ -139,11 +160,14 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const handleQuickLog = (template) => {
     if (!user || !logAsUser) return;
 
+    if (loading) return;
+    setDialogError('');
+
     // Combo template with checkbox mode: เปิด modal เลือก checkbox
     if (template.isCombo && template.requireCheckbox) {
       setSelectedTemplate(template);
       setComboCheckboxRecipient('');
-      setSelectedComboItems(template.comboItems.map((_, i) => i)); // เลือกทั้งหมดเป็นค่าเริ่มต้น
+      setSelectedComboItems([]);
       setShowComboCheckboxModal(true);
       return;
     }
@@ -156,7 +180,8 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
-    if (template.requireComment) {
+    const loanKind = equipmentLoanKind(template);
+    if (template.requireComment && !(loanKind && template.isSmart)) {
       setSelectedTemplate(template);
       setCommentText('');
       setRecipient('');
@@ -164,17 +189,18 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
+    if (loanKind) {
+      setSelectedTemplate(template);
+      setShowSmartEquipmentModal(true);
+      return;
+    }
+
     if (isSmartOrEquipmentTemplate(template)) {
       setSelectedTemplate(template);
-      setEquipmentComment('');
       const isRoom = template.minorTask.includes('ห้องเรียน') ||
                      template.minorTask.includes('ชั้น 3') || template.minorTask.includes('ชั้น 4') ||
                      template.name.includes('ชั้น 3') || template.name.includes('ชั้น 4');
-      if (template.minorTask.includes('ยืมหูฟัง') || template.minorTask.includes('คืนหูฟัง') ||
-          template.minorTask.includes('ยืมปลั๊กไฟ') || template.minorTask.includes('คืนปลั๊กไฟ') ||
-          template.name.includes('หูฟัง') || template.name.includes('ปลั๊กไฟ')) {
-        setShowSmartEquipmentModal(true);
-      } else if (isRoom) {
+      if (isRoom) {
         setShowSmartRoomModal(true);
       } else {
         setShowSmartEquipmentModal(true);
@@ -193,11 +219,12 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   };
 
   const handleLogCombo = async () => {
-    if (!selectedTemplate || !comboRecipient.trim()) {
+    if (!selectedTemplate || loading || (selectedTemplate.requireRecipient !== false && !comboRecipient.trim())) {
       if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
       return;
     }
 
+    setDialogError('');
     setLoggingTemplate(selectedTemplate.id);
     setLoading(true);
 
@@ -229,6 +256,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       setComboRecipient('');
 
     } catch (error) {
+      setDialogError('บันทึกไม่สำเร็จ กรุณาลองใหม่');
       console.error("Error combo logging:", error);
       if (onLogSuccess) {
         onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
@@ -240,7 +268,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   };
 
   const handleLogComboCheckbox = async () => {
-    if (!selectedTemplate || !comboCheckboxRecipient.trim()) {
+    if (!selectedTemplate || loading || (selectedTemplate.requireRecipient !== false && !comboCheckboxRecipient.trim())) {
       if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
       return;
     }
@@ -250,6 +278,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
+    setDialogError('');
     setLoggingTemplate(selectedTemplate.id);
     setLoading(true);
 
@@ -287,6 +316,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       setSelectedComboItems([]);
 
     } catch (error) {
+      setDialogError('บันทึกไม่สำเร็จ กรุณาลองใหม่');
       console.error("Error combo checkbox logging:", error);
       if (onLogSuccess) {
         onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
@@ -306,6 +336,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (onLogSuccess) onLogSuccess('กรุณากรอกผู้รับบริการ', 'error');
       return;
     }
+    setDialogError('');
     setLoggingTemplate(selectedTemplate.id);
     setLoading(true);
     try {
@@ -329,6 +360,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       setCommentText('');
       setRecipient('');
     } catch (error) {
+      setDialogError('บันทึกไม่สำเร็จ กรุณาลองใหม่');
       if (onLogSuccess) onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
     } finally {
       setLoading(false);
@@ -344,6 +376,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       return;
     }
 
+    setDialogError('');
     setLoggingTemplate(selectedTemplate.id);
     setLoading(true);
 
@@ -376,6 +409,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       setRecipient('');
 
     } catch (error) {
+      setDialogError('บันทึกไม่สำเร็จ กรุณาลองใหม่');
       console.error("Error quick logging:", error);
       if (onLogSuccess) {
         onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
@@ -424,7 +458,6 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       
       setShowEquipmentModal(false);
       setSelectedTemplate(null);
-      setEquipmentComment('');
 
     } catch (error) {
       console.error("Error quick logging with equipment:", error);
@@ -438,11 +471,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   };
 
   const handleLogWithSmartEquipment = async (comment, equipment, minorTask, recipient, equipmentCondition = 'normal', equipmentNote = '') => {
-    if (!selectedTemplate || !comment.trim()) {
-      if (onLogSuccess) {
-        onLogSuccess('กรุณาเลือกรายการอุปกรณ์', 'error');
-      }
-      return;
+    const equipmentType = equipmentLoanKind(selectedTemplate || undefined);
+    const returning = minorTask === equipmentLoanTask(equipmentType, true);
+    if (!user || !logAsUser || !equipmentType || !equipment || !comment.trim() ||
+        (!returning && (minorTask !== equipmentLoanTask(equipmentType, false) || !isEquipmentStudentCode(recipient)))) {
+      throw new Error('Invalid equipment loan input');
     }
 
     setLoggingTemplate(selectedTemplate.id);
@@ -457,7 +490,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         comment: comment.trim(),
         minorTask: minorTask, // override minorTask ตามสถานะ
         equipment: equipment,
-        recipient: recipient.trim(),
+        recipient,
         equipmentCondition: equipmentCondition || 'normal', // ITEM-1
         equipmentNote: equipmentNote || '',                 // ITEM-1
         employeeDisplayName: logAsUser.displayName || logAsUser.nickname || logAsUser.fullName?.split(' ')?.[0] || '',
@@ -468,54 +501,30 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       // บันทึกงานจาก template พร้อม override comment และ minorTask
       await logFromTemplate(selectedTemplate.id, logAsUser.uid || logAsUser.id, extraData);
 
-      // อัปเดตสถานะอุปกรณ์ใน RoomEquipmentStatus
-      const equipmentType = selectedTemplate.minorTask.includes('หูฟัง') ? 'headphones' : 
-                           selectedTemplate.minorTask.includes('ปลั๊กไฟ') ? 'power' : null;
-      
-      if (equipmentType) {
-        // กำหนดสถานะใหม่ตามการกระทำ
-        const newStatus = minorTask.includes('ยืม') || minorTask.includes('เปิด') ? 'in_use' : 'available';
-        
-        // อัปเดตใน RoomEquipmentStatus collection
-        const statusRef = doc(db, 'RoomEquipmentStatus', 'equipment');
-        await setDoc(statusRef, {
-          [`${equipmentType}.${equipment}`]: newStatus,
-          [`${equipmentType}.${equipment}_user`]: recipient,
-          [`${equipmentType}.${equipment}_timestamp`]: new Date().toISOString()
-        }, { merge: true });
-        
-        console.log(`✅ Updated ${equipmentType} ${equipment} status to ${newStatus}`);
-        
-        // Trigger refresh ของสถานะอุปกรณ์โดยการส่ง custom event
-        window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', {
-          detail: { equipmentType, equipment, status: newStatus }
-        }));
+      const newStatus = returning ? 'available' : 'in_use';
+      let statusSynced = true;
+      if (equipmentType !== 'usb') {
+        try {
+          await setDoc(doc(db, 'RoomEquipmentStatus', 'equipment'), {
+            [`${equipmentType}.${equipment}`]: newStatus,
+            [`${equipmentType}.${equipment}_user`]: recipient,
+            [`${equipmentType}.${equipment}_timestamp`]: new Date().toISOString()
+          }, { merge: true });
+        } catch {
+          // The worklog already committed. Report the status sync separately to avoid another loan on retry.
+          statusSynced = false;
+        }
       }
+      window.dispatchEvent(new CustomEvent('equipmentStatusUpdated', { detail: { equipmentType, equipment, status: newStatus } }));
 
-      // บันทึก system log
-      await logSystemAction(
+      void logSystemAction(
         SystemActions.WORKLOG_CREATE,
-        `Smart log from template: ${selectedTemplate.name} - ${equipment} (${minorTask}) - ${recipient}`,
-        { templateId: selectedTemplate.id, equipment, minorTask, recipient }
+        `Smart log from template: ${selectedTemplate.name} - ${equipment} (${minorTask})`,
+        logAsUser.uid || logAsUser.id
       );
 
-      // แจ้งผู้ใช้
-      if (onLogSuccess) {
-        console.log('🔔 Calling onLogSuccess with message:', `บันทึกงาน "${comment}" สำหรับ ${recipient} เรียบร้อยแล้ว`);
-        onLogSuccess(`บันทึกงาน "${comment}" สำหรับ ${recipient} เรียบร้อยแล้ว`);
-      } else {
-        console.log('❌ onLogSuccess is not available');
-      }
-      
-      setShowSmartEquipmentModal(false);
+      onLogSuccess?.(statusSynced ? `บันทึกงาน “${comment}” เรียบร้อยแล้ว` : `บันทึกงาน “${comment}” แล้ว แต่ซิงก์สถานะอุปกรณ์ไม่สำเร็จ`);
       setSelectedTemplate(null);
-      setEquipmentComment('');
-
-    } catch (error) {
-      console.error("Error quick logging with smart equipment:", error);
-      if (onLogSuccess) {
-        onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
-      }
     } finally {
       setLoading(false);
       setLoggingTemplate(null);
@@ -527,7 +536,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       if (onLogSuccess) {
         onLogSuccess('กรุณาเลือกห้องเรียน', 'error');
       }
-      return;
+      throw new Error("Missing room selection");
     }
 
     setLoggingTemplate(selectedTemplate.id);
@@ -557,13 +566,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       
       // อัปเดตใน RoomEquipmentStatus collection
       const statusRef = doc(db, 'RoomEquipmentStatus', 'equipment');
-      await setDoc(statusRef, {
+      void setDoc(statusRef, {
         [`rooms.${room}`]: newStatus,
         [`rooms.${room}_user`]: user.uid,
         [`rooms.${room}_timestamp`]: new Date().toISOString()
-      }, { merge: true });
-      
-      console.log(`✅ Updated room ${room} status to ${newStatus}`);
+      }, { merge: true }).catch(() => {});
       
       // Trigger refresh ของสถานะห้องเรียนโดยการส่ง custom event
       window.dispatchEvent(new CustomEvent('roomStatusUpdated', {
@@ -571,7 +578,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       }));
 
       // บันทึก system log
-      await logSystemAction(
+      void logSystemAction(
         SystemActions.WORKLOG_CREATE,
         `Smart log from template: ${selectedTemplate.name} - ${room} (${minorTask})`,
         { templateId: selectedTemplate.id, room, minorTask }
@@ -584,13 +591,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
       
       setShowSmartRoomModal(false);
       setSelectedTemplate(null);
-      setEquipmentComment('');
 
     } catch (error) {
       console.error("Error quick logging with smart room:", error);
       if (onLogSuccess) {
         onLogSuccess(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
       }
+      throw error;
     } finally {
       setLoading(false);
       setLoggingTemplate(null);
@@ -601,209 +608,106 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
     return null;
   }
 
-  const ITEMS_PER_PAGE = 6;
-  const totalPages = Math.ceil(templates.length / ITEMS_PER_PAGE);
-  const pagedTemplates = templates.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+  const term = search.trim().toLocaleLowerCase("th");
+  const filteredTemplates = templates.filter(template =>
+    !term || [template.name, template.minorTask].some(value => value?.toLocaleLowerCase("th").includes(term))
+  );
+  const pageCount = Math.ceil(filteredTemplates.length / 6);
+  const page = Math.min(currentPage, Math.max(0, pageCount - 1));
+  const pagedTemplates = filteredTemplates.slice(page * 6, page * 6 + 6);
+  const isCombo = showComboModal || showComboCheckboxModal;
+  const showForm = Boolean(selectedTemplate && (isCombo || showCommentModal || showRecipientModal));
+  const needsRecipient = isCombo ? selectedTemplate?.requireRecipient !== false : Boolean(showRecipientModal || selectedTemplate?.requireRecipient);
+  const recipientValue = showComboCheckboxModal ? comboCheckboxRecipient : showComboModal ? comboRecipient : recipient;
+  const setRecipientValue = showComboCheckboxModal ? setComboCheckboxRecipient : showComboModal ? setComboRecipient : setRecipient;
+  const comboItems = selectedTemplate?.comboItems || [];
+
+  function closeForm() {
+    if (loading) return;
+    setShowComboModal(false);
+    setShowComboCheckboxModal(false);
+    setShowRecipientModal(false);
+    setShowCommentModal(false);
+    setSelectedTemplate(null);
+    setRecipient('');
+    setComboRecipient('');
+    setComboCheckboxRecipient('');
+    setCommentText('');
+    setSelectedComboItems([]);
+    setDialogError('');
+  }
+
+  function submitForm(event) {
+    event.preventDefault();
+    if (loading) return;
+    if (needsRecipient && !recipientValue.trim()) {
+      setDialogError('กรุณากรอกผู้รับบริการ');
+      event.currentTarget.elements.namedItem('recipient')?.focus();
+      return;
+    }
+    if (showCommentModal && !commentText.trim()) {
+      setDialogError("กรุณากรอกรายละเอียด");
+      event.currentTarget.elements.namedItem("comment")?.focus();
+      return;
+    }
+    if (showComboCheckboxModal) void handleLogComboCheckbox();
+    else if (showComboModal) void handleLogCombo();
+    else if (showCommentModal) void handleLogWithComment();
+    else if (showRecipientModal) void handleLogWithRecipient();
+  }
 
   return (
     <div>
-      {templates.length > 0 ? (
-        <div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {pagedTemplates.map((template) => {
-              const direct = isDirectLog(template);
-              const isHolding = holdingId === template.id;
-              const isLogging = loggingTemplate === template.id;
-              return (
-              <button
-                key={template.id}
-                type="button"
-                onClick={() => { if (!direct || template.requireComment) handleQuickLog(template); }}
-                onMouseDown={() => direct && !template.requireComment && handleHoldStart(template)}
-                onMouseUp={() => direct && !template.requireComment && handleHoldEnd()}
-                onMouseLeave={() => direct && !template.requireComment && handleHoldEnd()}
-                onTouchStart={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldStart(template); } }}
-                onTouchEnd={(e) => { if (direct && !template.requireComment) { e.preventDefault(); handleHoldEnd(); } }}
-                onTouchCancel={() => direct && !template.requireComment && handleHoldEnd()}
-                disabled={loading && !isLogging}
-                title={direct ? 'กดค้างเพื่อบันทึก' : template.minorTask}
-                className={`
-                  relative p-3 text-left rounded-2xl border-2 transition-all overflow-hidden select-none
-                  ${isLogging
-                    ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
-                    : isHolding
-                    ? 'border-emerald-500 bg-emerald-50 text-slate-700'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                  }
-                  ${loading && !isLogging ? 'opacity-50 pointer-events-none' : ''}
-                `}
-              >
-                {/* hold progress bar */}
-                {isHolding && (
-                  <div
-                    className="absolute bottom-0 left-0 h-0.5 bg-emerald-500 transition-none"
-                    style={{ width: `${holdProgress}%` }}
-                  />
-                )}
-                {isLogging && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
-                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  </div>
-                )}
-                <div className="font-medium text-sm leading-tight truncate">{template.name}</div>
-                <div className="text-[11px] mt-0.5 opacity-60 truncate">
-                  {template.isCombo 
-                    ? template.comboItems?.map(i => i.minorTask).join(' · ')
-                    : template.minorTask
-                  }
-                </div>
-                <div className="mt-1 flex items-center gap-1">
-                  {template.isCombo && (
-                    <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full">
-                      {template.comboItems?.length || 0} งาน
-                    </span>
-                  )}
-                  {template.isCombo && template.requireCheckbox && (
-                    <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">เลือกเอง</span>
-                  )}
-                  {template.requireRecipient && (
-                    <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">กรอกชื่อ</span>
-                  )}
-                  {direct && !template.requireComment && (
-                    <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">กดค้าง 3 วิ</span>
-                  )}
-                  {template.requireComment && (
-                    <span className="text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">กรอก comment</span>
-                  )}
-                </div>
-              </button>
-              );
-            })}
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-3 px-1">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                disabled={currentPage === 0}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200 transition-colors select-none"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                ก่อนหน้า
-              </button>
-              <span className="text-xs text-slate-400">
-                {currentPage + 1} / {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={currentPage === totalPages - 1}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200 transition-colors select-none"
-              >
-                ถัดไป
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="text-center py-6 text-sm text-slate-400">
-          ยังไม่มี Quick Log Templates — Admin สร้างได้ในหน้าจัดการ
-        </div>
-      )}
-
-      {/* Modal สำหรับกรอกผู้รับบริการ */}
-      {showRecipientModal && selectedTemplate && mounted && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }} />
-          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{selectedTemplate.name}</h3>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
-            <input
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && recipient.trim() && handleLogWithRecipient()}
-              className="apple-input"
-              placeholder="กรอกชื่อผู้รับบริการ"
-              autoFocus
-            />
-            <div className="flex gap-2 mt-5">
-              <button
-                onClick={handleLogWithRecipient}
-                disabled={loading || !recipient.trim()}
-                className="apple-button flex-1 disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading
-                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
-                  : 'บันทึก'
-                }
-              </button>
-              <button
-                onClick={() => { setShowRecipientModal(false); setSelectedTemplate(null); setRecipient(''); }}
-                className="apple-button-secondary px-4"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Comment Modal */}
-      {showCommentModal && selectedTemplate && mounted && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); setRecipient(''); }} />
-          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm p-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">บันทึกด่วน</p>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
-            <p className="text-xs text-slate-500 mb-4">ปฏิบัติงานตามผู้บังคับบัญชา — กรุณาระบุรายละเอียด</p>
-            {selectedTemplate.requireRecipient && (
-              <>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
-                <input
-                  type="text"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  className="apple-input mb-3"
-                  placeholder="กรอกชื่อผู้รับบริการ"
-                  autoFocus
-                />
-              </>
-            )}
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">ความคิดเห็น / รายละเอียด *</label>
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="apple-input w-full resize-none"
-              rows={3}
-              placeholder="กรอกรายละเอียดการปฏิบัติงาน..."
-              autoFocus={!selectedTemplate.requireRecipient}
-            />
-            <div className="flex gap-2 mt-5">
-              <button
-                onClick={handleLogWithComment}
-                disabled={loading || !commentText.trim() || (selectedTemplate.requireRecipient && !recipient.trim())}
-                className="apple-button flex-1 disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading
-                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
-                  : 'บันทึก'
-                }
-              </button>
-              <button
-                onClick={() => { setShowCommentModal(false); setSelectedTemplate(null); setCommentText(''); setRecipient(''); }}
-                className="apple-button-secondary px-4"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <label className="ui-field quick-log-search">
+        <span>ค้นหาบันทึกด่วน</span>
+        <span className="quick-log-search-box">
+          <Search size={17} aria-hidden="true" />
+          <input type="search" aria-label="ค้นหาบันทึกด่วน" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(0); }} />
+        </span>
+      </label>
+      <div className="record-quick-grid">
+        {pagedTemplates.map(template => {
+          const direct = isDirectLog(template) && !template.requireComment;
+          const holding = holdingId === template.id;
+          const saving = loggingTemplate === template.id;
+          const kind = equipmentLoanKind(template);
+          const [symbol, tone] = templateAppearance(template, kind);
+          const hint = templateHint(template, kind, symbol);
+          return <button
+            key={template.id}
+            type="button"
+            className="record-quick-card"
+            data-holding={holding || undefined}
+            aria-busy={saving || undefined}
+            disabled={loading}
+            onClick={() => { if (!direct) handleQuickLog(template); }}
+            onPointerDown={event => { if (direct && event.button === 0) handleHoldStart(template); }}
+            onPointerUp={() => { if (direct) handleHoldEnd(); }}
+            onPointerLeave={() => { if (direct) handleHoldEnd(); }}
+            onPointerCancel={() => { if (direct) handleHoldEnd(); }}
+            onKeyDown={event => {
+              if (direct && (event.key === " " || event.key === "Enter")) {
+                event.preventDefault();
+                if (!event.repeat) handleHoldStart(template);
+              }
+            }}
+            onKeyUp={event => { if (direct && (event.key === " " || event.key === "Enter")) handleHoldEnd(); }}
+            onBlur={() => { if (direct) handleHoldEnd(); }}
+          >
+            <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={symbol} size={28} /></span>
+            {template.isCombo && <span className="record-quick-count">{template.comboItems?.length || 0} งาน</span>}
+            <strong>{template.name}</strong>
+            <small>{saving ? "กำลังบันทึก…" : hint}</small>
+            {holding && <span className="quick-log-hold-progress" style={{ width: `${holdProgress}%` }} />}
+          </button>;
+        })}
+      </div>
+      {!filteredTemplates.length && <p className="ui-caption">{term ? "ไม่พบบันทึกด่วนตรงกับคำค้นหา" : "ยังไม่มีรายการบันทึกด่วน"}</p>}
+      {pageCount > 1 && <div className="record-pagination" aria-label="หน้าบันทึกด่วน">
+        <GlassButton disabled={page === 0} onClick={() => setCurrentPage(page - 1)}><ChevronLeft size={16} aria-hidden="true" /> ก่อนหน้า</GlassButton>
+        <span>{page + 1} / {pageCount}</span>
+        <GlassButton disabled={page === pageCount - 1} onClick={() => setCurrentPage(page + 1)}>ถัดไป <ChevronRight size={16} aria-hidden="true" /></GlassButton>
+      </div>}
 
       {/* Equipment Modal */}
       {showEquipmentModal && selectedTemplate && (
@@ -824,6 +728,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
           onSelect={handleLogWithSmartEquipment}
           templateName={selectedTemplate.name}
           templateMinorTask={selectedTemplate.minorTask}
+          isSmart={selectedTemplate.isSmart}
         />
       )}
 
@@ -838,165 +743,47 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
         />
       )}
 
-      {/* Combo Modal */}
-      {showComboModal && selectedTemplate && mounted && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowComboModal(false); setSelectedTemplate(null); setComboRecipient(''); }} />
-          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">Combo Template</p>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
-            <span className="inline-block px-2 py-1 bg-violet-100 text-violet-700 text-xs rounded-full mb-4">
-              {selectedTemplate.comboItems?.length || 0} งานพร้อมกัน
-            </span>
-            
-            {/* Sub-tasks list */}
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-slate-500 mb-2">รายการงานที่จะบันทึก</label>
-              <div className="space-y-2">
-                {selectedTemplate.comboItems?.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
-                    <span className="w-5 h-5 bg-violet-100 text-violet-600 rounded-full text-xs flex items-center justify-center font-medium shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-slate-700 truncate">{item.name}</div>
-                      <div className="text-xs text-slate-500 truncate">{item.minorTask}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <Dialog
+        open={showForm}
+        onClose={closeForm}
+        title={selectedTemplate?.name || "บันทึกด่วน"}
+        busy={loading}
+        description={loading ? "กำลังบันทึกงาน…" : showComboCheckboxModal ? "เลือกเฉพาะงานที่ทำจริง" : undefined}
+        footer={<>
+          <GlassButton onClick={closeForm} disabled={loading}>ยกเลิก</GlassButton>
+          <GlassButton type="submit" form={formId} variant="prominent" disabled={loading || (showComboCheckboxModal && !selectedComboItems.length)}>
+            {isCombo ? `บันทึก ${showComboCheckboxModal ? selectedComboItems.length : comboItems.length} งาน` : "บันทึก"}
+          </GlassButton>
+        </>}
+      >
+        {showForm && <form id={formId} onSubmit={submitForm}>
+          {(needsRecipient || isCombo) && <label className="ui-field">
+            <span>ผู้รับบริการ{needsRecipient ? " *" : " (ถ้ามี)"}</span>
+            <input className="apple-input" name="recipient" value={recipientValue} onChange={event => setRecipientValue(event.target.value)} required={needsRecipient} />
+          </label>}
+          {showCommentModal && <label className="ui-field">
+            <span>รายละเอียด *</span>
+            <textarea className="apple-input" name="comment" rows={3} value={commentText} onChange={event => setCommentText(event.target.value)} required />
+          </label>}
+          {showComboCheckboxModal && <fieldset className="quick-log-combo">
+            <legend>รายการงาน</legend>
+            {comboItems.map((item, index) => <label key={index}>
+              <input type="checkbox" className="ui-checkbox" checked={selectedComboItems.includes(index)} onChange={event =>
+                setSelectedComboItems(previous => event.target.checked ? [...previous, index].sort((a, b) => a - b) : previous.filter(value => value !== index))
+              } />
+              <span>{item.name || item.minorTask}</span>
+            </label>)}
+            <div className="flex flex-wrap gap-2">
+              <GlassButton onClick={() => setSelectedComboItems(comboItems.map((_, index) => index))}>เลือกทั้งหมด</GlassButton>
+              <GlassButton onClick={() => setSelectedComboItems([])} disabled={!selectedComboItems.length}>ล้างการเลือก</GlassButton>
             </div>
-            
-            {/* Recipient input */}
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
-              <input
-                type="text"
-                value={comboRecipient}
-                onChange={(e) => setComboRecipient(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && comboRecipient.trim() && handleLogCombo()}
-                className="apple-input"
-                placeholder="กรอกรหัสนักศึกษาหรือชื่อผู้รับบริการ"
-                autoFocus
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={handleLogCombo}
-                disabled={loading || !comboRecipient.trim()}
-                className="apple-button flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading
-                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
-                  : <>บันทึก {selectedTemplate.comboItems?.length || 0} งาน</>
-                }
-              </button>
-              <button
-                onClick={() => { setShowComboModal(false); setSelectedTemplate(null); setComboRecipient(''); }}
-                className="apple-button-secondary px-4"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Combo Checkbox Modal */}
-      {showComboCheckboxModal && selectedTemplate && mounted && createPortal(
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowComboCheckboxModal(false); setSelectedTemplate(null); setComboCheckboxRecipient(''); setSelectedComboItems([]); }} />
-          <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-1">เลือกงานที่ทำจริง</p>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{selectedTemplate.name}</h3>
-            <p className="text-xs text-slate-500 mb-4">เลือกเฉพาะงานที่ทำจริงสำหรับผู้รับบริการนี้</p>
-
-            {/* Checkbox list */}
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-slate-500 mb-2">รายการงาน *</label>
-              <div className="space-y-2">
-                {selectedTemplate.comboItems?.map((item, index) => (
-                  <label key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedComboItems.includes(index)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedComboItems(prev => [...prev, index].sort());
-                        } else {
-                          setSelectedComboItems(prev => prev.filter(i => i !== index));
-                        }
-                      }}
-                      className="w-5 h-5 text-amber-600 border-slate-300 rounded focus:ring-amber-500 mt-0.5 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-slate-700">{item.name}</div>
-                      <div className="text-xs text-slate-500">{item.minorTask}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {selectedComboItems.length === 0 && (
-                <p className="text-xs text-red-500 mt-2">กรุณาเลือกอย่างน้อย 1 งาน</p>
-              )}
-            </div>
-
-            {/* Recipient input */}
-            <div className="mb-5">
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">ผู้รับบริการ *</label>
-              <input
-                type="text"
-                value={comboCheckboxRecipient}
-                onChange={(e) => setComboCheckboxRecipient(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && comboCheckboxRecipient.trim() && selectedComboItems.length > 0 && handleLogComboCheckbox()}
-                className="apple-input"
-                placeholder="กรอกรหัสนักศึกษาหรือชื่อผู้รับบริการ"
-                autoFocus
-              />
-            </div>
-
-            {/* Quick select buttons */}
-            <div className="flex gap-2 mb-4">
-              <button
-                type="button"
-                onClick={() => setSelectedComboItems(selectedTemplate.comboItems.map((_, i) => i))}
-                className="text-xs px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                เลือกทั้งหมด
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedComboItems([])}
-                className="text-xs px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                ล้างการเลือก
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleLogComboCheckbox}
-                disabled={loading || !comboCheckboxRecipient.trim() || selectedComboItems.length === 0}
-                className="apple-button flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 flex items-center justify-center gap-2"
-              >
-                {loading
-                  ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />กำลังบันทึก...</>
-                  : <>บันทึก {selectedComboItems.length} งาน</>
-                }
-              </button>
-              <button
-                onClick={() => { setShowComboCheckboxModal(false); setSelectedTemplate(null); setComboCheckboxRecipient(''); setSelectedComboItems([]); }}
-                className="apple-button-secondary px-4"
-              >
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </fieldset>}
+          {showComboModal && <ul className="quick-log-combo" aria-label="รายการงาน">
+            {comboItems.map((item, index) => <li key={index}>{item.name || item.minorTask}</li>)}
+          </ul>}
+          {dialogError && <p role="alert" className="record-error">{dialogError}</p>}
+        </form>}
+      </Dialog>
 
     </div>
   );

@@ -3,27 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
+import { worklogEntryPath } from "../lib/authUtils";
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, pendingApproval } = useAuth();
 
   useEffect(() => {
-    console.log("[Home] Redirect check:", {
-      user: user?.email,
-      role: user?.role,
-      loading,
-    });
-    if (!loading) {
-      if (!user) {
-        console.log("[Home] No user, redirect to /login");
-        router.push("/login");
-      } else {
-        console.log("[Home] Authenticated user, redirect to /worklogs/new");
-        router.push("/worklogs/new");
-      }
-    }
-  }, [user, loading, router]);
+    if (loading) return;
+    if (pendingApproval) router.replace("/pending");
+    else router.replace(user ? worklogEntryPath(user.role) : "/login");
+  }, [user, loading, pendingApproval, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

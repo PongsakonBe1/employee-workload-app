@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { db } from "../lib/firebase";
-import { collection, query, where, getDocs, limit as firestoreLimit } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs, limit as firestoreLimit } from "firebase/firestore";
+import "../app/ui-detail-layouts.css";
 import {
   calculateUserStats,
   calculateRadarData,
   getBadges,
-  formatMonthLabel,
 } from "../lib/analytics";
 import {
   Radar,
@@ -69,7 +69,7 @@ const ICON_MAP = {
 };
 
 // ─── Stats Card Component ───────────────────────────────────────────────────
-function StatCard({ title, value, subtitle, icon: Icon, trend }) {
+function StatCard({ title, value, subtitle, icon: Icon, trend, textValue = false }) {
   const trendIcon =
     trend === "up" ? (
       <TrendingUp size={14} className="text-emerald-500" />
@@ -80,24 +80,20 @@ function StatCard({ title, value, subtitle, icon: Icon, trend }) {
     );
 
   return (
-    <div className="apple-panel p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            {title}
-          </p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
-          {subtitle && (
-            <div className="flex items-center gap-1 mt-1">
-              {trend && trendIcon}
-              <p className="text-xs text-slate-500">{subtitle}</p>
-            </div>
-          )}
-        </div>
-        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-          <Icon size={20} className="text-slate-400" />
+    <div className="apple-panel profile-stat-card">
+      <div className="profile-stat-heading">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+        <div className="profile-stat-icon w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
+          <Icon size={20} className="text-slate-400" aria-hidden="true" />
         </div>
       </div>
+      <p className={`profile-stat-value ${textValue ? "profile-stat-value--text" : "text-2xl"} font-bold text-slate-900 mt-1`}>{value}</p>
+      {subtitle && (
+        <div className="flex items-center gap-1 mt-1">
+          {trend && <span className="shrink-0" aria-hidden="true">{trendIcon}</span>}
+          <p className="text-xs text-slate-500">{subtitle}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -148,18 +144,18 @@ function CategoryRadar({ data }) {
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={abbreviatedData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-            <PolarGrid stroke="#e2e8f0" />
+            <PolarGrid stroke="var(--ui-line)" />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fontSize: 10, fill: "#64748b" }}
+              tick={{ fontSize: 11, fill: "var(--ui-sub)" }}
             />
             <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
             <Radar
               name="ทักษะ"
               dataKey="A"
-              stroke="#3730a3"
+              stroke="var(--ui-purple-ink)"
               strokeWidth={2}
-              fill="#3730a3"
+              fill="var(--ui-purple-ink)"
               fillOpacity={0.25}
             />
             <RechartsTooltip
@@ -293,36 +289,42 @@ function shortenLabel(label) {
 }
 
 // ─── Main ProfileStats Component ────────────────────────────────────────────
+const profileLimit = 500;
+const emptyWorklogs = [];
+
 export function ProfileStats({ user }) {
-  const [worklogs, setWorklogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const uid = user?.uid;
+  const current = result?.uid === uid ? result : null;
+  const worklogs = current?.worklogs ?? emptyWorklogs;
+  const loading = !current;
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!uid) return;
+    let active = true;
 
     async function fetchWorklogs() {
       try {
-        // [SA] Limit 500 to prevent quota overuse - enough for stats
         const q = query(
           collection(db, "worklogs"),
-          where("employeeId", "==", user.uid),
-          firestoreLimit(500)
+          where("employeeId", "==", uid),
+          orderBy("date", "desc"),
+          firestoreLimit(profileLimit)
         );
         const snapshot = await getDocs(q);
         const logs = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setWorklogs(logs);
-      } catch (err) {
-        console.error("Error fetching worklogs:", err);
-      } finally {
-        setLoading(false);
+        if (active) setResult({ uid, worklogs: logs });
+      } catch {
+        if (active) setResult({ uid, error: true });
       }
     }
 
     fetchWorklogs();
-  }, [user?.uid]);
+    return () => { active = false; };
+  }, [uid]);
 
   const stats = useMemo(() => calculateUserStats(worklogs, user), [worklogs, user]);
   const radarData = useMemo(() => calculateRadarData(worklogs), [worklogs]);
@@ -343,13 +345,15 @@ export function ProfileStats({ user }) {
       </div>
     );
   }
+  if (current?.error) return <p className="apple-panel p-4 text-slate-600" role="alert">โหลดสถิติโปรไฟล์ไม่สำเร็จ</p>;
 
   return (
     <div className="space-y-6">
+      <p className="ui-caption">สถิติและกราฟคำนวณจากบันทึกล่าสุดสูงสุด {profileLimit} รายการ เรียงตามวันที่ทำงาน</p>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          title="งานทั้งหมด"
+          title="บันทึกที่ใช้คำนวณ"
           value={stats.totalWorklogs}
           subtitle={`${stats.totalDays} วันที่ทำงาน`}
           icon={Briefcase}
@@ -379,10 +383,11 @@ export function ProfileStats({ user }) {
           icon={Zap}
         />
         <StatCard
-          title="หมวดหมู่หลัก"
+          title="หัวข้อรองที่บันทึกบ่อยที่สุด"
           value={stats.topCategory || "—"}
           subtitle={stats.topCategory ? `${stats.topCategoryCount} งาน` : "ยังไม่มีข้อมูล"}
           icon={Target}
+          textValue
         />
       </div>
 

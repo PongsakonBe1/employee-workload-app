@@ -183,6 +183,34 @@
           "arrayConfig": "CONTAINS"
         }
       ]
+    },
+    {
+      "collectionGroup": "worklogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "resourceKeys",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "resourceRecordedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "worklogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "resourceConditionKeys",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "resourceRecordedAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

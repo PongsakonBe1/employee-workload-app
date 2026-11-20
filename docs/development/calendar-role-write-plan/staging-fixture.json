@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "targetProject": "labboy-workload-app-staging",
+  "database": "(default)",
+  "fixture": {
+    "title": "QA-ROLE-CLOUD-CREATE",
+    "date": "2027-04-23",
+    "room": "402",
+    "start": "10:00",
+    "end": "11:00",
+    "semester": "2/2569",
+    "teacher": ""
+  },
+  "expectedBefore": { "qaSchedules": 4, "qaReceipts": 4, "revision": 9 },
+  "budget": { "newSchedules": 1, "newReceipts": 1, "revisionDelta": 1 },
+  "attempts": [
+    { "id": "staff-create-denial", "role": "staff", "transport": "raw-sdk-batch", "expected": "permission-denied", "expectedNewSchedules": 0 },
+    { "id": "superadmin-create", "role": "superadmin", "transport": "calendar-ui", "expected": "created", "expectedNewSchedules": 1 },
+    { "id": "superadmin-repeat", "role": "superadmin", "transport": "sanctioned-writer-sdk", "expected": "repeated", "expectedNewSchedules": 0 }
+  ],
+  "stopOnUnexpectedStaffWrite": true,
+  "cleanup": false,
+  "roleChanges": false,
+  "productionAccess": false
+}

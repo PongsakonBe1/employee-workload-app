@@ -8,9 +8,9 @@ import {
   where,
   orderBy,
   getDocs,
+  getDocsFromServer,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -192,7 +192,7 @@ export function useDLExamSchedules() {
   /**
    * ดึงตารางสอบตามเดือน
    */
-  const fetchExamsByMonth = useCallback(async (year, month) => {
+  const fetchExamsByMonth = useCallback(async (year, month, { includeInactive = false, server = false } = {}) => {
     try {
       const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
       const endDate = month === 12
@@ -201,20 +201,21 @@ export function useDLExamSchedules() {
 
       const q = query(
         collection(db, "dlExamSchedules"),
-        where("isActive", "==", true),
+        ...(includeInactive ? [] : [where("isActive", "==", true)]),
         where("date", ">=", startDate),
         where("date", "<", endDate),
         orderBy("date", "asc"),
-        orderBy("timeSlot", "asc")
+        ...(includeInactive ? [] : [orderBy("timeSlot", "asc")])
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await (server ? getDocsFromServer(q) : getDocs(q));
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      return data;
+      return includeInactive ? data.sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || a.timeSlot || "").localeCompare(b.startTime || b.timeSlot || "")) : data;
     } catch (err) {
       console.error("Error fetching exams by month:", err);
+      if (server) throw err;
       return [];
     }
   }, []);

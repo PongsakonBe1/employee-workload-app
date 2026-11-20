@@ -1,5 +1,8 @@
 "use client";
 
+import "../../ui-detail-layouts.css";
+import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
+
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -25,10 +28,8 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
   query,
   where,
-  setDoc,
   serverTimestamp,
   addDoc,
   limit,
@@ -388,6 +389,7 @@ export default function AdminUsersPage() {
 
   return (
     <AppShell>
+      <div className="ui-management">
       <section className="mb-6">
         <div className="mb-2 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 text-white">
@@ -461,13 +463,14 @@ export default function AdminUsersPage() {
 
       {/* Search */}
       <div className="apple-panel mb-6 p-4">
-        <div className="relative max-w-md">
+        <div className="relative max-w-md management-search">
           <Search
             className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
             size={18}
           />
           <input
             className="apple-input pl-11"
+            aria-label="ค้นหาพนักงาน"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ค้นหาพนักงาน..."
@@ -490,22 +493,22 @@ export default function AdminUsersPage() {
               คำขอใช้งานที่รออนุมัติ ({pendingUsers.length})
             </h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="overflow-x-auto mobile-table-wrap">
+            <table role="table" aria-label="คำขอรออนุมัติ" className="min-w-full text-left text-sm mobile-detail-table">
               <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
-                <tr>
-                  <th className="px-5 py-4">ชื่อ</th>
-                  <th className="px-5 py-4">อีเมล</th>
-                  <th className="px-5 py-4">ขอเมื่อ</th>
-                  <th className="px-5 py-4">การจัดการ</th>
+                <tr role="row">
+                  <th scope="col" className="px-5 py-4">ชื่อ</th>
+                  <th scope="col" className="px-5 py-4">อีเมล</th>
+                  <th scope="col" className="px-5 py-4">ขอเมื่อ</th>
+                  <th scope="col" className="px-5 py-4">การจัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredPending.map((u) => {
                   const safePhoto = sanitizePhotoURL(u.photoURL);
                   return (
-                  <tr key={u.id} className="bg-white/45">
-                    <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
+                  <tr role="row" key={u.id} className="bg-white/45">
+                    <MobileDetailCell primary className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
                       <div className="flex items-center gap-3">
                         {safePhoto && (
                           <Image
@@ -526,12 +529,12 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-600">{u.email}</td>
-                    <td className="px-5 py-4 text-slate-500 text-xs">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="อีเมล" className="px-5 py-4 text-slate-600">{u.email}</MobileDetailCell>
+                    <MobileDetailCell label="ขอเมื่อ" className="px-5 py-4 text-slate-500 text-xs">
                       {u.requestedAt?.toDate?.().toLocaleString("th-TH") || "-"}
-                    </td>
-                    <td className="px-5 py-4">
+                    </MobileDetailCell>
+                    <MobileDetailCell actions className="px-5 py-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(u.id)}
@@ -548,7 +551,7 @@ export default function AdminUsersPage() {
                           ปฏิเสธ
                         </button>
                       </div>
-                    </td>
+                    </MobileDetailCell>
                   </tr>
                   );
                 })}
@@ -567,22 +570,22 @@ export default function AdminUsersPage() {
       {/* Active Users Table */}
       {activeTab === "active" && (
         <div className="apple-panel overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="overflow-x-auto mobile-table-wrap">
+            <table role="table" aria-label="ผู้ใช้งาน" className="min-w-full text-left text-sm mobile-detail-table">
               <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
-                <tr>
-                  <th className="px-5 py-4">ชื่อที่ใช้ลงงาน</th>
-                  <th className="px-5 py-4">ชื่อเต็ม</th>
-                  <th className="px-5 py-4">อีเมล</th>
-                  <th className="px-5 py-4">สิทธิ์</th>
-                  <th className="px-5 py-4">สถานะ</th>
-                  <th className="px-5 py-4">การจัดการ</th>
+                <tr role="row">
+                  <th scope="col" className="px-5 py-4">ชื่อที่ใช้ลงงาน</th>
+                  <th scope="col" className="px-5 py-4">ชื่อเต็ม</th>
+                  <th scope="col" className="px-5 py-4">อีเมล</th>
+                  <th scope="col" className="px-5 py-4">สิทธิ์</th>
+                  <th scope="col" className="px-5 py-4">สถานะ</th>
+                  <th scope="col" className="px-5 py-4">การจัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className="bg-white/45">
-                    <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
+                  <tr role="row" key={u.id} className="bg-white/45">
+                    <MobileDetailCell primary className="whitespace-nowrap px-5 py-4 font-medium text-slate-950">
                       <div>
                         <div>{u.displayName || u.nickname || "-"}</div>
                         {u.displayName &&
@@ -598,12 +601,12 @@ export default function AdminUsersPage() {
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-700">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="ชื่อเต็ม" className="px-5 py-4 text-slate-700">
                       {u.fullName || "-"}
-                    </td>
-                    <td className="px-5 py-4 text-slate-600">{u.email}</td>
-                    <td className="px-5 py-4">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="อีเมล" className="px-5 py-4 text-slate-600">{u.email}</MobileDetailCell>
+                    <MobileDetailCell label="สิทธิ์" className="px-5 py-4">
                       {u.role === "superadmin" ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
                           <Shield size={12} />
@@ -620,8 +623,8 @@ export default function AdminUsersPage() {
                           Staff
                         </span>
                       )}
-                    </td>
-                    <td className="px-5 py-4">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="สถานะ" className="px-5 py-4">
                       {u.active ? (
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
                           <CheckCircle2 size={14} />
@@ -633,8 +636,8 @@ export default function AdminUsersPage() {
                           ไม่ใช้งาน
                         </span>
                       )}
-                    </td>
-                    <td className="px-5 py-4">
+                    </MobileDetailCell>
+                    <MobileDetailCell actions className="px-5 py-4">
                       <div className="flex gap-2 flex-wrap">
                         {/* ITEM-3A: แก้ชื่อลงงาน — admin แก้สำหรับ staff ทุกคน */}
                         {u.role !== 'superadmin' && u.id !== user?.uid && (
@@ -690,7 +693,7 @@ export default function AdminUsersPage() {
                             </>
                           )}
                       </div>
-                    </td>
+                    </MobileDetailCell>
                   </tr>
                 ))}
               </tbody>
@@ -717,7 +720,6 @@ export default function AdminUsersPage() {
               value={editDisplayNameValue}
               onChange={(e) => setEditDisplayNameValue(e.target.value)}
               placeholder="ชื่อภาษาไทย เช่น พงศกร"
-              autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
             />
             <div className="flex gap-2">
@@ -742,20 +744,20 @@ export default function AdminUsersPage() {
               Admin ขอเพิ่มสิทธิ์พนักงานเป็น Admin ต้องรอการอนุมัติจากคุณ
             </p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="overflow-x-auto mobile-table-wrap">
+            <table role="table" aria-label="คำขอเพิ่มสิทธิ์" className="min-w-full text-left text-sm mobile-detail-table">
               <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
-                <tr>
-                  <th className="px-5 py-4">พนักงานที่ขอเพิ่มสิทธิ์</th>
-                  <th className="px-5 py-4">ขอโดย</th>
-                  <th className="px-5 py-4">วันที่ขอ</th>
-                  <th className="px-5 py-4">การจัดการ</th>
+                <tr role="row">
+                  <th scope="col" className="px-5 py-4">พนักงานที่ขอเพิ่มสิทธิ์</th>
+                  <th scope="col" className="px-5 py-4">ขอโดย</th>
+                  <th scope="col" className="px-5 py-4">วันที่ขอ</th>
+                  <th scope="col" className="px-5 py-4">การจัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {roleChangeRequests.map((req) => (
-                  <tr key={req.id} className="bg-white/45">
-                    <td className="whitespace-nowrap px-5 py-4">
+                  <tr role="row" key={req.id} className="bg-white/45">
+                    <MobileDetailCell primary className="whitespace-nowrap px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div>
                           <div className="font-medium text-slate-950">
@@ -766,15 +768,15 @@ export default function AdminUsersPage() {
                           </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="ขอโดย" className="px-5 py-4 text-slate-600">
                       <div>{req.requestedByEmail}</div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-500 text-xs">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="วันที่ขอ" className="px-5 py-4 text-slate-500 text-xs">
                       {req.requestedAt?.toDate?.().toLocaleString("th-TH") ||
                         "-"}
-                    </td>
-                    <td className="px-5 py-4">
+                    </MobileDetailCell>
+                    <MobileDetailCell actions className="px-5 py-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => approveRoleChangeRequest(req)}
@@ -791,7 +793,7 @@ export default function AdminUsersPage() {
                           ปฏิเสธ
                         </button>
                       </div>
-                    </td>
+                    </MobileDetailCell>
                   </tr>
                 ))}
               </tbody>
@@ -867,6 +869,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+      </div>
     </AppShell>
   );
 }

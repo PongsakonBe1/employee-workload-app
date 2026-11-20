@@ -2,119 +2,72 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { ShieldCheck, Chrome } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogIn } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
+import { worklogEntryPath } from "../../lib/authUtils";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading, pendingApproval, loginWithGoogle } = useAuth();
   const [error, setError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginStatus, setLoginStatus] = useState("");
 
-  // ถ้า login แล้ว redirect ไปหน้าบันทึกงาน (ทุก role)
-  // PWA Fix: รอให้ auth state นิ่งก่อน redirect (ป้องกัน redirect loop)
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.replace("/worklogs/new");
-      } else if (pendingApproval) {
-        router.replace("/pending");
-      }
-    }
+    if (loading) return;
+    if (pendingApproval) router.replace("/pending");
+    else if (user) router.replace(worklogEntryPath(user.role));
   }, [user, pendingApproval, loading, router]);
 
-  // ตรวจสอบ PWA Standalone mode
-  const isAndroidStandalone =
-    typeof window !== "undefined" &&
-    window.matchMedia("(display-mode: standalone)").matches &&
-    !(typeof window !== "undefined" && window.navigator.standalone === true);
-
   async function handleGoogleLogin() {
+    const isAndroidStandalone = window.matchMedia("(display-mode: standalone)").matches &&
+      window.navigator.standalone !== true;
     setError("");
-    setLoginLoading(true);
+    setLoginStatus(isAndroidStandalone ? "กำลังเปิด Google…" : "กำลังเข้าสู่ระบบ…");
 
     try {
       await loginWithGoogle();
-      // Android PWA: หน้าจะ redirect ไป Google ทันที (ไม่ถึง finally)
-      // iOS PWA + Browser: รอ popup แล้ว AuthProvider อัพเดต state
     } catch (err) {
       if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         setError("ยกเลิกการเข้าสู่ระบบ");
       } else if (err.code === "auth/popup-blocked") {
-        setError("Popup ถูกบล็อก กรุณาอนุญาต Popup ใน Safari แล้วลองใหม่");
+        setError("กรุณาอนุญาตหน้าต่างป๊อปอัปในเบราว์เซอร์ แล้วลองใหม่");
       } else if (err.code === "auth/unauthorized-domain") {
         setError("โดเมนนี้ไม่ได้รับอนุญาต กรุณาติดต่อผู้ดูแลระบบ");
       } else {
         setError("เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       }
-      setLoginLoading(false);
+      setLoginStatus("");
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-10">
-      <section className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="apple-panel overflow-hidden p-8 sm:p-12">
-          <div className="mb-10 inline-flex items-center gap-3 rounded-full bg-slate-950 px-4 py-2 text-white">
-            <Image src="/labboy-logo.png" alt="labboy logo" width={24} height={24} className="object-contain" />
-            <span className="text-sm font-semibold">Workload Recorder</span>
-          </div>
-
-          <h1 className="max-w-2xl text-5xl font-semibold tracking-tight text-slate-950 sm:text-7xl">
-            บันทึกงาน IT ได้ง่ายขึ้น
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-            ออกแบบมาสำหรับเจ้าหน้าที่เทคนิค ICIT บันทึกงานห้องคอมพิวเตอร์
-            แก้ไขปัญหา คุมสอบ DL และส่งออกรายงานปีงบประมาณ
-          </p>
-
-          <div className="mt-10 grid gap-3 sm:grid-cols-3">
-            {["งานในหน้าที่หลัก", "หัวข้อรอง", "ส่งออก CSV"].map((item) => (
-              <div
-                key={item}
-                className="rounded-3xl bg-white/70 p-4 text-sm font-semibold text-slate-700"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
+    <main className="flex min-h-[100svh] items-center justify-center px-5 py-10">
+      <section className="apple-panel w-full max-w-md p-6 sm:p-10" aria-labelledby="login-title">
+        <div className="mb-7 flex items-center gap-3">
+          <Image src="/labboy-logo.png" alt="" width={36} height={36} className="shrink-0 rounded-xl" />
+          <span className="text-sm font-semibold">labboy Workload</span>
         </div>
-
-        <div className="apple-panel p-8">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-950 text-white">
-            <ShieldCheck size={26} />
-          </div>
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-950">
-            เข้าสู่ระบบ
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            ใช้ Google Account ของ ICIT เท่านั้น
+        <h1 id="login-title" className="text-3xl font-semibold tracking-tight">เข้าสู่ระบบ</h1>
+        <p id="login-account" className="mt-3 text-sm leading-relaxed text-[var(--ui-sub)]">
+          ใช้บัญชี Google ของ ICIT (@icit.kmutnb.ac.th)
+        </p>
+        {error && (
+          <p role="alert" className="mt-5 rounded-xl bg-[var(--ui-red)] px-4 py-3 text-sm text-[var(--ui-red-ink)]">
+            {error}
           </p>
-
-          {error ? (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loginLoading}
-            className="apple-button mt-8 w-full inline-flex items-center justify-center gap-3"
-          >
-            <Chrome size={20} />
-            {loginLoading
-              ? isAndroidStandalone
-                ? "กำลังเปิด Google…"
-                : "กำลังเข้าสู่ระบบ…"
-              : "เข้าสู่ระบบด้วย Google"}
-          </button>
-
-          <p className="mt-4 text-xs text-center text-slate-400">
-            เฉพาะอีเมล @icit.kmutnb.ac.th เท่านั้น
-          </p>
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading || Boolean(loginStatus)}
+          aria-describedby="login-account"
+          className="apple-button mt-6 w-full"
+        >
+          <LogIn size={18} aria-hidden="true" />
+          {loginStatus || "เข้าสู่ระบบด้วย Google"}
+        </button>
+        <span className="sr-only" role="status">{loginStatus}</span>
       </section>
     </main>
   );

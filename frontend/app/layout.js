@@ -1,8 +1,15 @@
 import { NextIntlClientProvider } from "next-intl";
+import "./ui-foundation.css";
 import "./globals.css";
-import { AuthProvider } from "../components/AuthProvider";
-import FABVersionControl from "../components/FABVersionControl";
+import "./quick-liquid-pilot.css";
+import "./dock-navigation.css";
+import "@zakisheriff/liquid-glass/styles.css";
+import "./zak-button-pilot.css";
+import { DevelopmentAuthBoundary } from "../components/DevelopmentAuthBoundary";
 import thMessages from "../messages/th.json";
+import { AppearanceProvider } from "../components/ui/AppearanceProvider";
+import { ButtonMaterialProvider } from "../components/ui/ButtonMaterialProvider";
+import { appearanceBootstrap } from "../lib/appearance";
 
 export const metadata = {
   title: "labboy Workload Recorder",
@@ -35,18 +42,27 @@ export const viewport = {
   themeColor: "#0f172a",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th">
+    <html lang="th" suppressHydrationWarning>
+      <head>
+        {/* Send this before body parsing, including when Next streams metadata. */}
+        <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+        <script id="ui-appearance-bootstrap" dangerouslySetInnerHTML={{ __html: appearanceBootstrap }} />
+      </head>
       <body>
-        <NextIntlClientProvider locale="th" messages={thMessages}>
-          <AuthProvider>
-            {children}
-            <FABVersionControl />
-          </AuthProvider>
-        </NextIntlClientProvider>
+        <AppearanceProvider>
+          <ButtonMaterialProvider>
+            <NextIntlClientProvider locale="th" messages={thMessages}>
+              <DevelopmentAuthBoundary>
+                {children}
+              </DevelopmentAuthBoundary>
+            </NextIntlClientProvider>
+          </ButtonMaterialProvider>
+        </AppearanceProvider>
       </body>
     </html>
   );
