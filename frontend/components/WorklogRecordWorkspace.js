@@ -19,8 +19,8 @@ import "../app/worklogs/worklog-workspace.css";
 
 export function RecordHeading() {
   return <div className="ui-page-heading record-heading worklog-workspace-heading" data-worklog-workspace="record">
-    <div><h1>บันทึกงาน</h1><p>เลือกงานที่ทำ แล้วกลับไปทำงานต่อได้ทันที</p></div>
-    <Link href="/worklogs" prefetch={false} className="record-link worklog-mobile-history">ดูประวัติงาน</Link>
+    <h1>บันทึกงาน</h1>
+    <p>เลือกงานที่ทำ แล้วกลับไปทำงานต่อได้ทันที</p>
   </div>;
 }
 
@@ -88,7 +88,7 @@ export function WorklogRecordWorkspace({
           </div>
           {employeeId ? <>
             <div className="worklog-quick-panel" hidden={mode !== "quick"}>
-              <QuickLogButtons key={employeeId} targetUser={directory ? person : undefined} onLogSuccess={onQuickResult} />
+              <QuickLogButtons key={employeeId} targetUser={directory ? person : undefined} onLogSuccess={onQuickResult} expandOnDesktop />
             </div>
             <div className="worklog-record-panel" hidden={mode !== "manual"}>
               <WorklogManualWorkspace
@@ -104,7 +104,7 @@ export function WorklogRecordWorkspace({
           </details>
         </section>
         <section className="record-recent" aria-label="บันทึกล่าสุด">
-          <div className="record-section-head"><h2>บันทึกล่าสุด</h2><Link href="/worklogs" prefetch={false} className="record-link">ดูประวัติ <ChevronRight size={16} aria-hidden="true" /></Link></div>
+          <div className="record-section-head"><h2>บันทึกล่าสุด</h2><Link href="/worklogs" prefetch={false} className="record-link">ดูประวัติงาน <ChevronRight size={16} aria-hidden="true" /></Link></div>
           {worklogs.status === "loading" && <p className="ui-caption" role="status">กำลังโหลดบันทึก…</p>}
           {worklogs.status === "error" && <p className="ui-caption" role="status">โหลดบันทึกไม่สำเร็จ</p>}
           {worklogs.status === "ready" && !worklogs.items.length && <p className="ui-caption">ยังไม่มีบันทึกในวันที่เลือก</p>}
