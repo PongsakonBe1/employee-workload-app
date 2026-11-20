@@ -1,7 +1,8 @@
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, setDoc, getDocFromServer } from "firebase/firestore";
 import { withWorklogResourceIndex } from "./resourceStatusIndex";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 import { templateCreateFields } from "./templatePayload";
+import { isDlRoundTemplate } from "./dlQuickLog";
 
 /**
  * ดึง templates ทั้งหมด (admin ใช้)
@@ -165,12 +166,15 @@ export async function recordTemplateUsage(templateId) {
 export async function logFromTemplate(templateId, userId, extraData) {
   try {
     // ดึงข้อมูล template
-    const templateDoc = await getDoc(doc(db, "globalTemplates", templateId));
+    const round = extraData.dlRound;
+    const templateRef = doc(db, "globalTemplates", templateId);
+    const templateDoc = await (round ? getDocFromServer(templateRef) : getDoc(templateRef));
     if (!templateDoc.exists()) {
       throw new Error("Template not found");
     }
     
     const template = templateDoc.data();
+    if (round && (template.isActive !== true || !isDlRoundTemplate(template))) throw new Error("DL Quick Log template is no longer active");
     
     // สร้าง worklog ใหม่
     const worklogData = {
@@ -194,7 +198,15 @@ export async function logFromTemplate(templateId, userId, extraData) {
       createdAt: serverTimestamp()
     };
     
-    const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
+    if (round && auth.currentUser?.uid !== round.actorId) throw new Error("The signed-in account changed");
+    const worklogRef = round
+      ? doc(db, "worklogs", round.writeId)
+      : await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
+    if (round) {
+      // The create payload has no updatedAt. A second write to the same ID fails
+      // the existing history-update rules instead of replacing the first log.
+      await setDoc(worklogRef, withWorklogResourceIndex({ ...worklogData, dlProctoring: round.selection }));
+    }
     
     // บันทึกการใช้ template
     await recordTemplateUsage(templateId);
