@@ -20,6 +20,10 @@ service cloud.firestore {
         profileGrantsRole(get(/databases/$(database)/documents/users/$(request.auth.uid)).data, roles);
     }
 
+    function isActiveOperator() {
+      return hasActiveRole(['staff', 'admin', 'superadmin']);
+    }
+
     function profileGrantsRole(profile, roles) {
       return profile.get('active', false) == true && profile.get('role', '') in roles &&
         (profile.role != 'superadmin' || profile.get('email', null) == request.auth.token.email);
@@ -249,38 +253,29 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // Notifications collection
+    function matchesNotificationAudience(recipient) {
+      return recipient == request.auth.uid || recipient == 'all' ||
+        (recipient == 'staff' && isStaff()) ||
+        (recipient == 'admin' && isAdmin()) ||
+        (recipient == 'superadmin' && isSuperAdmin());
+    }
+
+    // NotificationBell queries a single recipient or audience at a time.
     match /notifications/{notificationId} {
-      // get: Users can read their own notifications + broadcast to all + role-based
-      allow get: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         resource.data.userId == "staff" && isStaff() ||
-         resource.data.userId == "admin" && isAdmin() ||
-         resource.data.userId == "superadmin" && isSuperAdmin());
-      
-      // list: Allow all authenticated to list (filter at client side for quota optimization)
-      allow list: if isAuthenticated();
+      allow read: if isActiveOperator() && matchesNotificationAudience(resource.data.userId);
       
       // System/Admin/Superadmin can create notifications, or users creating personal notifications
-      allow create: if isAuthenticated() && (isAdmin() || request.resource.data.userId == request.auth.uid);
+      allow create: if isActiveOperator() &&
+        (isAdmin() || request.resource.data.userId == request.auth.uid);
       
       // Users can update (mark as read) their own + broadcast + role-based notifications
-      allow update: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         (resource.data.userId == "staff" && isStaff()) ||
-         (resource.data.userId == "admin" && isAdmin()) ||
-         isSuperAdmin()) &&
+      allow update: if isActiveOperator() &&
+        (matchesNotificationAudience(resource.data.userId) || isSuperAdmin()) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'readBy']);
       
       // Users can delete their own + broadcast + role-based notifications, superadmin can delete any
-      allow delete: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || 
-         resource.data.userId == "all" ||
-         (resource.data.userId == "staff" && isStaff()) ||
-         (resource.data.userId == "admin" && isAdmin()) ||
-         isSuperAdmin());
+      allow delete: if isActiveOperator() &&
+        (matchesNotificationAudience(resource.data.userId) || isSuperAdmin());
     }
 
     // Admin Promotion Requests collection
@@ -383,16 +378,14 @@ service cloud.firestore {
 
     // Classroom Schedules collection (Floor 4 class schedules)
     match /classroomSchedules/{scheduleId} {
-      // All authenticated users can read schedules
-      allow read: if isAuthenticated();
+      allow read: if isActiveOperator();
       
       allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
 
     // DL Exam Schedules collection (Digital Literacy exam schedules)
     match /dlExamSchedules/{scheduleId} {
-      // All authenticated users can read exam schedules
-      allow read: if isAuthenticated();
+      allow read: if isActiveOperator();
       
       allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
