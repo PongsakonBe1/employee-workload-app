@@ -18,6 +18,7 @@
 .record-quick-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: start; min-width: 0; min-height: 149px; padding: 18px; border-radius: 17px; background: var(--ui-surface); box-shadow: 0 1px 2px #18243904; transition: box-shadow 150ms ease,transform 140ms ease; }
 .record-quick-card:hover { box-shadow: 0 5px 16px #18243912; }
 .record-quick-card:active { transform: scale(.98); }
+.record-quick-copy,.record-quick-title { display: contents; }
 .record-quick-card strong { font-size: .8125rem; font-weight: 600; line-height: 1.55; margin-top: 16px; }
 .record-quick-card small { color: var(--ui-sub); font-size: .8125rem; line-height: 1.5; margin-top: 4px; }
 .record-tile.ui-nav-symbol { width: 50px; height: 50px; border-radius: 15px; }

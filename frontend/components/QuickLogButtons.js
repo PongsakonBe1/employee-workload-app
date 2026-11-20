@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useId, useRef } from 'react';
+import { useState, useEffect, useId, useRef, useSyncExternalStore } from 'react';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Dialog } from './ui/Dialog';
 import { GlassButton } from './ui/GlassControls';
@@ -17,6 +17,16 @@ import SmartRoomModal from './SmartRoomModal';
 import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode } from '../lib/equipmentLoan';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
+const DESKTOP_QUICK_LOG_QUERY = '(min-width:761px)';
+const COMPACT_PAGE_SIZE = 6;
+const DESKTOP_PAGE_SIZE = 9;
+
+function subscribeToDesktopWidth(onChange) {
+  const query = window.matchMedia(DESKTOP_QUICK_LOG_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
 const equipmentAppearance = {
   headphones: ["headphones", "green"],
   power: ["plug", "green"],
@@ -41,7 +51,7 @@ function templateHint(template, equipmentKind, symbol) {
   return template.requireRecipient ? "ระบุผู้รับบริการ" : "กดค้าง 3 วินาที";
 }
 
-export default function QuickLogButtons({ onLogSuccess, targetUser }) {
+export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesktop = false }) {
   const { user } = useAuth();
   const logAsUser = targetUser || user;
   const [templates, setTemplates] = useState([]);
@@ -67,7 +77,12 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const [holdProgress, setHoldProgress] = useState(0); // 0-100
   const holdRafRef = useRef(null);
   const executingRef = useRef(false); // guard ป้องกัน double-log
-  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = useSyncExternalStore(
+    subscribeToDesktopWidth,
+    () => expandOnDesktop && window.matchMedia(DESKTOP_QUICK_LOG_QUERY).matches ? DESKTOP_PAGE_SIZE : COMPACT_PAGE_SIZE,
+    () => COMPACT_PAGE_SIZE,
+  );
+  const [pageStart, setPageStart] = useState(0);
   const [search, setSearch] = useState('');
   const [dialogError, setDialogError] = useState('');
   const formId = useId();
@@ -612,9 +627,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   const filteredTemplates = templates.filter(template =>
     !term || [template.name, template.minorTask].some(value => value?.toLocaleLowerCase("th").includes(term))
   );
-  const pageCount = Math.ceil(filteredTemplates.length / 6);
-  const page = Math.min(currentPage, Math.max(0, pageCount - 1));
-  const pagedTemplates = filteredTemplates.slice(page * 6, page * 6 + 6);
+  const pageCount = Math.ceil(filteredTemplates.length / pageSize);
+  const page = Math.min(Math.floor(pageStart / pageSize), Math.max(0, pageCount - 1));
+  const pagedTemplates = filteredTemplates.slice(page * pageSize, (page + 1) * pageSize);
   const isCombo = showComboModal || showComboCheckboxModal;
   const showForm = Boolean(selectedTemplate && (isCombo || showCommentModal || showRecipientModal));
   const needsRecipient = isCombo ? selectedTemplate?.requireRecipient !== false : Boolean(showRecipientModal || selectedTemplate?.requireRecipient);
@@ -659,10 +674,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
   return (
     <div>
       <label className="ui-field quick-log-search">
-        <span>ค้นหาบันทึกด่วน</span>
         <span className="quick-log-search-box">
           <Search size={17} aria-hidden="true" />
-          <input type="search" aria-label="ค้นหาบันทึกด่วน" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(0); }} />
+          <input type="search" aria-label="ค้นหาบันทึกด่วน" placeholder="ค้นหาบันทึกด่วน" value={search} onChange={event => { setSearch(event.target.value); setPageStart(0); }} />
         </span>
       </label>
       <div className="record-quick-grid">
@@ -695,18 +709,22 @@ export default function QuickLogButtons({ onLogSuccess, targetUser }) {
             onBlur={() => { if (direct) handleHoldEnd(); }}
           >
             <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={symbol} size={28} /></span>
-            {template.isCombo && <span className="record-quick-count">{template.comboItems?.length || 0} งาน</span>}
-            <strong>{template.name}</strong>
-            <small>{saving ? "กำลังบันทึก…" : hint}</small>
+            <span className="record-quick-copy">
+              <span className="record-quick-title">
+                <strong>{template.name}</strong>
+                {template.isCombo && <span className="record-quick-count">{template.comboItems?.length || 0} งาน</span>}
+              </span>
+              <small>{saving ? "กำลังบันทึก…" : hint}</small>
+            </span>
             {holding && <span className="quick-log-hold-progress" style={{ width: `${holdProgress}%` }} />}
           </button>;
         })}
       </div>
       {!filteredTemplates.length && <p className="ui-caption">{term ? "ไม่พบบันทึกด่วนตรงกับคำค้นหา" : "ยังไม่มีรายการบันทึกด่วน"}</p>}
       {pageCount > 1 && <div className="record-pagination" aria-label="หน้าบันทึกด่วน">
-        <GlassButton disabled={page === 0} onClick={() => setCurrentPage(page - 1)}><ChevronLeft size={16} aria-hidden="true" /> ก่อนหน้า</GlassButton>
+        <GlassButton disabled={page === 0} onClick={() => setPageStart((page - 1) * pageSize)}><ChevronLeft size={16} aria-hidden="true" /> ก่อนหน้า</GlassButton>
         <span>{page + 1} / {pageCount}</span>
-        <GlassButton disabled={page === pageCount - 1} onClick={() => setCurrentPage(page + 1)}>ถัดไป <ChevronRight size={16} aria-hidden="true" /></GlassButton>
+        <GlassButton disabled={page === pageCount - 1} onClick={() => setPageStart((page + 1) * pageSize)}>ถัดไป <ChevronRight size={16} aria-hidden="true" /></GlassButton>
       </div>}
 
       {/* Equipment Modal */}
