@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useId, useRef, useSyncExternalStore } from 'react';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { DlQuickLogDialog } from './DlQuickLogDialog';
 import { Dialog } from './ui/Dialog';
 import { GlassButton } from './ui/GlassControls';
 import { ReviewSymbol } from './ui/ReviewSymbol';
@@ -15,6 +16,7 @@ import EquipmentModal from './EquipmentModal';
 import SmartEquipmentModal from './SmartEquipmentModal';
 import SmartRoomModal from './SmartRoomModal';
 import { equipmentLoanKind, equipmentLoanTask, isEquipmentStudentCode } from '../lib/equipmentLoan';
+import { combineDlRoundTemplates, DL_WORKLOG_TASK, isDlRoundTemplate } from '../lib/dlQuickLog';
 
 const HOLD_DURATION = 3000; // ms hold to confirm direct-log (3 seconds)
 const DESKTOP_QUICK_LOG_QUERY = '(min-width:761px)';
@@ -43,7 +45,8 @@ function templateAppearance(template, equipmentKind) {
   return ["templates", "blue"];
 }
 
-function templateHint(template, equipmentKind, symbol) {
+function templateHint(template, equipmentKind, symbol, hasRoundPicker) {
+  if (hasRoundPicker) return "เลือกรอบที่คุมสอบ";
   if (equipmentKind) return "เลือกอุปกรณ์";
   if (symbol === "door") return "เลือกห้อง";
   if (template.isCombo) return template.requireCheckbox ? "เลือกเฉพาะงานที่ทำ" : "บันทึกเป็นชุด";
@@ -51,7 +54,7 @@ function templateHint(template, equipmentKind, symbol) {
   return template.requireRecipient ? "ระบุผู้รับบริการ" : "กดค้าง 3 วินาที";
 }
 
-export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesktop = false }) {
+export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesktop = false, dlContext }) {
   const { user } = useAuth();
   const logAsUser = targetUser || user;
   const [templates, setTemplates] = useState([]);
@@ -59,6 +62,7 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
   const [loggingTemplate, setLoggingTemplate] = useState(null);
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [dlRequest, setDlRequest] = useState(null);
   const [recipient, setRecipient] = useState('');
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showSmartEquipmentModal, setShowSmartEquipmentModal] = useState(false);
@@ -624,7 +628,8 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
   }
 
   const term = search.trim().toLocaleLowerCase("th");
-  const filteredTemplates = templates.filter(template =>
+  const visibleTemplates = dlContext ? combineDlRoundTemplates(templates) : templates;
+  const filteredTemplates = visibleTemplates.filter(template =>
     !term || [template.name, template.minorTask].some(value => value?.toLocaleLowerCase("th").includes(term))
   );
   const pageCount = Math.ceil(filteredTemplates.length / pageSize);
@@ -681,12 +686,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
       </label>
       <div className="record-quick-grid">
         {pagedTemplates.map(template => {
-          const direct = isDirectLog(template) && !template.requireComment;
+          const hasRoundPicker = dlContext && isDlRoundTemplate(template);
+          const direct = !hasRoundPicker && isDirectLog(template) && !template.requireComment;
           const holding = holdingId === template.id;
           const saving = loggingTemplate === template.id;
           const kind = equipmentLoanKind(template);
           const [symbol, tone] = templateAppearance(template, kind);
-          const hint = templateHint(template, kind, symbol);
+          const hint = templateHint(template, kind, symbol, hasRoundPicker);
           return <button
             key={template.id}
             type="button"
@@ -694,7 +700,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
             data-holding={holding || undefined}
             aria-busy={saving || undefined}
             disabled={loading}
-            onClick={() => { if (!direct) handleQuickLog(template); }}
+            onClick={() => {
+              if (hasRoundPicker) {
+                setDlRequest({ templateId: template.id, actorId: user.uid, date: dlContext.date, time: dlContext.time, person: { ...logAsUser, ...dlContext.person } });
+              } else if (!direct) handleQuickLog(template);
+            }}
             onPointerDown={event => { if (direct && event.button === 0) handleHoldStart(template); }}
             onPointerUp={() => { if (direct) handleHoldEnd(); }}
             onPointerLeave={() => { if (direct) handleHoldEnd(); }}
@@ -726,6 +736,11 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
         <span>{page + 1} / {pageCount}</span>
         <GlassButton disabled={page === pageCount - 1} onClick={() => setPageStart((page + 1) * pageSize)}>ถัดไป <ChevronRight size={16} aria-hidden="true" /></GlassButton>
       </div>}
+
+      {dlRequest && <DlQuickLogDialog request={dlRequest} context={dlContext} onClose={() => setDlRequest(null)} onSaved={() => {
+        setDlRequest(null);
+        onLogSuccess?.(`บันทึก “${DL_WORKLOG_TASK}” เรียบร้อย`);
+      }} />}
 
       {/* Equipment Modal */}
       {showEquipmentModal && selectedTemplate && (

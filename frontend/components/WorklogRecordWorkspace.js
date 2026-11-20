@@ -46,7 +46,7 @@ export function WorklogRecordWorkspace({
   const [dateError, setDateError] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
   const employeeId = person?.id;
-  const { worklogs, schedule } = useWorklogRecordContext(employeeId, form.date, revision);
+  const { worklogs, schedule, dlRounds } = useWorklogRecordContext(employeeId, form.date, revision);
   const day = validCalendarDate(form.date) ? calendarLabel(form.date) : "";
   const isToday = form.date === today();
 
@@ -88,7 +88,8 @@ export function WorklogRecordWorkspace({
           </div>
           {employeeId ? <>
             <div className="worklog-quick-panel" hidden={mode !== "quick"}>
-              <QuickLogButtons key={employeeId} targetUser={directory ? person : undefined} onLogSuccess={onQuickResult} expandOnDesktop />
+              <QuickLogButtons key={employeeId} targetUser={directory ? person : undefined} onLogSuccess={onQuickResult} expandOnDesktop
+                dlContext={{ date: form.date, time: form.time, person, rounds: dlRounds, status: schedule.status }} />
             </div>
             <div className="worklog-record-panel" hidden={mode !== "manual"}>
               <WorklogManualWorkspace
@@ -130,7 +131,7 @@ export function WorklogRecordWorkspace({
         </section>
       </aside>
     </div>
-    <Dialog open={Boolean(editingDate)} title="วันที่และเวลา" description="ใช้กับการกรอกเองและตารางวันที่เลือก บันทึกด่วนใช้เวลาปัจจุบัน" onClose={() => setEditingDate(null)}
+    <Dialog open={Boolean(editingDate)} title="วันที่และเวลา" description="ใช้กับการกรอกเองและคุมสอบ DL รอบจากตารางใช้เวลาสอบ บันทึกด่วนอื่นใช้เวลาปัจจุบัน" onClose={() => setEditingDate(null)}
       footer={editingDate && <><GlassButton onClick={() => setEditingDate(null)}>ยกเลิก</GlassButton><GlassButton type="submit" form={dateForm} variant="prominent">ใช้วันและเวลานี้</GlassButton></>}>
       {editingDate && <form id={dateForm} className="record-manual-fields worklog-date-form" onSubmit={reviewDate}>
         <label className="ui-field"><span>วันที่</span><input required type="date" className="apple-input" value={editingDate.date} onChange={event => setEditingDate(current => ({ ...current, date: event.target.value }))} /></label>

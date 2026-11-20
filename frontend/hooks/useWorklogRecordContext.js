@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocsFromServer, query, where } from "firebase/firestore";
 import { adaptLegacyCalendarForDisplay } from "../lib/calendarDataAdapter";
 import { calendarWeekday, expandCalendar, validCalendarDate } from "../lib/calendarView";
+import { assignedDlRounds } from "../lib/dlQuickLog";
 import { db } from "../lib/firebase";
 
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -41,17 +42,20 @@ export function useWorklogRecordContext(employeeId, date, revision) {
       getDocsFromServer(query(collection(db, "classroomSchedules"), where("isActive", "==", true), where("dayOfWeek", "==", day))),
       getDocsFromServer(query(collection(db, "dlExamSchedules"), where("date", "==", date))),
     ]).then(([classroom, dl]) => {
-      const { data, unavailable } = adaptLegacyCalendarForDisplay({ classroomSchedules: rows(classroom), dlExamSchedules: rows(dl), users: [] });
+      const dlRecords = rows(dl);
+      const { data, unavailable } = adaptLegacyCalendarForDisplay({ classroomSchedules: rows(classroom), dlExamSchedules: dlRecords, users: [] });
       const items = expandCalendar(data, { start: date, end: date });
-      if (current) setSchedule({ date, items, unavailable, status: "ready" });
+      if (current) setSchedule({ date, items, dlRecords, unavailable, status: "ready" });
     }).catch(() => {
       if (current) setSchedule({ date, status: "error", items: [] });
     });
     return () => { current = false; };
   }, [date, validDate]);
 
+  const selectedSchedule = validDate ? (schedule?.date === date ? schedule : loading) : empty;
   return {
     worklogs: worklogKey ? (worklogs?.key === worklogKey ? worklogs : loading) : empty,
-    schedule: validDate ? (schedule?.date === date ? schedule : loading) : empty,
+    schedule: selectedSchedule,
+    dlRounds: selectedSchedule.status === "ready" ? assignedDlRounds(selectedSchedule.items, selectedSchedule.dlRecords, employeeId) : [],
   };
 }

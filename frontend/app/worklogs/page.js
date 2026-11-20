@@ -27,7 +27,7 @@ import "../dev/history/history.css";
 import "./worklog-workspace.css";
 import { useAuth } from "../../components/AuthProvider";
 import { db } from "../../lib/firebase";
-import { addCalendarMonths, calendarRange, calendarToday } from "../../lib/calendarView";
+import { addCalendarDays, addCalendarMonths, calendarRange, calendarToday } from "../../lib/calendarView";
 import { WORKLOG_HISTORY_READ_LIMIT, worklogHistoryMonth, worklogHistoryRange } from "../../lib/worklogHistoryRange";
 import {
   collection,
@@ -40,6 +40,7 @@ import {
   doc,
   writeBatch,
   getDoc,
+  deleteField,
   runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
@@ -52,9 +53,10 @@ import {
   getMainDutyFromMinorTask,
   hasCommentSuggestions,
 } from "../../lib/commentSuggestions";
-import { normalizeStatus } from "../../lib/worklogUtils";
+import { getDutyGroupFromMinorTask, normalizeStatus } from "../../lib/worklogUtils";
 import { indexedWorklogEdit } from "../../lib/resourceStatusIndex";
 import { isAdminRole, worklogEntryPath } from "../../lib/authUtils";
+import { DL_WORKLOG_TASK, isDlRoundWorklog, validateDlWorklogDate } from "../../lib/dlQuickLog";
 
 const workspaceEnabled = process.env.NEXT_PUBLIC_WORKLOG_WORKSPACE === "1";
 const emptyResult = { items: [], total: 0, truncated: false, error: "" };
@@ -331,6 +333,7 @@ function WorklogHistory({ user }) {
       mainDuty: item.mainDuty || "",
       comment: item.comment || "",
       status: item.status || "บันทึกแล้ว",
+      ...(isDlRoundWorklog(item) ? { date: item.date } : {}),
     });
     setActionError("");
   }
@@ -348,11 +351,24 @@ function WorklogHistory({ user }) {
 
   async function saveEdit(id) {
     try {
+      if (Object.hasOwn(editForm, "date")) {
+        const validation = validateDlWorklogDate(editForm.date);
+        if (!validation.valid) throw new Error(validation.error);
+      }
       const ref = doc(db, "worklogs", id);
       await runTransaction(db, async tx => {
         const current = await tx.get(ref);
         if (!current.exists()) throw Error("ไม่พบบันทึกงาน");
-        tx.update(ref, indexedWorklogEdit(current.data(), { ...editForm, updatedAt: serverTimestamp() }));
+        const worklog = current.data();
+        const fields = { ...editForm, updatedAt: serverTimestamp() };
+        if (isDlRoundWorklog(worklog)) {
+          if (fields.minorTask !== DL_WORKLOG_TASK) fields.dutyGroup = getDutyGroupFromMinorTask(fields.minorTask);
+          if (fields.minorTask !== DL_WORKLOG_TASK || (fields.date ?? worklog.date) !== worklog.date) {
+            // Retain dlRoundKey so this history document's ID stays reserved.
+            fields.dlProctoring = deleteField();
+          }
+        }
+        tx.update(ref, indexedWorklogEdit(worklog, fields));
       });
       window.dispatchEvent(new Event("worklogUpdated"));
 
@@ -1081,6 +1097,12 @@ function WorklogHistory({ user }) {
             )}
 
             <div className="space-y-4">
+              {Object.hasOwn(editForm, "date") && <div>
+                <label className="apple-label" htmlFor="worklog-edit-date">วันที่บันทึกงาน</label>
+                <input id="worklog-edit-date" type="date" className="apple-input"
+                  max={addCalendarDays(calendarToday(), 1)} value={editForm.date}
+                  onChange={event => setEditForm(previous => ({ ...previous, date: event.target.value }))} />
+              </div>}
               {/* Recipient */}
               <div>
                 <label className="apple-label" htmlFor="worklog-edit-recipient">ผู้รับบริการ</label>
