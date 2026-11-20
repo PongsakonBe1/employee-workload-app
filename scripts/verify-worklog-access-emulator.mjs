@@ -7,7 +7,7 @@ import { getAuth as adminAuth } from "firebase-admin/auth";
 import { FieldPath, getFirestore as adminFirestore } from "firebase-admin/firestore";
 import { initializeApp, deleteApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { collection, connectFirestoreEmulator, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, limit, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import { arrayUnion, collection, connectFirestoreEmulator, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, limit, orderBy, query, runTransaction, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { indexedWorklogEdit, withWorklogResourceIndex } from "../frontend/lib/resourceStatusIndex.js";
 import { backfillResourceStatus, dryRunResourceStatusBackfill } from "../backend/src/services/resourceStatusBackfill.js";
 import { createResourceStatusHandler } from "../backend/src/services/resourceStatusHandler.js";
@@ -44,6 +44,62 @@ const users = client => collection(client.db, "users");
 const profile = (client, uid = client.uid) => doc(users(client), uid);
 const pending = (client, uid = client.uid) => doc(client.db, "pendingUsers", uid);
 const worklog = (client, id) => doc(client.db, "worklogs", id);
+const notifications = client => collection(client.db, "notifications");
+const notification = (client, id) => doc(notifications(client), id);
+const notificationFeed = (client, recipient) => getDocsFromServer(query(
+  notifications(client), where("userId", "==", recipient), orderBy("timestamp", "desc"), limit(20)
+));
+const calendarFeeds = client => [
+  query(collection(client.db, "classroomSchedules"), where("isActive", "==", true)),
+  query(collection(client.db, "dlExamSchedules"), where("date", ">=", "2026-11-01"), where("date", "<=", "2026-11-30"))
+];
+
+async function verifyApprovedReads({ staff, other, admin, superadmin, waiting, inactive, unverified }) {
+  const db = adminFirestore(server);
+  const classroomId = "qa-approved-classroom";
+  const dlId = "qa-approved-dl";
+  const notices = {
+    "qa-notification-personal": staff.uid,
+    "qa-notification-waiting": waiting.uid,
+    "qa-notification-all": "all",
+    "qa-notification-staff": "staff",
+    "qa-notification-admin": "admin",
+    "qa-notification-superadmin": "superadmin",
+  };
+  await Promise.all([
+    db.doc("classroomSchedules/" + classroomId).create({ isActive: true }),
+    db.doc("dlExamSchedules/" + dlId).create({ date: "2026-11-26" }),
+    ...Object.entries(notices).map(([id, userId]) =>
+      db.doc("notifications/" + id).create({ userId, timestamp: new Date(), title: "Synthetic notification" }))
+  ]);
+
+  for (const actor of [waiting, inactive, unverified]) {
+    for (const feed of calendarFeeds(actor)) await ensureDenied(getDocsFromServer(feed));
+    await ensureDenied(getDocFromServer(doc(actor.db, "classroomSchedules", classroomId)));
+    await ensureDenied(getDocFromServer(doc(actor.db, "dlExamSchedules", dlId)));
+    await ensureDenied(notificationFeed(actor, actor.uid));
+    await ensureDenied(notificationFeed(actor, "all"));
+  }
+  await ensureDenied(getDocFromServer(notification(waiting, "qa-notification-waiting")));
+  await ensureDenied(updateDoc(notification(waiting, "qa-notification-all"), { readBy: arrayUnion(waiting.uid) }));
+
+  for (const [actor, audiences] of [
+    [staff, ["all", "staff", staff.uid]], [admin, ["all", "admin"]], [superadmin, ["all", "admin", "superadmin"]]
+  ]) {
+    const [classes, exams] = await Promise.all(calendarFeeds(actor).map(getDocsFromServer));
+    assert.deepEqual(classes.docs.map(row => row.id), [classroomId]);
+    assert.deepEqual(exams.docs.map(row => row.id), [dlId]);
+    for (const audience of audiences) assert.equal((await notificationFeed(actor, audience)).size, 1);
+  }
+  await ensureDenied(getDocsFromServer(notifications(staff)));
+  await ensureDenied(notificationFeed(other, staff.uid));
+  await ensureDenied(notificationFeed(staff, "admin"));
+  await ensureDenied(notificationFeed(admin, "superadmin"));
+  const broadcast = notification(staff, "qa-notification-all");
+  await updateDoc(broadcast, { readBy: arrayUnion(staff.uid) });
+  assert.deepEqual((await getDocFromServer(broadcast)).data().readBy, [staff.uid]);
+  console.log("PASS Calendar and notification queries enforce approval and the existing audiences");
+}
 
 async function readStatus(client, expected) {
   const token = await client?.auth.currentUser.getIdToken();
@@ -134,11 +190,23 @@ try {
   await ensureDenied(getDocsFromServer(users(waiting)));
   await ensureDenied(getDocFromServer(profile(waiting, other.uid)));
   assert.equal((await getDocFromServer(profile(waiting))).exists(), false);
-  await setDoc(pending(waiting), { uid: waiting.uid, email: waiting.email, status: "pending" });
+  const requestData = {
+    uid: waiting.uid, email: waiting.email, status: "pending",
+    nickname: "Synthetic Applicant", fullName: "", displayName: "", photoURL: "", requestedAt: new Date()
+  };
+  await ensureDenied(setDoc(pending(waiting), { ...requestData, status: "approved" }));
+  const register = () => runTransaction(waiting.db, async tx => {
+    const ref = pending(waiting);
+    if (!(await tx.get(ref)).exists()) tx.set(ref, requestData);
+  });
+  await register();
+  await register();
   assert((await getDocFromServer(pending(waiting))).exists());
+  await ensureDenied(setDoc(profile(waiting), roleDocument(waiting.email, "staff")));
   await ensureDenied(updateDoc(pending(waiting), { status: "approved" }));
   await ensureDenied(getDocFromServer(pending(staff, waiting.uid)));
   assert((await getDocFromServer(pending(admin, waiting.uid))).exists());
+  await verifyApprovedReads({ staff, other, admin, superadmin, waiting, inactive, unverified });
 
   const resourceLog = (employeeId, minorTask, data = {}) => ({
     employeeId, date: "2026-11-19", time: "09:00", minorTask, mainDuty: "QA",
@@ -193,6 +261,9 @@ try {
   await ensureDenied(getDocFromServer(worklog(other, "qa-role-loan")));
   await ensureDenied(getDocFromServer(worklog(waiting, "qa-role-loan")));
   await ensureDenied(getDocsFromServer(collection(other.db, "worklogs")));
+  for (const forbidden of [inactive, unverified]) {
+    await ensureDenied(getDocFromServer(worklog(forbidden, "qa-role-loan")));
+  }
   await ensureDenied(setDoc(worklog(waiting, "qa-role-new"), resourceLog(waiting.uid, "QA pending")));
   await ensureDenied(updateDoc(worklog(staff, "qa-role-loan"), { employeeId: other.uid }));
   await ensureDenied(updateDoc(worklog(other, "qa-role-loan"), { comment: "not an owner" }));
@@ -244,6 +315,7 @@ try {
     await ensureDenied(setDoc(profile(forbidden, `${forbidden.uid}-new`), roleDocument(staff.email, "staff")));
   }
   await ensureDenied(updateDoc(profile(staff), { role: "admin" }));
+  await ensureDenied(updateDoc(profile(admin, staff.uid), { role: "admin" }));
   await ensureDenied(updateDoc(profile(admin, superadmin.uid), { role: "staff" }));
   await updateDoc(profile(superadmin, staff.uid), { displayName: "QA Staff A" });
   await updateDoc(profile(staff), { nickname: "QA nickname" });
@@ -252,8 +324,14 @@ try {
   const migration = { email: legacy.email, uid: legacy.uid, active: true, migratedFrom: "qa-role-old" };
   await ensureDenied(setDoc(profile(legacy), { ...migration, role: "admin" }));
   await setDoc(profile(legacy), { ...migration, role: "staff" });
-  await setDoc(profile(admin, waiting.uid), roleDocument(waiting.email, "staff"));
+  await setDoc(profile(admin, waiting.uid), { ...roleDocument(waiting.email, "staff"), approvedBy: admin.uid });
+  await deleteDoc(pending(admin, waiting.uid));
   assert.equal((await getDocFromServer(profile(waiting))).data().active, true);
+  assert.equal((await getDocFromServer(pending(waiting))).exists(), false);
+  await writeResource(waiting, "qa-role-approved-worklog", "QA approved Staff");
+  assert((await getDocFromServer(worklog(waiting, "qa-role-approved-worklog"))).exists());
+  for (const feed of calendarFeeds(waiting)) assert.equal((await getDocsFromServer(feed)).size, 1);
+  assert.equal((await notificationFeed(waiting, waiting.uid)).size, 1);
   console.log("PASS verified approval and legacy migration; pending, inactive, unverified and role changes rejected");
 } finally {
   await Promise.all(identities.map(deleteApp));

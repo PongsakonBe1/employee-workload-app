@@ -240,14 +240,15 @@ npx playwright test push-notification-e2e --config playwright.qa.config.js
 | `frontend/components/SmartRoomModal.js` | 0 | ✅ |
 | `frontend/lib/quickLogTemplates.js` | 0 | ✅ |
 
-### 7.3 QA-1: Playwright Auth Fixtures
+### 7.3 QA-1 สำหรับทดสอบบทบาทด้วย Firebase Auth Emulator
 
-**สร้าง:**
-- `frontend/tests/fixtures/auth-states/superadmin.json`
-- `frontend/tests/fixtures/auth-states/staff.json`
-- `frontend/tests/bugfix-jun04.spec.js` (8 tests)
+ชุด `bugfix-jun04.spec.js` และ `equipment-health-eh8.spec.js` สร้างบัญชี `@example.test` และข้อมูลสังเคราะห์ใน Emulator ต่อการรัน ทดสอบการเข้าสู่ระบบผ่านหน้าต่าง Google ของ Emulator และใช้โปรไฟล์ Firebase ที่ตรงกับบทบาท
 
-**หมายเหตุ:** Fixtures ใช้ localStorage injection สำหรับทดสอบ role-based access ต้องการ Firebase Emulator หรือ real auth สำหรับ E2E เต็มรูปแบบ
+1. รัน `node scripts/worklog-workspace-smoke.mjs build --analytics` จาก root
+2. เปิดคนละ terminal สำหรับ `node scripts/worklog-workspace-smoke.mjs emulators` และ `node scripts/worklog-workspace-smoke.mjs serve`
+3. รัน `playwright test --config frontend/playwright.emulator.config.js` ด้วย Playwright ที่ตั้งไว้ในเครื่อง หากใช้ Microsoft Edge ให้ตั้ง `PLAYWRIGHT_BROWSER_CHANNEL=msedge`
+
+ชุดทดสอบตรวจเฉพาะแอปที่ `127.0.0.1:4318` และเขียน fixture ลง demo project บน Emulator ผลรันอยู่ในโฟลเดอร์ที่ Git ignore
 
 ### 7.4 Playwright E2E — สรุปรวม
 
