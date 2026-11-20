@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { AlertTriangle, X, Clock } from "lucide-react";
+import { calendarToday, classroomAppliesOn } from "../lib/calendarView";
+
+const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 /**
  * Component แสดงแจ้งเตือนเมื่อห้องเรียนใกล้จะปิด
@@ -11,8 +14,6 @@ export default function ScheduleAlertBanner() {
   const [alerts, setAlerts] = useState([]);
   const [dismissed, setDismissed] = useState([]);
 
-  const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-
   useEffect(() => {
     const checkUpcomingClosures = async () => {
       try {
@@ -20,7 +21,8 @@ export default function ScheduleAlertBanner() {
         const { collection, query, where, getDocs } = await import("firebase/firestore");
 
         const now = new Date();
-        const dayOfWeek = DAYS[now.getDay()];
+        const today = calendarToday(now);
+        const dayOfWeek = DAYS[new Date(today + "T12:00:00Z").getUTCDay()];
         const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
         // ดึงตารางเรียนวันนี้
@@ -37,6 +39,7 @@ export default function ScheduleAlertBanner() {
 
         // หาห้องที่ใกล้จะปิด (ภายใน 15 นาที)
         const upcomingAlerts = schedules
+          .filter(schedule => classroomAppliesOn(schedule, today))
           .map((schedule) => {
             const diff = timeDiffInMinutes(currentTime, schedule.endTime);
             if (diff > 0 && diff <= 15) {

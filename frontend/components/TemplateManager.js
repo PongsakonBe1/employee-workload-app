@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import "../app/ui-detail-layouts.css";
+import { MobileDetailCell } from "./ui/MobileDetailCell";
+
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthProvider';
 import { MinorTaskSelector } from './MinorTaskSelector';
 import { 
@@ -12,15 +14,20 @@ import {
 } from '../lib/quickLogTemplates';
 import { logSystemAction, SystemActions } from '../lib/systemLog';
 import { getMainDutyFromMinorTask } from '../lib/commentSuggestions';
+import { GlassButton } from "./ui/GlassControls";
 
 export default function TemplateManager() {
-  const t = useTranslations('admin');
   const { user } = useAuth();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const editorHeading = useRef(null);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (showForm) editorHeading.current?.focus();
+  }, [showForm, editingTemplate?.id]);
   const [formData, setFormData] = useState({
     name: '',
     minorTask: '',
@@ -169,18 +176,17 @@ export default function TemplateManager() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-6xl mx-auto p-6 ui-management ui-management-padded">
+      <div className="management-heading mb-6">
         <h1 className="text-2xl font-semibold text-slate-900">จัดการ Quick Log Templates</h1>
-        <button
+        <GlassButton variant="prominent"
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           เพิ่ม Template
-        </button>
+        </GlassButton>
       </div>
 
       {error && (
@@ -193,7 +199,7 @@ export default function TemplateManager() {
       {showForm && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-slate-900">
+            <h2 ref={editorHeading} tabIndex={-1} className="text-xl font-semibold text-slate-900">
               {editingTemplate ? 'แก้ไข Template' : 'สร้าง Template ใหม่'}
             </h2>
             <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -240,10 +246,10 @@ export default function TemplateManager() {
               
               <div className={`grid grid-cols-1 ${!formData.isCombo ? 'lg:grid-cols-2' : ''} gap-4`}>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="template-name" className="block text-sm font-medium text-slate-700 mb-2">
                     ชื่อ Template *
                   </label>
-                  <input
+                  <input id="template-name"
                     type="text"
                     required
                     value={formData.name}
@@ -261,10 +267,7 @@ export default function TemplateManager() {
                 
                 {!formData.isCombo && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      หัวข้อรอง *
-                    </label>
-                    <MinorTaskSelector
+                    <MinorTaskSelector label="หัวข้อรอง *"
                       value={formData.minorTask}
                       onChange={handleMinorTaskChange}
                       placeholder="เลือกหัวข้อรอง"
@@ -280,10 +283,10 @@ export default function TemplateManager() {
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label htmlFor="template-mainDuty" className="block text-sm font-medium text-slate-700 mb-2">
                         หัวข้อหลัก (auto-fill)
                       </label>
-                      <input
+                      <input id="template-mainDuty"
                         type="text"
                         required
                         value={formData.mainDuty}
@@ -295,10 +298,10 @@ export default function TemplateManager() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label htmlFor="template-dutyGroup" className="block text-sm font-medium text-slate-700 mb-2">
                         หมวดหมู่
                       </label>
-                      <select
+                      <select id="template-dutyGroup"
                         value={formData.dutyGroup}
                         onChange={(e) => setFormData({...formData, dutyGroup: e.target.value})}
                         className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -310,10 +313,10 @@ export default function TemplateManager() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label htmlFor="template-comment" className="block text-sm font-medium text-slate-700 mb-2">
                       ความคิดเห็น (ถ้ามี)
                     </label>
-                    <textarea
+                    <textarea id="template-comment"
                       value={formData.comment}
                       onChange={(e) => setFormData({...formData, comment: e.target.value})}
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -480,8 +483,8 @@ export default function TemplateManager() {
                       </div>
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">ชื่องานที่แสดง *</label>
-                          <input
+                          <label htmlFor={"template-name-" + index} className="block text-xs font-medium text-slate-600 mb-1">ชื่องานที่แสดง *</label>
+                          <input id={"template-name-" + index}
                             type="text"
                             required
                             value={item.name}
@@ -495,8 +498,7 @@ export default function TemplateManager() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">หัวข้อรอง *</label>
-                          <MinorTaskSelector
+                          <MinorTaskSelector label="หัวข้อรอง *"
                             value={item.minorTask}
                             onChange={(minorTask) => {
                               const newItems = [...formData.comboItems];
@@ -508,8 +510,9 @@ export default function TemplateManager() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">ความคิดเห็น (ถ้ามี)</label>
+                          <label htmlFor={"template-combo-comment-" + index} className="block text-xs font-medium text-slate-600 mb-1">ความคิดเห็น (ถ้ามี)</label>
                           <input
+                            id={"template-combo-comment-" + index}
                             type="text"
                             value={item.comment || ''}
                             onChange={(e) => {
@@ -585,31 +588,31 @@ export default function TemplateManager() {
             <div className="text-slate-500">ยังไม่มี templates</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto mobile-table-wrap">
+            <table role="table" aria-label="Quick Log Templates" className="w-full mobile-detail-table">
               <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <tr role="row">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     ชื่อ
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     หัวข้อรอง
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     หัวข้อหลัก
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     ใช้แล้ว
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     จัดการ
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {templates.map((template) => (
-                  <tr key={template.id}>
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                  <tr role="row" key={template.id}>
+                    <MobileDetailCell primary className="px-4 py-3 text-sm font-medium text-slate-900">
                       <div className="flex items-center gap-2">
                         {template.name}
                         {template.isCombo && (
@@ -623,20 +626,20 @@ export default function TemplateManager() {
                           </span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="หัวข้อรอง" className="px-4 py-3 text-sm text-slate-600">
                       {template.isCombo 
                         ? template.comboItems?.map(i => i.minorTask).join(' · ') || '-'
                         : template.minorTask
                       }
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="หัวข้อหลัก" className="px-4 py-3 text-sm text-slate-600">
                       {template.mainDuty}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="ใช้แล้ว" className="px-4 py-3 text-sm text-slate-600">
                       {template.usageCount || 0}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
+                    </MobileDetailCell>
+                    <MobileDetailCell actions className="px-4 py-3 text-sm">
                       <button
                         onClick={() => handleEdit(template)}
                         className="text-blue-600 hover:text-blue-900 mr-3"
@@ -649,7 +652,7 @@ export default function TemplateManager() {
                       >
                         ลบ
                       </button>
-                    </td>
+                    </MobileDetailCell>
                   </tr>
                 ))}
               </tbody>

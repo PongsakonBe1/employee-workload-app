@@ -3,6 +3,8 @@
  * Can be used in both frontend and Firebase Cloud Functions
  */
 
+import { calendarToday, addCalendarDays } from "./calendarView";
+
 // Validation rules
 export const VALIDATION_RULES = {
   // Recipient: 1-50 characters, alphanumeric, Thai, spaces, and common symbols
@@ -135,11 +137,10 @@ export function validateDate(date) {
   }
 
   // Check if not in the future (allow up to 1 day ahead for late night entries)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-
-  if (dateObj > tomorrow) {
+  // A worklog date is a Bangkok calendar day, not UTC midnight compared with
+  // the host machine's midnight. Compare date-only values in one time zone.
+  const tomorrow = addCalendarDays(calendarToday(), 1);
+  if (date > tomorrow) {
     return { valid: false, error: "ไม่สามารถบันทึกล่วงหน้าเกิน 1 วันได้" };
   }
 

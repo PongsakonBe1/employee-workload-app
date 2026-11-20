@@ -151,6 +151,14 @@ describe("validateDate", () => {
   it("rejects dates more than 1 day in the future", () => {
     expect(validateDate("2026-06-06").valid).toBe(false);
   });
+  it("uses Bangkok date boundaries on both sides of local midnight", () => {
+    vi.setSystemTime(new Date("2026-06-04T16:59:59Z"));
+    expect(validateDate("2026-06-05").valid).toBe(true);
+    expect(validateDate("2026-06-06").valid).toBe(false);
+    vi.setSystemTime(new Date("2026-06-04T17:00:00Z"));
+    expect(validateDate("2026-06-06").valid).toBe(true);
+    expect(validateDate("2026-06-07").valid).toBe(false);
+  });
 
   it("accepts rolled-over calendar dates (JS Date behavior: Feb 30 → Mar 2)", () => {
     // Note: JavaScript's Date constructor does not reject invalid day-of-month;

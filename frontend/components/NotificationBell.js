@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Bell, X, AlertCircle, BellRing } from "lucide-react";
 import {
   collection,
@@ -15,7 +16,6 @@ import {
   arrayUnion,
   doc,
   getDoc,
-  setDoc,
 } from "firebase/firestore";
 import { db, getFCMToken, onFCMMessage } from "../lib/firebase";
 import { useAuth } from "./AuthProvider";
@@ -28,11 +28,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [notifPermission, setNotifPermission] = useState(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return "default";
-    if (localStorage.getItem("notif_dismissed") === "1") return "dismissed";
-    return Notification.permission;
-  });
+  const [notifPermission, setNotifPermission] = useState("unavailable");
   const [fcmTokenStatus, setFcmTokenStatus] = useState(null); // null | "saving" | "saved" | "error"
   const [reminderTime, setReminderTime] = useState("22:00");
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -43,11 +39,7 @@ export function NotificationBell() {
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
       const perm = Notification.permission;
-      if (perm !== "default") {
-        setNotifPermission(perm);
-      } else if (localStorage.getItem("notif_dismissed") === "1") {
-        setNotifPermission("dismissed");
-      }
+      setNotifPermission(perm === "default" && localStorage.getItem("notif_dismissed") === "1" ? "dismissed" : perm);
     }
   }, []);
 
@@ -379,48 +371,54 @@ export function NotificationBell() {
 
   return (
     <>
-      {/* Alert Banner สำหรับ notification สำคัญ */}
-      {showAlert && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm px-2">
-          <div className="bg-amber-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
-            <AlertCircle size={20} className="shrink-0" />
-            <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
-            <button
-              onClick={() => setShowAlert(false)}
-              className="shrink-0 hover:bg-white/20 rounded p-1"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {(showAlert || notifPermission === "default") && createPortal(
+        <div className="ui-notification-banners">
+          {/* Alert Banner สำหรับ notification สำคัญ */}
+          {showAlert && (
+            <div role="status" className="ui-notification-banner ui-notification-banner--alert">
+              <AlertCircle size={20} className="shrink-0" />
+              <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
+              <button
+                onClick={() => setShowAlert(false)}
+                className="ui-notification-dismiss"
+                aria-label="ปิดข้อความแจ้งเตือน"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
-      {/* Banner ขอ permission Browser Notification */}
-      {notifPermission === "default" && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-2rem)] max-w-sm px-2">
-          <div className="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
-            <BellRing size={20} className="shrink-0 text-amber-400" />
-            <span className="text-sm flex-1 min-w-0">เปิดการแจ้งเตือนเพื่อรับแจ้งเตือนแม้ปิดแอปไว้</span>
-            <button
-              onClick={requestPermission}
-              className="shrink-0 bg-amber-400 text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-amber-300 transition"
-            >
-              เปิด
-            </button>
-            <button
-              onClick={() => { localStorage.setItem("notif_dismissed", "1"); setNotifPermission("dismissed"); }}
-              className="shrink-0 hover:bg-white/20 rounded p-1"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>
+          {/* Banner ขอ permission Browser Notification */}
+          {notifPermission === "default" && (
+            <div className="ui-notification-banner">
+              <BellRing size={20} className="shrink-0 text-[var(--ui-amber-ink)]" />
+              <span className="text-sm flex-1 min-w-0">รับการแจ้งเตือนแม้ปิดแอป</span>
+              <button
+                onClick={requestPermission}
+                className="apple-button shrink-0 px-3"
+              >
+                เปิด
+              </button>
+              <button
+                onClick={() => { localStorage.setItem("notif_dismissed", "1"); setNotifPermission("dismissed"); }}
+                className="ui-notification-dismiss"
+                aria-label="ซ่อนคำเชิญเปิดการแจ้งเตือน"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>,
+        document.body,
       )}
 
       <div className="relative z-[999]">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative p-2 rounded-full hover:bg-slate-100 transition"
+          className="ui-icon-button relative"
+          aria-label={`การแจ้งเตือน${unreadCount ? ` ${unreadCount} ยังไม่อ่าน` : ""}`}
+          aria-expanded={isOpen}
+          aria-controls={isOpen ? "workspace-notifications" : undefined}
         >
           <Bell size={20} className="text-slate-600" />
           {unreadCount > 0 && (
@@ -433,12 +431,15 @@ export function NotificationBell() {
         {isOpen && (
           <>
             {/* Backdrop สำหรับปิด dropdown */}
-            <div
+            <button
+              type="button"
               className="fixed inset-0 z-[9998]"
+              tabIndex={-1}
+              aria-label="ปิดแผงการแจ้งเตือน"
               onClick={() => setIsOpen(false)}
             />
             {/* Dropdown — fixed on mobile, absolute on desktop */}
-            <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-xs sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
+            <div id="workspace-notifications" className="ui-notification-panel fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-xs sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 apple-panel z-[9999] shadow-2xl border border-slate-200">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-semibold text-slate-900">การแจ้งเตือน</h3>
                 <div className="flex items-center gap-2">
@@ -457,6 +458,7 @@ export function NotificationBell() {
                   <button
                     onClick={() => setIsOpen(false)}
                     className="p-1 hover:bg-slate-100 rounded"
+                    aria-label="ปิดแผงการแจ้งเตือน"
                   >
                     <X size={16} className="text-slate-400" />
                   </button>
@@ -471,31 +473,28 @@ export function NotificationBell() {
                   notifications.map((notif) => (
                     <div
                       key={notif.id}
-                      className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group"
-                      onClick={() => markAsRead(notif.id)}
+                      className="flex items-start gap-2 p-3 border-b border-slate-50 hover:bg-slate-50"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">
-                            {notif.title}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                            {notif.message}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {notif.timestamp
-                              ?.toDate?.()
-                              .toLocaleString("th-TH") || ""}
-                          </p>
-                        </div>
-                        <button
-                          onClick={(e) => deleteNotification(e, notif.id)}
-                          className="shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-opacity"
-                          title="ลบการแจ้งเตือน"
-                        >
-                          <X size={14} className="text-red-500" />
-                        </button>
-                      </div>
+                      <button type="button" className="flex-1 min-w-0 text-start" onClick={() => markAsRead(notif.id)}>
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {notif.title}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                          {notif.message}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {notif.timestamp
+                            ?.toDate?.()
+                            .toLocaleString("th-TH") || ""}
+                        </p>
+                      </button>
+                      <button
+                        onClick={(e) => deleteNotification(e, notif.id)}
+                        className="shrink-0 p-1 hover:bg-red-100 rounded"
+                        title="ลบการแจ้งเตือน"
+                      >
+                        <X size={14} className="text-red-500" />
+                      </button>
                     </div>
                   ))
                 )}

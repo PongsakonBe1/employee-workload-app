@@ -6,14 +6,22 @@
  * 
  * Usage:
  *   cd firebase/seed-data
+ *   Set GCLOUD_PROJECT=labboy-workload-app and GOOGLE_APPLICATION_CREDENTIALS
+ *   to an absolute credential path outside Git before running this write utility.
  *   node mark-icit02-damaged.js
  */
 
+const path = require("node:path");
+const projectId = "labboy-workload-app";
+const credentialPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || "";
+const relativeCredential = path.relative(path.resolve(__dirname, "../.."), path.resolve(credentialPath));
+const outsideRepository = relativeCredential === ".." || relativeCredential.startsWith(".." + path.sep) || path.isAbsolute(relativeCredential);
+// Fail before SDK initialization; never silently select the old key or a default project.
+if (process.env.GCLOUD_PROJECT !== projectId || !path.isAbsolute(credentialPath) || !outsideRepository) {
+  throw new Error("Set the explicit GCLOUD_PROJECT and an absolute GOOGLE_APPLICATION_CREDENTIALS path outside Git before running this one-off write utility");
+}
 const admin = require("firebase-admin");
-const path  = require("path");
-
-const serviceAccount = require(path.join(__dirname, "labboy-workload-app-firebase-adminsdk-fbsvc-f626f842a7.json"));
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+admin.initializeApp({ projectId, credential: admin.credential.applicationDefault() });
 const db = admin.firestore();
 
 async function main() {

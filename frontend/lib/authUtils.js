@@ -14,3 +14,7 @@ export function isAdminRole(user) {
 export function isSuperAdminRole(user) {
   return user?.role === "superadmin";
 }
+
+export function worklogEntryPath(role) {
+  return isAdminRole({ role }) ? "/admin/record" : "/worklogs/new";
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
 import { MINOR_TASKS, minorTaskToMainDuty } from "../lib/commentSuggestions";
@@ -11,9 +11,15 @@ const DUTY_GROUP_LABELS = {
 };
 
 export function MinorTaskSelector({ value, onChange, label, placeholder }) {
+  const triggerId = useId();
   const t = useTranslations("worklog");
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const searchInput = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) searchInput.current?.focus({ preventScroll: true });
+  }, [isOpen]);
 
   // Build a flat list of all minor tasks with their duty group info
   const allMinorTasks = useMemo(() => {
@@ -58,11 +64,13 @@ export function MinorTaskSelector({ value, onChange, label, placeholder }) {
 
   return (
     <div className="relative">
-      <label className="apple-label">{label}</label>
+      {label && <label className="apple-label" htmlFor={triggerId}>{label}</label>}
 
       {/* Display selected value or trigger */}
       <button
+        id={triggerId}
         type="button"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         className="apple-input text-left flex items-center justify-between"
       >
@@ -100,7 +108,7 @@ export function MinorTaskSelector({ value, onChange, label, placeholder }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("table.search")}
                 className="w-full pl-10 pr-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-slate-900 focus:outline-none"
-                autoFocus
+                ref={searchInput}
               />
             </div>
           </div>

@@ -1,0 +1,84 @@
+// Prototype for isolated staging with synthetic/minimal directory data. Never deploy to production.
+// users/{uid}: displayName string, role string, active bool; calendarWriter bool is provisioned only.
+// calendarWriteState/main: revision int; operationId string, updatedBy UID, updatedAt timestamp after a write.
+// calendarWriteOperations/{op-hash}: count/skipped ints, createdBy UID, createdAt timestamp, schemaVersion=1.
+// classroomSchedules/{cal-hash}: subject/teacher/note/semester strings, one room, weekday, HH:mm times,
+//   YYYY-MM-DD validFrom/validTo, isActive=true and immutable operation metadata.
+// dlExamSchedules/{cal-hash}: subject/date/times/timeSlot/semester/notes/examType strings,
+//   locations list, proctors list of directory IDs, studentCount int and immutable operation metadata.
+// Only create is exposed for schedules; all updates/deletes and every client profile write are denied.
+// Conflict validation lives in the approved client protocol, not an aggregate server-side rules check.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function reader() {
+      return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['staff','admin','superadmin'];
+    }
+    function writer() {
+      return reader() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin','superadmin']
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.calendarWriter == true;
+    }
+    function text(value, max) { return value is string && value.size() <= max; }
+    function day(value) { return text(value,10) && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'); }
+    function clock(value) { return text(value,5) && value.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'); }
+    function room(value) { return value in ['401','402','406','407']; }
+    function operationId(value) { return value is string && value.matches('^op-[0-9a-f]{64}$'); }
+    function gateAdvanced(operation) {
+      return operationId(operation)
+        && getAfter(/databases/$(database)/documents/calendarWriteState/main).data.revision == get(/databases/$(database)/documents/calendarWriteState/main).data.revision + 1
+        && getAfter(/databases/$(database)/documents/calendarWriteState/main).data.operationId == operation
+        && getAfter(/databases/$(database)/documents/calendarWriteState/main).data.updatedBy == request.auth.uid;
+    }
+    function metadata(d) {
+      return d.createdBy == request.auth.uid && d.createdAt == request.time && d.schemaVersion == 1
+        && gateAdvanced(d.operationId)
+        && getAfter(/databases/$(database)/documents/calendarWriteOperations/$(d.operationId)).data.createdBy == request.auth.uid;
+    }
+    function validClass(d) {
+      return d.keys().hasOnly(['subject','teacher','note','semester','room','dayOfWeek','startTime','endTime','validFrom','validTo','isActive','operationId','createdBy','createdAt','schemaVersion'])
+        && d.keys().hasAll(['subject','teacher','note','semester','room','dayOfWeek','startTime','endTime','validFrom','validTo','isActive','operationId','createdBy','createdAt','schemaVersion'])
+        && text(d.subject,300) && d.subject.size()>0 && text(d.teacher,1000) && text(d.note,1000) && text(d.semester,32)
+        && room(d.room) && d.dayOfWeek in ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+        && clock(d.startTime) && clock(d.endTime) && d.startTime < d.endTime
+        && day(d.validFrom) && day(d.validTo) && d.validFrom <= d.validTo && d.isActive == true && metadata(d);
+    }
+    function proctor(value) { return value is string && value.size()>0 && value.size()<=128 && !value.matches('.*[/].*'); }
+    function validProctors(values) {
+      return values is list && values.size()>=1 && values.size()<=8 && values.toSet().size()==values.size()
+        && proctor(values[0]) && (values.size()<2 || proctor(values[1])) && (values.size()<3 || proctor(values[2]))
+        && (values.size()<4 || proctor(values[3])) && (values.size()<5 || proctor(values[4]))
+        && (values.size()<6 || proctor(values[5])) && (values.size()<7 || proctor(values[6])) && (values.size()<8 || proctor(values[7]));
+    }
+    function validExam(d) {
+      return d.keys().hasOnly(['subject','date','startTime','endTime','timeSlot','locations','proctors','studentCount','examType','semester','notes','isActive','operationId','createdBy','createdAt','schemaVersion'])
+        && d.keys().hasAll(['subject','date','startTime','endTime','timeSlot','locations','proctors','studentCount','examType','semester','notes','isActive','operationId','createdBy','createdAt','schemaVersion'])
+        && text(d.subject,300) && d.subject.size()>0 && day(d.date) && clock(d.startTime) && clock(d.endTime) && d.startTime<d.endTime
+        && text(d.timeSlot,1000) && text(d.semester,32) && text(d.notes,1000) && d.examType in ['staff','student']
+        && d.studentCount is int && d.studentCount>=1 && d.studentCount<=10000
+        && d.locations == (d.studentCount>40 ? ['ห้อง 406','ห้อง 407'] : ['ห้อง 406'])
+        && validProctors(d.proctors) && d.isActive==true && metadata(d);
+    }
+    function validReceipt(d, id) {
+      return d.keys().hasOnly(['count','skipped','createdBy','createdAt','schemaVersion'])
+        && d.keys().hasAll(['count','skipped','createdBy','createdAt','schemaVersion'])
+        && d.count is int && d.skipped is int && d.count>=0 && d.skipped>=0 && d.count+d.skipped>=1 && d.count+d.skipped<=100
+        && d.createdBy==request.auth.uid && d.createdAt==request.time && d.schemaVersion==1 && gateAdvanced(id);
+    }
+    function validGate(d) {
+      return d.keys().hasOnly(['revision','operationId','updatedBy','updatedAt'])
+        && d.keys().hasAll(['revision','operationId','updatedBy','updatedAt'])
+        && d.revision is int && d.revision==resource.data.revision+1 && operationId(d.operationId)
+        && d.updatedBy==request.auth.uid && d.updatedAt==request.time
+        && !exists(/databases/$(database)/documents/calendarWriteOperations/$(d.operationId))
+        && getAfter(/databases/$(database)/documents/calendarWriteOperations/$(d.operationId)).data.createdBy==request.auth.uid;
+    }
+    match /users/{uid} { allow read: if reader(); allow write: if false; }
+    match /classroomSchedules/{id} { allow read: if reader(); allow create: if writer() && id.matches('^cal-[0-9a-f]{64}$') && validClass(request.resource.data); allow update,delete: if false; }
+    match /dlExamSchedules/{id} { allow read: if reader(); allow create: if writer() && id.matches('^cal-[0-9a-f]{64}$') && validExam(request.resource.data); allow update,delete: if false; }
+    match /calendarWriteState/{id} { allow get: if writer() && id=='main'; allow update: if writer() && id=='main' && validGate(request.resource.data); allow create,delete,list: if false; }
+    match /calendarWriteOperations/{id} { allow get: if writer(); allow create: if writer() && validReceipt(request.resource.data,id); allow update,delete,list: if false; }
+    match /{path=**} { allow read,write: if false; }
+  }
+}

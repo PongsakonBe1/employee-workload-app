@@ -1,0 +1,7 @@
+{
+  "indexes": [
+    { "collectionGroup": "dlExamSchedules", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "isActive", "order": "ASCENDING" }, { "fieldPath": "date", "order": "ASCENDING" }] },
+    { "collectionGroup": "users", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "active", "order": "ASCENDING" }, { "fieldPath": "role", "order": "ASCENDING" }] }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,73 @@
+.worklog-workspace-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap; }
+.worklog-workspace-heading>div { min-width:0; }
+.worklog-record-panel { padding:clamp(14px,3vw,25px);min-width:0; }
+.worklog-record-panel[hidden] { display:none; }
+.worklog-live-record .record-context { align-self:start; }
+.worklog-live-record .record-panel-title { flex-wrap:wrap; }
+.worklog-live-record .record-mode { max-width:100%; }
+.worklog-live-record :is(input,textarea) { min-width:0;max-width:100%; }
+.worklog-live-record .worklog-record-panel { padding:0; }
+.worklog-record-empty { padding:20px; border:1px solid var(--ui-line); border-radius:16px; }
+.worklog-record-person { display:grid; min-width:min(245px,100%); gap:3px; }
+.worklog-record-person select { min-height:44px; max-width:100%; }
+.worklog-record-person>span { font-size:.75rem; color:var(--ui-sub); }
+.worklog-mobile-history,.worklog-inline-schedule { display:none; }
+.worklog-date-form { width:100%; }
+.worklog-date-form :is(input,.record-error) { min-width:0;max-width:100%; }
+.worklog-date-form .record-error { grid-column:1 / -1; }
+@media(max-width:1150px) { .worklog-inline-schedule { display:block; } }
+.worklog-task-options { display:grid;gap:1px;margin-top:12px; }
+.worklog-task-options button { min-height:44px;text-align:start;width:100%;padding:8px 12px;border-radius:10px; }
+.worklog-task-options button:is(:hover,[aria-pressed=true]) { background:var(--ui-soft); }
+.worklog-history-toolbar>form { display:flex;align-items:center;flex:1;gap:8px;flex-wrap:wrap;min-width:0; }
+.worklog-history-toolbar .history-search { min-width:min(200px,100%); }
+.worklog-history-toolbar .worklog-history-range { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:1 1 240px;min-width:0;max-width:100%; }
+.worklog-history-range input { width:100%;max-width:100%;min-width:0; }
+.worklog-history-list .history-row-open { min-height:65px; }
+.worklog-history-list .history-table-head { min-height:42px; }
+.worklog-history-list .history-summary { margin-block:12px; }
+.history-calendar-layout { display:grid; align-items:start; gap:16px; margin-top:12px; }
+.history-calendar-panel { min-width:0; padding:clamp(10px,2vw,20px); }
+.history-calendar-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.history-calendar-panel :is(h2,h3) { font-weight:650; font-size:1.125rem; line-height:1.5; overflow-wrap:anywhere; }
+.history-calendar-nav { display:flex; align-items:center; gap:4px; }
+.history-calendar-nav button { display:grid; min-height:44px; min-width:44px; padding:4px 8px; place-items:center; border-radius:12px; color:var(--ui-ink); }
+.history-calendar-nav button:hover { background:var(--ui-soft); }
+.history-calendar-weekdays, .history-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.history-calendar-weekdays { text-align:center; margin-bottom:5px; font-size:.75rem; color:var(--ui-sub); }
+.history-calendar-grid { gap:1px; overflow:hidden; border:1px solid var(--ui-line); border-radius:14px; background:var(--ui-line); }
+.history-calendar-blank { background:var(--ui-soft); }
+.history-calendar-day { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; min-height:72px; padding:6px; background:var(--ui-surface); color:var(--ui-ink); text-align:start; }
+.history-calendar-day:hover { background:var(--ui-soft); }
+.history-calendar-day[aria-pressed=true] { background:var(--ui-blue); color:var(--ui-blue-ink); }
+.history-calendar-day:focus-visible { outline:2px solid var(--ui-accent); outline-offset:-2px; }
+.history-calendar-number { display:inline-grid; place-items:center; min-width:24px; min-height:24px; border:1px solid transparent; border-radius:50%; font-size:.875rem; font-weight:600; }
+.history-calendar-day[aria-current=date] .history-calendar-number { border-color:var(--ui-blue-ink); color:var(--ui-blue-ink); }
+.history-calendar-day:is([data-holiday],[data-sunday]):not([aria-current=date]) .history-calendar-number, .history-calendar-holiday { color:var(--ui-red-ink); }
+.history-calendar-count { font-size:.75rem; line-height:1.15; color:var(--ui-blue-ink); overflow-wrap:anywhere; }
+.history-calendar-holiday { max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.625rem; }
+.history-calendar-summary { margin:9px 0; color:var(--ui-sub); font-size:.875rem; }
+.history-calendar-entries { display:grid; gap:8px; margin:0 0 10px; }
+.history-calendar-entries:empty { display:none; }
+.history-calendar-entries li { min-width:0; display:grid; grid-template-columns:3.2rem minmax(0,1fr); gap:7px; }
+.history-calendar-time { font-size:.75rem; color:var(--ui-sub); font-variant-numeric:tabular-nums; padding-top:10px; }
+.history-calendar-entry { display:grid; gap:4px; justify-items:start; min-width:0; overflow-wrap:anywhere; background:var(--ui-soft); border:1px solid var(--ui-line); border-radius:13px; padding:10px; }
+.history-calendar-task { font-weight:650; }
+.history-calendar-entry-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; color:var(--ui-sub); font-size:.75rem; }
+.history-calendar-status { border-radius:999px; padding:3px 8px; background:var(--ui-surface); }
+.history-calendar-status[data-recorded] { background:var(--ui-green); color:var(--ui-green-ink); }
+.history-calendar-entry .history-link { min-height:44px; }
+@media(min-width:1000px) {
+  .history-calendar-layout { grid-template-columns:minmax(0,1fr) minmax(284px,340px); }
+}
+@media (max-width:760px), (any-pointer:coarse) {
+  .worklog-live-record :is(input,textarea), .worklog-task-dialog input, .worklog-history-range input, .worklog-date-form input { font-size:16px; }
+}
+@media (max-width:760px) {
+  .worklog-mobile-history { display:inline-flex; }
+  .worklog-quick-panel:not([hidden]) { background:var(--ui-surface); border:1px solid var(--ui-line); border-radius:18px; padding:14px; }
+  .worklog-live-record .record-meta { flex-wrap:wrap; }
+  .worklog-history-toolbar>form, .worklog-history-toolbar .worklog-history-range { flex-basis:100%; }
+  .history-calendar-day { align-items:center; min-height:54px; padding:3px 1px; text-align:center; }
+  .history-calendar-count { font-size:.625rem; line-height:1.2; }
+}

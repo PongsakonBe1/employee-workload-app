@@ -1,12 +1,14 @@
 import { initializeApp, getApps } from "firebase/app";
+import { selectDefaultFirebaseApp } from "./firebaseAppSelection.js";
 import {
+  connectAuthEmulator,
   getAuth,
   GoogleAuthProvider,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
-import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
+import { connectFirestoreEmulator, initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 // ⚠️ DISABLED: No Firebase Functions to save quota
 // import { getFunctions } from "firebase/functions";
@@ -21,10 +23,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent duplicate initialization in Next.js)
-const app =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app = selectDefaultFirebaseApp(getApps(), () => initializeApp(firebaseConfig));
 
 export const auth = getAuth(app);
+const worklogSmokeBrowser = typeof window !== "undefined" && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "demo-worklog-workspace";
+if (worklogSmokeBrowser) {
+  if (window.location.origin !== "http://127.0.0.1:4318") throw new Error("Worklog smoke build requires its local preview origin");
+  connectAuthEmulator(auth, "http://127.0.0.1:19218", { disableWarnings: true });
+}
 
 // ตั้งค่า Persistence Mode — export promise เพื่อให้ AuthProvider await ก่อนใช้งาน
 // ลอง LOCAL ก่อน (คง login ข้าม browser sessions) ถ้า error จะ fallback ไป SESSION
@@ -39,6 +45,7 @@ export const authReady = setPersistence(auth, browserLocalPersistence)
 export const db = initializeFirestore(app, {
   localCache: memoryLocalCache(),
 });
+if (worklogSmokeBrowser) connectFirestoreEmulator(db, "127.0.0.1", 18218);
 // ⚠️ DISABLED: Functions not used
 // export const functions = getFunctions(app);
 export const googleProvider = new GoogleAuthProvider();
@@ -48,6 +55,7 @@ export const functions = null;
 
 // FCM Messaging — lazy init เพราะต้องรันใน browser เท่านั้น
 export async function getFCMToken() {
+  if (worklogSmokeBrowser) return null;
   try {
     const supported = await isSupported();
     if (!supported) return null;
@@ -70,6 +78,7 @@ export async function getFCMToken() {
 }
 
 export async function onFCMMessage(callback) {
+  if (worklogSmokeBrowser) return () => {};
   try {
     const supported = await isSupported();
     if (!supported) return () => {};

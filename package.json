@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "calendar-server"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace backend\" \"npm run dev --workspace frontend\"",
@@ -17,7 +18,8 @@
     "build:prod": "npm run pre-build-check && npm run copy-env && cd frontend && npm run build",
     "deploy:firebase": "cd firebase && firebase deploy --only hosting",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build:production-hosting": "node scripts/build-production-hosting.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

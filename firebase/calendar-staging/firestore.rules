@@ -1,0 +1,24 @@
+// Prototype rules for synthetic staging data; never deploy to the production project.
+// users/{uid}: displayName:string, role:staff/admin/superadmin/user, active:bool.
+// classroomSchedules/{id}: weekly classroom data with explicit term bounds.
+// dlExamSchedules/{id}: dated DL data with explicit times and directory IDs.
+// Only the separately authorized provisioning tool writes initial synthetic fixtures.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() { return request.auth != null; }
+    function isValidReader(data) {
+      return data.keys().hasAll(['role', 'active']) && data.active is bool && data.active == true
+        && data.role in ['staff', 'admin', 'superadmin'];
+    }
+    function canReadCalendar() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && isValidReader(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+    }
+    match /users/{uid} { allow read: if canReadCalendar(); allow write: if false; }
+    match /classroomSchedules/{id} { allow read: if canReadCalendar(); allow write: if false; }
+    match /dlExamSchedules/{id} { allow read: if canReadCalendar(); allow write: if false; }
+    match /{path=**} { allow read, write: if false; }
+  }
+}

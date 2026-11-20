@@ -304,13 +304,19 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
+    // Calendar writer state is server-owned. Once enabled, all browser
+    // versions must use the trusted API for schedule mutations.
+    function allowsLegacyCalendarWrite() {
+      let gate = /databases/$(database)/documents/calendarWriteState/main;
+      return !exists(gate) || get(gate).data.get('mode', '') == 'legacy';
+    }
+
     // Classroom Schedules collection (Floor 4 class schedules)
     match /classroomSchedules/{scheduleId} {
       // All authenticated users can read schedules
       allow read: if isAuthenticated();
       
-      // Only admin can create/update/delete schedules
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
 
     // DL Exam Schedules collection (Digital Literacy exam schedules)
@@ -318,8 +324,7 @@ service cloud.firestore {
       // All authenticated users can read exam schedules
       allow read: if isAuthenticated();
       
-      // Only admin can create/update/delete exam schedules
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAdmin() && allowsLegacyCalendarWrite();
     }
 
     // Equipment Items collection (admin-managed equipment inventory)

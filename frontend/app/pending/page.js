@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, CheckCircle, Mail } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
+import { isAdminRole, worklogEntryPath } from "../../lib/authUtils";
 
 export default function PendingApprovalPage() {
   const router = useRouter();
@@ -12,8 +13,7 @@ export default function PendingApprovalPage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // ถ้ามี user แสดงว่าอนุมัติแล้ว ไป dashboard
-        router.replace("/dashboard");
+        router.replace(isAdminRole(user) ? worklogEntryPath(user.role) : "/dashboard");
       } else if (!pendingApproval) {
         // ถ้าไม่มี user และไม่ได้ pending แสดงว่ายังไม่ได้ login
         router.replace("/login");

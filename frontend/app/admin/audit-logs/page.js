@@ -1,5 +1,6 @@
 "use client";
 
+import "../../ui-detail-layouts.css";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,7 @@ import { FileText, Search, Filter, User, Clock, FileEdit, Trash2, LogIn, LogOut 
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { isAdminRole } from "../../../lib/authUtils";
+import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
 
 const LOG_TYPES = {
   WORKLOG_CREATED: { label: "สร้างรายการ", labelEn: "Created", icon: FileEdit, color: "bg-emerald-100 text-emerald-700" },
@@ -33,8 +35,7 @@ export default function AuditLogsPage() {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const logs = MOCK_LOGS;
   const [filter, setFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,14 +47,6 @@ export default function AuditLogsPage() {
       router.replace("/dashboard");
     }
   }, [user, isAdmin, router]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      // TODO: Replace with actual API call
-      setLogs(MOCK_LOGS);
-      setLoading(false);
-    }
-  }, [user, isAdmin]);
 
   const filteredLogs = logs.filter((log) => {
     const matchesFilter = filter === "ALL" || log.type === filter;
@@ -94,136 +87,138 @@ export default function AuditLogsPage() {
 
   return (
     <AppShell>
-      <section className="mb-6">
-        <div className="mb-2 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
-            <FileText size={20} />
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Admin
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-              ประวัติการใช้งาน
-            </h1>
-          </div>
-        </div>
-      </section>
-
-      {/* Filters */}
-      <div className="apple-panel mb-6 p-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <div className="relative flex-1 max-w-md">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              className="apple-input pl-11"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาผู้ใช้ หรือรายการ..."
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-slate-400" />
-            <select
-              className="apple-input py-2 text-sm"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="ALL">ทั้งหมด</option>
-              <option value="WORKLOG_CREATED">สร้างรายการ</option>
-              <option value="WORKLOG_UPDATED">แก้ไขรายการ</option>
-              <option value="WORKLOG_DELETED">ลบรายการ</option>
-              <option value="USER_LOGIN">เข้าสู่ระบบ</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Logs Table */}
-      <div className="apple-panel overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-white/60 text-xs uppercase tracking-[0.16em] text-slate-500">
-              <tr>
-                <th className="px-5 py-4">เวลา</th>
-                <th className="px-5 py-4">ประเภท</th>
-                <th className="px-5 py-4">ผู้ใช้</th>
-                <th className="px-5 py-4">เป้าหมาย</th>
-                <th className="px-5 py-4">รายละเอียด</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredLogs.map((log) => {
-                const config = LOG_TYPES[log.type] || LOG_TYPES.WORKLOG_CREATED;
-                const Icon = config.icon;
-                return (
-                  <tr key={log.id} className="bg-white/45">
-                    <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={14} className="text-slate-400" />
-                        <span>{formatDate(log.timestamp)}</span>
-                      </div>
-                      <span className="ml-5 text-xs text-slate-400">
-                        {formatTime(log.timestamp)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${config.color}`}
-                      >
-                        <Icon size={12} />
-                        {config.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">
-                          <User size={14} className="text-slate-500" />
-                        </div>
-                        <span className="font-medium text-slate-700">
-                          {log.user}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 font-mono text-xs text-slate-600">
-                      {log.target}
-                    </td>
-                    <td className="px-5 py-4 text-slate-600">
-                      {log.details || "-"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredLogs.length === 0 && (
-          <div className="py-12 text-center text-slate-500">
-            {t("common.noData")}
-          </div>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
-        {Object.entries(LOG_TYPES).map(([type, config]) => {
-          const count = logs.filter((l) => l.type === type).length;
-          return (
-            <div key={type} className="apple-panel p-4">
-              <div className="flex items-center gap-2">
-                <div className={`rounded-full p-1.5 ${config.color}`}>
-                  <config.icon size={14} />
-                </div>
-                <span className="text-xs text-slate-500">{config.label}</span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">{count}</p>
+      <div className="ui-management">
+        <section className="mb-6">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
+              <FileText size={20} />
             </div>
-          );
-        })}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Admin
+              </p>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+                ประวัติการใช้งาน
+              </h1>
+              <p className="mt-1 text-sm text-[var(--ui-sub)]">ข้อมูลตัวอย่างสำหรับดูรูปแบบประวัติการใช้งาน</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Filters */}
+        <div className="apple-panel mb-6 p-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="management-search relative flex-1 max-w-md">
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                className="apple-input pl-11"
+                aria-label="ค้นหาผู้ใช้หรือรายการ"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ค้นหาผู้ใช้ หรือรายการ..."
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-slate-400" />
+              <select
+                className="apple-input py-2 text-sm"
+                aria-label="ประเภทการใช้งาน"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="ALL">ทั้งหมด</option>
+                {Object.entries(LOG_TYPES).map(([type, { label }]) => <option key={type} value={type}>{label}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Logs Table */}
+        <div className="apple-panel overflow-hidden">
+          <div className="mobile-table-wrap overflow-x-auto">
+            <table role="table" aria-label="ตัวอย่างประวัติการใช้งาน" className="mobile-detail-table min-w-full text-left text-sm">
+              <thead className="text-xs text-slate-500">
+                <tr role="row">
+                  <th className="px-5 py-4">เวลา</th>
+                  <th className="px-5 py-4">ประเภท</th>
+                  <th className="px-5 py-4">ผู้ใช้</th>
+                  <th className="px-5 py-4">เป้าหมาย</th>
+                  <th className="px-5 py-4">รายละเอียด</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLogs.map((log) => {
+                  const config = LOG_TYPES[log.type] || LOG_TYPES.WORKLOG_CREATED;
+                  const Icon = config.icon;
+                  return (
+                    <tr role="row" key={log.id} className="border-t border-[var(--ui-line)]">
+                      <MobileDetailCell label="เวลา" className="whitespace-nowrap px-5 py-4 text-slate-600">
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={14} className="text-slate-400" />
+                          <span>{formatDate(log.timestamp)}</span>
+                        </div>
+                        <span className="ml-5 text-xs text-slate-400">
+                          {formatTime(log.timestamp)}
+                        </span>
+                      </MobileDetailCell>
+                      <MobileDetailCell label="ประเภท" primary className="px-5 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${config.color}`}
+                        >
+                          <Icon size={12} />
+                          {config.label}
+                        </span>
+                      </MobileDetailCell>
+                      <MobileDetailCell label="ผู้ใช้" className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">
+                            <User size={14} className="text-slate-500" />
+                          </div>
+                          <span className="font-medium text-slate-700">
+                            {log.user}
+                          </span>
+                        </div>
+                      </MobileDetailCell>
+                      <MobileDetailCell label="เป้าหมาย" className="px-5 py-4 font-mono text-xs text-slate-600">
+                        {log.target}
+                      </MobileDetailCell>
+                      <MobileDetailCell label="รายละเอียด" className="px-5 py-4 text-slate-600">
+                        {log.details || "-"}
+                      </MobileDetailCell>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredLogs.length === 0 && (
+            <div className="py-12 text-center text-slate-500">
+              {t("common.noData")}
+            </div>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-4">
+          {Object.entries(LOG_TYPES).map(([type, config]) => {
+            const count = logs.filter((l) => l.type === type).length;
+            return (
+              <div key={type} className="apple-panel p-4">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-full p-1.5 ${config.color}`}>
+                    <config.icon size={14} />
+                  </div>
+                  <span className="text-xs text-slate-500">{config.label}</span>
+                </div>
+                <p className="mt-2 text-2xl font-semibold text-slate-950">{count}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </AppShell>
   );

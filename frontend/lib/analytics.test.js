@@ -9,7 +9,9 @@
  * - predictNextPeak with 6-month cap (ITEM-2 fix)
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date("2026-11-08T03:00:00Z")); });
+afterEach(() => vi.useRealTimers());
 import {
   ACADEMIC_PERIODS_2569,
   ACADEMIC_PERIODS_2569_BACHELOR,
@@ -267,6 +269,7 @@ describe("analyzeSeasonalPattern", () => {
       ...Array(18).fill({ date: "2026-03-15" }),
       ...Array(22).fill({ date: "2026-04-15" }),
       ...Array(19).fill({ date: "2026-05-15" }),
+      ...Array(20).fill({ date: "2026-06-15" }),
     ];
     const result = analyzeSeasonalPattern(worklogs);
     expect(result.outliers).toHaveLength(1);
@@ -282,6 +285,12 @@ describe("analyzeSeasonalPattern", () => {
     ];
     const result = analyzeSeasonalPattern(worklogs);
     expect(result.yearsOfData).toBe(2); // 2025 and 2026
+  });
+  it("does not force an outlier from five observations under the documented strict population 2-SD rule", () => {
+    const worklogs = [100, 20, 18, 22, 19].flatMap((count, index) => Array(count).fill({ date: `2026-0${index + 1}-15` }));
+    const result = analyzeSeasonalPattern(worklogs);
+    expect(result.outliers).toEqual([]);
+    expect(result.mean + 2 * result.std).toBeGreaterThan(100);
   });
 
   it("should calculate mean and std correctly", () => {
@@ -309,6 +318,7 @@ describe("detectOutliers", () => {
       ...Array(7).fill({ date: "2026-01-17" }),
       ...Array(6).fill({ date: "2026-01-18" }),
       ...Array(8).fill({ date: "2026-01-19" }),
+      ...Array(6).fill({ date: "2026-01-20" }),
     ];
     const result = detectOutliers(worklogs);
     expect(result.length).toBeGreaterThan(0);
@@ -330,6 +340,24 @@ describe("detectOutliers", () => {
 });
 
 describe("predictNextPeak", () => {
+  it("uses a dated ongoing exam rather than a stale academic-calendar alias", () => {
+    const result = predictNextPeak({ pattern: { "2026-01": 20 }, yearsOfData: 1 }, 1, new Date("2026-08-18T03:00:00Z"));
+    expect(result.nextPeakPeriod.start).toBe("2026-08-17");
+    expect(result.nextPeakPeriod.end).toBe("2026-08-23");
+  });
+  it("does not invent an exam beyond the known calendar or the selected horizon", () => {
+    const pattern = { pattern: { "2026-01": 20 }, yearsOfData: 1 };
+    for (const now of ["2030-11-08T03:00:00Z", "2026-11-08T03:00:00Z"]) {
+      const result = predictNextPeak(pattern, 1, new Date(now));
+      expect(result.nextPeakPeriod).toBeNull();
+      expect(result.confidence).toBe("none");
+    }
+  });
+  it("selects the next occurrence of a historical peak only inside the bounded horizon", () => {
+    const pattern = { pattern: { "2026-01": 20 }, yearsOfData: 2, peakMonth: "2026-01" };
+    expect(predictNextPeak(pattern, 3, new Date("2026-11-08T03:00:00Z")).nextPeakPeriod.month).toBe("2027-01");
+    expect(predictNextPeak(pattern, 1, new Date("2026-11-08T03:00:00Z")).nextPeakPeriod).toBeNull();
+  });
   // ITEM-2: 6-month cap tests
   describe("6-month cap (ITEM-2 fix)", () => {
     it("should cap monthsAhead at 6", () => {
@@ -381,14 +409,15 @@ describe("predictNextPeak", () => {
         peakMonth: "2026-01"
       };
       
-      const result = predictNextPeak(pattern, 1);
+      const result = predictNextPeak(pattern, 1, new Date("2026-07-20T03:00:00Z"));
       expect(result.confidence).toBe("low");
       expect(result.reason).toContain("single_year");
       expect(result.nextPeakPeriod).toBeDefined();
+      expect(result.nextPeakPeriod.start).toBe("2026-08-17");
     });
 
     it("should identify next academic period correctly", () => {
-      // Mock current date to be in the middle of semester
+      // The next dated exam is selected from the actual repository calendar.
       const pattern = {
         pattern: { "2026-04": 40 },
         yearsOfData: 1,
@@ -397,7 +426,8 @@ describe("predictNextPeak", () => {
       
       const result = predictNextPeak(pattern, 6);
       expect(result.nextPeakLabel).toBeDefined();
-      expect(["สอบกลางภาค", "สอบปลายภาค"]).toContain(result.nextPeakLabel);
+      expect(result.nextPeakLabel).toBe(ACADEMIC_PERIODS_2569_BACHELOR.sem2_mid_exam.label);
+      expect(result.nextPeakPeriod.start).toBe(ACADEMIC_PERIODS_2569_BACHELOR.sem2_mid_exam.start);
     });
   });
 
@@ -434,7 +464,7 @@ describe("predictNextPeak", () => {
 
 describe("getTrendIndicator", () => {
   it("should return 'up' for > 10% increase", () => {
-    expect(getTrendIndicator(110, 100)).toBe("up");
+    expect(getTrendIndicator(111, 100)).toBe("up");
     expect(getTrendIndicator(120, 100)).toBe("up");
   });
 
@@ -450,6 +480,11 @@ describe("getTrendIndicator", () => {
 
   it("should handle zero previous value", () => {
     expect(getTrendIndicator(100, 0)).toBe("stable");
+  });
+  it("treats exactly ten percent in either direction as stable", () => {
+    expect(getTrendIndicator(110, 100)).toBe("stable");
+    expect(getTrendIndicator(90, 100)).toBe("stable");
+    expect(getTrendIndicator(89, 100)).toBe("down");
   });
 });
 

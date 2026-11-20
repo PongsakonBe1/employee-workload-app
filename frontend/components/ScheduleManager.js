@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import "../app/ui-detail-layouts.css";
+import { MobileDetailCell } from "./ui/MobileDetailCell";
+
+import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { useClassroomSchedules } from "../hooks/useClassroomSchedules";
+import { useProductionCalendarManager } from "../hooks/useProductionCalendarManager";
+import { CalendarManagerFeedback } from "./calendar/CalendarManagerFeedback";
 import { logSystemAction, SystemActions } from "../lib/systemLog";
+import { GlassButton } from "./ui/GlassControls";
+import { Dialog } from "./ui/Dialog";
 
 const ROOM_COLORS = {
   "401": { bg: "bg-blue-500",    light: "bg-blue-50",    border: "border-blue-200",   text: "text-blue-700",    pill: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -12,26 +19,34 @@ const ROOM_COLORS = {
   "407": { bg: "bg-sky-500",     light: "bg-sky-50",     border: "border-sky-200",    text: "text-sky-700",     pill: "bg-sky-100 text-sky-700 border-sky-200" },
   default:{ bg: "bg-slate-500",  light: "bg-slate-50",   border: "border-slate-200",  text: "text-slate-700",  pill: "bg-slate-100 text-slate-600 border-slate-200" },
 };
+const scheduleSemester = schedule => typeof schedule.semester === "string" ? schedule.semester.trim() : "";
 
 export default function ScheduleManager() {
   const { user } = useAuth();
   const {
-    schedules,
-    todaySchedules,
+    schedules: allSchedules,
+    todaySchedules: allTodaySchedules,
     FLOOR4_ROOMS,
     DAYS,
     loading,
     error,
-    fetchSchedules,
     createSchedule,
     updateSchedule,
     deleteSchedule,
+    fetchSchedules,
+    fetchTodaySchedules,
   } = useClassroomSchedules();
+  const writer = useProductionCalendarManager(user, "classroomSchedules", () => Promise.all([fetchSchedules(true), fetchTodaySchedules(true)]));
+  const blocked = writer.saving || writer.uncertain;
 
   const [showForm, setShowForm] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [semester, setSemester] = useState("1/2569");
+  const [semester, setSemester] = useState("all");
+  const semesters = [...new Set(allSchedules.map(scheduleSemester).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th", { numeric: true }));
+  const inSemester = schedule => semester === "all" || scheduleSemester(schedule) === (semester === "unspecified" ? "" : semester);
+  const schedules = allSchedules.filter(inSemester);
+  const todaySchedules = allTodaySchedules.filter(inSemester);
   const [formData, setFormData] = useState({
     room: "401",
     dayOfWeek: "monday",
@@ -78,14 +93,21 @@ export default function ScheduleManager() {
       teacher: schedule.teacher || "",
       note: schedule.note || "",
       isActive: schedule.isActive !== false,
+      semester: schedule.semester || "",
+      validFrom: typeof schedule.validFrom === "string" ? schedule.validFrom : "",
+      validTo: typeof schedule.validTo === "string" ? schedule.validTo : "",
     });
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (blocked) return;
     try {
-      if (editingSchedule) {
+      if (writer.enabled) {
+        if (editingSchedule) await writer.mutate("edit", [editingSchedule], formData);
+        else await writer.create(formData);
+      } else if (editingSchedule) {
         await updateSchedule(editingSchedule.id, formData);
         await logSystemAction(
           SystemActions.UPDATE_WORKLOG,
@@ -103,22 +125,25 @@ export default function ScheduleManager() {
       resetForm();
       setShowForm(false);
     } catch (err) {
-      alert("เกิดข้อผิดพลาด: " + err.message);
+      if (!writer.enabled) alert("เกิดข้อผิดพลาด: " + err.message);
     }
   };
 
   // Bulk toggle selected schedules
   const handleBulkToggle = async (targetActive) => {
-    if (selectedIds.length === 0) return;
+    const toUpdate = schedules.filter((s) => selectedIds.includes(s.id));
+    if (blocked || !toUpdate.length) return;
     const label = targetActive ? "เปิด" : "ปิด";
-    if (!confirm(`ต้องการ${label}ใช้งานรายการที่เลือก (${selectedIds.length} รายการ) ใช่หรือไม่?`)) return;
+    if (!confirm(`ต้องการ${label}ใช้งานรายการที่เลือก (${toUpdate.length} รายการ) ใช่หรือไม่?`)) return;
     try {
-      const toUpdate = schedules.filter((s) => selectedIds.includes(s.id));
-      await Promise.all(toUpdate.map((s) => updateSchedule(s.id, { ...s, isActive: targetActive })));
-      await logSystemAction(SystemActions.UPDATE_WORKLOG, `Bulk ${label} ${selectedIds.length} classroom schedules`, user?.uid);
+      if (writer.enabled) await writer.mutate("bulk-status", toUpdate, { isActive: targetActive });
+      else {
+        await Promise.all(toUpdate.map((s) => updateSchedule(s.id, { ...s, isActive: targetActive })));
+        await logSystemAction(SystemActions.UPDATE_WORKLOG, `Bulk ${label} ${toUpdate.length} classroom schedules`, user?.uid);
+      }
       setSelectedIds([]);
     } catch (err) {
-      alert("เกิดข้อผิดพลาด: " + err.message);
+      if (!writer.enabled) alert("เกิดข้อผิดพลาด: " + err.message);
     }
   };
 
@@ -131,10 +156,14 @@ export default function ScheduleManager() {
   };
 
   const handleDelete = async (schedule) => {
-    if (!confirm(`ต้องการลบตารางเรียน "${schedule.subject}" ใช่หรือไม่?`)) {
+    if (blocked || !confirm(`ต้องการ${writer.enabled ? "หยุดใช้" : "ลบ"}ตารางเรียน "${schedule.subject}" ใช่หรือไม่?`)) {
       return;
     }
     try {
+      if (writer.enabled) {
+        await writer.mutate("cancel", [schedule]);
+        return;
+      }
       await deleteSchedule(schedule.id);
       await logSystemAction(
         SystemActions.DELETE_WORKLOG,
@@ -142,17 +171,9 @@ export default function ScheduleManager() {
         user?.uid
       );
     } catch (err) {
-      alert("เกิดข้อผิดพลาด: " + err.message);
+      if (!writer.enabled) alert("เกิดข้อผิดพลาด: " + err.message);
     }
   };
-
-  // Group active schedules by day (for overview)
-  const activeSchedules = schedules.filter((s) => s.isActive !== false);
-  const schedulesByDay = DAYS.map((day) => ({
-    day,
-    label: dayLabels[day],
-    schedules: activeSchedules.filter((s) => s.dayOfWeek === day),
-  }));
 
   if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
     return (
@@ -163,9 +184,9 @@ export default function ScheduleManager() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto ui-management">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="management-heading mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
             จัดการตารางเรียนชั้น 4
@@ -173,26 +194,26 @@ export default function ScheduleManager() {
           <p className="text-sm text-slate-500 mt-1">
             ห้อง 401, 402, 406, 407
           </p>
-          <div className="flex items-center gap-2 mt-2">
-            <label className="text-sm text-slate-600">ภาคเรียน:</label>
+          <div className="management-filters mt-2">
+            <label className="text-sm text-slate-600" htmlFor="management-semester">ภาคเรียน</label>
             <select
+              id="management-semester"
+              disabled={writer.saving}
               value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-              className="text-sm border border-slate-300 rounded px-2 py-1"
+              onChange={event => { setSemester(event.target.value); setSelectedIds([]); }}
+              className="apple-input"
             >
-              <option value="1/2569">ภาคเรียนที่ 1/2569</option>
-              <option value="2/2569">ภาคเรียนที่ 2/2569</option>
-              <option value="1/2570">ภาคเรียนที่ 1/2570</option>
-              <option value="2/2570">ภาคเรียนที่ 2/2570</option>
+              <option value="all">ทุกภาคเรียน</option>
+              {semesters.map(value => <option key={value} value={value}>{value}</option>)}
+              <option value="unspecified">ไม่ระบุภาคเรียน</option>
             </select>
           </div>
         </div>
-        <button
+        <GlassButton variant="prominent" disabled={blocked}
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <svg
             width="16"
@@ -205,7 +226,7 @@ export default function ScheduleManager() {
             <path d="M12 5v14M5 12h14" />
           </svg>
           เพิ่มตารางเรียน
-        </button>
+        </GlassButton>
       </div>
 
       {/* Error */}
@@ -216,175 +237,182 @@ export default function ScheduleManager() {
       )}
 
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowForm(false)}
-          />
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">
-              {editingSchedule ? "แก้ไขตารางเรียน" : "เพิ่มตารางเรียน"}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    ห้องเรียน *
-                  </label>
-                  <select
-                    value={formData.room}
-                    onChange={(e) =>
-                      setFormData({ ...formData, room: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    {FLOOR4_ROOMS.map((room) => (
-                      <option key={room} value={room}>
-                        ห้อง {room}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    วัน *
-                  </label>
-                  <select
-                    value={formData.dayOfWeek}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dayOfWeek: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    {DAYS.slice(1, 7).map((day) => (
-                      <option key={day} value={day}>
-                        {dayLabels[day]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    เวลาเริ่ม *
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.startTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startTime: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    เวลาจบ *
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endTime: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  วิชา / กิจกรรม *
-                </label>
-                <input
-                  type="text"
-                  value={formData.subject}
-                  onChange={(e) =>
-                    setFormData({ ...formData, subject: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="เช่น: วิชา Digital Literacy"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  อาจารย์ผู้สอน
-                </label>
-                <input
-                  type="text"
-                  value={formData.teacher}
-                  onChange={(e) =>
-                    setFormData({ ...formData, teacher: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="ชื่ออาจารย์ (ถ้ามี)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  หมายเหตุ
-                </label>
-                <textarea
-                  value={formData.note}
-                  onChange={(e) =>
-                    setFormData({ ...formData, note: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  rows={2}
-                  placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive !== false}
-                  onChange={(e) =>
-                    setFormData({ ...formData, isActive: e.target.checked })
-                  }
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="isActive" className="text-sm font-medium text-slate-700 cursor-pointer">
-                  เปิดใช้งาน
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {loading ? "กำลังบันทึก..." : editingSchedule ? "บันทึกการแก้ไข" : "สร้างตารางเรียน"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetForm();
-                    setShowForm(false);
-                  }}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
-                >
-                  ยกเลิก
-                </button>
-              </div>
-            </form>
+      {!showForm && <CalendarManagerFeedback writer={writer} onConfirmed={() => setSelectedIds([])} />}
+      <Dialog open={showForm} title={editingSchedule ? "แก้ไขตารางเรียน" : "เพิ่มตารางเรียน"}
+        description={writer.enabled ? writer.saving ? "กำลังบันทึกตาราง…" : "บันทึกไปยังปฏิทินที่ใช้งานจริง" : undefined}
+        busy={writer.saving} onClose={() => setShowForm(false)} className="ui-management">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="classroom-room" className="block text-sm font-medium text-slate-700 mb-1">
+                ห้องเรียน *
+              </label>
+              <select id="classroom-room"
+                value={formData.room}
+                onChange={(e) =>
+                  setFormData({ ...formData, room: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                {FLOOR4_ROOMS.map((room) => (
+                  <option key={room} value={room}>
+                    ห้อง {room}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="classroom-dayOfWeek" className="block text-sm font-medium text-slate-700 mb-1">
+                วัน *
+              </label>
+              <select id="classroom-dayOfWeek"
+                value={formData.dayOfWeek}
+                onChange={(e) =>
+                  setFormData({ ...formData, dayOfWeek: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                {DAYS.slice(1, 7).map((day) => (
+                  <option key={day} value={day}>
+                    {dayLabels[day]}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="classroom-startTime" className="block text-sm font-medium text-slate-700 mb-1">
+                เวลาเริ่ม *
+              </label>
+              <input id="classroom-startTime"
+                type="time"
+                value={formData.startTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="classroom-endTime" className="block text-sm font-medium text-slate-700 mb-1">
+                เวลาจบ *
+              </label>
+              <input id="classroom-endTime"
+                type="time"
+                value={formData.endTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="classroom-subject" className="block text-sm font-medium text-slate-700 mb-1">
+              วิชา / กิจกรรม *
+            </label>
+            <input id="classroom-subject"
+              type="text"
+              value={formData.subject}
+              onChange={(e) =>
+                setFormData({ ...formData, subject: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="เช่น: วิชา Digital Literacy"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="classroom-teacher" className="block text-sm font-medium text-slate-700 mb-1">
+              อาจารย์ผู้สอน
+            </label>
+            <input id="classroom-teacher"
+              type="text"
+              value={formData.teacher}
+              onChange={(e) =>
+                setFormData({ ...formData, teacher: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="ชื่ออาจารย์ (ถ้ามี)"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="classroom-note" className="block text-sm font-medium text-slate-700 mb-1">
+              หมายเหตุ
+            </label>
+            <textarea id="classroom-note"
+              value={formData.note}
+              onChange={(e) =>
+                setFormData({ ...formData, note: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              rows={2}
+              placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
+            />
+          </div>
+
+          {writer.enabled && <>
+            <div className="grid grid-cols-2 gap-4">
+              {[[ "validFrom", "เริ่มใช้ตาราง" ], [ "validTo", "สิ้นสุดตาราง" ]].map(([field, label]) => (
+                <label key={field} className="text-sm font-medium text-slate-700">
+                  {label}
+                  <input type="date" required className="apple-input w-full" value={formData[field] || ""}
+                    onChange={event => setFormData({ ...formData, [field]: event.target.value })} />
+                </label>
+              ))}
+            </div>
+            <label className="block text-sm font-medium text-slate-700">ภาคเรียน
+              <input className="apple-input w-full" maxLength={32} value={formData.semester || ""}
+                onChange={event => setFormData({ ...formData, semester: event.target.value })} />
+            </label>
+          </>}
+          {(!writer.enabled || editingSchedule) && <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={formData.isActive !== false}
+              onChange={(e) =>
+                setFormData({ ...formData, isActive: e.target.checked })
+              }
+              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="isActive" className="text-sm font-medium text-slate-700 cursor-pointer">
+              เปิดใช้งาน
+            </label>
+          </div>}
+
+          {showForm && <CalendarManagerFeedback writer={writer} onConfirmed={() => { resetForm(); setShowForm(false); }} onReload={() => setShowForm(false)} />}
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="submit"
+              disabled={loading || blocked}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {loading ? "กำลังบันทึก..." : editingSchedule ? "บันทึกการแก้ไข" : "สร้างตารางเรียน"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setShowForm(false);
+              }}
+              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </form>
+      </Dialog>
 
       {/* Overview: Room-colored cards for today */}
       <div className="mb-6 rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
@@ -434,6 +462,7 @@ export default function ScheduleManager() {
             <button
               type="button"
               onClick={() => handleBulkToggle(true)}
+              disabled={blocked}
               className="px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition"
             >
               เปิดที่เลือก
@@ -441,6 +470,7 @@ export default function ScheduleManager() {
             <button
               type="button"
               onClick={() => handleBulkToggle(false)}
+              disabled={blocked}
               className="px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-200 transition"
             >
               ปิดที่เลือก
@@ -464,48 +494,48 @@ export default function ScheduleManager() {
             เปิดใช้งาน {schedules.filter(s => s.isActive !== false).length} / {schedules.length}
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto mobile-table-wrap">
+          <table role="table" aria-label="รายการตารางเรียน" className="w-full mobile-detail-table">
             <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-4 py-3 text-center text-sm font-medium text-slate-700 w-10">
-                  <input
-                    type="checkbox"
-                    checked={schedules.length > 0 && selectedIds.length === schedules.length}
-                    onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
+              <tr role="row">
+                <th scope="col" aria-label="เลือกทั้งหมด" className="px-4 py-3 text-center text-sm font-medium text-slate-700 w-10">
+                  <label className="management-select-all">
+                    <input type="checkbox" aria-label="เลือกตารางทั้งหมดในมุมมองนี้"
+                      checked={schedules.length > 0 && selectedIds.length === schedules.length}
+                      onChange={toggleSelectAll} className="ui-checkbox" />
+                    <span>เลือกทั้งหมดในมุมมองนี้</span>
+                  </label>
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   วัน
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   เวลา
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   ห้อง
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   วิชา / กิจกรรม
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   อาจารย์
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-slate-700">
                   หมายเหตุ
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-slate-700">
                   สถานะ
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-slate-700">
+                <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-slate-700">
                   จัดการ
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {schedules.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <tr role="row">
+                  <td data-mobile-span colSpan={9} className="px-4 py-8 text-center text-slate-500">
                     ยังไม่มีตารางเรียน
                   </td>
                 </tr>
@@ -515,36 +545,36 @@ export default function ScheduleManager() {
                   const isInactive = schedule.isActive === false;
                   const isSelected = selectedIds.includes(schedule.id);
                   return (
-                  <tr key={schedule.id} className={`hover:bg-slate-50 ${isInactive ? "opacity-50" : ""} ${isSelected ? "bg-blue-50/60" : ""}`}>
-                    <td className="px-4 py-3 text-center">
+                  <tr role="row" key={schedule.id} className={`hover:bg-slate-50 ${isInactive ? "opacity-50" : ""} ${isSelected ? "bg-blue-50/60" : ""}`}>
+                    <MobileDetailCell label="เลือก" className="px-4 py-3 text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelect(schedule.id)}
                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="วัน" className="px-4 py-3 text-sm text-slate-900">
                       {dayLabels[schedule.dayOfWeek]}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="เวลา" className="px-4 py-3 text-sm text-slate-600">
                       {schedule.startTime} - {schedule.endTime}
-                    </td>
-                    <td className="px-4 py-3">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="ห้อง" className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${c.pill}`}>
                         ห้อง {schedule.room}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                    </MobileDetailCell>
+                    <MobileDetailCell primary className="px-4 py-3 text-sm font-medium text-slate-900">
                       {schedule.subject}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="อาจารย์" className="px-4 py-3 text-sm text-slate-600">
                       {schedule.teacher || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-500">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="หมายเหตุ" className="px-4 py-3 text-sm text-slate-500">
                       {schedule.note || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </MobileDetailCell>
+                    <MobileDetailCell label="สถานะ" className="px-4 py-3 text-center">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           schedule.isActive !== false
@@ -554,11 +584,12 @@ export default function ScheduleManager() {
                       >
                         {schedule.isActive !== false ? "เปิด" : "ปิด"}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </MobileDetailCell>
+                    <MobileDetailCell actions className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleEdit(schedule)}
+                          disabled={blocked}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="แก้ไข"
                         >
@@ -576,8 +607,9 @@ export default function ScheduleManager() {
                         </button>
                         <button
                           onClick={() => handleDelete(schedule)}
+                          disabled={blocked || writer.enabled && isInactive}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="ลบ"
+                          title={writer.enabled ? "หยุดใช้" : "ลบ"}
                         >
                           <svg
                             width="16"
@@ -591,7 +623,7 @@ export default function ScheduleManager() {
                           </svg>
                         </button>
                       </div>
-                    </td>
+                    </MobileDetailCell>
                   </tr>
                   );
                 })

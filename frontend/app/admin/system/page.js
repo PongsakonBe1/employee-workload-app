@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import "../../ui-detail-layouts.css";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../components/AuthProvider";
 import { AppShell } from "../../../components/AppShell";
 import TemplateManager from "../../../components/TemplateManager";
 import DLExamManager from "../../../components/DLExamManager";
 import ScheduleManager from "../../../components/ScheduleManager";
-import RoomUsageCalendar from "../../../components/RoomUsageCalendar";
 import {
   collection,
   query,
@@ -20,7 +20,8 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../../../lib/firebase";
 import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
-import { NotificationBell } from "../../../components/NotificationBell";
+import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
+import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
 import {
   CheckCircle,
   XCircle,
@@ -39,6 +40,16 @@ import {
   GraduationCap,
   BookOpen,
 } from "lucide-react";
+
+const systemSections = [
+  { id: "exports", label: "คำขอส่งออกข้อมูล", icon: FileSpreadsheet },
+  { id: "templates", label: "Quick Log Templates", icon: FileSpreadsheet },
+  { id: "classroom-schedules", label: "ตารางเรียน", icon: BookOpen },
+  { id: "dl-exam", label: "ตารางคุมสอบ DL", icon: GraduationCap },
+  { id: "logs", label: "บันทึกการใช้งาน", icon: RefreshCw, superadmin: true },
+  { id: "broadcast", label: "ประกาศ", icon: Megaphone, superadmin: true },
+  { id: "import", label: "นำข้อมูลเข้า", icon: Upload, superadmin: true },
+];
 
 // Helper function สำหรับบันทึก log
 async function logSystemAction(db, user, action, details = "") {
@@ -101,7 +112,7 @@ export default function SystemManagementPage() {
   const isAdmin = isAdminRole(user);
 
   // โหลดคำขอส่งออกที่รออนุมัติ (ใช้ getDocs แทน onSnapshot ประหยัด quota)
-  async function loadExportRequests() {
+  const loadExportRequests = useCallback(async () => {
     if (!isAdmin) return;
     setLoading(true);
     try {
@@ -122,11 +133,11 @@ export default function SystemManagementPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [isAdmin]);
 
   useEffect(() => {
     loadExportRequests();
-  }, [isAdmin]);
+  }, [loadExportRequests]);
 
   // โหลดจำนวน users สำหรับ Broadcast
   useEffect(() => {
@@ -193,6 +204,8 @@ export default function SystemManagementPage() {
     if (activeTab === "logs") {
       loadSystemLogs();
     }
+    // Date edits are applied through the explicit Load action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuperAdmin, activeTab, logsLimit]);
 
   // อนุมัติคำขอส่งออก
@@ -268,7 +281,7 @@ export default function SystemManagementPage() {
     setMessage({ type: "", text: "" });
     try {
       const q = query(
-        worklogsRef,
+        collection(db, "worklogs"),
         where("date", ">=", request.dateRange.start),
         where("date", "<=", request.dateRange.end),
         where("employeeId", "==", request.staffId),
@@ -617,7 +630,7 @@ export default function SystemManagementPage() {
         importPreview.map(async (row) => {
           try {
             const uid = usersMap[row.employeeDisplayName] || "";
-            await addDoc(collection(db, "worklogs"), {
+            await addDoc(collection(db, "worklogs"), withWorklogResourceIndex({
               date: row.date,
               time: row.time,
               employeeId: uid,
@@ -632,7 +645,7 @@ export default function SystemManagementPage() {
               createdBy: user.uid,
               createdByName: user.displayName || user.email,
               source: "import",
-            });
+            }));
             success++;
           } catch {
             failed++;
@@ -673,105 +686,21 @@ export default function SystemManagementPage() {
   }
 
   return (
-    <AppShell>
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-950">จัดการระบบ</h1>
-          <p className="text-slate-600 mt-1">
-            จัดการคำขอส่งออกข้อมูลและดูบันทึกการใช้งานระบบ
-          </p>
-        </div>
-        <NotificationBell />
+    <AppShell><div className="ui-management">
+      <div className="mb-5">
+        <h1 className="text-3xl font-semibold text-slate-950">จัดการระบบ</h1>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex gap-2 rounded-2xl bg-slate-100 p-2 overflow-x-auto scrollbar-none">
-        <button
-          onClick={() => setActiveTab("exports")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-            activeTab === "exports"
-              ? "bg-white text-slate-950 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <FileSpreadsheet size={18} />
-          คำขอส่งออกข้อมูล
-          {exportRequests.length > 0 && (
-            <span className="ml-1 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">
-              {exportRequests.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("templates")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-            activeTab === "templates"
-              ? "bg-white text-slate-950 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <FileSpreadsheet size={18} />
-          Templates
-        </button>
-        <button
-          onClick={() => setActiveTab("classroom-schedules")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-            activeTab === "classroom-schedules"
-              ? "bg-white text-slate-950 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <BookOpen size={18} />
-          ตารางเรียน
-        </button>
-        <button
-          onClick={() => setActiveTab("dl-exam")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-            activeTab === "dl-exam"
-              ? "bg-white text-slate-950 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <GraduationCap size={18} />
-          ตารางคุมสอบ DL
-        </button>
-        {isSuperAdmin && (
-          <>
-            <button
-              onClick={() => setActiveTab("logs")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-                activeTab === "logs"
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <RefreshCw size={18} />
-              บันทึกการใช้งาน
-            </button>
-            <button
-              onClick={() => setActiveTab("broadcast")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-                activeTab === "broadcast"
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <Megaphone size={18} />
-              ประกาศ
-            </button>
-            <button
-              onClick={() => setActiveTab("import")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-                activeTab === "import"
-                  ? "bg-white text-slate-950 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <Upload size={18} />
-              นำข้อมูลเข้า
-            </button>
-          </>
-        )}
+      <div className="ui-option-group ui-system-options mb-6" role="group" aria-label="ส่วนจัดการระบบ">
+        {systemSections.filter(({ superadmin }) => !superadmin || isSuperAdmin).map(({ id, label, icon: Icon }) => (
+          <button key={id} type="button" className="ui-option" aria-pressed={activeTab === id} onClick={() => setActiveTab(id)}>
+            <Icon size={18} aria-hidden="true" />
+            <span>{label}</span>
+            {id === "exports" && exportRequests.length > 0 && (
+              <span className="rounded-full bg-[var(--ui-amber)] px-2 py-0.5 text-xs text-[var(--ui-amber-ink)]">{exportRequests.length}</span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Alert Messages */}
@@ -829,9 +758,9 @@ export default function SystemManagementPage() {
                   key={request.id}
                   className="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 basis-60 break-words">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
                         <User size={16} className="text-slate-400" />
                         <span className="font-medium text-slate-900">
                           {request.staffName || request.staffEmail}
@@ -865,7 +794,7 @@ export default function SystemManagementPage() {
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-2 ml-4">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() =>
                           approveRequest(
@@ -954,32 +883,35 @@ export default function SystemManagementPage() {
           <div className="bg-slate-50 rounded-xl p-4 mb-4">
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <label className="block text-xs text-slate-500 mb-1">
+                <label htmlFor="system-logs-start" className="block text-xs text-slate-500 mb-1">
                   วันที่เริ่มต้น
                 </label>
                 <input
                   type="date"
+                  id="system-logs-start"
                   value={logsStartDate}
                   onChange={(e) => setLogsStartDate(e.target.value)}
                   className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">
+                <label htmlFor="system-logs-end" className="block text-xs text-slate-500 mb-1">
                   วันที่สิ้นสุด
                 </label>
                 <input
                   type="date"
+                  id="system-logs-end"
                   value={logsEndDate}
                   onChange={(e) => setLogsEndDate(e.target.value)}
                   className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">
+                <label htmlFor="system-logs-limit" className="block text-xs text-slate-500 mb-1">
                   จำนวนรายการ (Quota)
                 </label>
                 <select
+                  id="system-logs-limit"
                   value={logsLimit}
                   onChange={(e) => setLogsLimit(Number(e.target.value))}
                   className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1047,7 +979,7 @@ export default function SystemManagementPage() {
               {systemLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center gap-3 p-3 border-b border-slate-100 text-sm hover:bg-slate-50"
+                  className="ui-system-log-row flex items-center gap-3 break-words border-b border-slate-100 p-3 text-sm hover:bg-slate-50"
                 >
                   <span className="text-xs text-slate-400 whitespace-nowrap w-36">
                     {log.timestamp?.toDate?.()?.toLocaleString("th-TH") ||
@@ -1435,7 +1367,7 @@ export default function SystemManagementPage() {
               <p className="font-medium mb-2">
                 รูปแบบข้อมูล (แต่ละคอลัมน์คั่นด้วย Tab):
               </p>
-              <code className="block bg-white p-3 rounded-lg text-xs font-mono border border-slate-200 whitespace-pre">
+              <code className="block break-words whitespace-pre-wrap rounded-lg border border-slate-200 bg-[var(--ui-soft)] p-3 font-mono text-xs">
                 {`วันที่        เวลา      ชื่อ (displayName)  ผู้รับบริการ  ประเภทงาน (minorTask)  ประเภทหน้าที่ (mainDuty)  หมายเหตุ
 12/5/2026   13:47:22  เพียงธาร                           ให้บริการรับแจ้งฯ       Software ลิขสิทธิ์         Solidworks
 12/5/2026   13:47:23  พงศกร         6701021610197  ให้บริการรับแจ้งฯ       Software ลิขสิทธิ์         Solidworks`}
@@ -1446,10 +1378,11 @@ export default function SystemManagementPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="system-import-text" className="block text-sm font-medium text-slate-700 mb-2">
                 วางข้อมูลที่นี่ <span className="text-red-500">*</span>
               </label>
               <textarea
+                id="system-import-text"
                 rows={8}
                 value={importText}
                 onChange={(e) => {
@@ -1480,10 +1413,10 @@ export default function SystemManagementPage() {
                 <h3 className="text-sm font-medium text-slate-700 mb-2">
                   ตัวอย่างข้อมูลที่จะนำเข้า ({importPreview.length} รายการ)
                 </h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="min-w-full text-xs">
+                <div className="mobile-table-wrap overflow-x-auto rounded-xl border border-slate-200">
+                  <table role="table" aria-label="ตัวอย่างข้อมูลนำเข้า" className="mobile-detail-table min-w-full text-xs">
                     <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
-                      <tr>
+                      <tr role="row">
                         <th className="px-3 py-2 text-left">วันที่</th>
                         <th className="px-3 py-2 text-left">เวลา</th>
                         <th className="px-3 py-2 text-left">ชื่อ</th>
@@ -1492,19 +1425,19 @@ export default function SystemManagementPage() {
                         <th className="px-3 py-2 text-left">ประเภทหน้าที่</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody>
                       {importPreview.slice(0, 10).map((row, i) => (
-                        <tr key={i} className="bg-white">
-                          <td className="px-3 py-2">{row.date}</td>
-                          <td className="px-3 py-2">{row.time}</td>
-                          <td className="px-3 py-2 font-medium">
+                        <tr role="row" key={i} className="border-t border-[var(--ui-line)]">
+                          <MobileDetailCell label="วันที่" className="px-3 py-2">{row.date}</MobileDetailCell>
+                          <MobileDetailCell label="เวลา" className="px-3 py-2">{row.time}</MobileDetailCell>
+                          <MobileDetailCell label="ชื่อ" className="px-3 py-2 font-medium">
                             {row.employeeDisplayName}
-                          </td>
-                          <td className="px-3 py-2 text-slate-500">
+                          </MobileDetailCell>
+                          <MobileDetailCell label="ผู้รับบริการ" className="px-3 py-2 text-slate-500">
                             {row.recipient || "-"}
-                          </td>
-                          <td className="px-3 py-2">{row.minorTask}</td>
-                          <td className="px-3 py-2">{row.mainDuty}</td>
+                          </MobileDetailCell>
+                          <MobileDetailCell label="ประเภทงาน" className="px-3 py-2">{row.minorTask}</MobileDetailCell>
+                          <MobileDetailCell label="ประเภทหน้าที่" className="px-3 py-2">{row.mainDuty}</MobileDetailCell>
                         </tr>
                       ))}
                     </tbody>
@@ -1569,6 +1502,6 @@ export default function SystemManagementPage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </div></AppShell>
   );
 }

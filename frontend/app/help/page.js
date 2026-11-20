@@ -1,7 +1,9 @@
 "use client";
 
 import { AppShell } from "../../components/AppShell";
+import Link from "next/link";
 import { useState } from "react";
+import "../ui-detail-layouts.css";
 import {
   BookOpen,
   LayoutDashboard,
@@ -9,18 +11,14 @@ import {
   ListChecks,
   Download,
   Calendar,
-  Zap,
   Shield,
   ChevronDown,
   ChevronRight,
   Clock,
-  Users,
   BarChart2,
   HelpCircle,
   Bell,
   Smartphone,
-  Activity,
-  Wrench,
 } from "lucide-react";
 
 const sections = [
@@ -38,7 +36,7 @@ const sections = [
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {[
             { icon: PlusCircle, label: "บันทึกงาน", desc: "Quick Log, Combo Template และ Manual" },
-            { icon: Calendar, label: "ตารางห้องเรียน", desc: "ห้องชั้น 4 + DL Exam แบบ Real-time" },
+            { icon: Calendar, label: "ตารางและการใช้ห้อง", desc: "ดูตารางเรียนชั้น 4 และรอบสอบ Digital Literacy" },
             { icon: BarChart2, label: "วิเคราะห์ข้อมูล", desc: "Dashboard, Staff Analytics, Equipment Health" },
           ].map((item) => (
             <div key={item.label} className="rounded-xl bg-blue-50 border border-blue-100 p-3 flex items-start gap-3">
@@ -53,8 +51,8 @@ const sections = [
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 space-y-1">
           <p className="font-semibold">3 บทบาทในระบบ</p>
           {[
-            ["👤 Staff", "บันทึกงานตัวเอง, ดู Dashboard, Export ข้อมูลตัวเอง"],
-            ["🛡️ Admin", "บันทึกงานให้พนักงาน, จัดการ Users, ดู Staff Analytics"],
+            ["👤 Staff", "บันทึกและดูภาพรวมงานตัวเอง ดูปฏิทิน และส่งออกข้อมูลตัวเอง"],
+            ["🛡️ Admin", "บันทึกงานให้พนักงาน ดูรายงานทีม และเพิ่มหรือนำเข้าตาราง"],
             ["⚡ Superadmin", "สิทธิ์ทั้งหมด + Broadcast Push, ดู Audit Logs"],
           ].map(([role, desc]) => (
             <div key={role} className="flex gap-2">
@@ -69,19 +67,18 @@ const sections = [
   {
     id: "dashboard",
     icon: LayoutDashboard,
-    title: "หน้าแดชบอร์ด",
+    title: "ภาพรวมงาน",
     color: "violet",
     content: (
       <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-        <p>หน้าหลักหลังเข้าสู่ระบบ แสดงสรุปภาระงานและ Widget ต่างๆ</p>
+        <p>หน้า <Link href="/dashboard" className="underline"><strong>ภาพรวมงาน</strong></Link> เริ่มที่ <strong>รายสัปดาห์</strong> กดชื่อช่วงเวลาเพื่อเลือกวัน เดือน ไตรมาส ปีงบประมาณ หรือกำหนดช่วงเอง</p>
         <ul className="space-y-2 mt-2">
           {[
-            ["Stat Cards", "สรุปงานวันนี้, สัปดาห์นี้, เดือนนี้"],
-            ["Heatmap", "แผนที่ความร้อนภาระงานย้อนหลัง 1 ปี"],
-            ["Hour-of-Day Chart", "ช่วงเวลาที่ทำงานบ่อยสุดรายชั่วโมง"],
-            ["Leaderboard", "อันดับผู้บันทึกงานมากที่สุดในเดือนนี้"],
-            ["ตารางห้องเรียน", "Widget แสดงตารางชั้น 4 วันนี้แบบ Compact"],
-            ["สถานะห้อง + อุปกรณ์", "Real-time ห้อง 303–407, หูฟัง ICIT01–20, ปลั๊ก ICIT21–25"],
+            ["Staff", "ดูสรุปและรายการต้นทางของตัวเอง"],
+            ["Admin และ Superadmin", "ใช้ตัวกรองผู้ปฏิบัติงานเพื่อดูทั้งทีมหรือรายคน"],
+            ["แนวโน้มกิจกรรมและหัวข้อรอง", "กดวันที่หรือแถบหัวข้อเพื่อดูบันทึกที่นำมานับ แต่ละบันทึกนับเป็นหนึ่งกิจกรรม"],
+            ["บันทึกของทีม", "แสดงเฉพาะบัญชีที่เปิดใช้งาน เมื่อปิดบัญชี บันทึกเดิมยังอยู่ในหน้าประวัติงาน"],
+            ["โหลดเพิ่ม 1,000 รายการ", "กดเมื่อแสดงสถานะว่ายังโหลดไม่ครบ ยอดและกราฟอิงจากรายการที่โหลดแล้ว"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2">
               <ChevronRight size={14} className="text-violet-400 mt-0.5 shrink-0" />
@@ -137,32 +134,21 @@ const sections = [
   {
     id: "calendar",
     icon: Calendar,
-    title: "ตารางห้องเรียนชั้น 4",
+    title: "ตารางและการใช้ห้อง",
     color: "sky",
     content: (
       <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-        <p>แสดงตารางการใช้ห้องเรียนชั้น 4 แบบ Real-time พร้อม Time Grid</p>
-        <div className="space-y-2">
-          {[
-            ["📘 ตารางเรียน", "สีน้ำเงิน — ตารางเรียนปกติ แสดงรายวิชาและห้อง"],
-            ["📙 สอบ DL", "สีส้ม — ตารางคุมสอบ Distance Learning แสดงผู้คุมสอบ"],
-            ["📅 วันหยุด", "สีแดง — วันหยุดราชการ/นักขัตฤกษ์"],
-          ].map(([type, desc]) => (
-            <div key={type} className="flex gap-2 items-start">
-              <span className="text-base shrink-0">{type.split(" ")[0]}</span>
-              <span><strong>{type.split(" ").slice(1).join(" ")}</strong> — {desc}</span>
-            </div>
-          ))}
-        </div>
-        <div className="rounded-xl border border-sky-100 bg-sky-50 p-3 mt-2">
-          <p className="font-semibold text-sky-700 text-xs mb-2">View Mode Toggle</p>
-          <div className="flex gap-2 flex-wrap">
-            {["1 วัน", "3 วัน", "1 สัปดาห์"].map((v) => (
-              <span key={v} className="px-3 py-1 rounded-full bg-white border border-sky-200 text-sky-700 text-xs font-medium">{v}</span>
-            ))}
-          </div>
-          <p className="text-xs text-sky-600 mt-2">สลับมุมมองได้ตามต้องการ บน Mobile ใช้ปุ่ม "ดูตารางห้องเรียน" ด้านล่าง</p>
-        </div>
+        <p>เปิดเมนู <Link href="/calendar" className="underline"><strong>ตาราง</strong></Link> เพื่อดูตารางเรียนและรอบสอบ Digital Literacy (DL) สลับมุมมองวัน สัปดาห์ หรือเดือน แล้วกดกิจกรรมเพื่อดูเวลา ห้อง และผู้เกี่ยวข้อง</p>
+        <p>ใช้ <strong>ปฏิทินและตัวกรอง</strong> เพื่อเลือกห้อง ประเภทกิจกรรม หรือภาคเรียน</p>
+        <h3 className="font-semibold text-slate-800">เพิ่มและนำเข้าตารางสำหรับ Admin และ Superadmin</h3>
+        <ol className="list-decimal space-y-2 pl-5">
+          <li><strong>เพิ่มตาราง</strong> แล้วเลือกตารางเรียนหรือ Digital Literacy กรอกวัน เวลา และห้อง สำหรับตารางเรียนรายสัปดาห์ให้ระบุวันสิ้นสุด สำหรับ DL ให้ระบุจำนวนผู้สอบและเลือกผู้คุมจากรายชื่อในระบบ</li>
+          <li><strong>นำเข้าตาราง → ตารางเรียน · PDF</strong> ใช้ PDF ที่มีข้อความและเส้นตาราง ขนาดไม่เกิน 10 MB และ 5 หน้า ตรวจห้อง วัน เวลา และช่วงภาคเรียนของรายการที่เลือก</li>
+          <li><strong>นำเข้าตาราง → ตารางสอบ DL · รูปภาพ</strong> ใช้ PNG หรือ JPEG ขนาดไม่เกิน 10 MB และ 12 ล้านพิกเซล ตามแบบตารางผู้คุม 3 ช่อง ตรวจวัน เวลา และจับคู่ชื่อผู้คุมกับรายชื่อในระบบ</li>
+          <li>ตรวจรายการที่เลือกแล้วกดยืนยันบันทึก ระบบจะแจ้งหากห้องหรือผู้คุมสอบมีเวลาชนกัน ให้แก้จุดที่ระบุแล้วส่งอีกครั้ง</li>
+        </ol>
+        <p>รอบ DL ใช้ห้อง 406 และเมื่อมีผู้สอบเกิน 40 คนจะใช้ห้อง 406 กับ 407 ร่วมกัน</p>
+        <p>Staff เปิดดูตารางได้ ส่วนผู้ดูแลแก้ไขหรือ <strong>หยุดใช้</strong> ได้จากหน้าจัดการตารางเรียนและตารางคุมสอบ DL ในเมนูจัดการระบบ การหยุดใช้จะเก็บรายการเดิมไว้</p>
       </div>
     ),
   },
@@ -265,7 +251,7 @@ const sections = [
             ["จัดการระบบ", "Templates, ตารางเรียน, ตาราง DL Exam, Broadcast"],
             ["ตั้งค่าระบบ", "Time Lock, Push Notification, Security"],
             ["Audit Logs", "ประวัติทุก action ในระบบ (Superadmin only)"],
-            ["Staff Analytics", "Radar Chart 6 มิติ วิเคราะห์ประสิทธิภาพรายบุคคล"],
+            ["Staff Analytics", "ดูการกระจายงานและรายละเอียดบันทึกของบุคลากรที่เปิดใช้งาน"],
             ["Equipment Health", "ติดตามสุขภาพอุปกรณ์ หูฟัง/ปลั๊กไฟ"],
             ["Broadcast Push", "ส่ง Push Notification ถึงทุก User (Superadmin only)"],
           ].map(([title, desc]) => (
@@ -276,7 +262,7 @@ const sections = [
           ))}
         </div>
         <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-xs text-red-700">
-          <strong>Staff Analytics — 6 มิติ:</strong> Volume · Versatility · Consistency · Peak Handling · Documentation · Combo Usage
+          <strong>วิเคราะห์บุคลากร (Staff Analytics)</strong> เปิดที่ช่วงรายสัปดาห์ เลือกช่วงวันและผู้ปฏิบัติงาน กดรายละเอียดเพื่อดูบันทึกต้นทาง หรือกด <strong>ส่งออกข้อมูลที่แสดง</strong> เพื่อดาวน์โหลด CSV ตามตัวกรอง รายชื่อ ยอด และ CSV กรองบัญชีที่ปิดใช้งานออกจากรายงานทีม
         </div>
       </div>
     ),
@@ -325,6 +311,8 @@ function AccordionSection({ section, isOpen, onToggle }) {
     <div className={`rounded-2xl border overflow-hidden transition-all ${isOpen ? "border-slate-200 shadow-sm" : "border-slate-100"}`}>
       <button
         onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`help-section-${section.id}`}
         className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-50 transition"
       >
         <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${color}`}>
@@ -333,11 +321,9 @@ function AccordionSection({ section, isOpen, onToggle }) {
         <span className="flex-1 font-semibold text-slate-800 text-sm">{section.title}</span>
         {isOpen ? <ChevronDown size={16} className="text-slate-400 shrink-0" /> : <ChevronRight size={16} className="text-slate-400 shrink-0" />}
       </button>
-      {isOpen && (
-        <div className="px-4 pb-5 pt-1 border-t border-slate-100 bg-white">
+        <div id={`help-section-${section.id}`} hidden={!isOpen} className="px-4 pb-5 pt-1 border-t border-slate-100 bg-white">
           {section.content}
         </div>
-      )}
     </div>
   );
 }
@@ -347,7 +333,7 @@ export default function HelpPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 ui-help">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
@@ -366,18 +352,17 @@ export default function HelpPage() {
         </div>
 
         {/* Quick links */}
-        <div className="grid grid-cols-4 gap-2 mb-6">
+        <div className="ui-help-shortcuts mb-6" role="group" aria-label="หมวดคู่มือ">
           {sections.slice(0, 4).map((s) => {
             const Icon = s.icon;
-            const color = colorMap[s.color];
             return (
               <button
                 key={s.id}
                 onClick={() => setOpenId(s.id)}
-                className={`rounded-xl border p-2.5 flex flex-col items-center gap-1 transition hover:shadow-sm ${openId === s.id ? color : "bg-white border-slate-100 text-slate-500"}`}
+                aria-pressed={openId === s.id}
               >
-                <Icon size={16} />
-                <span className="text-[10px] font-medium text-center leading-tight">{s.title.split(" ")[0]}</span>
+                <Icon size={16} aria-hidden="true" />
+                <span className="text-xs font-medium leading-snug">{s.title}</span>
               </button>
             );
           })}
@@ -400,7 +385,7 @@ export default function HelpPage() {
           <p className="text-xs text-slate-400">
             หากพบปัญหาการใช้งาน ติดต่อผู้ดูแลระบบ
           </p>
-          <p className="text-xs text-slate-300 mt-1">labboy Workload Recorder &mdash; v2.10.0</p>
+          <p className="ui-caption mt-1">labboy Workload Recorder &mdash; v2.10.0</p>
         </div>
       </div>
     </AppShell>

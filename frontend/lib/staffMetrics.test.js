@@ -193,9 +193,9 @@ describe("calculateConsistency", () => {
     expect(calculateConsistency(EMPLOYEE_A, worklogs, DATE_RANGE_JUNE)).toBe(100);
   });
 
-  it("should calculate lower consistency for variable daily counts", () => {
+  it("does not infer zero work on dates without records", () => {
     const worklogs = [
-      // Day 1: 10 tasks, Day 2: 0 tasks, Day 3: 10 tasks
+      // Day 1 and day 3 have 10 tasks; day 2 has no observations.
       ...Array.from({ length: 10 }, () => ({
         employeeId: EMPLOYEE_A,
         date: "2026-06-15",
@@ -207,10 +207,13 @@ describe("calculateConsistency", () => {
         time: "09:00",
       })),
     ];
-    // Mean = 6.67, Std = 5.77, CV = 0.866, Score = 100 - (0.866 * 50) ≈ 57
+    // The available observed counts are [10, 10], not [10, 0, 10].
     const score = calculateConsistency(EMPLOYEE_A, worklogs, DATE_RANGE_JUNE);
-    expect(score).toBeGreaterThan(50);
-    expect(score).toBeLessThan(60);
+    expect(score).toBe(100);
+  });
+  it("calculates lower consistency for genuinely different observed daily counts", () => {
+    const logs = [...Array(10).fill({ employeeId: EMPLOYEE_A, date: "2026-06-15" }), { employeeId: EMPLOYEE_A, date: "2026-06-16" }];
+    expect(calculateConsistency(EMPLOYEE_A, logs, DATE_RANGE_JUNE)).toBeCloseTo(100 - 50 * (4.5 / 5.5), 5);
   });
 
   it("should return 0 for very high variation (CV >= 2)", () => {
@@ -441,8 +444,9 @@ describe("calculateRadarMetrics", () => {
     const metrics = calculateRadarMetrics(EMPLOYEE_A, worklogs, DATE_RANGE_JUNE);
     expect(metrics.volume).toBe(50);
     expect(metrics.versatility).toBe(50);
-    expect(metrics.peakHandling).toBe(50);
-    expect(metrics.comboUsage).toBe(50);
+    // Indices 0, 2, ..., 24 contain 13 qualifying rows out of 25.
+    expect(metrics.peakHandling).toBe(52);
+    expect(metrics.comboUsage).toBe(52);
   });
 });
 

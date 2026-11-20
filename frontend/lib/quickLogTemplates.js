@@ -1,5 +1,7 @@
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from "firebase/firestore";
+import { withWorklogResourceIndex } from "./resourceStatusIndex";
 import { db } from "./firebase";
+import { templateCreateFields } from "./templatePayload";
 
 /**
  * ดึง templates ทั้งหมด (admin ใช้)
@@ -89,17 +91,7 @@ export async function getTemplatesForUser(userDepartment) {
 export async function createTemplate(templateData) {
   try {
     const docRef = await addDoc(collection(db, "globalTemplates"), {
-      name: templateData.name,
-      minorTask: templateData.minorTask,
-      mainDuty: templateData.mainDuty,
-      dutyGroup: templateData.dutyGroup || "main",
-      comment: templateData.comment || "",
-      department: templateData.department || null,
-      requireRecipient: templateData.requireRecipient || false,
-      requireComment: templateData.requireComment || false,
-      isSmart: templateData.isSmart || false,
-      isActive: true,
-      usageCount: 0,
+      ...templateCreateFields(templateData),
       createdAt: serverTimestamp(),
       createdBy: templateData.createdBy
     });
@@ -202,7 +194,7 @@ export async function logFromTemplate(templateId, userId, extraData) {
       createdAt: serverTimestamp()
     };
     
-    const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+    const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
     
     // บันทึกการใช้ template
     await recordTemplateUsage(templateId);
@@ -263,7 +255,7 @@ export async function logFromComboTemplate(templateId, userId, extraData) {
         createdAt: serverTimestamp()
       };
       
-      const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+      const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
       return worklogRef.id;
     });
     
@@ -334,7 +326,7 @@ export async function logFromComboCheckbox(templateId, userId, selectedItems, ex
         createdAt: serverTimestamp()
       };
 
-      const worklogRef = await addDoc(collection(db, "worklogs"), worklogData);
+      const worklogRef = await addDoc(collection(db, "worklogs"), withWorklogResourceIndex(worklogData));
       return worklogRef.id;
     });
 

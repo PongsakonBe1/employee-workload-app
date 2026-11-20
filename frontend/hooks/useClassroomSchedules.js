@@ -2,18 +2,23 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { db } from "../lib/firebase";
+import { calendarToday, classroomAppliesOn } from "../lib/calendarView";
 import {
   collection,
   query,
   where,
   orderBy,
   getDocs,
+  getDocsFromServer,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
+
+const FLOOR4_ROOMS = ["401", "402", "406", "407"];
+const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 /**
  * Hook สำหรับจัดการตารางเรียนห้องชั้น 4
@@ -25,13 +30,10 @@ export function useClassroomSchedules() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const FLOOR4_ROOMS = ["401", "402", "406", "407"];
-  const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-
   /**
    * ดึงตารางเรียนทั้งหมด
    */
-  const fetchSchedules = useCallback(async () => {
+  const fetchSchedules = useCallback(async (server = false) => {
     setLoading(true);
     setError(null);
     try {
@@ -40,7 +42,7 @@ export function useClassroomSchedules() {
         orderBy("dayOfWeek", "asc"),
         orderBy("startTime", "asc")
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await (server ? getDocsFromServer(q) : getDocs(q));
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -50,6 +52,7 @@ export function useClassroomSchedules() {
     } catch (err) {
       console.error("Error fetching schedules:", err);
       setError(err.message);
+      if (server) throw err;
       return [];
     } finally {
       setLoading(false);
@@ -59,9 +62,9 @@ export function useClassroomSchedules() {
   /**
    * ดึงตารางเรียนวันนี้
    */
-  const fetchTodaySchedules = useCallback(async () => {
-    const today = new Date();
-    const dayOfWeek = DAYS[today.getDay()];
+  const fetchTodaySchedules = useCallback(async (server = false) => {
+    const today = calendarToday();
+    const dayOfWeek = DAYS[new Date(today + "T12:00:00Z").getUTCDay()];
 
     try {
       const q = query(
@@ -70,15 +73,17 @@ export function useClassroomSchedules() {
         where("dayOfWeek", "==", dayOfWeek),
         orderBy("startTime", "asc")
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await (server ? getDocsFromServer(q) : getDocs(q));
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setTodaySchedules(data);
-      return data;
+      const relevant = data.filter(row => classroomAppliesOn(row, today));
+      setTodaySchedules(relevant);
+      return relevant;
     } catch (err) {
       console.error("Error fetching today schedules:", err);
+      if (server) throw err;
       return [];
     }
   }, []);
