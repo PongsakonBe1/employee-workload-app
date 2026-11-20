@@ -7,7 +7,7 @@ import { getAuth as adminAuth } from "firebase-admin/auth";
 import { FieldPath, getFirestore as adminFirestore } from "firebase-admin/firestore";
 import { initializeApp, deleteApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { collection, connectFirestoreEmulator, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, limit, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import { collection, connectFirestoreEmulator, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, limit, query, runTransaction, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { indexedWorklogEdit, withWorklogResourceIndex } from "../frontend/lib/resourceStatusIndex.js";
 import { backfillResourceStatus, dryRunResourceStatusBackfill } from "../backend/src/services/resourceStatusBackfill.js";
 import { createResourceStatusHandler } from "../backend/src/services/resourceStatusHandler.js";
@@ -134,8 +134,19 @@ try {
   await ensureDenied(getDocsFromServer(users(waiting)));
   await ensureDenied(getDocFromServer(profile(waiting, other.uid)));
   assert.equal((await getDocFromServer(profile(waiting))).exists(), false);
-  await setDoc(pending(waiting), { uid: waiting.uid, email: waiting.email, status: "pending" });
+  const requestData = {
+    uid: waiting.uid, email: waiting.email, status: "pending",
+    nickname: "Synthetic Applicant", fullName: "", displayName: "", photoURL: "", requestedAt: new Date()
+  };
+  await ensureDenied(setDoc(pending(waiting), { ...requestData, status: "approved" }));
+  const register = () => runTransaction(waiting.db, async tx => {
+    const ref = pending(waiting);
+    if (!(await tx.get(ref)).exists()) tx.set(ref, requestData);
+  });
+  await register();
+  await register();
   assert((await getDocFromServer(pending(waiting))).exists());
+  await ensureDenied(setDoc(profile(waiting), roleDocument(waiting.email, "staff")));
   await ensureDenied(updateDoc(pending(waiting), { status: "approved" }));
   await ensureDenied(getDocFromServer(pending(staff, waiting.uid)));
   assert((await getDocFromServer(pending(admin, waiting.uid))).exists());
@@ -193,6 +204,9 @@ try {
   await ensureDenied(getDocFromServer(worklog(other, "qa-role-loan")));
   await ensureDenied(getDocFromServer(worklog(waiting, "qa-role-loan")));
   await ensureDenied(getDocsFromServer(collection(other.db, "worklogs")));
+  for (const forbidden of [inactive, unverified]) {
+    await ensureDenied(getDocFromServer(worklog(forbidden, "qa-role-loan")));
+  }
   await ensureDenied(setDoc(worklog(waiting, "qa-role-new"), resourceLog(waiting.uid, "QA pending")));
   await ensureDenied(updateDoc(worklog(staff, "qa-role-loan"), { employeeId: other.uid }));
   await ensureDenied(updateDoc(worklog(other, "qa-role-loan"), { comment: "not an owner" }));
@@ -244,6 +258,7 @@ try {
     await ensureDenied(setDoc(profile(forbidden, `${forbidden.uid}-new`), roleDocument(staff.email, "staff")));
   }
   await ensureDenied(updateDoc(profile(staff), { role: "admin" }));
+  await ensureDenied(updateDoc(profile(admin, staff.uid), { role: "admin" }));
   await ensureDenied(updateDoc(profile(admin, superadmin.uid), { role: "staff" }));
   await updateDoc(profile(superadmin, staff.uid), { displayName: "QA Staff A" });
   await updateDoc(profile(staff), { nickname: "QA nickname" });
@@ -252,8 +267,12 @@ try {
   const migration = { email: legacy.email, uid: legacy.uid, active: true, migratedFrom: "qa-role-old" };
   await ensureDenied(setDoc(profile(legacy), { ...migration, role: "admin" }));
   await setDoc(profile(legacy), { ...migration, role: "staff" });
-  await setDoc(profile(admin, waiting.uid), roleDocument(waiting.email, "staff"));
+  await setDoc(profile(admin, waiting.uid), { ...roleDocument(waiting.email, "staff"), approvedBy: admin.uid });
+  await deleteDoc(pending(admin, waiting.uid));
   assert.equal((await getDocFromServer(profile(waiting))).data().active, true);
+  assert.equal((await getDocFromServer(pending(waiting))).exists(), false);
+  await writeResource(waiting, "qa-role-approved-worklog", "QA approved Staff");
+  assert((await getDocFromServer(worklog(waiting, "qa-role-approved-worklog"))).exists());
   console.log("PASS verified approval and legacy migration; pending, inactive, unverified and role changes rejected");
 } finally {
   await Promise.all(identities.map(deleteApp));
