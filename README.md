@@ -1,5 +1,7 @@
 # labboy Workload Recorder — ระบบบันทึกภาระงานพนักงาน ICIT (v2.10.0)
 
+> **คู่มือสำหรับระบบที่ใช้งานจริง:** เปิด [คู่มือบนเว็บ](https://labboy-workload-app.web.app/help) เพื่อดูวิธีใช้ปฏิทิน การนำเข้า และรายงานทีม
+
 > **ระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล** สำหรับพนักงานสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ (ICIT)  
 > มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (KMUTNB) พัฒนาด้วย Next.js + Firebase  
 > รองรับ PWA บน iOS/Android/Desktop, Google Sign-In, Real-time sync, Push Notification และ Dashboard วิเคราะห์ข้อมูล
@@ -8,7 +10,7 @@
 |---|---|
 | 🌐 **Production URL** | https://labboy-workload-app.web.app |
 | 📦 **Current Version** | v2.10.0 |
-| 📅 **Last Updated** | 2026-09-02 |
+| 📅 **Last Updated** | 2026-11-20 |
 | 🏢 **Organization** | ICIT KMUTNB |
 | 👤 **Developer** | Pongsakon Rawangwong (พงศกร ระวังวงศ์) |
 | 📧 **Contact** | pongsakon.be1@gmail.com |
@@ -84,7 +86,7 @@
 |--------|----------|
 | **กลุ่มเป้าหมาย** | พนักงาน ICIT KMUTNB (~15 คน) |
 | **Platform** | Web App (PWA) ทำงานบน iOS, Android, Desktop |
-| **Backend** | Firebase (Serverless) ไม่ต้องจัดการ Server |
+| **Backend** | Firebase และ Express API บน Render |
 | **ช่วงเวลาพัฒนา** | มีนาคม 2026 – มิถุนายน 2026 |
 | **Version ปัจจุบัน** | v2.8.0 (18 Releases นับจาก v1.0.0) |
 | **ข้อมูลที่บันทึก** | Worklog entries, Room/Equipment status, Exam schedules |
@@ -124,10 +126,9 @@
 | Comment Suggestions | แนะนำค่า comment อัตโนมัติตาม minorTask | v1.8.0 |
 | แก้ไข/ลบงาน | ได้เฉพาะวันเดียวกัน (auto-lock หลัง 23:59) | v1.6.0 |
 | Undo Delete | ยกเลิกการลบภายใน 30 วินาที | v1.0.0 |
-| Dashboard ส่วนตัว | งานของฉัน + อันดับในกลุ่ม + leaderboard ทีม | v1.7.0 |
+| ภาพรวมงานส่วนตัว | ยอดและแนวโน้มบันทึกงานของตนเอง เริ่มที่รายสัปดาห์ | ใช้งานจริง |
 | Calendar View | สลับ List/ปฏิทิน, คลิกวันดู worklog | v1.7.0 |
-| Room Usage Calendar | iOS-style compact calendar ตารางห้องวันนี้บน Dashboard (ตารางเรียน + คุมสอบ DL) | v2.4.0 |
-| iCloud Calendar Strip | ปฏิทินรายวัน iOS-style พร้อม Time Grid แสดงตารางเรียน + คุมสอบ DL พร้อมชื่อผู้คุมสอบ, นำทางข้ามวัน, now-line สีแดง, รองรับ overlap events แบบ side-by-side; **บน Mobile แสดงเฉพาะ Compact Cards** (ไม่มี Timeline) ป้องกันล้นหน้าจอ | v2.6.0–v2.8.0 |
+| ตารางและการใช้ห้อง | หน้า `/calendar` สำหรับดูตารางเรียนและรอบสอบ Digital Literacy รายวัน รายสัปดาห์ หรือรายเดือน | ใช้งานจริง |
 | Thai Holidays | แสดงวันหยุดนักขัตฤกษ์ไทยในปฏิทิน | v1.7.3 |
 | Export CSV | Export ข้อมูลของตัวเอง | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header (ชื่อองค์กร, ช่วงวันที่, วันที่พิมพ์) และ CSS @media print ซ่อน sidebar/nav/filter (เฉพาะ Admin/Superadmin) | v2.0.0 |
@@ -139,16 +140,13 @@
 | บันทึกงานให้พนักงาน | เลือกพนักงานจาก dropdown แล้วบันทึกในนามพนักงาน | v1.8.0 |
 | Navbar Icon-only + Hover Expand | Admin/Superadmin บน PC เห็น navbar เป็น icon ย่อ เมื่อ hover แสดงชื่อเมนู (ป้องกันตัวหนังสือซ้อนกัน) | v2.8.0 |
 | Mobile Drawer แบบ Grouped | เมนู mobile แบ่งกลุ่ม "ทั่วไป" / "จัดการระบบ" พร้อม role badge | v2.8.0 |
-| Admin Nav ครบทุกหน้า | เข้าถึง วิเคราะห์ประสิทธิภาพ, สุขภาพอุปกรณ์, Audit Logs ได้จาก navbar/drawer โดยตรง | v2.8.0 |
+| เมนูผู้ดูแล | เข้าถึงวิเคราะห์บุคลากร สุขภาพอุปกรณ์ และ Audit Logs ตามสิทธิ์ | ใช้งานจริง |
 | จัดการ Templates | เพิ่ม/แก้ไข/ลบ Quick Log Templates + Combo Templates | v1.8.0 |
 | Template Options | `requireRecipient`, `requireComment`, `isSmart` | v1.9.4 |
-| Dashboard ทีม | สถิติรวม, เฉลี่ยต่อคน, Top 3, รายชื่อทุกคน | v1.7.0 |
-| RoomUsageCalendar (Week View) | ตาราง Time Grid แบบ iOS 1วัน/3วัน/สัปดาห์ + View Toggle บนหน้า admin/record | v2.4.0 |
-| จัดการตารางเรียนชั้น 4 | แสดงทุกสถานะ (active/inactive), สร้าง/แก้ไข/ลบตารางเรียน, checkbox selection + bulk toggle เปิด/ปิดที่เลือก, ภาพรวมห้องวันนี้แยกสี | v2.6.0 |
-| จัดการตารางคุมสอบ DL | สร้าง/แก้ไข/ลบตารางคุมสอบ, ภาพรวม 406/407/CEM + ผู้คุมสอบ displayName | v2.6.0 |
-| Workload Heatmap | กราฟ DOW × Hour แสดงความถี่งาน | v1.7.1 |
-| Hour-of-Day Chart | กราฟแท่งแสดงงานตามช่วงเวลา | v1.7.0 |
-| Custom Date Filter | Filter ตามช่วงวันที่ พร้อม quota alert (>90 วัน) | v1.6.0 |
+| ภาพรวมงานและวิเคราะห์บุคลากร | กรองทั้งทีมหรือรายคน ดูแนวโน้มและรายละเอียดของบัญชีที่เปิดใช้งาน | ใช้งานจริง |
+| จัดการตารางเรียนชั้น 4 | กรอกเองหรือนำเข้า PDF แก้ไข หยุดใช้ และเปิดหรือปิดตารางเรียนหลายรายการได้ | ใช้งานจริง |
+| จัดการตารางคุมสอบ DL | กรอกเองหรือนำเข้าจากภาพ เลือกผู้คุมสอบและตรวจห้อง 406/407 ก่อนบันทึก | ใช้งานจริง |
+| เลือกช่วงรายงาน | รายวัน รายสัปดาห์ รายเดือน ไตรมาส ปีงบประมาณ หรือกำหนดช่วงเอง | ใช้งานจริง |
 | Export CSV | Export ข้อมูลทุกคนกรองตามวันที่/พนักงาน | v1.5.0 |
 | พิมพ์รายงานประจำเดือน (Print Summary) | ปุ่ม "พิมพ์รายงาน" บน Dashboard พร้อม print header และ CSS @media print ซ่อน UI ที่ไม่จำเป็น | v2.0.0 |
 | Push Notification Settings | ตั้งค่าวัน/เวลาส่ง Push Reminder (Render + Cron-job.org), เปิด/ปิด toggle, เลือกวันที่ส่ง (จ–อา) | v2.1.0 |
@@ -220,6 +218,8 @@ User Action → Frontend Component → Firebase Auth Check → Firestore Operati
                                                           ↓
                                               onSnapshot Listener (All Clients)
 
+Calendar Form → Firebase ID Token → Calendar API on Render → Firestore Transaction
+
 Cron-job.org (17:00 daily)
     → GET /api/notify/daily-reminder?secret=CRON_SECRET
     → Backend checks Firestore for users without today's log
@@ -240,7 +240,7 @@ Cron-job.org (17:00 daily)
 | **Hosting** | Firebase Hosting (CDN, SSL, HTTP/2) |
 | **PWA** | `next-pwa`, Web App Manifest, Service Worker, FCM SW |
 | **Push Notification** | Firebase Cloud Messaging (FCM) — foreground + background |
-| **Backend** | Express.js on Render.com (Node 20) — FCM multicast sender |
+| **Backend** | Express.js และ Firebase Admin SDK บน Render — Push Notification, Calendar API และสถานะทรัพยากร |
 | **Scheduler** | Cron-job.org — daily reminder trigger + health ping |
 | **Icons** | Lucide React |
 | **i18n** | next-intl (Thai, static messages) |
@@ -270,14 +270,14 @@ employee-workload-app/
 │   │       ├── settings/page.js     # ตั้งค่าระบบ (ทั่วไป/แจ้งเตือน/ข้อมูล/ความปลอดภัย)
 │   │       ├── audit-logs/page.js   # Audit logs (Superadmin only)
 │   │       ├── system/page.js       # จัดการระบบ (Templates/ตารางเรียน/คุมสอบ/Broadcast)
-│   │       ├── staff-analytics/page.js   # วิเคราะห์ประสิทธิภาพพนักงาน (Radar + List/Single view)
+│   │       ├── staff-analytics/page.js   # การกระจายงานและบันทึกของทีม
 │   │       └── equipment-health/page.js  # สุขภาพอุปกรณ์ (filter วัน/สัปดาห์/เดือน/ไตรมาส/ปี)
 │   ├── components/
 │   │   ├── AuthProvider.js          # Firebase Auth context + loginWithGoogle
 │   │   ├── AppShell.js              # Layout shell + navigation (icon-only navbar สำหรับ Admin)
 │   │   ├── NotificationBell.js      # In-app + FCM foreground notification
 │   │   ├── DashboardCharts.js       # Recharts: Heatmap, HourOfDay, Trend, Pie, Bar
-│   │   ├── StaffRadarChart.js       # Radar chart สำหรับ Staff Analytics
+│   │   ├── StaffRadarChart.js       # Radar chart ของหน้า Staff Analytics รุ่นเดิม
 │   │   ├── RoomEquipmentStatus.js   # Widget สถานะห้อง + อุปกรณ์ real-time
 │   │   ├── iCloudCalendarStrip.js   # iOS-style Time Grid calendar
 │   │   ├── FABVersionControl.js     # FAB badge แสดง version
@@ -643,7 +643,7 @@ function isSameDay(worklog) {
 
 ## Backend API (Render.com)
 
-Backend เป็น Express.js service ที่ deploy บน Render.com ทำหน้าที่หลักคือส่ง Push Notification ผ่าน Firebase Admin SDK เท่านั้น (ไม่จัดการ business logic อื่น)
+Express.js บน Render ใช้ Firebase Admin SDK สำหรับการแจ้งเตือน การอ่านสถานะทรัพยากร และการตรวจและบันทึกตารางผ่าน Calendar API
 
 ### URL & Endpoints
 
@@ -652,8 +652,13 @@ Backend เป็น Express.js service ที่ deploy บน Render.com ท�
 | `GET` | `/health` | ไม่ต้อง | Health check — ใช้ Cron-job.org ping ป้องกัน Render sleep |
 | `GET/POST` | `/api/notify/daily-reminder` | `x-cron-secret` header หรือ `?secret=` | ส่ง daily reminder ให้ users ที่ยังไม่ได้ลงงานวันนี้ |
 | `POST` | `/api/notify/broadcast` | Firebase ID Token + superadmin role | Broadcast push ถึงทุก user ที่มี FCM token |
+| `GET` | `/api/calendar/health` | Public | สถานะ Calendar API และการตั้งค่า writer บน Render |
+| `POST` | `/api/calendar/create` | Firebase ID Token + Admin/Superadmin ที่เปิดใช้งาน | เพิ่มตารางเรียนและรอบ DL จากฟอร์มหรือไฟล์ที่ตรวจแล้ว |
+| `POST` | `/api/calendar/mutate` | Firebase ID Token + Admin/Superadmin ที่เปิดใช้งาน | แก้ไข หยุดใช้ หรือเปลี่ยนสถานะตารางเรียนเป็นชุด |
 
 > **Base URL:** `https://employee-workload-app.onrender.com`
+
+หน้า `/calendar` อ่านตารางจาก Firestore การเขียนผ่าน API ตรวจเวลาชนของห้องและผู้คุมสอบก่อนบันทึกทั้งชุด คำขอเดิมที่ส่งซ้ำใช้ผลจากการบันทึกครั้งเดิม เมื่อเปิด writer ระบบใช้ Firestore Rules จำกัดการเขียนตรงจากเว็บ
 
 ### Environment Variables (Render)
 
@@ -684,33 +689,13 @@ PORT=10000                           # Render default
 
 ---
 
-## Staff Analytics (วิเคราะห์ประสิทธิภาพพนักงาน)
+## Staff Analytics (การกระจายงานของทีม)
 
-หน้า `/admin/staff-analytics` ให้ Admin/Superadmin วิเคราะห์ประสิทธิภาพพนักงานผ่าน **Radar Chart 6 มิติ**
+Admin และ Superadmin เปิดเมนู **วิเคราะห์บุคลากร** ที่ `/admin/staff-analytics` เพื่อดูจำนวนกิจกรรม หัวข้อรอง และวันที่มีบันทึกของแต่ละคน กด **รายละเอียด** เพื่อดูรายการต้นทาง หรือ **ส่งออกข้อมูลที่แสดง** เพื่อดาวน์โหลด CSV ตามตัวกรอง
 
-### 6 Metric Dimensions
+เริ่มที่รายสัปดาห์และเลือกช่วงรายวัน รายเดือน ไตรมาส ปีงบประมาณ (ต.ค.–ก.ย.) หรือกำหนดช่วงเองได้ รายชื่อ ตัวกรอง กราฟ ยอดรวม และ CSV กรองบัญชีที่ปิดใช้งานออกจากรายงานทีม บันทึกเดิมยังอยู่ในหน้าประวัติงาน เมื่อเปิดบัญชีกลับให้โหลดหน้าใหม่เพื่ออัปเดตยอด
 
-| Metric | ชื่อไทย | การคำนวณ | ฟังก์ชัน |
-|--------|---------|---------|---------|
-| **Volume** | ปริมาณงาน | จำนวน worklogs ÷ เป้าหมาย (normalize 0–100) | `calcVolumeScore()` |
-| **Versatility** | ความหลากหลาย | จำนวน unique `minorTask` ÷ max ของทีม | `calcVersatilityScore()` |
-| **Consistency** | ความสม่ำเสมอ | `100 - CV` (Coefficient of Variation ของงานต่อวัน) | `calcConsistencyScore()` |
-| **Peak Handling** | จัดการช่วงพีค | สัดส่วนงานช่วง 14:00–17:00 | `calcPeakScore()` |
-| **Documentation** | เอกสารละเอียด | สัดส่วน comment ≥ 20 ตัวอักษร | `calcDocumentationScore()` |
-| **Combo Usage** | ใช้ combo | อัตราการใช้ Combo Templates | `calcComboScore()` |
-
-คำนวณโดย `frontend/lib/staffMetrics.js` — แสดงผลผ่าน `StaffRadarChart` component
-
-### 2 View Modes
-
-| View | คำอธิบาย |
-|------|---------|
-| **List View** | ตารางพนักงานทุกคน พร้อม metrics 6 มิติ + คะแนนเฉลี่ย ค้นหา/เรียงลำดับ/Export CSV |
-| **Single View** | แสดงทีละคนพร้อม Radar Chart ขนาดใหญ่ นำทางด้วยปุ่ม ‹ › |
-
-### Date Range Filters
-
-`วัน / สัปดาห์ / เดือน / ไตรมาส / ปีงบประมาณ (ต.ค.–ก.ย.) / ปี / กำหนดเอง`
+หนึ่งบันทึกนับเป็นหนึ่งกิจกรรม รวมรายการย่อยใน Combo เมื่อมีสถานะว่ายังโหลดไม่ครบ กราฟและยอดรวมจะนับเฉพาะรายการที่โหลดแล้ว กด **โหลดเพิ่ม 1,000 รายการ** เพื่อดูข้อมูลต่อ
 
 ---
 
@@ -827,27 +812,11 @@ Quick Log คือปุ่มลัดสำหรับงานที่ท�
 
 #### การดู Dashboard ส่วนตัว
 
-ไปที่หน้า **"แดชบอร์ด"** (`/dashboard`) จะเห็น:
-
-| Widget | คำอธิบาย |
-|--------|----------|
-| **สถิติงานวันนี้/สัปดาห์/เดือน** | จำนวนงานและชั่วโมงรวม |
-| **อันดับในกลุ่ม** | เปรียบเทียบกับเพื่อนร่วมทีม |
-| **Workload Heatmap** | กราฟความถี่งาน วัน × ชั่วโมง |
-| **Hour-of-Day Chart** | กราฟแท่งแสดงช่วงเวลาที่ทำงานบ่อย |
-| **ตารางห้องวันนี้** | สถานะห้องเรียนชั้น 4 และ DL Exam |
-| **Radar Chart ทักษะ** | แสดง Top 8 หัวข้อรองที่ทำบ่อยที่สุด |
+เปิดหน้า **ภาพรวมงาน** (`/dashboard`) เพื่อดูยอดกิจกรรม แนวโน้ม และหัวข้อรองของตัวเอง ค่าเริ่มต้นคือรายสัปดาห์ กดชื่อช่วงเวลาเพื่อเปลี่ยนช่วงข้อมูล และกดวันที่หรือหัวข้อเพื่อดูบันทึกต้นทาง
 
 #### การดูตารางห้องและคุมสอบ
 
-ไปที่หน้า **"บันทึกงาน"** → แท็บ **"ตารางห้อง"** หรือดูบน Dashboard:
-
-- **iCloudCalendarStrip** — ปฏิทินรายวัน iOS-style, Time Grid 07:00–22:00
-- ลาก drag เพื่อเลื่อนดูช่วงเวลา
-- กดปุ่มลูกศร ‹ / › เพื่อเปลี่ยนวัน
-- กดปุ่ม **"วันนี้"** เพื่อกลับมายังวันปัจจุบัน
-- แถบสีแดง = เวลาปัจจุบัน (Now line)
-- Card สีน้ำเงิน = ตารางเรียนปกติ, Card สีม่วง = คุมสอบ DL
+เปิดเมนู **ตาราง** (`/calendar`) แล้วสลับมุมมองวัน สัปดาห์ หรือเดือน ใช้ **ปฏิทินและตัวกรอง** เพื่อเลือกห้อง ประเภทกิจกรรม หรือภาคเรียน กดกิจกรรมเพื่อดูวัน เวลา ห้อง และผู้เกี่ยวข้อง Staff ใช้ปฏิทินในโหมดอ่าน
 
 ---
 
@@ -860,20 +829,13 @@ Quick Log คือปุ่มลัดสำหรับงานที่ท�
 3. ใช้ Quick Log หรือกรอกเองเช่นเดียวกับ Staff
 4. งานจะถูกบันทึกในนามพนักงานที่เลือก
 
-#### การจัดการตารางเรียน (Classroom Schedule)
+#### การเพิ่ม นำเข้า และจัดการตาราง
 
-1. ไปที่ **"จัดการระบบ"** → แท็บ **"ตารางเรียน"**
-2. **เพิ่มตารางใหม่:** กรอกห้อง, วิชา, อาจารย์, วัน, เวลาเริ่ม/สิ้นสุด → กด "เพิ่ม"
-3. **เปิด/ปิดรายการ:** ติ๊ก checkbox หลายรายการ → กด "เปิดใช้งาน" หรือ "ปิดใช้งาน"
-4. **ลบรายการ:** กดปุ่ม "ลบ" → ยืนยัน (ลบถาวรออกจาก Firestore)
-5. **ภาพรวมวันนี้:** แถบสีด้านบนแสดงสถานะห้อง 401/402/406/407
-
-#### การจัดการตารางคุมสอบ DL
-
-1. ไปที่ **"จัดการระบบ"** → แท็บ **"คุมสอบ DL"**
-2. **เพิ่มการสอบ:** เลือกวันที่, วิชา, ประเภท (นศ./บุคลากร), ห้อง, ช่วงเวลา, ผู้คุมสอบ
-3. ผู้คุมสอบค้นหาจาก `displayName` ของ users ในระบบ
-4. **ภาพรวม:** แสดงแผนผัง 406/407/CEM พร้อมชื่อผู้คุมสอบแต่ละคน
+1. จากหน้า **ตาราง** กด **เพิ่มตาราง** แล้วเลือกตารางเรียนหรือ Digital Literacy ตารางเรียนที่เกิดซ้ำต้องระบุวันสิ้นสุด รอบ DL ต้องระบุจำนวนผู้สอบและเลือกผู้คุมสอบจากรายชื่อในระบบ ระบบใช้ห้อง 406 และเพิ่มห้อง 407 เมื่อจำนวนผู้สอบเกิน 40 คน
+2. สำหรับตารางเรียน กด **นำเข้าตาราง → ตารางเรียน · PDF** เลือก PDF ที่มีข้อความและเส้นตาราง (สูงสุด 10 MB และ 5 หน้า) ตรวจห้อง วัน เวลา และช่วงภาคเรียน
+3. สำหรับรอบสอบ กด **นำเข้าตาราง → ตารางสอบ DL · รูปภาพ** เลือก PNG หรือ JPEG ตามแบบผู้คุม 3 ช่อง (สูงสุด 10 MB และ 12 ล้านพิกเซล) ตรวจวัน เวลา และจับคู่ผู้คุม
+4. ยืนยันรายการที่ตรวจแล้ว หากพบห้องหรือผู้คุมสอบมีเวลาชนกัน ให้แก้จุดที่ระบบระบุก่อนส่งอีกครั้ง
+5. แก้ไขหรือกด **หยุดใช้** จากหน้าจัดการตารางเรียนและตารางคุมสอบ DL ใน **จัดการระบบ** ระบบจะเก็บเอกสารของรายการที่หยุดใช้ไว้
 
 #### การจัดการ Users
 
@@ -907,16 +869,7 @@ Quick Log คือปุ่มลัดสำหรับงานที่ท�
 
 #### การดู Dashboard ทีม
 
-ไปที่หน้า **"แดชบอร์ด"** จะเห็นข้อมูลเพิ่มเติมสำหรับ Admin:
-
-| Widget | คำอธิบาย |
-|--------|----------|
-| **สถิติรวมทีม** | จำนวนงานและชั่วโมงรวมทั้งทีม |
-| **Top 3 พนักงาน** | พนักงานที่มีงานมากที่สุดในช่วงที่เลือก |
-| **Leaderboard** | อันดับพนักงานทุกคน |
-| **Seasonal Chart** | แนวโน้มงานรายสัปดาห์ |
-| **Export ทีม** | ดาวน์โหลด CSV ข้อมูลทุกคน |
-| **พิมพ์รายงาน** | Print รายงานประจำเดือนพร้อม header |
+เปิดหน้า **ภาพรวมงาน** แล้วใช้ตัวกรอง **ผู้ปฏิบัติงาน** เพื่อดูทั้งทีมหรือรายคน กดชื่อใน **บันทึกของทีม** เพื่อดูรายละเอียด สำหรับการกระจายงานและการส่งออกตารางที่กรองแล้ว ให้เปิด **วิเคราะห์บุคลากร**
 
 ---
 
@@ -942,7 +895,7 @@ Quick Log คือปุ่มลัดสำหรับงานที่ท�
 
 ### Firebase Client SDK APIs
 
-ระบบใช้ Firebase Client SDK (v12.13.0) สำหรับทุก operation:
+ระบบใช้ Firebase Client SDK (v12.13.0) สำหรับ Authentication และการอ่าน/เขียนที่ผ่าน Firestore Rules ส่วนการเพิ่มและเปลี่ยนตารางส่งคำขอผ่าน Calendar API บน Render
 
 #### Authentication APIs
 
@@ -1755,12 +1708,12 @@ snyk container test
 |---------|-----------|
 | บันทึก/แก้ไข/ลบ worklog | ได้เฉพาะวันเดียวกัน (staff), ไม่จำกัดวัน (admin/superadmin) |
 | Quick Log + Combo Template | บันทึกงานซ้ำๆ ด้วยปุ่มเดียว หรือหลายงานพร้อมกัน |
-| ดูตารางห้องเรียน + คุมสอบ DL | iOS-style calendar รายวัน พร้อมชื่อผู้คุมสอบ |
-| จัดการตารางเรียนชั้น 4 | สร้าง/แก้ไข/ลบ, bulk toggle เปิด/ปิดรายการที่เลือก |
-| จัดการตารางคุมสอบ DL | สร้าง/แก้ไข/ลบ, ภาพรวม 406/407/CEM + ผู้คุมสอบ |
+| ดูตารางเรียนและรอบสอบ DL | ปฏิทินรายวัน รายสัปดาห์ และรายเดือน พร้อมตัวกรองและรายละเอียดกิจกรรม |
+| จัดการตารางเรียนชั้น 4 | กรอกเองหรือนำเข้า PDF แก้ไข และหยุดใช้ |
+| จัดการตารางคุมสอบ DL | กรอกเองหรือนำเข้าภาพ แก้ไข และหยุดใช้ |
 | Export CSV | staff ส่งออกข้อมูลตัวเอง, admin/superadmin ส่งออกทุกคน |
 | Push Notification | แจ้งเตือนเมื่อลืมบันทึกงาน (Render + Cron-job.org) |
-| Dashboard & Analytics | Heatmap, Hour-of-Day chart, leaderboard, filter ช่วงวันที่ |
+| ภาพรวมงานและ Staff Analytics | แนวโน้ม รายละเอียดและการกระจายงาน กรองตามช่วงวันที่และผู้ปฏิบัติงาน |
 | สถานะห้องและอุปกรณ์ Real-time | ห้อง 303-407, หูฟัง ICIT01-20, ปลั๊ก ICIT21-25 |
 | PWA | ติดตั้งเป็น App บน iOS/Android/Desktop, offline บางส่วน |
 
