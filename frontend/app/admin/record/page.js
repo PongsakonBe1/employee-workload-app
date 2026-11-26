@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { collection, doc, getDocsFromServer, query, runTransaction, serverTimestamp, where } from "firebase/firestore";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
-import ScheduleAlertBanner from "../../../components/ScheduleAlertBanner";
 import { Toast } from "../../../components/Toast";
 import { RecordHeading, WorklogRecordReview, WorklogRecordWorkspace } from "../../../components/WorklogRecordWorkspace";
 import { useAutoUpdateDateTime } from "../../../hooks/useAutoUpdateDateTime";
@@ -187,7 +186,6 @@ function TeamRecord({ user }) {
 
   return <>
     <RecordHeading />
-    <ScheduleAlertBanner />
     <Toast message={message} error={review ? "" : error} onDismissMessage={() => setMessage("")} onDismissError={() => setError("")} />
     <WorklogRecordWorkspace form={form} setForm={setForm} mode={mode} setMode={setMode} person={person}
       directory={picker} busy={saving} onReview={onReview} revision={revision}

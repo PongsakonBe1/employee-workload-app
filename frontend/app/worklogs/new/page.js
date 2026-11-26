@@ -259,7 +259,6 @@ function WorklogRecord({ user }) {
   if (workspaceEnabled) {
     return <AppShell showBreadcrumb={false}>
       <RecordHeading />
-      <ScheduleAlertBanner />
       <Toast message={message} error={review ? "" : error} info={draftRestored ? "กู้คืนร่างอัตโนมัติแล้ว" : ""} onDismissMessage={() => setMessage("")} onDismissError={() => setError("")} />
       <WorklogRecordWorkspace form={form} setForm={setForm} mode={mode} setMode={setMode} person={{ id: user?.uid, label: employeeLabel }}
         busy={saving} onReview={onSubmit} revision={recordRevision}
