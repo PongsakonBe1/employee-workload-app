@@ -5,14 +5,16 @@ import { useId, useState } from "react";
 import { CalendarDays, Check, ChevronDown, ChevronRight, Clock3, FilePenLine, Zap } from "lucide-react";
 import QuickLogButtons from "./QuickLogButtons";
 import { WorklogManualWorkspace } from "./WorklogManualWorkspace";
-import { WorklogResourceSummary } from "./WorklogResourceSummary";
+import { MobileRoomClosureNotice, WorklogResourceSummary } from "./WorklogResourceSummary";
 import { Dialog } from "./ui/Dialog";
 import { GlassButton, GlassControlGroup } from "./ui/GlassControls";
-import { useBangkokRoomClock, useWorklogRecordContext } from "../hooks/useWorklogRecordContext";
+import { useSharedResourceStatus } from "../hooks/useSharedResourceStatus";
+import { recordStatusRefreshMs, useBangkokRoomClock, useWorklogRecordContext } from "../hooks/useWorklogRecordContext";
 import { calendarLabel, timeMinutes, validCalendarDate } from "../lib/calendarView";
 import { getMainDutyFromMinorTask } from "../lib/commentSuggestions";
 import { nowTime, today } from "../lib/dateUtils";
 import { sanitizeInput } from "../lib/validation";
+import { roomClosureNotices } from "../lib/worklogResourceSummary";
 import { getDutyGroupFromMinorTask } from "../lib/worklogUtils";
 import "../app/dev/record/record.css";
 import "../app/dev/history/history.css";
@@ -49,8 +51,11 @@ export function WorklogRecordWorkspace({
   const employeeId = person?.id;
   const roomClock = useBangkokRoomClock();
   const { worklogs, schedule, todaySchedule, retryTodaySchedule, dlRounds } = useWorklogRecordContext(employeeId, form.date, revision, roomClock?.date);
+  const resourceStatus = useSharedResourceStatus({ refreshEveryMs: recordStatusRefreshMs });
+  const notices = roomClosureNotices(resourceStatus.status?.roomStatus ?? {}, todaySchedule, roomClock);
   const day = validCalendarDate(form.date) ? calendarLabel(form.date) : "";
   const isToday = form.date === today();
+  const agendaTitle = form.date === roomClock?.date ? "ตารางวันนี้" : "ตารางวันที่เลือก";
 
   function reviewDate(event) {
     event.preventDefault();
@@ -78,6 +83,7 @@ export function WorklogRecordWorkspace({
               <span><small>ผู้ปฏิบัติงาน</small><strong>{person?.label || "ผู้ใช้งาน"}</strong></span>
             </div>}
           </div>
+          <MobileRoomClosureNotice notices={notices} />
           <div className="record-meta">
             <GlassControlGroup mode="quick" label="วิธีบันทึกงาน" className="record-mode">
               <button type="button" aria-pressed={mode === "quick"} onClick={() => setMode("quick")}><Zap size={17} aria-hidden="true" /> บันทึกด่วน</button>
@@ -101,8 +107,12 @@ export function WorklogRecordWorkspace({
           </> : <p className="ui-caption worklog-record-empty">เลือกผู้ปฏิบัติงานก่อนบันทึก</p>}
       </section>
       <aside className="record-live-context" aria-label="ข้อมูลประกอบการบันทึก">
-        <WorklogResourceSummary schedule={todaySchedule} retrySchedule={retryTodaySchedule} clock={roomClock} />
+        <WorklogResourceSummary schedule={todaySchedule} retrySchedule={retryTodaySchedule} notices={notices} resourceStatus={resourceStatus} />
         <div className="record-context">
+          <section>
+            <div className="record-section-head"><h2>{agendaTitle}</h2><Link href="/calendar" prefetch={false} className="record-link">ดูปฏิทิน <ChevronRight size={16} aria-hidden="true" /></Link></div>
+            <RecordAgenda schedule={schedule} />
+          </section>
           <section>
             <div className="record-section-head"><h2>{isToday ? (directory ? "สรุปวันนี้" : "วันนี้ของคุณ") : "สรุปวันที่เลือก"}</h2><CalendarDays size={18} aria-hidden="true" /></div>
             <p className="record-context-date">{day}</p>
@@ -110,15 +120,11 @@ export function WorklogRecordWorkspace({
               ? <div className="record-context-count"><strong>{worklogs.count}</strong><span>รายการที่บันทึก{directory && <small>{person.label}</small>}</span></div>
               : <p className="ui-caption">{worklogs.status === "error" ? "โหลดจำนวนบันทึกไม่สำเร็จ" : worklogs.status === "loading" ? "กำลังโหลดจำนวนบันทึก…" : "เลือกผู้ปฏิบัติงานและวันที่เพื่อดูจำนวนบันทึก"}</p>}
           </section>
-          <section>
-            <div className="record-section-head"><h2>ตารางวันที่เลือก</h2><Link href="/calendar" prefetch={false} className="record-link">ดูปฏิทิน <ChevronRight size={16} aria-hidden="true" /></Link></div>
-            <RecordAgenda schedule={schedule} />
-          </section>
         </div>
       </aside>
       <div className="record-column record-follow-up">
         <details className="record-inline-schedule worklog-inline-schedule">
-          <summary><CalendarDays size={17} aria-hidden="true" /><span>ตารางวันที่เลือก</span><small>{day}</small></summary>
+          <summary><CalendarDays size={17} aria-hidden="true" /><span>{agendaTitle}</span><small>{day}</small></summary>
           <RecordAgenda schedule={schedule} />
           <Link href="/calendar" className="record-link" prefetch={false}>ดูปฏิทิน</Link>
         </details>
