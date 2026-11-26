@@ -1,6 +1,40 @@
 .worklog-record-panel { padding:clamp(14px,3vw,25px);min-width:0; }
 .worklog-record-panel[hidden] { display:none; }
-.worklog-live-record .record-context { align-self:start; }
+.worklog-live-record {
+  grid-template-areas: "entry context" "follow-up context";
+  grid-template-rows: auto 1fr;
+  row-gap: 22px;
+}
+.worklog-live-record .record-entry { grid-area: entry; min-width: 0; }
+.worklog-live-record .record-follow-up { grid-area: follow-up; }
+.record-live-context { grid-area: context; display: grid; gap: 20px; align-self: start; min-width: 0; }
+.record-resource-summary { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 17px; min-width: 0; }
+.record-resource-title { margin: 15px 16px 0; font-size: .9375rem; font-weight: 650; }
+.record-resource-disclosure { display: none; }
+.record-resource-summary-body { display: grid; gap: 12px; padding: 12px 16px 14px; }
+.record-resource-summary-body :is(ul,p) { margin: 0; }
+.record-room-notices, .record-live-equipment { display: grid; gap: 8px; }
+.record-room-notices li {
+  display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 6px;
+  background: var(--ui-amber); color: var(--ui-amber-ink); border-radius: 10px; padding: 8px; font-size: .75rem;
+}
+.record-room-notices li[data-overdue="true"] { background: var(--ui-red); color: var(--ui-red-ink); }
+.record-room-notices time { font-variant-numeric: tabular-nums; }
+.record-live-rooms { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+.record-live-rooms li {
+  display: grid; gap: 2px; border-radius: 8px; background: var(--ui-soft); color: var(--ui-sub);
+  padding: 5px 4px; text-align: center; font-size: .6875rem; overflow-wrap: anywhere;
+}
+.record-live-rooms li[data-state="in_use"] { background: var(--ui-green); color: var(--ui-green-ink); }
+.record-equipment-meter { display: grid; gap: 3px; font-size: .75rem; }
+.record-equipment-track { display: flex; gap: 2px; height: 8px; background: var(--ui-soft); padding: 1px; border-radius: 5px; overflow: hidden; }
+.record-equipment-track span { flex-basis: 0; border-radius: 3px; }
+.record-equipment-track [data-state="ready"] { background: var(--ui-green-ink); }
+.record-equipment-track [data-state="inUse"] { background: var(--ui-blue-ink); }
+.record-equipment-track [data-state="issue"] { background: var(--ui-amber-ink); }
+.record-equipment-counts { display: flex; flex-wrap: wrap; column-gap: 8px; color: var(--ui-sub); font-size: .6875rem; }
+.record-resource-feedback { color: var(--ui-sub); font-size: .75rem; }
+.record-resource-summary-body .record-link { min-height: 44px; justify-self: start; }
 .worklog-live-record .record-panel-title { flex-wrap:wrap; }
 .worklog-live-record .record-mode { max-width:100%; }
 .worklog-live-record :is(input,textarea) { min-width:0;max-width:100%; }
@@ -25,7 +59,21 @@
 .worklog-date-form { width:100%; }
 .worklog-date-form :is(input,.record-error) { min-width:0;max-width:100%; }
 .worklog-date-form .record-error { grid-column:1 / -1; }
-@media(max-width:1150px) { .worklog-inline-schedule { display:block; } }
+@media(max-width:1150px) {
+  .worklog-inline-schedule { display:block; }
+  .worklog-live-record { grid-template-areas: "entry" "context" "follow-up"; grid-template-rows: auto; row-gap: 14px; }
+  .record-resource-title { display: none; }
+  .record-resource-disclosure {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px;
+    border-radius: inherit; padding: 8px 12px; text-align: start; font-size: .8125rem;
+  }
+  .record-resource-disclosure span { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+  .record-resource-disclosure small { color: var(--ui-sub); font-size: .75rem; }
+  .record-resource-disclosure small[data-alert="true"] { color: var(--ui-amber-ink); font-weight: 650; }
+  .record-resource-disclosure[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .record-resource-disclosure:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+  .record-resource-summary[data-expanded="false"] .record-resource-summary-body { display: none; }
+}
 .worklog-task-options { display:grid;gap:1px;margin-top:12px; }
 .worklog-task-options button { min-height:44px;text-align:start;width:100%;padding:8px 12px;border-radius:10px; }
 .worklog-task-options button:is(:hover,[aria-pressed=true]) { background:var(--ui-soft); }

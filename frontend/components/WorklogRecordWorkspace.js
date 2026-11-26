@@ -5,9 +5,10 @@ import { useId, useState } from "react";
 import { CalendarDays, Check, ChevronDown, ChevronRight, Clock3, FilePenLine, Zap } from "lucide-react";
 import QuickLogButtons from "./QuickLogButtons";
 import { WorklogManualWorkspace } from "./WorklogManualWorkspace";
+import { WorklogResourceSummary } from "./WorklogResourceSummary";
 import { Dialog } from "./ui/Dialog";
 import { GlassButton, GlassControlGroup } from "./ui/GlassControls";
-import { useWorklogRecordContext } from "../hooks/useWorklogRecordContext";
+import { useBangkokRoomClock, useWorklogRecordContext } from "../hooks/useWorklogRecordContext";
 import { calendarLabel, timeMinutes, validCalendarDate } from "../lib/calendarView";
 import { getMainDutyFromMinorTask } from "../lib/commentSuggestions";
 import { nowTime, today } from "../lib/dateUtils";
@@ -46,7 +47,8 @@ export function WorklogRecordWorkspace({
   const [dateError, setDateError] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
   const employeeId = person?.id;
-  const { worklogs, schedule, dlRounds } = useWorklogRecordContext(employeeId, form.date, revision);
+  const roomClock = useBangkokRoomClock();
+  const { worklogs, schedule, todaySchedule, retryTodaySchedule, dlRounds } = useWorklogRecordContext(employeeId, form.date, revision, roomClock?.date);
   const day = validCalendarDate(form.date) ? calendarLabel(form.date) : "";
   const isToday = form.date === today();
 
@@ -68,8 +70,7 @@ export function WorklogRecordWorkspace({
 
   return <>
     <div className="record-layout worklog-live-record">
-      <div className="record-column">
-        <section aria-label="บันทึกงานของคุณ">
+      <section className="record-entry" aria-label="บันทึกงานของคุณ">
           <div className="record-panel-title">
             <div><h2>{directory ? "งานของทีม" : "งานของฉัน"}</h2>{day && <p>บันทึกสำหรับ {day}</p>}</div>
             {directory || <div className="record-person">
@@ -98,12 +99,29 @@ export function WorklogRecordWorkspace({
               />
             </div>
           </> : <p className="ui-caption worklog-record-empty">เลือกผู้ปฏิบัติงานก่อนบันทึก</p>}
-          <details className="record-inline-schedule worklog-inline-schedule">
-            <summary><CalendarDays size={17} aria-hidden="true" /><span>ตารางวันที่เลือก</span><small>{day}</small></summary>
+      </section>
+      <aside className="record-live-context" aria-label="ข้อมูลประกอบการบันทึก">
+        <WorklogResourceSummary schedule={todaySchedule} retrySchedule={retryTodaySchedule} clock={roomClock} />
+        <div className="record-context">
+          <section>
+            <div className="record-section-head"><h2>{isToday ? (directory ? "สรุปวันนี้" : "วันนี้ของคุณ") : "สรุปวันที่เลือก"}</h2><CalendarDays size={18} aria-hidden="true" /></div>
+            <p className="record-context-date">{day}</p>
+            {worklogs.status === "ready"
+              ? <div className="record-context-count"><strong>{worklogs.count}</strong><span>รายการที่บันทึก{directory && <small>{person.label}</small>}</span></div>
+              : <p className="ui-caption">{worklogs.status === "error" ? "โหลดจำนวนบันทึกไม่สำเร็จ" : worklogs.status === "loading" ? "กำลังโหลดจำนวนบันทึก…" : "เลือกผู้ปฏิบัติงานและวันที่เพื่อดูจำนวนบันทึก"}</p>}
+          </section>
+          <section>
+            <div className="record-section-head"><h2>ตารางวันที่เลือก</h2><Link href="/calendar" prefetch={false} className="record-link">ดูปฏิทิน <ChevronRight size={16} aria-hidden="true" /></Link></div>
             <RecordAgenda schedule={schedule} />
-            <Link href="/calendar" className="record-link" prefetch={false}>ดูปฏิทิน</Link>
-          </details>
-        </section>
+          </section>
+        </div>
+      </aside>
+      <div className="record-column record-follow-up">
+        <details className="record-inline-schedule worklog-inline-schedule">
+          <summary><CalendarDays size={17} aria-hidden="true" /><span>ตารางวันที่เลือก</span><small>{day}</small></summary>
+          <RecordAgenda schedule={schedule} />
+          <Link href="/calendar" className="record-link" prefetch={false}>ดูปฏิทิน</Link>
+        </details>
         <section className="record-recent" aria-label="บันทึกล่าสุด">
           <div className="record-section-head"><h2>บันทึกล่าสุด</h2><Link href="/worklogs" prefetch={false} className="record-link">ดูประวัติงาน <ChevronRight size={16} aria-hidden="true" /></Link></div>
           {worklogs.status === "loading" && <p className="ui-caption" role="status">กำลังโหลดบันทึก…</p>}
@@ -114,22 +132,8 @@ export function WorklogRecordWorkspace({
             <span><strong>{log.minorTask || "บันทึกงาน"}</strong><small>{[person.label, log.time, log.comment].filter(Boolean).join(" · ")}</small></span>
             <ChevronRight size={16} aria-hidden="true" />
           </button>)}
-          <Link href="/resources" prefetch={false} className="record-link">ดูสถานะห้องและอุปกรณ์</Link>
         </section>
       </div>
-      <aside className="record-context" aria-label="ข้อมูลประกอบการบันทึก">
-        <section>
-          <div className="record-section-head"><h2>{isToday ? (directory ? "สรุปวันนี้" : "วันนี้ของคุณ") : "สรุปวันที่เลือก"}</h2><CalendarDays size={18} aria-hidden="true" /></div>
-          <p className="record-context-date">{day}</p>
-          {worklogs.status === "ready"
-            ? <div className="record-context-count"><strong>{worklogs.count}</strong><span>รายการที่บันทึก{directory && <small>{person.label}</small>}</span></div>
-            : <p className="ui-caption">{worklogs.status === "error" ? "โหลดจำนวนบันทึกไม่สำเร็จ" : worklogs.status === "loading" ? "กำลังโหลดจำนวนบันทึก…" : "เลือกผู้ปฏิบัติงานและวันที่เพื่อดูจำนวนบันทึก"}</p>}
-        </section>
-        <section>
-          <div className="record-section-head"><h2>ตารางวันที่เลือก</h2><Link href="/calendar" prefetch={false} className="record-link">ดูปฏิทิน <ChevronRight size={16} aria-hidden="true" /></Link></div>
-          <RecordAgenda schedule={schedule} />
-        </section>
-      </aside>
     </div>
     <Dialog open={Boolean(editingDate)} title="วันที่และเวลา" description="ใช้กับการกรอกเองและคุมสอบ DL รอบจากตารางใช้เวลาสอบ บันทึกด่วนอื่นใช้เวลาปัจจุบัน" onClose={() => setEditingDate(null)}
       footer={editingDate && <><GlassButton onClick={() => setEditingDate(null)}>ยกเลิก</GlassButton><GlassButton type="submit" form={dateForm} variant="prominent">ใช้วันและเวลานี้</GlassButton></>}>
