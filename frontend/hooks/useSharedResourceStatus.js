@@ -58,18 +58,20 @@ export function useSharedResourceStatus({ enabled = true, refreshEveryMs = 0 } =
     };
     const refreshSoon = () => {
       clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(load, 400);
+      if (!document.hidden) refreshTimer = setTimeout(load, 400);
     };
     for (const event of statusEvents) window.addEventListener(event, refreshSoon);
     window.addEventListener("focus", refreshSoon);
     load();
-    const interval = refreshEveryMs ? setInterval(load, refreshEveryMs) : null;
+    const interval = refreshEveryMs ? setInterval(refreshSoon, refreshEveryMs) : null;
+    if (refreshEveryMs) document.addEventListener("visibilitychange", refreshSoon);
     return () => {
       controller?.abort();
       clearTimeout(refreshTimer);
       clearInterval(interval);
       for (const event of statusEvents) window.removeEventListener(event, refreshSoon);
       window.removeEventListener("focus", refreshSoon);
+      document.removeEventListener("visibilitychange", refreshSoon);
     };
   }, [uid, attempt, refreshEveryMs]);
 
