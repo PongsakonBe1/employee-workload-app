@@ -8,6 +8,7 @@
 
 import admin from "firebase-admin";
 import { env } from "../config/env.js";
+import { pushMessageData } from "./pushMessage.js";
 
 let firebaseApp = null;
 let firestoreDb = null;
@@ -54,14 +55,13 @@ export async function sendToTokens(tokens, title, body, data = {}) {
 
   const message = {
     tokens,
-    notification: { title, body },
-    data: Object.entries(data).reduce((acc, [key, value]) => {
-      acc[key] = String(value);
-      return acc;
-    }, {}),
+    // Web notifications are displayed by the service worker from the data payload.
+    data: pushMessageData(title, body, data),
     android: {
       priority: "high",
       notification: {
+        title,
+        body,
         channelId: "default",
         priority: "high",
         defaultSound: true,
