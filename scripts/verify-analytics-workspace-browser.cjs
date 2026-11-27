@@ -207,10 +207,13 @@ async function saveView(page, suffix) {
     await count(adminPage, fiscalCount);
     await selectRange(adminPage, "custom", oldDate, oldDate);
     await count(adminPage, 1000);
-    await adminPage.getByText("กราฟและยอดรวมคำนวณจากรายการที่โหลดแล้ว", { exact: false }).waitFor();
+    await adminPage.getByText("ยอดด้านล่างนับเฉพาะรายการที่โหลดแล้ว", { exact: false }).waitFor();
+    assert.equal(await adminPage.locator(".planning-distribution,.planning-trend,.planning-person-trend").count(), 0);
+    await adminPage.getByRole("region", { name: "สรุปเฉพาะบันทึกที่โหลดแล้ว" }).waitFor();
     await adminPage.getByRole("button", { name: "โหลดเพิ่ม 1,000 รายการ" }).click();
     const full = source.filter(doc => doc.employeeId === staff.id && doc.date === oldDate).length;
     await count(adminPage, full);
+    await adminPage.locator(".planning-person-trend").waitFor();
     assert.equal(await adminPage.getByRole("button", { name: "โหลดเพิ่ม 1,000 รายการ" }).count(), 0);
     await adminPage.reload();
     await adminPage.getByRole("button", { name: "รายสัปดาห์", exact: true }).waitFor();
