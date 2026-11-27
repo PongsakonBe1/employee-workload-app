@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
-import { Bell, ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Bell, ChevronRight } from "lucide-react";
 import { EQUIPMENT_LABELS } from "../lib/equipmentCatalog";
 import { RESOURCE_ROOM_IDS } from "../lib/resourceStatusIndex";
 import { equipmentStatusLabels, roomDisplayState, roomStatusLabels } from "../lib/resourcePresentation";
@@ -23,49 +23,109 @@ export function MobileRoomClosureNotice({ notices }) {
   </p>;
 }
 
-function EquipmentMeter({ label, counts }) {
+const resourcePages = [["rooms", "ห้อง"], ...Object.entries(EQUIPMENT_LABELS)];
+
+function EquipmentPage({ counts }) {
   const segments = Object.entries(equipmentStatusLabels);
-  return <li className="record-equipment-meter">
-    <strong>{label}</strong>
-    <div className="record-equipment-counts">
-      {segments.map(([state, name]) => <span key={state} data-attention={state === "issue" && counts.issue > 0}>
-        {name} <b>{counts[state]}</b>
-      </span>)}
-    </div>
+  const total = counts.ready + counts.inUse + counts.issue;
+  if (!total) return <p className="record-resource-feedback">ยังไม่มีอุปกรณ์ประเภทนี้</p>;
+
+  return <div className="record-equipment-meter">
+    <p className="record-equipment-available"><strong>{counts.ready}</strong> พร้อมใช้ จาก {total} ชิ้น</p>
     <div className="record-equipment-track" aria-hidden="true">
       {segments.map(([state]) => counts[state] > 0 && <span key={state} data-state={state} style={{ flexGrow: counts[state] }} />)}
     </div>
-  </li>;
+    <dl className="record-equipment-counts">
+      {segments.map(([state, name]) => <div key={state} data-attention={state === "issue" && counts.issue > 0}>
+        <dt>{name}</dt><dd>{counts[state]}</dd>
+      </div>)}
+    </dl>
+  </div>;
+}
+
+function ResourceStatusWidget({ status }) {
+  const widgetId = useId();
+  const viewport = useRef(null);
+  const active = useRef(0);
+  const [page, setPage] = useState(0);
+  const rooms = status.roomStatus ?? {};
+  const openCount = RESOURCE_ROOM_IDS.filter(room => rooms[room] === "in_use").length;
+  const equipment = summarizeEquipment(status.equipmentCatalog ?? [], status.equipmentStatus ?? {}, status.equipmentConditions ?? {});
+  const issueCount = Object.values(equipment).reduce((sum, item) => sum + item.issue, 0);
+
+  useEffect(() => {
+    const node = viewport.current;
+    let width = node.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (width === node.clientWidth) return;
+      width = node.clientWidth;
+      node.scrollLeft = active.current * width;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  function selectPage(index) {
+    const node = viewport.current;
+    active.current = index;
+    setPage(index);
+    node.scrollLeft = index * node.clientWidth;
+  }
+
+  function followScroll(event) {
+    const { scrollLeft, clientWidth } = event.currentTarget;
+    if (!clientWidth) return;
+    const index = Math.min(resourcePages.length - 1, Math.max(0, Math.round(scrollLeft / clientWidth)));
+    if (index === active.current) return;
+    active.current = index;
+    setPage(index);
+  }
+
+  function onPageKey(event, index) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const offset = event.key === "ArrowRight" ? 1 : -1;
+    const next = (index + offset + resourcePages.length) % resourcePages.length;
+    selectPage(next);
+    event.currentTarget.parentElement.children[next].focus({ preventScroll: true });
+  }
+
+  return <div className="record-status-widget">
+    <div className="record-status-pages" role="group" aria-label="เลือกสถานะตามประเภท">
+      {resourcePages.map(([kind, label], index) => <button key={kind} type="button" id={`${widgetId}-${kind}-label`}
+        aria-pressed={page === index} aria-controls={`${widgetId}-${kind}`} onClick={() => selectPage(index)} onKeyDown={event => onPageKey(event, index)}>
+        <strong>{label}</strong><small>{kind === "rooms" ? <>เปิด <b>{openCount}</b></> : <>พร้อม <b>{equipment[kind].ready}</b></>}</small>
+      </button>)}
+    </div>
+    {issueCount > 0 && <p className="record-status-issue-total" data-attention="true">อุปกรณ์ต้องตรวจ {issueCount} ชิ้น</p>}
+    <p className="sr-only" role="status">กำลังดูสถานะ{resourcePages[page][1]}</p>
+    <div className="record-status-viewport" ref={viewport} onScroll={followScroll}>
+      {resourcePages.map(([kind], index) => <section key={kind} className="record-status-slide"
+        id={`${widgetId}-${kind}`} aria-labelledby={`${widgetId}-${kind}-label`} aria-hidden={page !== index}>
+        {kind === "rooms" ? ["3", "4"].map(floor => <div className="record-resource-group" key={floor}>
+          <h3>ห้องชั้น {floor}</h3>
+          <ul className="record-live-rooms" aria-label={`สถานะห้องชั้น ${floor}`}>
+            {RESOURCE_ROOM_IDS.filter(room => room.startsWith(floor)).map(room => {
+              const state = roomDisplayState(rooms[room]);
+              return <li key={room} data-state={state}><strong>ห้อง {room}</strong><span>{roomStatusLabels[state]}</span></li>;
+            })}
+          </ul>
+        </div>) : <EquipmentPage counts={equipment[kind]} />}
+      </section>)}
+    </div>
+  </div>;
 }
 
 export function WorklogResourceSummary({ schedule, retrySchedule, notices, resourceStatus }) {
   const titleId = useId();
-  const detailId = useId();
-  const [expanded, setExpanded] = useState(false);
   const { status, loading, error, retry } = resourceStatus;
-  const rooms = status?.roomStatus ?? {};
-  const openCount = RESOURCE_ROOM_IDS.filter(room => rooms[room] === "in_use").length;
-  const unknownCount = RESOURCE_ROOM_IDS.filter(room => roomDisplayState(rooms[room]) === "unknown").length;
-  const equipment = status && summarizeEquipment(status.equipmentCatalog ?? [], status.equipmentStatus ?? {}, status.equipmentConditions ?? {});
-  const counts = Object.values(equipment ?? {});
-  const readyCount = counts.reduce((sum, item) => sum + item.ready, 0);
-  const issueCount = counts.reduce((sum, item) => sum + item.issue, 0);
-  const summary = status ? <span className="record-resource-totals">
-    <span>เปิด <b>{openCount}</b> ห้อง</span>
-    <span>อุปกรณ์พร้อมใช้ <b>{readyCount}</b> ชิ้น</span>
-    {issueCount > 0 && <span data-attention="true">ต้องตรวจ <b>{issueCount}</b> ชิ้น</span>}
-    {unknownCount > 0 && <span>ยังไม่ยืนยัน <b>{unknownCount}</b> ห้อง</span>}
-  </span> : error ? "ยังยืนยันสถานะไม่ได้" : "กำลังโหลด…";
 
-  return <section className="record-resource-summary" aria-labelledby={titleId} data-expanded={expanded}>
-    <h2 id={titleId} className="record-resource-title">สถานะห้องและอุปกรณ์</h2>
-    <p className="record-resource-at-a-glance">{summary}</p>
-    <button type="button" className="record-resource-disclosure" aria-expanded={expanded} aria-controls={detailId} onClick={() => setExpanded(value => !value)}>
-      <span><strong>สถานะห้องและอุปกรณ์</strong><small>{summary}</small></span>
-      <ChevronDown size={17} aria-hidden="true" />
-    </button>
-    <div id={detailId} className="record-resource-summary-body">
+  return <section className="record-resource-summary" aria-labelledby={titleId}>
+    <header className="record-resource-header">
+      <h2 id={titleId}>สถานะห้องและอุปกรณ์</h2>
       <Link href="/resources" prefetch={false} className="record-link record-resource-directory-link">ดูทรัพยากรทั้งหมด <ChevronRight size={15} aria-hidden="true" /></Link>
+    </header>
+    <div className="record-resource-summary-body">
       {loading && <p className="ui-caption" role="status">กำลังโหลดสถานะห้องและอุปกรณ์…</p>}
       {error && <div className="record-resource-feedback">
         <p role="status">ยังยืนยันสถานะห้องและอุปกรณ์ไม่ได้</p>
@@ -83,21 +143,7 @@ export function WorklogResourceSummary({ schedule, retrySchedule, notices, resou
           <button type="button" className="record-link" onClick={retrySchedule}>ลองโหลดตารางวันนี้อีกครั้ง</button>
         </div>}
         {schedule.unavailable > 0 && <p className="ui-caption">ตารางวันนี้มีข้อมูลไม่ครบ จึงยังยืนยันเวลาปิดห้องไม่ได้</p>}
-        {["3", "4"].map(floor => <div className="record-resource-group" key={floor}>
-          <h3>ห้องชั้น {floor}</h3>
-          <ul className="record-live-rooms" aria-label={`สถานะห้องชั้น ${floor}`}>
-            {RESOURCE_ROOM_IDS.filter(room => room.startsWith(floor)).map(room => {
-              const state = roomDisplayState(rooms[room]);
-              return <li key={room} data-state={state}><strong>ห้อง {room}</strong><span>{roomStatusLabels[state]}</span></li>;
-            })}
-          </ul>
-        </div>)}
-        <div className="record-resource-group">
-          <h3>อุปกรณ์</h3>
-          <ul className="record-live-equipment" aria-label="สถานะอุปกรณ์">
-            {Object.entries(EQUIPMENT_LABELS).map(([kind, label]) => <EquipmentMeter key={kind} label={label} counts={equipment[kind]} />)}
-          </ul>
-        </div>
+        <ResourceStatusWidget status={status} />
       </>}
     </div>
   </section>;
