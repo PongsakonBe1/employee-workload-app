@@ -116,6 +116,15 @@
 .record-badge[data-tone=amber] { background: var(--ui-amber); color: var(--ui-amber-ink); }
 .record-resource-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: var(--ui-blue-ink); font-size: .8125rem; margin-top: auto; }
 .record-resource-tile:disabled .record-resource-action { color: var(--ui-sub); }
+.record-room-dialog .record-resource-tile { position: relative; justify-content: center; min-height: 128px; gap: 7px; padding: 12px 8px; background: var(--ui-soft); color: var(--ui-ink); transition: none; }
+.record-room-dialog .ui-dialog-header .ui-icon-button { transition: none; }
+.record-room-dialog .record-resource-tile[aria-pressed=true] { border-color: var(--ui-accent); box-shadow: inset 0 0 0 1px var(--ui-accent); }
+.record-room-check { position: absolute; top: 8px; right: 8px; color: var(--ui-accent); }
+@media (forced-colors: active) {
+  .record-room-dialog .record-resource-tile[aria-pressed=true] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .record-room-dialog .ui-glass-button[data-kind=prominent]:enabled { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .record-room-dialog .ui-glass-button-label { background: transparent; }
+}
 .record-back { margin: -8px 0 12px -5px; }
 .record-device-summary { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
 .record-device-summary strong { font-size: .9375rem; font-weight: 600; }

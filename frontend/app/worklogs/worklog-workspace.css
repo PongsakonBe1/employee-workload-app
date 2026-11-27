@@ -10,6 +10,7 @@
 .record-live-context { grid-area: context; display: grid; gap: 20px; align-self: start; min-width: 0; }
 .record-resource-summary { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 17px; min-width: 0; }
 .record-resource-title { margin: 15px 16px 0; font-size: .9375rem; font-weight: 650; }
+.record-resource-at-a-glance { margin: 4px 16px 0; color: var(--ui-sub); font-size: .8125rem; }
 .record-resource-disclosure { display: none; }
 .record-resource-summary-body { display: grid; gap: 12px; padding: 12px 16px 14px; }
 .record-resource-summary-body :is(ul,p) { margin: 0; }
@@ -28,14 +29,15 @@
   display: grid; gap: 2px; border-radius: 8px; background: var(--ui-soft); color: var(--ui-sub);
   padding: 5px 4px; text-align: center; font-size: .6875rem; overflow-wrap: anywhere;
 }
-.record-live-rooms li[data-state="in_use"] { background: var(--ui-green); color: var(--ui-green-ink); }
-.record-equipment-meter { display: grid; gap: 3px; font-size: .75rem; }
-.record-equipment-track { display: flex; gap: 2px; height: 8px; background: var(--ui-soft); padding: 1px; border-radius: 5px; overflow: hidden; }
+.record-live-rooms li[data-state="in_use"] span { color: var(--ui-green-ink); font-weight: 650; }
+.record-equipment-meter { display: grid; gap: 4px; font-size: .8125rem; padding-block: 5px; }
+.record-equipment-track { display: flex; gap: 2px; height: 5px; background: var(--ui-soft); border-radius: 5px; overflow: hidden; }
 .record-equipment-track span { flex-basis: 0; border-radius: 3px; }
 .record-equipment-track [data-state="ready"] { background: var(--ui-green-ink); }
 .record-equipment-track [data-state="inUse"] { background: var(--ui-blue-ink); }
 .record-equipment-track [data-state="issue"] { background: var(--ui-amber-ink); }
-.record-equipment-counts { display: flex; flex-wrap: wrap; column-gap: 8px; color: var(--ui-sub); font-size: .6875rem; }
+.record-equipment-counts { display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--ui-sub); font-size: .8125rem; }
+.record-equipment-counts b { color: var(--ui-ink); font-variant-numeric: tabular-nums; }
 .record-resource-feedback { color: var(--ui-sub); font-size: .75rem; }
 .record-resource-summary-body .record-link { min-height: 44px; justify-self: start; }
 .worklog-live-record .record-panel-title { flex-wrap:wrap; }
@@ -66,6 +68,7 @@
   .worklog-inline-schedule { display:block; }
   .worklog-live-record { grid-template-areas: "entry" "context" "follow-up"; grid-template-rows: auto; row-gap: 8px; }
   .record-resource-title { display: none; }
+  .record-resource-at-a-glance { display: none; }
   .record-mobile-room-notice {
     display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px;
     line-height: 1.35; margin: 0 0 6px; padding: 5px 8px;

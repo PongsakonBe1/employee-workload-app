@@ -1,6 +1,7 @@
 import { timeMinutes } from "./calendarView.js";
 import { EQUIPMENT_LABELS, visibleEquipment } from "./equipmentCatalog.js";
 import { RESOURCE_ROOM_IDS } from "./resourceStatusIndex.js";
+import { equipmentDisplayState } from "./resourcePresentation.js";
 
 const bangkokDateTime = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
@@ -43,10 +44,7 @@ export function roomClosureNotices(roomStatus, schedule, clock) {
 export function summarizeEquipment(catalog, statuses, conditions) {
   const summaries = Object.fromEntries(Object.keys(EQUIPMENT_LABELS).map(kind => [kind, { ready: 0, inUse: 0, issue: 0 }]));
   for (const { id, kind } of visibleEquipment(catalog, statuses)) {
-    const state = statuses[kind]?.[id];
-    if (state === "in_use") summaries[kind].inUse++;
-    else if (state !== "available" || ["damaged", "lost"].includes(conditions[id])) summaries[kind].issue++;
-    else summaries[kind].ready++;
+    summaries[kind][equipmentDisplayState(statuses[kind]?.[id], conditions[id])]++;
   }
   return summaries;
 }

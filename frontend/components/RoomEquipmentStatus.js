@@ -526,11 +526,12 @@ export default function RoomEquipmentStatus({ directory = false }) {
   const allRooms4 = ['401', '402', '406', '407'];
   const roomItems = [...allRooms3, ...allRooms4].map(id => ({
     type: 'room', id, label: id, location: `ห้องบริการ ชั้น ${id[0]}`,
-    inUse: roomStatus[id] === 'in_use', os: roomOsMap[id]
+    status: roomStatus[id], inUse: roomStatus[id] === 'in_use', os: roomOsMap[id]
   }));
   const equipmentItems = visibleEquipment(status?.equipmentCatalog ?? [], equipmentStatus).map(({ id, kind, location }) => ({
     type: kind, id, label: `${EQUIPMENT_LABELS[kind]} ${id.slice(4)}`, location: location || 'ไม่ระบุสังกัด',
-    inUse: equipmentStatus[kind]?.[id] === 'in_use', unknown: equipmentStatus[kind]?.[id] === 'unknown',
+    status: equipmentStatus[kind]?.[id], inUse: equipmentStatus[kind]?.[id] === 'in_use',
+    unknown: !['available', 'in_use'].includes(equipmentStatus[kind]?.[id]),
     detail: equipmentDetails[id], condition: equipmentConditions[id]
   }));
   const equipmentGroups = new Map();
