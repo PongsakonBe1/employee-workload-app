@@ -19,14 +19,10 @@ import {
   Tooltip as RechartsTooltip,
 } from "recharts";
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Calendar,
   Target,
   Award,
   Briefcase,
-  BarChart3,
   Zap,
   Trophy,
   Medal,
@@ -69,16 +65,7 @@ const ICON_MAP = {
 };
 
 // ─── Stats Card Component ───────────────────────────────────────────────────
-function StatCard({ title, value, subtitle, icon: Icon, trend, textValue = false }) {
-  const trendIcon =
-    trend === "up" ? (
-      <TrendingUp size={14} className="text-emerald-500" />
-    ) : trend === "down" ? (
-      <TrendingDown size={14} className="text-rose-500" />
-    ) : (
-      <Minus size={14} className="text-slate-400" />
-    );
-
+function StatCard({ title, value, subtitle, icon: Icon, textValue = false }) {
   return (
     <div className="apple-panel profile-stat-card">
       <div className="profile-stat-heading">
@@ -90,7 +77,6 @@ function StatCard({ title, value, subtitle, icon: Icon, trend, textValue = false
       <p className={`profile-stat-value ${textValue ? "profile-stat-value--text" : "text-2xl"} font-bold text-slate-900 mt-1`}>{value}</p>
       {subtitle && (
         <div className="flex items-center gap-1 mt-1">
-          {trend && <span className="shrink-0" aria-hidden="true">{trendIcon}</span>}
           <p className="text-xs text-slate-500">{subtitle}</p>
         </div>
       )}
@@ -109,41 +95,14 @@ function CategoryRadar({ data }) {
     }));
   }, [data]);
 
-  // PM/UX: Need at least 3 different minorTasks for meaningful radar
-  if (!data || data.length === 0) {
-    return (
-      <div className="apple-panel p-6 flex flex-col items-center justify-center h-64">
-        <BarChart3 size={32} className="text-slate-300 mb-3" />
-        <p className="text-sm text-slate-500">ยังไม่มีข้อมูลหมวดหมู่</p>
-        <p className="text-xs text-slate-400 mt-1">
-          บันทึกงานเพิ่มเพื่อดูกราฟทักษะ
-        </p>
-      </div>
-    );
-  }
-
-  if (data.length < 3) {
-    return (
-      <div className="apple-panel p-6 flex flex-col items-center justify-center h-64">
-        <BarChart3 size={32} className="text-slate-300 mb-3" />
-        <p className="text-sm text-slate-500">ข้อมูลไม่พอสำหรับกราฟ</p>
-        <p className="text-xs text-slate-400 mt-1 text-center px-4">
-          ต้องมีอย่างน้อย 3 หัวข้อรองที่แตกต่างกัน
-          <br />
-          (ขณะนี้มี {data.length} หัวข้อ)
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="apple-panel p-6">
       <h3 className="text-base font-semibold text-slate-900 mb-4">
-        การกระจายตามหัวข้อรอง
+        หัวข้อรองที่บันทึกบ่อย
       </h3>
-      <div className="h-64">
+      {data.length >= 3 && <div className="h-64" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={abbreviatedData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+          <RadarChart data={abbreviatedData} accessibilityLayer={false} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
             <PolarGrid stroke="var(--ui-line)" />
             <PolarAngleAxis
               dataKey="subject"
@@ -151,7 +110,7 @@ function CategoryRadar({ data }) {
             />
             <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
             <Radar
-              name="ทักษะ"
+              name="ความถี่สัมพัทธ์"
               dataKey="A"
               stroke="var(--ui-purple-ink)"
               strokeWidth={2}
@@ -172,10 +131,10 @@ function CategoryRadar({ data }) {
             />
           </RadarChart>
         </ResponsiveContainer>
-      </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">
-        แสดงสัดส่วนงานตามหัวข้อรองยอดนิยม (normalized)
-      </p>
+      </div>}
+      {data.length ? <ul className="profile-topic-counts" aria-label="จำนวนบันทึกแยกตามหัวข้อรอง">
+        {data.map(item => <li key={item.subject}><span>{item.subject}</span><b>{item.count} รายการ</b></li>)}
+      </ul> : <p className="ui-caption">ยังไม่มีบันทึกให้สรุป</p>}
     </div>
   );
 }
@@ -355,30 +314,22 @@ export function ProfileStats({ user }) {
         <StatCard
           title="บันทึกที่ใช้คำนวณ"
           value={stats.totalWorklogs}
-          subtitle={`${stats.totalDays} วันที่ทำงาน`}
+          subtitle={`มีบันทึก ${stats.totalDays} วัน`}
           icon={Briefcase}
-          trend={stats.trend}
         />
         <StatCard
           title="เดือนนี้"
           value={stats.thisMonth}
-          subtitle={
-            stats.thisMonth > stats.lastMonth
-              ? `เพิ่มจากเดือนที่แล้ว ${stats.thisMonth - stats.lastMonth}`
-              : stats.thisMonth < stats.lastMonth
-              ? `ลดจากเดือนที่แล้ว ${stats.lastMonth - stats.thisMonth}`
-              : "เท่ากับเดือนที่แล้ว"
-          }
+          subtitle="รายการที่บันทึกในเดือนนี้"
           icon={Calendar}
-          trend={stats.trend}
         />
         <StatCard
-          title="streak"
+          title="วันที่มีบันทึกต่อเนื่อง"
           value={stats.streak > 0 ? `${stats.streak} วัน` : "—"}
           subtitle={
             stats.longestStreak > stats.streak
               ? `สูงสุด ${stats.longestStreak} วัน`
-              : "กำลังต่อเนื่อง!"
+              : undefined
           }
           icon={Zap}
         />

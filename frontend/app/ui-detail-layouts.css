@@ -102,6 +102,11 @@
 .profile-stat-icon { flex-shrink: 0; }
 .profile-stat-value { overflow-wrap: anywhere; }
 .profile-stat-value--text { font-size: 1rem; line-height: 1.45; }
+.profile-topic-counts { display:grid; list-style:none; padding:0; margin:0; }
+.profile-topic-counts li { display:flex; justify-content:space-between; gap:12px; padding-block:8px; border-bottom:1px solid var(--ui-line); color:var(--ui-ink); font-size:.875rem; }
+.profile-topic-counts li:last-child { border-bottom:0; }
+.profile-topic-counts span { overflow-wrap:anywhere; }
+.profile-topic-counts b { flex:none; color:var(--ui-sub); font-variant-numeric:tabular-nums; }
 
 @media (max-width: 760px) {
   .ui-system-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }

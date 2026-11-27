@@ -1,152 +1,124 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { doc, updateDoc } from "firebase/firestore";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
 import { ProfileStats } from "../../components/ProfileStats";
+import { GlassButton } from "../../components/ui/GlassControls";
 import { db } from "../../lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
-import { User, Save, Lock, BarChart3 } from "lucide-react";
 import { isAdminRole } from "../../lib/authUtils";
+import "./profile.css";
 
-export default function ProfilePage() {
-  const { user, setUser } = useAuth();
-  const [form, setForm] = useState({
-    fullName: user?.fullName || "",
-    displayName: user?.displayName || "",
-  });
+const roleLabels = { staff: "เจ้าหน้าที่", admin: "Admin", superadmin: "Superadmin" };
+
+function ProfileAvatar({ photoURL, name }) {
+  const [failed, setFailed] = useState(false);
+  return <span className="profile-account-avatar" aria-hidden="true">
+    {!failed && /^https:\/\/(?:[a-z0-9-]+\.)+googleusercontent\.com\//i.test(photoURL ?? "")
+      ? <img src={photoURL} alt="" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+      : Array.from(name)[0]?.toLocaleUpperCase()}
+  </span>;
+}
+
+function ProfileAccount({ user, setUser }) {
+  const [draft, setDraft] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
+  const editButton = useRef(null);
+  const form = useRef(null);
+  const editing = Boolean(draft);
+  const admin = isAdminRole(user);
+  const name = user.displayName || user.nickname || user.fullName || "ผู้ใช้งาน";
 
-  const isAdmin = isAdminRole(user);
+  useEffect(() => {
+    if (editing) form.current?.querySelector("input")?.focus();
+  }, [editing]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!user) return;
+  useEffect(() => {
+    if (message && !message.error && !saving) editButton.current?.focus();
+  }, [message, saving]);
 
+  function toggleEdit() {
+    setMessage(null);
+    setDraft(draft ? null : {
+      fullName: user.fullName ?? "",
+      nickname: user.nickname ?? "",
+      displayName: user.displayName ?? "",
+    });
+  }
+
+  async function save(event) {
+    event.preventDefault();
+    if (!draft || saving) return;
+    const fields = { fullName: draft.fullName.trim(), nickname: draft.nickname.trim() };
+    if (admin) fields.displayName = draft.displayName.trim() || fields.fullName;
+    setSaving(true);
+    setMessage(null);
     try {
-      setSaving(true);
-      const updatePayload = { fullName: form.fullName };
-      // ITEM-3A: เฉพาะ admin/superadmin แก้ displayName ได้ (SA lock rules)
-      if (isAdmin) updatePayload.displayName = form.displayName || form.fullName;
-      await updateDoc(doc(db, "users", user.uid), updatePayload);
-
-      // อัพเดต context
-      setUser({ ...user, ...form });
-      setMessage("บันทึกสำเร็จ!");
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      setMessage("เกิดข้อผิดพลาด: " + err.message);
+      await updateDoc(doc(db, "users", user.uid), fields);
+      setUser(current => current?.uid === user.uid ? { ...current, ...fields } : current);
+      setDraft(null);
+      setMessage({ text: "บันทึกข้อมูลแล้ว" });
+    } catch {
+      setMessage({ text: "บันทึกข้อมูลไม่สำเร็จ กรุณาลองอีกครั้ง", error: true });
     } finally {
       setSaving(false);
     }
   }
 
-  if (!user) {
-    return (
-      <AppShell>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-slate-600">กรุณาเข้าสู่ระบบ</p>
-        </div>
-      </AppShell>
-    );
-  }
+  return <section className="apple-panel profile-account" aria-labelledby="profile-account-title">
+    <div className="profile-account-heading">
+      <ProfileAvatar key={user.photoURL} photoURL={user.photoURL} name={name} />
+      <div><h2 id="profile-account-title">{name}</h2><p>{user.email}</p></div>
+      <GlassButton mode="quick" ref={editButton} aria-expanded={Boolean(draft)} disabled={saving} onClick={toggleEdit}>
+        {draft ? "ยกเลิกการแก้ไข" : "แก้ไขข้อมูล"}
+      </GlassButton>
+    </div>
+    <dl className="profile-account-details">
+      <div><dt>บทบาท</dt><dd>{roleLabels[user.role] ?? "ยังไม่ระบุ"}</dd></div>
+      <div><dt>สถานะบัญชี</dt><dd>{user.active === true ? "เปิดใช้งาน" : user.active === false ? "ปิดใช้งาน" : "ยังไม่ยืนยัน"}</dd></div>
+      <div><dt>ชื่อที่ใช้ลงงาน</dt><dd>{user.displayName || "ยังไม่ได้กำหนด"}</dd></div>
+      <div><dt>ชื่อ–นามสกุล</dt><dd>{user.fullName || "—"}</dd></div>
+      <div><dt>ชื่อเล่น</dt><dd>{user.nickname || "—"}</dd></div>
+    </dl>
+    {message && <p className="profile-account-feedback" role={message.error ? "alert" : "status"}>{message.text}</p>}
+    {draft && <form ref={form} className="profile-account-edit" onSubmit={save}>
+      {admin && <div className="ui-field">
+        <label htmlFor="profile-display-name">ชื่อที่ใช้ลงงาน</label>
+        <input id="profile-display-name" aria-describedby="profile-display-name-hint" className="apple-input" maxLength={200} value={draft.displayName} disabled={saving}
+          onChange={event => setDraft({ ...draft, displayName: event.target.value })} />
+        <small id="profile-display-name-hint" className="ui-caption">ใช้แสดงในบันทึกงานและรายงาน</small>
+      </div>}
+      {!admin && <p className="ui-caption">ผู้ดูแลจัดการชื่อที่ใช้ลงงาน</p>}
+      <label className="ui-field">
+        <span>ชื่อ–นามสกุล</span>
+        <input className="apple-input" autoComplete="name" maxLength={200} value={draft.fullName} disabled={saving}
+          onChange={event => setDraft({ ...draft, fullName: event.target.value })} />
+      </label>
+      <div className="ui-field">
+        <label htmlFor="profile-nickname">ชื่อเล่น (ไม่บังคับ)</label>
+        <input id="profile-nickname" aria-describedby="profile-nickname-hint" className="apple-input" autoComplete="nickname" maxLength={200} value={draft.nickname} disabled={saving}
+          onChange={event => setDraft({ ...draft, nickname: event.target.value })} />
+        <small id="profile-nickname-hint" className="ui-caption">บางหน้าจะแสดงชื่อเล่นเมื่อยังไม่ได้กำหนดชื่อที่ใช้ลงงาน</small>
+      </div>
+      <GlassButton mode="quick" variant="prominent" type="submit" disabled={saving}>{saving ? "กำลังบันทึก…" : "บันทึกข้อมูล"}</GlassButton>
+    </form>}
+  </section>;
+}
 
-  return (
-    <AppShell>
-      <section className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-blue-500 text-white mb-4">
-            <User size={24} />
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-            แก้ไขโปรไฟล์
-          </h1>
-          <p className="mt-2 text-slate-600">อัพเดตข้อมูลส่วนตัวของคุณ</p>
-        </div>
-
-        {/* ITEM-3B: Stats + Radar + Badges */}
-        <section className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 size={20} className="text-indigo-600" />
-            <h2 className="text-lg font-semibold text-slate-900">สถิติของฉัน</h2>
-          </div>
+export default function ProfilePage() {
+  const { user, setUser, loading } = useAuth();
+  return <AppShell>
+    <div className="profile-workspace">
+      <header className="ui-page-heading"><h1>โปรไฟล์ของฉัน</h1></header>
+      {loading ? <p role="status">กำลังโหลดโปรไฟล์…</p> : !user ? <p>กรุณาเข้าสู่ระบบ</p> : <>
+        <ProfileAccount key={user.uid} user={user} setUser={setUser} />
+        <section className="profile-workspace-stats" aria-labelledby="profile-stats-title">
+          <h2 id="profile-stats-title">สถิติของฉัน</h2>
           <ProfileStats user={user} />
         </section>
-
-        <div className="apple-panel p-8">
-          {message && (
-            <div
-              className={`mb-6 p-4 rounded-xl ${message.includes("สำเร็จ") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
-            >
-              {message}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ITEM-3A: displayName — admin แก้ได้, staff ดูอย่างเดียว */}
-            <div>
-              <label className="apple-label">
-                ชื่อที่ใช้ลงงาน (ภาษาไทย)
-              </label>
-              {isAdmin ? (
-                <>
-                  <input
-                    type="text"
-                    className="apple-input"
-                    value={form.displayName}
-                    onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-                    placeholder="เช่น พงศกร"
-                  />
-                  <p className="mt-1 text-xs text-slate-500">
-                    ชื่อนี้จะแสดงในหน้า Dashboard และรายงานงาน
-                  </p>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
-                  <Lock size={14} className="text-slate-400 shrink-0" />
-                  <span className="text-slate-700 font-medium">{user.displayName || user.fullName || "—"}</span>
-                  <span className="ml-auto text-xs text-slate-400">แก้ไขโดย Admin เท่านั้น</span>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="apple-label">ชื่อ-นามสกุลเต็ม (ภาษาไทย)</label>
-              <input
-                type="text"
-                className="apple-input"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                placeholder="เช่น พงศกร ราวังวง"
-              />
-              <p className="mt-1 text-xs text-slate-500">
-                ข้อมูลเพิ่มเติม (ไม่บังคับ)
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-slate-100">
-              <p className="text-sm text-slate-500 mb-4">
-                <strong>อีเมล:</strong> {user.email}
-              </p>
-              <p className="text-sm text-slate-500 mb-4">
-                <strong>สิทธิ์:</strong>{" "}
-                {user.role === "staff" ? "พนักงาน" : user.role}
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="apple-button w-full flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <Save size={18} />
-              {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
-            </button>
-          </form>
-        </div>
-      </section>
-    </AppShell>
-  );
+      </>}
+    </div>
+  </AppShell>;
 }
