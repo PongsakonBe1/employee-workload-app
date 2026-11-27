@@ -18,15 +18,15 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// รับ background message และแสดง notification
+// FCM displays messages with a notification payload before calling this handler.
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || payload.data?.title || "แจ้งเตือน";
-  const body = payload.notification?.body || payload.data?.body || "";
-  const icon = payload.notification?.icon || "/labboy-logo.png";
+  if (payload.notification) return;
+  const title = payload.data?.title || "แจ้งเตือน";
+  const body = payload.data?.body || "";
 
-  self.registration.showNotification(title, {
+  return self.registration.showNotification(title, {
     body,
-    icon,
+    icon: "/labboy-logo.png",
     badge: "/labboy-logo.png",
     data: payload.data || {},
     tag: payload.data?.tag || "labboy-notif",
