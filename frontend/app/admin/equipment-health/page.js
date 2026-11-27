@@ -7,6 +7,8 @@ import { Download, AlertTriangle, XCircle, CheckCircle, Headphones, Plug, Calend
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { isAdminRole } from "../../../lib/authUtils";
+import { calendarToday } from "../../../lib/calendarView";
+import { equipmentRange } from "../../../lib/equipmentRange";
 import { db } from "../../../lib/firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 
@@ -92,7 +94,7 @@ const dateOptions = [
   { value: "week", label: "สัปดาห์นี้" },
   { value: "month", label: "เดือนนี้" },
   { value: "quarter", label: "ไตรมาสนี้" },
-  { value: "fiscalYear", label: "ปีงบ" },
+  { value: "fiscal", label: "ปีงบ" },
   { value: "year", label: "ปีนี้" },
   { value: "custom", label: "กำหนดเอง" },
 ];
@@ -142,7 +144,7 @@ export default function EquipmentHealthPage() {
   const [error, setError] = useState("");
   const [filterType,      setFilterType]      = useState("all");   // "all"|"headphones"|"power"
   const [{ condition: filterCondition, returnsOnly }, setConditionFilter] = useState({ condition: "all", returnsOnly: false });
-  const [dateMode,        setDateMode]        = useState("month");  // "day"|"week"|"month"|"quarter"|"fiscalYear"|"year"|"custom"
+  const [dateMode,        setDateMode]        = useState("month");  // "day"|"week"|"month"|"quarter"|"fiscal"|"year"|"custom"
   const [customStart,     setCustomStart]     = useState("");
   const [customEnd,       setCustomEnd]       = useState("");
   const [showCharts, setShowCharts] = useState(false);
@@ -156,42 +158,15 @@ export default function EquipmentHealthPage() {
     listHeading.current?.scrollIntoView({ block: "start" });
   }
 
-  // คำนวณ date range จาก mode
-  const activeDateRange = useMemo(() => {
-    const today = new Date();
-    const fmt = (d) => d.toISOString().slice(0, 10);
-    if (dateMode === "day") {
-      const s = fmt(today); return { start: s, end: s };
-    }
-    if (dateMode === "week") {
-      const mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + 1);
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-      return { start: fmt(mon), end: fmt(sun) };
-    }
-    if (dateMode === "month") {
-      const s = new Date(today.getFullYear(), today.getMonth(), 1);
-      const e = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      return { start: fmt(s), end: fmt(e) };
-    }
-    if (dateMode === "year") {
-      return { start: `${today.getFullYear()}-01-01`, end: `${today.getFullYear()}-12-31` };
-    }
-    if (dateMode === "quarter") {
-      const q = Math.floor(today.getMonth() / 3);
-      const s = new Date(today.getFullYear(), q * 3, 1);
-      const e = new Date(today.getFullYear(), q * 3 + 3, 0);
-      return { start: fmt(s), end: fmt(e) };
-    }
-    if (dateMode === "fiscalYear") {
-      // ปีงบประมาณไทย: ต.ค. - ก.ย.
-      const fy = today.getMonth() >= 9 ? today.getFullYear() : today.getFullYear() - 1;
-      return { start: `${fy}-10-01`, end: `${fy + 1}-09-30` };
-    }
-    if (dateMode === "custom" && customStart && customEnd) {
-      return { start: customStart, end: customEnd };
-    }
-    return null; // null = ไม่ filter
-  }, [dateMode, customStart, customEnd]);
+  // The static export has no authenticated user until the client resolves the session.
+  const reportDate = user ? calendarToday() : null;
+  const activeDateRange = useMemo(() => reportDate
+    ? equipmentRange(reportDate, dateMode, { start: customStart, end: customEnd })
+    : null, [reportDate, dateMode, customStart, customEnd]);
+  const hasCustomDates = Boolean(customStart && customEnd);
+  const customDateMessage = reportDate && dateMode === "custom" && !activeDateRange
+    ? hasCustomDates ? "ตรวจวันที่ให้ถูกต้อง วันสิ้นสุดต้องตรงกับหรือมาหลังวันเริ่มต้น" : "เลือกวันที่เริ่มต้นและวันที่สิ้นสุด"
+    : "";
 
   // Guard — admin only
   useEffect(() => {
@@ -245,7 +220,7 @@ export default function EquipmentHealthPage() {
 
   // ─── Date-filtered base logs ──────────────────────────────────────────────
   const dateLogs = useMemo(() => {
-    if (!activeDateRange) return logs;
+    if (!activeDateRange) return [];
     return logs.filter((l) => l.date >= activeDateRange.start && l.date <= activeDateRange.end);
   }, [logs, activeDateRange]);
 
@@ -330,7 +305,7 @@ export default function EquipmentHealthPage() {
         </div>
         <button
           onClick={() => exportCSV(filtered)}
-          disabled={filtered.length === 0}
+          disabled={!activeDateRange || loading || Boolean(error) || filtered.length === 0}
           className="apple-button flex items-center gap-2 disabled:opacity-40"
         >
           <Download size={16} />
@@ -364,6 +339,8 @@ export default function EquipmentHealthPage() {
             <div className={isMobile ? "flex w-full min-w-0 items-center gap-2" : "flex items-center gap-2 ml-1"}>
               <input
                 type="date" aria-label="วันที่เริ่มต้น"
+                aria-describedby={customDateMessage ? "equipment-health-custom-date-message" : undefined}
+                aria-invalid={Boolean(hasCustomDates && customDateMessage) || undefined}
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
                 className={isMobile ? "apple-input w-full min-w-0 text-base" : "rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"}
@@ -371,12 +348,16 @@ export default function EquipmentHealthPage() {
               <span className="text-xs text-slate-400">ถึง</span>
               <input
                 type="date" aria-label="วันที่สิ้นสุด"
+                aria-describedby={customDateMessage ? "equipment-health-custom-date-message" : undefined}
+                aria-invalid={Boolean(hasCustomDates && customDateMessage) || undefined}
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
                 className={isMobile ? "apple-input w-full min-w-0 text-base" : "rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"}
               />
             </div>
           )}
+          {customDateMessage && <p id="equipment-health-custom-date-message" role="status"
+            className="basis-full text-sm text-[var(--ui-sub)]">{customDateMessage}</p>}
           {activeDateRange && (
             <span className="ml-auto text-xs text-slate-400">
               {activeDateRange.start} – {activeDateRange.end}
@@ -389,7 +370,7 @@ export default function EquipmentHealthPage() {
         <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
       )}
 
-      {isMobile ? <section aria-label="สรุปการคืนอุปกรณ์" className="apple-panel mb-4 p-3">
+      {activeDateRange && (isMobile ? <section aria-label="สรุปการคืนอุปกรณ์" className="apple-panel mb-4 p-3">
         {loading || error ? <p role="status" className="text-sm text-[var(--ui-sub)]">
           {loading ? "กำลังโหลดสภาพอุปกรณ์…" : "ยังยืนยันสภาพอุปกรณ์ไม่ได้"}
         </p> : <>
@@ -409,12 +390,12 @@ export default function EquipmentHealthPage() {
         <StatCard icon={AlertTriangle}  label="ชำรุด"        value={stats.damaged} color="bg-amber-500" />
         <StatCard icon={XCircle}        label="สูญหาย"       value={stats.lost}    color="bg-red-500"   />
         <StatCard icon={Headphones}     label="คืนทั้งหมด"  value={stats.total}   color="bg-slate-700" />
-      </section>}
+      </section>)}
 
-      {!isMobile && charts}
+      {activeDateRange && !isMobile && charts}
 
       {/* Filters + Table */}
-      <section className={isMobile ? "apple-panel min-w-0 p-3" : "apple-panel p-6"}>
+      {activeDateRange && <section className={isMobile ? "apple-panel min-w-0 p-3" : "apple-panel p-6"}>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h2 ref={listHeading} tabIndex={-1} className="scroll-mt-24 text-base font-semibold text-slate-950 flex-1">
             {returnsOnly ? `รายการคืน · ${conditionLabels[filterCondition].label}` : "รายการคืนอุปกรณ์"}
@@ -511,8 +492,8 @@ export default function EquipmentHealthPage() {
         {filtered.length > 200 && <p className="mt-3 text-xs text-slate-400 text-center">
           แสดง 200 รายการแรก จากทั้งหมด {filtered.length} รายการ
         </p>}
-      </section>
-      {isMobile && <details className="apple-panel mt-4 p-3" onToggle={event => setShowCharts(event.currentTarget.open)}>
+      </section>}
+      {activeDateRange && isMobile && <details className="apple-panel mt-4 p-3" onToggle={event => setShowCharts(event.currentTarget.open)}>
         <summary className="min-h-11 cursor-pointer py-2 font-medium">กราฟสภาพอุปกรณ์</summary>
         {showCharts && charts}
       </details>}
