@@ -116,7 +116,13 @@
 .record-badge[data-tone=amber] { background: var(--ui-amber); color: var(--ui-amber-ink); }
 .record-resource-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: var(--ui-blue-ink); font-size: .8125rem; margin-top: auto; }
 .record-resource-tile:disabled .record-resource-action { color: var(--ui-sub); }
-.record-room-dialog .record-resource-tile { position: relative; justify-content: center; min-height: 128px; gap: 7px; padding: 12px 8px; background: var(--ui-soft); color: var(--ui-ink); transition: none; }
+.record-room-dialog .record-resource-tile { position: relative; justify-content: center; min-height: 104px; gap: 5px; padding: 14px 10px; background: var(--ui-soft); color: var(--ui-sub); transition: none; }
+.record-room-dialog .record-resource-tile[data-state=available] { background: var(--ui-green); color: var(--ui-green-ink); }
+.record-room-dialog .record-resource-tile[data-state=in_use] { background: var(--ui-amber); color: var(--ui-amber-ink); }
+.record-room-tile-title { display: flex; align-items: center; justify-content: center; gap: 7px; }
+.record-room-tile-title svg { flex: none; }
+.record-room-dialog .record-room-tile-title strong { font-size: 1.0625rem; }
+.record-room-tile-state { font-size: .875rem; }
 .record-room-dialog .ui-dialog-header .ui-icon-button { transition: none; }
 .record-room-dialog .record-resource-tile[aria-pressed=true] { border-color: var(--ui-accent); box-shadow: inset 0 0 0 1px var(--ui-accent); }
 .record-room-check { position: absolute; top: 8px; right: 8px; color: var(--ui-accent); }

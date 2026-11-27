@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Check } from "lucide-react";
+import { Check, DoorClosed, DoorOpen } from "lucide-react";
 import { Dialog } from './ui/Dialog';
 import { GlassButton } from './ui/GlassControls';
-import { ReviewSymbol } from './ui/ReviewSymbol';
 import '../app/dev/record/record.css';
 import { useSharedResourceStatus } from "../hooks/useSharedResourceStatus";
 import { RESOURCE_ROOM_IDS } from "../lib/resourceStatusIndex";
@@ -91,14 +90,17 @@ export default function SmartRoomModal({
         {rooms.map(room => {
           const state = roomDisplayState(roomStatus[room]);
           const selected = !selectionChanged && selection?.room === room;
+          const Door = state === "in_use" ? DoorOpen : DoorClosed;
           return <button
             type="button" className="record-resource-tile" key={room}
-            aria-pressed={selected}
+            data-state={state} aria-pressed={selected}
             onClick={() => { setSelection({ room, state }); setError(""); }} disabled={saving || state === "unknown"}
           >
-            <span className="record-tile ui-nav-symbol" data-tone="neutral" aria-hidden="true"><ReviewSymbol name="door" size={22} /></span>
-            <strong>ห้อง {room}</strong>
-            <span className="record-badge" data-tone={state === "unknown" ? "amber" : "neutral"}>{roomStatusLabels[state]}</span>
+            <span className="record-room-tile-title">
+              {state !== "unknown" && <Door size={20} strokeWidth={1.65} aria-hidden="true" />}
+              <strong>ห้อง {room}</strong>
+            </span>
+            <span className="record-room-tile-state">{roomStatusLabels[state]}</span>
             {roomDetails[room] && <small>{roomDetails[room]}</small>}
             {selected && <Check className="record-room-check" size={16} aria-hidden="true" />}
           </button>;

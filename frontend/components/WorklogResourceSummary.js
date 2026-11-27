@@ -28,7 +28,9 @@ function EquipmentMeter({ label, counts }) {
   return <li className="record-equipment-meter">
     <strong>{label}</strong>
     <div className="record-equipment-counts">
-      {segments.map(([state, name]) => <span key={state}>{name} <b>{counts[state]}</b></span>)}
+      {segments.map(([state, name]) => <span key={state} data-attention={state === "issue" && counts.issue > 0}>
+        {name} <b>{counts[state]}</b>
+      </span>)}
     </div>
     <div className="record-equipment-track" aria-hidden="true">
       {segments.map(([state]) => counts[state] > 0 && <span key={state} data-state={state} style={{ flexGrow: counts[state] }} />)}
@@ -48,11 +50,12 @@ export function WorklogResourceSummary({ schedule, retrySchedule, notices, resou
   const counts = Object.values(equipment ?? {});
   const readyCount = counts.reduce((sum, item) => sum + item.ready, 0);
   const issueCount = counts.reduce((sum, item) => sum + item.issue, 0);
-  let summary = error ? "ยังยืนยันสถานะไม่ได้" : "กำลังโหลด…";
-  if (status) summary = [
-    `เปิด ${openCount} ห้อง`, `อุปกรณ์พร้อม ${readyCount}`, issueCount > 0 && `ต้องตรวจ ${issueCount}`,
-    unknownCount > 0 && `ยังไม่ยืนยัน ${unknownCount} ห้อง`,
-  ].filter(Boolean).join(" · ");
+  const summary = status ? <span className="record-resource-totals">
+    <span>เปิด <b>{openCount}</b> ห้อง</span>
+    <span>อุปกรณ์พร้อมใช้ <b>{readyCount}</b> ชิ้น</span>
+    {issueCount > 0 && <span data-attention="true">ต้องตรวจ <b>{issueCount}</b> ชิ้น</span>}
+    {unknownCount > 0 && <span>ยังไม่ยืนยัน <b>{unknownCount}</b> ห้อง</span>}
+  </span> : error ? "ยังยืนยันสถานะไม่ได้" : "กำลังโหลด…";
 
   return <section className="record-resource-summary" aria-labelledby={titleId} data-expanded={expanded}>
     <h2 id={titleId} className="record-resource-title">สถานะห้องและอุปกรณ์</h2>
@@ -62,6 +65,7 @@ export function WorklogResourceSummary({ schedule, retrySchedule, notices, resou
       <ChevronDown size={17} aria-hidden="true" />
     </button>
     <div id={detailId} className="record-resource-summary-body">
+      <Link href="/resources" prefetch={false} className="record-link record-resource-directory-link">ดูทรัพยากรทั้งหมด <ChevronRight size={15} aria-hidden="true" /></Link>
       {loading && <p className="ui-caption" role="status">กำลังโหลดสถานะห้องและอุปกรณ์…</p>}
       {error && <div className="record-resource-feedback">
         <p role="status">ยังยืนยันสถานะห้องและอุปกรณ์ไม่ได้</p>
@@ -79,17 +83,22 @@ export function WorklogResourceSummary({ schedule, retrySchedule, notices, resou
           <button type="button" className="record-link" onClick={retrySchedule}>ลองโหลดตารางวันนี้อีกครั้ง</button>
         </div>}
         {schedule.unavailable > 0 && <p className="ui-caption">ตารางวันนี้มีข้อมูลไม่ครบ จึงยังยืนยันเวลาปิดห้องไม่ได้</p>}
-        {["3", "4"].map(floor => <ul key={floor} className="record-live-rooms" aria-label={`สถานะห้องชั้น ${floor}`}>
-          {RESOURCE_ROOM_IDS.filter(room => room.startsWith(floor)).map(room => {
-            const state = roomDisplayState(rooms[room]);
-            return <li key={room} data-state={state}><strong>ห้อง {room}</strong><span>{roomStatusLabels[state]}</span></li>;
-          })}
-        </ul>)}
-        <ul className="record-live-equipment" aria-label="สถานะอุปกรณ์">
-          {Object.entries(EQUIPMENT_LABELS).map(([kind, label]) => <EquipmentMeter key={kind} label={label} counts={equipment[kind]} />)}
-        </ul>
+        {["3", "4"].map(floor => <div className="record-resource-group" key={floor}>
+          <h3>ห้องชั้น {floor}</h3>
+          <ul className="record-live-rooms" aria-label={`สถานะห้องชั้น ${floor}`}>
+            {RESOURCE_ROOM_IDS.filter(room => room.startsWith(floor)).map(room => {
+              const state = roomDisplayState(rooms[room]);
+              return <li key={room} data-state={state}><strong>ห้อง {room}</strong><span>{roomStatusLabels[state]}</span></li>;
+            })}
+          </ul>
+        </div>)}
+        <div className="record-resource-group">
+          <h3>อุปกรณ์</h3>
+          <ul className="record-live-equipment" aria-label="สถานะอุปกรณ์">
+            {Object.entries(EQUIPMENT_LABELS).map(([kind, label]) => <EquipmentMeter key={kind} label={label} counts={equipment[kind]} />)}
+          </ul>
+        </div>
       </>}
-      <Link href="/resources" prefetch={false} className="record-link">ดูทรัพยากรทั้งหมด <ChevronRight size={15} aria-hidden="true" /></Link>
     </div>
   </section>;
 }
