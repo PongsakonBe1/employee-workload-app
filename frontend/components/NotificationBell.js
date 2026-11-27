@@ -29,6 +29,7 @@ export function NotificationBell() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [notifPermission, setNotifPermission] = useState("unavailable");
+  const [permissionRequest, setPermissionRequest] = useState("idle");
   const [fcmTokenStatus, setFcmTokenStatus] = useState(null); // null | "saving" | "saved" | "error"
   const [reminderTime, setReminderTime] = useState("22:00");
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -38,8 +39,7 @@ export function NotificationBell() {
   // โหลด permission state ตอน mount (sync กับ browser)
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
-      const perm = Notification.permission;
-      setNotifPermission(perm === "default" && localStorage.getItem("notif_dismissed") === "1" ? "dismissed" : perm);
+      setNotifPermission(Notification.permission);
     }
   }, []);
 
@@ -50,9 +50,7 @@ export function NotificationBell() {
     let unsubFCM = () => {};
 
     async function initFCM() {
-      if (typeof window === "undefined") return;
-      // ต้อง granted ก่อน
-      if (Notification.permission !== "granted") return;
+      if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
 
       const token = await getFCMToken();
       if (token) {
@@ -269,7 +267,15 @@ export function NotificationBell() {
 
   async function requestPermission() {
     if (typeof window === "undefined" || !("Notification" in window)) return;
-    const result = await Notification.requestPermission();
+    setPermissionRequest("pending");
+    let result;
+    try {
+      result = await Notification.requestPermission();
+    } catch {
+      setPermissionRequest("error");
+      return;
+    }
+    setPermissionRequest("idle");
     setNotifPermission(result);
     // ถ้า granted ให้ init FCM token ทันที
     if (result === "granted" && user) {
@@ -371,43 +377,20 @@ export function NotificationBell() {
 
   return (
     <>
-      {(showAlert || notifPermission === "default") && createPortal(
+      {showAlert && createPortal(
         <div className="ui-notification-banners">
-          {/* Alert Banner สำหรับ notification สำคัญ */}
-          {showAlert && (
-            <div role="status" className="ui-notification-banner ui-notification-banner--alert">
-              <AlertCircle size={20} className="shrink-0" />
-              <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
-              <button
-                onClick={() => setShowAlert(false)}
-                className="ui-notification-dismiss"
-                aria-label="ปิดข้อความแจ้งเตือน"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-
-          {/* Banner ขอ permission Browser Notification */}
-          {notifPermission === "default" && (
-            <div className="ui-notification-banner">
-              <BellRing size={20} className="shrink-0 text-[var(--ui-amber-ink)]" />
-              <span className="text-sm flex-1 min-w-0">รับการแจ้งเตือนแม้ปิดแอป</span>
-              <button
-                onClick={requestPermission}
-                className="apple-button shrink-0 px-3"
-              >
-                เปิด
-              </button>
-              <button
-                onClick={() => { localStorage.setItem("notif_dismissed", "1"); setNotifPermission("dismissed"); }}
-                className="ui-notification-dismiss"
-                aria-label="ซ่อนคำเชิญเปิดการแจ้งเตือน"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
+          <div role="status" className="ui-notification-banner ui-notification-banner--alert">
+            <AlertCircle size={20} className="shrink-0" aria-hidden="true" />
+            <span className="font-medium text-sm flex-1 min-w-0 truncate">{alertMessage}</span>
+            <button
+              type="button"
+              onClick={() => setShowAlert(false)}
+              className="ui-notification-dismiss"
+              aria-label="ปิดข้อความแจ้งเตือน"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
         </div>,
         document.body,
       )}
@@ -464,6 +447,26 @@ export function NotificationBell() {
                   </button>
                 </div>
               </div>
+              {notifPermission === "default" && (
+                <div className="grid gap-2 border-b border-[var(--ui-line)] p-4">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    <BellRing size={17} className="shrink-0" aria-hidden="true" />
+                    รับการแจ้งเตือนแม้ปิดแอป
+                  </p>
+                  <button type="button" className="apple-button justify-self-start"
+                    onClick={requestPermission} disabled={permissionRequest === "pending"}>
+                    {permissionRequest === "pending" ? "กำลังขออนุญาต…" : "เปิดรับแจ้งเตือน"}
+                  </button>
+                  {permissionRequest === "error" && <p role="alert" className="text-sm text-[var(--ui-red-ink)]">
+                    ขออนุญาตแจ้งเตือนไม่สำเร็จ กรุณาลองอีกครั้ง
+                  </p>}
+                </div>
+              )}
+              {notifPermission === "denied" && (
+                <p role="status" className="border-b border-[var(--ui-line)] p-4 text-sm text-[var(--ui-sub)]">
+                  การแจ้งเตือนถูกปิดไว้ เปิดได้ในการตั้งค่าของเบราว์เซอร์หรืออุปกรณ์
+                </p>
+              )}
               <div className="max-h-64 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-sm text-slate-500">
