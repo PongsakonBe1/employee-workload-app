@@ -6,7 +6,7 @@
 .profile-account-heading p,.profile-account-details dt { color:var(--ui-sub); font-size:.875rem; }
 .profile-account-avatar { width:52px; height:52px; flex:none; display:grid; place-items:center; overflow:hidden; border-radius:50%; background:var(--ui-soft); color:var(--ui-ink); font-weight:700; font-size:1.25rem; }
 .profile-account-avatar img { width:100%; height:100%; object-fit:cover; }
-.profile-account-details { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap:12px 18px; margin-top:16px; padding-top:16px; border-top:1px solid var(--ui-line); }
+.profile-account-details { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(135px, 100%), 1fr)); gap:12px 18px; margin-top:16px; padding-top:16px; border-top:1px solid var(--ui-line); }
 .profile-account-details dd { color:var(--ui-ink); overflow-wrap:anywhere; }
 .profile-account-feedback,.profile-account-edit { margin-top:16px; }
 .profile-account-feedback { color:var(--ui-ink); }

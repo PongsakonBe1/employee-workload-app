@@ -140,6 +140,7 @@
 .resource-availability :is(strong,b) { color:var(--ui-ink); }
 .resource-directory-layout .resource-directory-row { grid-template-columns:minmax(0,1fr) auto 15px; gap:8px; padding:10px 12px; min-height:52px; }
 .resource-directory-name { display:grid; min-width:0; }
+.resource-directory-name :is(strong,small) { grid-column:1; grid-row:auto; }
 .resource-directory-row .record-badge { grid-column:2; grid-row:auto; white-space:normal; text-align:center; }
 .resource-directory-row > svg { color:var(--ui-sub); }
 @media (max-width:600px) { .resource-directory-toolbar .resource-search { order:3; } .resource-directory-filter select { font-size:16px; } }
