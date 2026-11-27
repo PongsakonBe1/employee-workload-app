@@ -129,7 +129,7 @@ function CalendarContent({ user }) {
     externalCalendar={{
       production: true, sourceName: "ตารางและการใช้ห้อง",
       identity: { id: userId }, data: snapshot?.data || emptyCalendar,
-      people: snapshot?.people || [], controls, onRangeChange: setVisibleRange,
+      people: snapshot?.people || [], controls, loading, error, onRangeChange: setVisibleRange,
       canCreate, saving: writeState.saving, writePhase: writeState.phase,
       uncertainDraft: writeState.draft, writeTarget: canCreate ? "ปฏิทินที่ใช้งานจริง" : "",
       onCreate: writer ? create : undefined,

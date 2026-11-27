@@ -434,7 +434,12 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
                 range={{ start: date, end: date }} emptyText="ไม่มีตารางในวันที่เลือก"
               />
             </div>
-          </> : mode === "agenda" ? <CalendarAgenda {...shared} /> : <CalendarTimeline {...shared} today={today} />}
+          </> : mode === "agenda" ? <CalendarAgenda {...shared} /> : mode === "day" ? <>
+            <div className="cal-day-timeline"><CalendarTimeline {...shared} today={today} /></div>
+            {!externalCalendar?.loading && !externalCalendar?.error && <div className="cal-day-agenda">
+              <CalendarAgenda {...shared} showDate={false} emptyText="ไม่มีตารางในวันที่เลือก" />
+            </div>}
+          </> : <CalendarTimeline {...shared} today={today} />}
         </div>
         <div className="cal-legend" aria-label="คำอธิบายสี">
           {colorBy === "room" ? CALENDAR_ROOMS.map(room => <span key={room} data-room-color={CALENDAR_ROOM_COLORS[room]}>
@@ -544,6 +549,14 @@ export default function CalendarWorkspace({ externalCalendar = null, previewData
             value={filterDraft.query} onChange={event => setFilterDraft({ ...filterDraft, query: event.target.value })}
           />
         </label>
+        <div className="ui-field cal-dialog-color">
+          <span id="cal-dialog-color-label">สีตาม</span>
+          <select aria-labelledby="cal-dialog-color-label" className="apple-input" value={filterDraft.colorBy || "room"}
+            onChange={event => setFilterDraft({ ...filterDraft, colorBy: event.target.value })}>
+            <option value="room">ห้อง</option>
+            <option value="kind">ประเภทกิจกรรม</option>
+          </select>
+        </div>
         <FilterFields
           filters={filterDraft} onChange={setFilterDraft}
           id="cal-dialog" semesters={semesters} includePreviewSemesters={!production}

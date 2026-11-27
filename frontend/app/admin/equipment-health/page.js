@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Download, AlertTriangle, XCircle, CheckCircle, Headphones, Plug, Calendar } from "lucide-react";
+import { Download, AlertTriangle, XCircle, CheckCircle, Headphones, Plug, Calendar, ChevronDown } from "lucide-react";
 import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { isAdminRole } from "../../../lib/authUtils";
@@ -77,6 +77,63 @@ function StatCard({ icon: Icon, label, value, color }) {
   );
 }
 
+const mobileQuery = "(max-width: 760px)";
+const isMobileViewport = () => matchMedia(mobileQuery).matches;
+const isServerViewport = () => false;
+
+function subscribeViewport(onChange) {
+  const media = matchMedia(mobileQuery);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+const dateOptions = [
+  { value: "day", label: "วันนี้" },
+  { value: "week", label: "สัปดาห์นี้" },
+  { value: "month", label: "เดือนนี้" },
+  { value: "quarter", label: "ไตรมาสนี้" },
+  { value: "fiscalYear", label: "ปีงบ" },
+  { value: "year", label: "ปีนี้" },
+  { value: "custom", label: "กำหนดเอง" },
+];
+
+const equipmentLabels = { headphones: "หูฟัง", power: "ปลั๊กไฟ", usb: "USB", other: "อุปกรณ์อื่น" };
+const conditionLabels = {
+  normal: { label: "สมบูรณ์", tone: "bg-[var(--ui-green)] text-[var(--ui-green-ink)]" },
+  damaged: { label: "ชำรุด", tone: "bg-[var(--ui-amber)] text-[var(--ui-amber-ink)]" },
+  lost: { label: "สูญหาย", tone: "bg-[var(--ui-red)] text-[var(--ui-red-ink)]" },
+};
+const isReturn = log => log.minorTask?.includes("คืน");
+
+function EquipmentConditionRows({ logs }) {
+  return <ul aria-label="รายการสภาพอุปกรณ์" className="divide-y divide-[var(--ui-line)]">
+    {logs.map(log => {
+      const kind = equipmentLabels[detectEquipmentType(log)];
+      const id = typeof log.equipment === "string" && log.equipment.trim();
+      const condition = conditionLabels[log.equipmentCondition] || conditionLabels.normal;
+      const note = log.equipmentNote || (log.equipmentCondition && log.equipmentCondition !== "normal" && log._backfillReason);
+      return <li key={log.id}>
+        <details className="group">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="min-w-0 flex-1 break-words">
+              <strong className="block text-sm">{id || "ไม่ระบุรหัส"}</strong>
+              <span className="block text-xs text-[var(--ui-sub)]">{kind} · {log.date || "ไม่ระบุวันที่"}</span>
+            </span>
+            <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${condition.tone}`}>{condition.label}</span>
+            <ChevronDown size={16} className="shrink-0 group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 break-words pb-4 text-sm">
+            <dt className="text-[var(--ui-sub)]">เวลา</dt><dd>{log.time || "—"}</dd>
+            <dt className="text-[var(--ui-sub)]">รายละเอียด</dt><dd>{log.comment || "—"}</dd>
+            <dt className="text-[var(--ui-sub)]">พนักงาน</dt><dd>{log.employeeDisplayName || log.employeeId || "—"}</dd>
+            <dt className="text-[var(--ui-sub)]">หมายเหตุ</dt><dd>{note || "—"}</dd>
+          </dl>
+        </details>
+      </li>;
+    })}
+  </ul>;
+}
+
 export default function EquipmentHealthPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -84,10 +141,20 @@ export default function EquipmentHealthPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterType,      setFilterType]      = useState("all");   // "all"|"headphones"|"power"
-  const [filterCondition, setFilterCondition] = useState("all");   // "all"|"damaged"|"lost"|"normal"
+  const [{ condition: filterCondition, returnsOnly }, setConditionFilter] = useState({ condition: "all", returnsOnly: false });
   const [dateMode,        setDateMode]        = useState("month");  // "day"|"week"|"month"|"quarter"|"fiscalYear"|"year"|"custom"
   const [customStart,     setCustomStart]     = useState("");
   const [customEnd,       setCustomEnd]       = useState("");
+  const [showCharts, setShowCharts] = useState(false);
+  const isMobile = useSyncExternalStore(subscribeViewport, isMobileViewport, isServerViewport);
+  const listHeading = useRef(null);
+
+  function showReturns(condition) {
+    setFilterType("all");
+    setConditionFilter({ condition, returnsOnly: true });
+    listHeading.current?.focus({ preventScroll: true });
+    listHeading.current?.scrollIntoView({ block: "start" });
+  }
 
   // คำนวณ date range จาก mode
   const activeDateRange = useMemo(() => {
@@ -184,7 +251,7 @@ export default function EquipmentHealthPage() {
 
   // ─── Derived stats ────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const returnLogs = dateLogs.filter((l) => l.minorTask?.includes("คืน"));
+    const returnLogs = dateLogs.filter(isReturn);
     const total = returnLogs.length;
     const damaged = returnLogs.filter((l) => l.equipmentCondition === "damaged").length;
     const lost = returnLogs.filter((l) => l.equipmentCondition === "lost").length;
@@ -226,11 +293,12 @@ export default function EquipmentHealthPage() {
     return dateLogs.filter((l) => {
       const eqType = detectEquipmentType(l);
       if (filterType !== "all" && eqType !== filterType) return false;
+      if (returnsOnly && !isReturn(l)) return false;
       const cond = l.equipmentCondition || "normal";
       if (filterCondition !== "all" && cond !== filterCondition) return false;
       return true;
     });
-  }, [dateLogs, filterType, filterCondition]);
+  }, [dateLogs, filterType, filterCondition, returnsOnly]);
 
   const CONDITION_BADGE = {
     normal:  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5"><CheckCircle size={11} />สมบูรณ์</span>,
@@ -238,13 +306,26 @@ export default function EquipmentHealthPage() {
     lost:    <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-full px-2 py-0.5"><XCircle size={11} />สูญหาย</span>,
   };
 
+  const charts = <>
+    <section className="mb-6 grid gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <EquipmentDamageChart data={damageChartData} />
+      </div>
+      <DamageCategoryPie data={{ normal: stats.normal, damaged: stats.damaged, lost: stats.lost }} />
+    </section>
+
+    <section className="mb-6">
+      <EquipmentHealthTimeline data={timelineData} equipmentKeys={["headphones", "power"]} />
+    </section>
+  </>;
+
   return (
     <AppShell>
       {/* Header */}
       <section className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Admin</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">Equipment Health</h1>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">สภาพอุปกรณ์</h1>
           <p className="mt-2 text-sm text-slate-500">ติดตามสุขภาพอุปกรณ์ — ชำรุด / สูญหาย</p>
         </div>
         <button
@@ -253,7 +334,7 @@ export default function EquipmentHealthPage() {
           className="apple-button flex items-center gap-2 disabled:opacity-40"
         >
           <Download size={16} />
-          Export CSV
+          ส่งออก CSV
         </button>
       </section>
 
@@ -261,18 +342,14 @@ export default function EquipmentHealthPage() {
       <section className="mb-6 apple-panel p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Calendar size={15} className="text-slate-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-slate-500 mr-1">ช่วงเวลา</span>
-          {[
-            { value: "day",        label: "วันนี้" },
-            { value: "week",       label: "สัปดาห์นี้" },
-            { value: "month",      label: "เดือนนี้" },
-            { value: "quarter",    label: "ไตรมาสนี้" },
-            { value: "fiscalYear", label: "ปีงบ" },
-            { value: "year",       label: "ปีนี้" },
-            { value: "custom",     label: "กำหนดเอง" },
-          ].map(({ value, label }) => (
+          <span id="equipment-health-date-label" className="text-xs font-semibold text-slate-500 mr-1">ช่วงเวลา</span>
+          {isMobile ? <select aria-labelledby="equipment-health-date-label" className="apple-input min-w-0 flex-1 text-base" value={dateMode}
+            onChange={event => setDateMode(event.target.value)}>
+            {dateOptions.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+          </select> : dateOptions.map(({ value, label }) => (
             <button
               key={value}
+              type="button" aria-pressed={dateMode === value}
               onClick={() => setDateMode(value)}
               className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
                 dateMode === value
@@ -284,19 +361,19 @@ export default function EquipmentHealthPage() {
             </button>
           ))}
           {dateMode === "custom" && (
-            <div className="flex items-center gap-2 ml-1">
+            <div className={isMobile ? "flex w-full min-w-0 items-center gap-2" : "flex items-center gap-2 ml-1"}>
               <input
-                type="date"
+                type="date" aria-label="วันที่เริ่มต้น"
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
-                className="rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className={isMobile ? "apple-input w-full min-w-0 text-base" : "rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"}
               />
               <span className="text-xs text-slate-400">ถึง</span>
               <input
-                type="date"
+                type="date" aria-label="วันที่สิ้นสุด"
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
-                className="rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className={isMobile ? "apple-input w-full min-w-0 text-base" : "rounded-xl border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"}
               />
             </div>
           )}
@@ -312,32 +389,38 @@ export default function EquipmentHealthPage() {
         <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
       )}
 
-      {/* Stat Cards */}
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {isMobile ? <section aria-label="สรุปการคืนอุปกรณ์" className="apple-panel mb-4 p-3">
+        {loading || error ? <p role="status" className="text-sm text-[var(--ui-sub)]">
+          {loading ? "กำลังโหลดสภาพอุปกรณ์…" : "ยังยืนยันสภาพอุปกรณ์ไม่ได้"}
+        </p> : <>
+          <p className="mb-2 text-sm text-[var(--ui-sub)]">คืนทั้งหมด {stats.total} · สมบูรณ์ {stats.normal}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {["damaged", "lost"].map(condition => <button key={condition} type="button"
+              aria-pressed={filterCondition === condition && returnsOnly}
+              onClick={() => showReturns(condition)}
+              className={`min-h-12 min-w-0 rounded-xl border border-transparent px-2 py-2 text-start text-sm aria-pressed:border-current ${conditionLabels[condition].tone}`}>
+              <span className="block">{conditionLabels[condition].label}</span>
+              <b className="text-lg">{stats[condition]}</b> รายการ
+            </button>)}
+          </div>
+        </>}
+      </section> : <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={CheckCircle}    label="คืนสมบูรณ์"  value={stats.normal}  color="bg-green-500" />
         <StatCard icon={AlertTriangle}  label="ชำรุด"        value={stats.damaged} color="bg-amber-500" />
         <StatCard icon={XCircle}        label="สูญหาย"       value={stats.lost}    color="bg-red-500"   />
         <StatCard icon={Headphones}     label="คืนทั้งหมด"  value={stats.total}   color="bg-slate-700" />
-      </section>
+      </section>}
 
-      {/* Charts */}
-      <section className="mb-6 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <EquipmentDamageChart data={damageChartData} />
-        </div>
-        <DamageCategoryPie data={{ normal: stats.normal, damaged: stats.damaged, lost: stats.lost }} />
-      </section>
-
-      <section className="mb-6">
-        <EquipmentHealthTimeline data={timelineData} equipmentKeys={["headphones", "power"]} />
-      </section>
+      {!isMobile && charts}
 
       {/* Filters + Table */}
-      <section className="apple-panel p-6">
+      <section className={isMobile ? "apple-panel min-w-0 p-3" : "apple-panel p-6"}>
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <h3 className="text-base font-semibold text-slate-950 flex-1">รายการคืนอุปกรณ์</h3>
+          <h2 ref={listHeading} tabIndex={-1} className="scroll-mt-24 text-base font-semibold text-slate-950 flex-1">
+            {returnsOnly ? `รายการคืน · ${conditionLabels[filterCondition].label}` : "รายการคืนอุปกรณ์"}
+          </h2>
           {/* Type filter */}
-          <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1">
             {[
               { value: "all",        label: "ทั้งหมด" },
               { value: "headphones", label: "หูฟัง",   icon: Headphones },
@@ -345,6 +428,7 @@ export default function EquipmentHealthPage() {
             ].map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
+                type="button" aria-pressed={filterType === value}
                 onClick={() => setFilterType(value)}
                 className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors
                   ${filterType === value ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
@@ -354,7 +438,7 @@ export default function EquipmentHealthPage() {
             ))}
           </div>
           {/* Condition filter */}
-          <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1">
             {[
               { value: "all",     label: "ทุกสภาพ" },
               { value: "normal",  label: "สมบูรณ์" },
@@ -363,7 +447,8 @@ export default function EquipmentHealthPage() {
             ].map(({ value, label }) => (
               <button
                 key={value}
-                onClick={() => setFilterCondition(value)}
+                type="button" aria-pressed={filterCondition === value}
+                onClick={() => setConditionFilter({ condition: value, returnsOnly: false })}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors
                   ${filterCondition === value ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
               >
@@ -378,8 +463,10 @@ export default function EquipmentHealthPage() {
             <span className="w-5 h-5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin mr-2" />
             กำลังโหลด…
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex h-32 items-center justify-center text-sm text-slate-400">ไม่มีข้อมูล</div>
+        ) : isMobile && error ? null : filtered.length === 0 ? (
+          <div className="flex h-32 items-center justify-center text-sm text-slate-400">ไม่มีข้อมูลตรงกับตัวกรอง</div>
+        ) : isMobile ? (
+          <EquipmentConditionRows logs={filtered.slice(0, 200)} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -419,14 +506,16 @@ export default function EquipmentHealthPage() {
                 })}
               </tbody>
             </table>
-            {filtered.length > 200 && (
-              <p className="mt-3 text-xs text-slate-400 text-center">
-                แสดง 200 รายการแรก จากทั้งหมด {filtered.length} รายการ
-              </p>
-            )}
           </div>
         )}
+        {filtered.length > 200 && <p className="mt-3 text-xs text-slate-400 text-center">
+          แสดง 200 รายการแรก จากทั้งหมด {filtered.length} รายการ
+        </p>}
       </section>
+      {isMobile && <details className="apple-panel mt-4 p-3" onToggle={event => setShowCharts(event.currentTarget.open)}>
+        <summary className="min-h-11 cursor-pointer py-2 font-medium">กราฟสภาพอุปกรณ์</summary>
+        {showCharts && charts}
+      </details>}
     </AppShell>
   );
 }
