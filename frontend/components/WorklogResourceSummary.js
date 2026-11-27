@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, CircleCheck, Clock3, Package } from "lucide-react";
 import { EQUIPMENT_LABELS } from "../lib/equipmentCatalog";
 import { RESOURCE_ROOM_IDS } from "../lib/resourceStatusIndex";
-import { equipmentStatusLabels, roomDisplayState, roomStatusLabels } from "../lib/resourcePresentation";
-import { summarizeEquipment } from "../lib/worklogResourceSummary";
+import { roomDisplayState, roomStatusLabels } from "../lib/resourcePresentation";
+import { worklogEquipmentSummary } from "../lib/worklogResourceSummary";
 
 function noticeText({ minutes }) {
   return minutes > 0 ? `ปิดใน ${minutes} นาที` : "พ้นเวลาตามตาราง";
@@ -23,24 +23,64 @@ export function MobileRoomClosureNotice({ notices }) {
   </p>;
 }
 
-const resourcePages = [["rooms", "ห้อง"], ...Object.entries(EQUIPMENT_LABELS)];
+const equipmentKinds = Object.entries(EQUIPMENT_LABELS);
+const resourcePages = [["returns", "ค้างคืน"], ["rooms", "ห้อง"], ...equipmentKinds];
+const conditionLabels = { damaged: "ชำรุด", lost: "สูญหาย" };
 
-function EquipmentPage({ counts }) {
-  const segments = Object.entries(equipmentStatusLabels);
+function EquipmentItemList({ items }) {
+  return <ul className="record-return-items">
+    {items.map(item => <li key={item.id}>
+      <strong>{item.id}</strong>
+      <span>{item.location || "ไม่ระบุสังกัด"}</span>
+      {item.condition && <small>{conditionLabels[item.condition]}</small>}
+    </li>)}
+  </ul>;
+}
+
+function ReturnExceptions({ label, items }) {
+  if (!items.length) return null;
+  return <details className="record-return-exceptions">
+    <summary><span>{label} <b>{items.length}</b> ชิ้น</span><ChevronDown size={16} aria-hidden="true" /></summary>
+    <EquipmentItemList items={items} />
+  </details>;
+}
+
+function ReturnOverview({ summary }) {
+  const { loans, unconfirmed, conditionIssues, total } = summary;
+  const complete = total > 0 && !loans.length && !unconfirmed.length;
+  const StatusIcon = complete ? CircleCheck : loans.length ? Clock3 : Package;
+  return <>
+    <div className="record-return-headline" data-return-state={complete ? "clear" : loans.length ? "pending" : "unknown"}>
+      <StatusIcon size={22} aria-hidden="true" />
+      <div>
+        {loans.length > 0 ? <h3>ค้างคืน <b>{loans.length}</b> ชิ้น</h3>
+          : <h3>{complete ? "ไม่มีอุปกรณ์ค้างคืน" : total ? "ยังยืนยันการคืนครบไม่ได้" : "ยังไม่มีอุปกรณ์ในรายการ"}</h3>}
+        {loans.length > 0 && unconfirmed.length > 0 && <p>นับเฉพาะชิ้นที่ยืนยันว่าค้างคืน</p>}
+      </div>
+    </div>
+    {equipmentKinds.map(([kind, label]) => {
+      const items = loans.filter(item => item.kind === kind);
+      return items.length ? <div className="record-return-group" key={kind}>
+        <h3>{label}</h3><EquipmentItemList items={items} />
+      </div> : null;
+    })}
+    <ReturnExceptions label="ยังยืนยันสถานะไม่ได้" items={unconfirmed} />
+    <ReturnExceptions label="ต้องตรวจสภาพ" items={conditionIssues} />
+  </>;
+}
+
+function EquipmentPage({ counts, loans, unconfirmed, conditionIssues }) {
   const total = counts.ready + counts.inUse + counts.issue;
   if (!total) return <p className="record-resource-feedback">ยังไม่มีอุปกรณ์ประเภทนี้</p>;
 
-  return <div className="record-equipment-meter">
+  return <>
     <p className="record-equipment-available"><strong>{counts.ready}</strong> พร้อมใช้ จาก {total} ชิ้น</p>
-    <div className="record-equipment-track" aria-hidden="true">
-      {segments.map(([state]) => counts[state] > 0 && <span key={state} data-state={state} style={{ flexGrow: counts[state] }} />)}
-    </div>
-    <dl className="record-equipment-counts">
-      {segments.map(([state, name]) => <div key={state} data-attention={state === "issue" && counts.issue > 0}>
-        <dt>{name}</dt><dd>{counts[state]}</dd>
-      </div>)}
-    </dl>
-  </div>;
+    {loans.length > 0 && <div className="record-return-group">
+      <h3>ค้างคืน {loans.length} ชิ้น</h3><EquipmentItemList items={loans} />
+    </div>}
+    <ReturnExceptions label="ยังยืนยันสถานะไม่ได้" items={unconfirmed} />
+    <ReturnExceptions label="ต้องตรวจสภาพ" items={conditionIssues} />
+  </>;
 }
 
 function ResourceStatusWidget({ status }) {
@@ -50,8 +90,7 @@ function ResourceStatusWidget({ status }) {
   const [page, setPage] = useState(0);
   const rooms = status.roomStatus ?? {};
   const openCount = RESOURCE_ROOM_IDS.filter(room => rooms[room] === "in_use").length;
-  const equipment = summarizeEquipment(status.equipmentCatalog ?? [], status.equipmentStatus ?? {}, status.equipmentConditions ?? {});
-  const issueCount = Object.values(equipment).reduce((sum, item) => sum + item.issue, 0);
+  const equipment = worklogEquipmentSummary(status.equipmentCatalog ?? [], status.equipmentStatus ?? {}, status.equipmentConditions ?? {});
 
   useEffect(() => {
     const node = viewport.current;
@@ -82,7 +121,7 @@ function ResourceStatusWidget({ status }) {
   }
 
   function onPageKey(event, index) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (event.altKey || event.metaKey || event.ctrlKey || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
     event.preventDefault();
     const offset = event.key === "ArrowRight" ? 1 : -1;
     const next = (index + offset + resourcePages.length) % resourcePages.length;
@@ -94,15 +133,16 @@ function ResourceStatusWidget({ status }) {
     <div className="record-status-pages" role="group" aria-label="เลือกสถานะตามประเภท">
       {resourcePages.map(([kind, label], index) => <button key={kind} type="button" id={`${widgetId}-${kind}-label`}
         aria-pressed={page === index} aria-controls={`${widgetId}-${kind}`} onClick={() => selectPage(index)} onKeyDown={event => onPageKey(event, index)}>
-        <strong>{label}</strong><small>{kind === "rooms" ? <>เปิด <b>{openCount}</b></> : <>พร้อม <b>{equipment[kind].ready}</b></>}</small>
+        <strong>{label}</strong>
+        <small>{kind === "returns" ? <b>{equipment.loans.length} ชิ้น</b> : kind === "rooms"
+          ? <>เปิด <b>{openCount}</b></> : <>พร้อม <b>{equipment.counts[kind].ready}</b></>}</small>
       </button>)}
     </div>
-    {issueCount > 0 && <p className="record-status-issue-total" data-attention="true">อุปกรณ์ต้องตรวจ {issueCount} ชิ้น</p>}
-    <p className="sr-only" role="status">กำลังดูสถานะ{resourcePages[page][1]}</p>
+    <p className="sr-only" role="status">กำลังดู {resourcePages[page][1]}</p>
     <div className="record-status-viewport" ref={viewport} onScroll={followScroll}>
       {resourcePages.map(([kind], index) => <section key={kind} className="record-status-slide"
-        id={`${widgetId}-${kind}`} aria-labelledby={`${widgetId}-${kind}-label`} aria-hidden={page !== index}>
-        {kind === "rooms" ? ["3", "4"].map(floor => <div className="record-resource-group" key={floor}>
+        id={`${widgetId}-${kind}`} aria-labelledby={`${widgetId}-${kind}-label`} aria-hidden={page !== index} inert={page !== index || undefined}>
+        {kind === "returns" ? <ReturnOverview summary={equipment} /> : kind === "rooms" ? ["3", "4"].map(floor => <div className="record-resource-group" key={floor}>
           <h3>ห้องชั้น {floor}</h3>
           <ul className="record-live-rooms" aria-label={`สถานะห้องชั้น ${floor}`}>
             {RESOURCE_ROOM_IDS.filter(room => room.startsWith(floor)).map(room => {
@@ -110,7 +150,10 @@ function ResourceStatusWidget({ status }) {
               return <li key={room} data-state={state}><strong>ห้อง {room}</strong><span>{roomStatusLabels[state]}</span></li>;
             })}
           </ul>
-        </div>) : <EquipmentPage counts={equipment[kind]} />}
+        </div>) : <EquipmentPage counts={equipment.counts[kind]}
+          loans={equipment.loans.filter(item => item.kind === kind)}
+          unconfirmed={equipment.unconfirmed.filter(item => item.kind === kind)}
+          conditionIssues={equipment.conditionIssues.filter(item => item.kind === kind)} />}
       </section>)}
     </div>
   </div>;

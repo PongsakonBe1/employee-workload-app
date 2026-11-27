@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bangkokRoomClock, roomClosureNotices, summarizeEquipment } from "./worklogResourceSummary.js";
+import { bangkokRoomClock, roomClosureNotices, worklogEquipmentSummary } from "./worklogResourceSummary.js";
 
 const date = "2026-11-26";
 const clockAt = minute => ({ date, minute });
@@ -43,10 +43,27 @@ describe("resource summary in the worklog workspace", () => {
       id: `ICIT0${number}`, kind: "headphones", active: number < 6,
     }));
     const statuses = { headphones: { ICIT01: "available", ICIT02: "in_use", ICIT03: "unknown", ICIT04: "available", ICIT06: "in_use" } };
-    expect(summarizeEquipment(catalog, statuses, { ICIT04: "damaged" })).toEqual({
+    const summary = worklogEquipmentSummary(catalog, statuses, { ICIT04: "damaged" });
+    expect(summary.counts).toEqual({
       headphones: { ready: 1, inUse: 2, issue: 3 },
       power: { ready: 0, inUse: 0, issue: 0 },
       usb: { ready: 0, inUse: 0, issue: 0 },
     });
+    expect(summary.loans.map(({ id }) => id)).toEqual(["ICIT02", "ICIT06"]);
+    expect(summary.unconfirmed.map(({ id }) => id)).toEqual(["ICIT03", "ICIT05"]);
+    expect(summary.conditionIssues.map(({ id, condition }) => [id, condition])).toEqual([["ICIT04", "damaged"]]);
+    expect(summary.total).toBe(6);
+  });
+
+  it("removes a returned asset from the loan list while keeping its reported damage visible", () => {
+    const item = { id: "ICIT01", location: "ชั้น 3", kind: "headphones", active: true };
+    const conditions = { ICIT01: "damaged" };
+    const during = worklogEquipmentSummary([item], { headphones: { ICIT01: "in_use" } }, conditions);
+    expect(during.loans).toEqual([item]);
+    expect(during.conditionIssues).toEqual([]);
+    const after = worklogEquipmentSummary([item], { headphones: { ICIT01: "available" } }, conditions);
+    expect(after.loans).toEqual([]);
+    expect(after.unconfirmed).toEqual([]);
+    expect(after.conditionIssues).toEqual([{ ...item, condition: "damaged" }]);
   });
 });
