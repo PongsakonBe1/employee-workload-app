@@ -33,6 +33,10 @@ const sections = [
           <strong>labboy Workload Recorder</strong> คือระบบบันทึกและวิเคราะห์ภาระงานดิจิทัล
           สำหรับบุคลากร ICIT มจพ. รองรับ Desktop และ Mobile (PWA) เข้าสู่ระบบด้วย Google (@icit.kmutnb.ac.th)
         </p>
+        <p>
+          บนมือถือ แตะเมนูล่างเพื่อเปลี่ยนหน้า หรือกดค้างที่แท็บปัจจุบันแล้วลากนิ้วแนวนอน
+          ปล่อยบนแท็บที่ต้องการเพื่อเปิดหน้า ลากออกจากแถบเพื่อยกเลิก
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {[
             { icon: PlusCircle, label: "บันทึกงาน", desc: "Quick Log, Combo Template และ Manual" },
@@ -86,6 +90,11 @@ const sections = [
             </li>
           ))}
         </ul>
+        <p>
+          ใน <Link href="/profile" className="underline"><strong>โปรไฟล์</strong></Link> เลือก <strong>เดือนนี้</strong>,
+          <strong> 90 วันล่าสุด</strong> หรือ <strong>บันทึกล่าสุด</strong> แล้วกดหัวข้อรองเพื่อดูบันทึกตัวอย่างได้สูงสุด 5 รายการ
+          หากใช้ข้อมูลจาก 500 บันทึกล่าสุด ระบบจะแสดงหมายเหตุเมื่อช่วงที่เลือกอาจครอบคลุมไม่ครบ
+        </p>
       </div>
     ),
   },
@@ -247,7 +256,7 @@ const sections = [
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             ["จัดการผู้ใช้", "อนุมัติ/ปฏิเสธ/ระงับบัญชี, กำหนด Role"],
-            ["บันทึกงานให้พนักงาน", "Admin บันทึกงานแทนพนักงานได้"],
+            ["บันทึกงานให้พนักงาน", "เลือกผู้ปฏิบัติงานก่อนบันทึก รายการแสดงชื่อลงงานและชื่อเล่นในวงเล็บเมื่อมีข้อมูล"],
             ["จัดการระบบ", "Templates, ตารางเรียน, ตาราง DL Exam, Broadcast"],
             ["ตั้งค่าระบบ", "Time Lock, Push Notification, Security"],
             ["Audit Logs", "ประวัติทุก action ในระบบ (Superadmin only)"],
