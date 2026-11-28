@@ -23,10 +23,10 @@ const scrubPreview = process.env.NEXT_PUBLIC_MOBILE_TAB_SCRUB_PREVIEW === "1" &&
 const scrubEnabled = scrubPreview || (process.env.NEXT_PUBLIC_MOBILE_TAB_SCRUB === "1" &&
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "labboy-workload-app");
 
-export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, resolveHref = directHref, glassMode = "css" }) {
+export function WorkspaceFrame({ user, pathname, navigationHref = pathname, notificationSlot, children, onLogout, onNavigate, resolveHref = directHref, glassMode = "css" }) {
   const { preferences } = useAppearance();
   const dock = preferences.navigation !== "sidebar";
-  const logicalGroups = getWorkspaceNavigation(user.role), current = activeNavigation(pathname, logicalGroups);
+  const logicalGroups = getWorkspaceNavigation(user.role), current = activeNavigation(navigationHref, logicalGroups);
   const groups = logicalGroups.map(group => ({ ...group, items: group.items.map(entry => ({ ...entry, href: resolveHref(entry.href) })) })), all = groups.flatMap(group => group.items);
   const [collapsed, setCollapsed] = useState(false), [wide, setWide] = useState(false), [scrolled, setScrolled] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(() => groups.find(group => group.id === "tools")?.items.some(entry => entry.id === current));
