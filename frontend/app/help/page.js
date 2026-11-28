@@ -259,7 +259,7 @@ const sections = [
             ["บันทึกงานให้พนักงาน", "เลือกผู้ปฏิบัติงานก่อนบันทึก รายการแสดงชื่อลงงานและชื่อเล่นในวงเล็บเมื่อมีข้อมูล"],
             ["จัดการระบบ", "Templates, ตารางเรียน, ตาราง DL Exam, Broadcast"],
             ["ตั้งค่าระบบ", "Time Lock, Push Notification, Security"],
-            ["Audit Logs", "ประวัติทุก action ในระบบ (Superadmin only)"],
+            ["ประวัติการใช้งาน", "Superadmin เปิดเมนูประวัติการใช้งานเพื่อดูและส่งออกบันทึกการใช้งานระบบ"],
             ["Staff Analytics", "ดูการกระจายงานและรายละเอียดบันทึกของบุคลากรที่เปิดใช้งาน"],
             ["Equipment Health", "ติดตามสุขภาพอุปกรณ์ หูฟัง/ปลั๊กไฟ"],
             ["Broadcast Push", "ส่ง Push Notification ถึงทุก User (Superadmin only)"],

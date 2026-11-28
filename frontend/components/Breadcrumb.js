@@ -12,7 +12,7 @@ const routeMap = {
   "/export": { label: "navigation.export", parent: "/dashboard" },
   "/admin": { label: "navigation.admin", parent: "/dashboard" },
   "/admin/users": { label: "admin.users.title", parent: "/admin" },
-  "/admin/audit-logs": { label: "admin.auditLogs.title", parent: "/admin" },
+  "/admin/audit-logs": { label: "navigation.auditLogs", parent: "/admin" },
 };
 
 export function Breadcrumb() {

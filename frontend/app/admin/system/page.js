@@ -1,7 +1,8 @@
 "use client";
 
 import "../../ui-detail-layouts.css";
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "../../../components/AuthProvider";
 import { AppShell } from "../../../components/AppShell";
 import TemplateManager from "../../../components/TemplateManager";
@@ -20,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../../../lib/firebase";
 import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
+import { adminSystemHref, systemLogsHref } from "../../../lib/navigation";
 import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
 import {
@@ -75,11 +77,19 @@ function getEmailPrefix(email) {
 }
 
 export default function SystemManagementPage() {
+  return (
+    <Suspense fallback={<main className="ui-loading" role="status">กำลังโหลด…</main>}>
+      <SystemManagement />
+    </Suspense>
+  );
+}
+
+function SystemManagement() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [exportRequests, setExportRequests] = useState([]);
   const [systemLogs, setSystemLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("exports"); // "exports" | "logs" | "templates"
 
   // Feedback states
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -110,6 +120,18 @@ export default function SystemManagementPage() {
 
   const isSuperAdmin = isSuperAdminRole(user);
   const isAdmin = isAdminRole(user);
+  const visibleSections = systemSections.filter(({ superadmin }) => !superadmin || isSuperAdmin);
+  const requestedTab = searchParams.get("tab");
+  const activeTab = visibleSections.find(({ id }) => id === requestedTab)?.id ?? "exports";
+
+  function selectTab(id) {
+    if (activeTab === id) return;
+    const params = new URLSearchParams(searchParams);
+    if (id === "exports") params.delete("tab");
+    else params.set("tab", id);
+    const query = params.toString();
+    window.history.pushState(null, "", query ? `${adminSystemHref}?${query}` : adminSystemHref);
+  }
 
   // โหลดคำขอส่งออกที่รออนุมัติ (ใช้ getDocs แทน onSnapshot ประหยัด quota)
   const loadExportRequests = useCallback(async () => {
@@ -686,14 +708,14 @@ export default function SystemManagementPage() {
   }
 
   return (
-    <AppShell><div className="ui-management">
+    <AppShell navigationHref={activeTab === "logs" ? systemLogsHref : adminSystemHref}><div className="ui-management">
       <div className="mb-5">
         <h1 className="text-3xl font-semibold text-slate-950">จัดการระบบ</h1>
       </div>
 
       <div className="ui-option-group ui-system-options mb-6" role="group" aria-label="ส่วนจัดการระบบ">
-        {systemSections.filter(({ superadmin }) => !superadmin || isSuperAdmin).map(({ id, label, icon: Icon }) => (
-          <button key={id} type="button" className="ui-option" aria-pressed={activeTab === id} onClick={() => setActiveTab(id)}>
+        {visibleSections.map(({ id, label, icon: Icon }) => (
+          <button key={id} type="button" className="ui-option" aria-pressed={activeTab === id} onClick={() => selectTab(id)}>
             <Icon size={18} aria-hidden="true" />
             <span>{label}</span>
             {id === "exports" && exportRequests.length > 0 && (

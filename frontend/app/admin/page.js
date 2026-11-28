@@ -8,7 +8,6 @@ import {
   FileText,
   Shield,
   BarChart3,
-  Settings,
   ChevronRight,
   PlusCircle,
   Cog,
@@ -16,7 +15,8 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { useAuth } from "../../components/AuthProvider";
-import { isAdminRole } from "../../lib/authUtils";
+import { isAdminRole, isSuperAdminRole } from "../../lib/authUtils";
+import { systemLogsHref } from "../../lib/navigation";
 
 const adminModules = [
   {
@@ -41,13 +41,14 @@ const adminModules = [
   },
   {
     id: "audit",
-    title: "ประวัติการใช้งาน (ตัวอย่าง)",
-    titleEn: "Audit Log Preview",
-    description: "ดูตัวอย่างรูปแบบประวัติการใช้งาน",
-    descriptionEn: "Preview the layout of audit logs",
+    title: "ประวัติการใช้งาน",
+    titleEn: "Audit Logs",
+    description: "ดูและส่งออกบันทึกการใช้งานระบบ",
+    descriptionEn: "View and export system logs",
     icon: FileText,
-    href: "/admin/audit-logs",
+    href: systemLogsHref,
     color: "bg-emerald-500",
+    superadmin: true,
   },
   {
     id: "staff-analytics",
@@ -98,6 +99,7 @@ export default function AdminPage() {
 
   // Redirect non-admin users (allow admin and superadmin)
   const isAdmin = isAdminRole(user);
+  const isSuperAdmin = isSuperAdminRole(user);
 
   useEffect(() => {
     if (user && !isAdmin) {
@@ -140,7 +142,7 @@ export default function AdminPage() {
       </section>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {adminModules.map((module) => {
+        {adminModules.filter(({ superadmin }) => !superadmin || isSuperAdmin).map((module) => {
           const Icon = module.icon;
           return (
             <a

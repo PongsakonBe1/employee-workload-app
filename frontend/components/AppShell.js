@@ -8,7 +8,7 @@ import { Breadcrumb } from "./Breadcrumb";
 import { NotificationBell } from "./NotificationBell";
 import { WorkspaceFrame } from "./ui/WorkspaceFrame";
 
-export function AppShell({ children, showBreadcrumb = true }) {
+export function AppShell({ children, showBreadcrumb = true, navigationHref }) {
   const pathname = usePathname(), router = useRouter();
   const { user, loading, pendingApproval, logout } = useAuth();
   const t = useTranslations();
@@ -22,7 +22,7 @@ export function AppShell({ children, showBreadcrumb = true }) {
   if (loading) return <main className="ui-loading" aria-busy="true"><div className="apple-panel p-6" role="status">{t("common.loading")}</div></main>;
   if (!user || pendingApproval) return null;
   return <WorkspaceFrame
-    user={user} pathname={pathname}
+    user={user} pathname={pathname} navigationHref={navigationHref}
     onLogout={logout} notificationSlot={<NotificationBell />}
   >
     {showBreadcrumb && <Breadcrumb />}

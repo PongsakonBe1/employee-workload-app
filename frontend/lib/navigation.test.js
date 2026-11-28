@@ -17,11 +17,20 @@ describe("task-first workspace navigation", () => {
   it("keeps existing admin destinations and resolves the most specific path", () => {
     const nav = getWorkspaceNavigation("superadmin");
     expect(nav.flatMap(group => group.items).find(entry => entry.id === "audit")).toMatchObject({
-      href: "/admin/audit-logs", label: "ประวัติการใช้งาน (ตัวอย่าง)",
+      href: "/admin/system?tab=logs", label: "ประวัติการใช้งาน",
     });
     expect(activeNavigation("/admin/record", nav)).toBe("record");
     expect(activeNavigation("/admin/staff-analytics", nav)).toBe("staff");
     expect(activeNavigation("/worklogs/new", getWorkspaceNavigation("staff"))).toBe("record");
     expect(activeNavigation("/adminish", nav)).toBe(null);
+  });
+
+  it("highlights the audit shortcut only when that destination is available", () => {
+    const superadmin = getWorkspaceNavigation("superadmin");
+    const admin = getWorkspaceNavigation("admin");
+    expect(activeNavigation("/admin/system?tab=logs", superadmin)).toBe("audit");
+    expect(activeNavigation("/admin/system?tab=templates", superadmin)).toBe("system");
+    expect(activeNavigation("/admin/system", superadmin)).toBe("system");
+    expect(activeNavigation("/admin/system?tab=logs", admin)).toBe("system");
   });
 });
