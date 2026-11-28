@@ -8,12 +8,47 @@
 .worklog-live-record .record-entry { grid-area: entry; min-width: 0; }
 .worklog-live-record .record-follow-up { grid-area: follow-up; }
 .record-live-context { grid-area: context; display: grid; gap: 20px; align-self: start; min-width: 0; }
-.record-resource-summary { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 17px; min-width: 0; }
-.record-resource-title { margin: 15px 16px 0; font-size: .9375rem; font-weight: 650; }
-.record-resource-disclosure { display: none; }
-.record-resource-summary-body { display: grid; gap: 12px; padding: 12px 16px 14px; }
+.record-resource-summary { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 22px; min-width: 0; }
+.record-resource-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 8px; padding: 2px 12px 0; }
+.record-resource-header h2 { margin: 0; font-size: .9375rem; font-weight: 700; }
+.record-resource-header .record-link { min-height: 44px; white-space: nowrap; }
+.record-resource-summary-body { display: grid; gap: 10px; padding: 0 12px 12px; min-width: 0; }
 .record-resource-summary-body :is(ul,p) { margin: 0; }
-.record-room-notices, .record-live-equipment { display: grid; gap: 8px; }
+.record-status-widget { display: grid; gap: 8px; min-width: 0; }
+.record-status-pages { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 2px; padding: 3px; border: 1px solid var(--ui-line); background: color-mix(in srgb,var(--ui-soft) 76%,var(--ui-glass)); border-radius: 14px; }
+.record-status-pages button { display: grid; place-content: center; gap: 1px; min-width: 0; min-height: 44px; padding: 3px 2px; border-radius: 10px; border: 1px solid transparent; text-align: center; color: var(--ui-ink); }
+.record-status-pages button strong { font-size: .75rem; line-height: 1.25; }
+.record-status-pages button small { color: var(--ui-sub); font-size: .6875rem; }
+.record-status-pages button b { color: var(--ui-ink); font-variant-numeric: tabular-nums; }
+.record-status-pages button[aria-pressed="true"] { background: var(--ui-surface); border-color: var(--ui-line); box-shadow: 0 1px 3px #0001; color: var(--ui-blue-ink); }
+.record-status-pages button:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+.record-status-viewport { display: grid; align-items: start; grid-auto-columns: 100%; grid-auto-flow: column; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; min-width: 0; }
+.record-status-viewport::-webkit-scrollbar { display: none; }
+.record-status-slide { display: grid; align-content: start; gap: 8px; min-width: 0; scroll-snap-align: start; }
+.record-status-slide[aria-hidden="true"] { max-block-size: 0; }
+.record-return-headline { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 13px; background: var(--ui-soft); }
+.record-return-headline svg { flex: none; color: var(--ui-sub); }
+.record-return-headline[data-return-state="pending"] svg { color: var(--ui-amber-ink); }
+.record-return-headline[data-return-state="clear"] svg { color: var(--ui-green-ink); }
+.record-return-headline h3 { margin: 0; font-size: 1rem; line-height: 1.5; }
+.record-return-headline h3 b { font-size: 1.375rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.record-return-headline p { color: var(--ui-sub); font-size: .75rem; }
+.record-return-group { display: grid; gap: 2px; padding-inline: 4px; }
+.record-return-group h3 { margin: 0; font-size: .8125rem; font-weight: 650; color: var(--ui-sub); }
+.record-return-items { padding: 0; list-style: none; }
+.record-return-items li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 6px 0; border-bottom: 1px solid var(--ui-line); font-size: .8125rem; }
+.record-return-items li:last-child { border-bottom: 0; }
+.record-return-items strong { font-variant-numeric: tabular-nums; }
+.record-return-items span { color: var(--ui-sub); overflow-wrap: anywhere; }
+.record-return-items small { color: var(--ui-amber-ink); }
+.record-return-exceptions { border-top: 1px solid var(--ui-line); padding-inline: 4px; }
+.record-return-exceptions summary { display: flex; justify-content: space-between; align-items: center; min-height: 44px; gap: 8px; cursor: pointer; list-style: none; color: var(--ui-amber-ink); font-size: .8125rem; }
+.record-return-exceptions summary::-webkit-details-marker { display: none; }
+.record-return-exceptions[open] summary svg { transform: rotate(180deg); }
+.record-return-exceptions summary:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; border-radius: 7px; }
+.record-resource-group { display: grid; gap: 6px; min-width: 0; }
+.record-resource-group h3 { font-size: .875rem; font-weight: 700; color: var(--ui-ink); margin: 0; }
+.record-room-notices { display: grid; gap: 8px; }
 .record-room-notices li {
   display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 6px;
 }
@@ -28,16 +63,12 @@
   display: grid; gap: 2px; border-radius: 8px; background: var(--ui-soft); color: var(--ui-sub);
   padding: 5px 4px; text-align: center; font-size: .6875rem; overflow-wrap: anywhere;
 }
-.record-live-rooms li[data-state="in_use"] { background: var(--ui-green); color: var(--ui-green-ink); }
-.record-equipment-meter { display: grid; gap: 3px; font-size: .75rem; }
-.record-equipment-track { display: flex; gap: 2px; height: 8px; background: var(--ui-soft); padding: 1px; border-radius: 5px; overflow: hidden; }
-.record-equipment-track span { flex-basis: 0; border-radius: 3px; }
-.record-equipment-track [data-state="ready"] { background: var(--ui-green-ink); }
-.record-equipment-track [data-state="inUse"] { background: var(--ui-blue-ink); }
-.record-equipment-track [data-state="issue"] { background: var(--ui-amber-ink); }
-.record-equipment-counts { display: flex; flex-wrap: wrap; column-gap: 8px; color: var(--ui-sub); font-size: .6875rem; }
+.record-live-rooms li[data-state="in_use"] span { color: var(--ui-amber-ink); font-weight: 650; }
+.record-equipment-available { display: flex; align-items: baseline; gap: 6px; color: var(--ui-sub); font-size: .8125rem; }
+.record-equipment-available strong { color: var(--ui-ink); font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .record-resource-feedback { color: var(--ui-sub); font-size: .75rem; }
 .record-resource-summary-body .record-link { min-height: 44px; justify-self: start; }
+@media(forced-colors:active) { .record-status-pages button[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: -2px; } }
 .worklog-live-record .record-panel-title { flex-wrap:wrap; }
 .worklog-live-record .record-mode { max-width:100%; }
 .worklog-live-record :is(input,textarea) { min-width:0;max-width:100%; }
@@ -65,22 +96,13 @@
 @media(max-width:1150px) {
   .worklog-inline-schedule { display:block; }
   .worklog-live-record { grid-template-areas: "entry" "context" "follow-up"; grid-template-rows: auto; row-gap: 8px; }
-  .record-resource-title { display: none; }
   .record-mobile-room-notice {
     display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px;
     line-height: 1.35; margin: 0 0 6px; padding: 5px 8px;
   }
   .record-mobile-room-notice svg { flex: none; }
   .record-mobile-room-notice small { font-size: inherit; }
-  .record-resource-disclosure {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px;
-    border-radius: inherit; padding: 5px 12px; text-align: start; font-size: .8125rem;
-  }
-  .record-resource-disclosure span { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
-  .record-resource-disclosure small { color: var(--ui-sub); font-size: .75rem; }
-  .record-resource-disclosure[aria-expanded="true"] svg { transform: rotate(180deg); }
-  .record-resource-disclosure:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
-  .record-resource-summary[data-expanded="false"] .record-resource-summary-body { display: none; }
+  body:has(.ui-notification-banners) .record-resource-directory-link { scroll-margin-block-end: 156px; }
 }
 .worklog-task-options { display:grid;gap:1px;margin-top:12px; }
 .worklog-task-options button { min-height:44px;text-align:start;width:100%;padding:8px 12px;border-radius:10px; }

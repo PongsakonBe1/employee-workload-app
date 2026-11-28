@@ -16,7 +16,9 @@ describe("task-first workspace navigation", () => {
   });
   it("keeps existing admin destinations and resolves the most specific path", () => {
     const nav = getWorkspaceNavigation("superadmin");
-    expect(nav.flatMap(group => group.items).find(entry => entry.id === "audit").href).toBe("/admin/audit-logs");
+    expect(nav.flatMap(group => group.items).find(entry => entry.id === "audit")).toMatchObject({
+      href: "/admin/audit-logs", label: "ประวัติการใช้งาน (ตัวอย่าง)",
+    });
     expect(activeNavigation("/admin/record", nav)).toBe("record");
     expect(activeNavigation("/admin/staff-analytics", nav)).toBe("staff");
     expect(activeNavigation("/worklogs/new", getWorkspaceNavigation("staff"))).toBe("record");

@@ -111,7 +111,7 @@
   "admin": {
     "title": "Admin",
     "auditLogs": {
-      "title": "Audit Logs",
+      "title": "Audit Log Preview",
       "type": "Type",
       "user": "User",
       "action": "Action",

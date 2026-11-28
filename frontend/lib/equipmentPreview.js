@@ -1,4 +1,5 @@
-import { validCalendarDate, calendarRange, addCalendarMonths, addCalendarDays } from "./calendarView";
+import { validCalendarDate } from "./calendarView";
+export { equipmentRange } from "./equipmentRange";
 export const EQUIPMENT_KINDS = {
   headphones: "หูฟัง",
   plug: "ปลั๊กไฟ",
@@ -77,24 +78,6 @@ export function equipmentDraft(value, devices, currentId) {
 export function equipmentList(devices, filters = {}) {
   const search = (filters.search || "").trim().toLocaleLowerCase();
   return devices.filter(item => (filters.includeInactive || item.active !== false || item.student) && (!filters.kind || filters.kind === "all" || item.kind === filters.kind) && (!filters.location || filters.location === "all" || item.location === filters.location) && (!filters.status || filters.status === "all" || equipmentState(item).id === filters.status) && (!search || [item.name, item.assetCode, item.barcode, item.location].join(" ").toLocaleLowerCase().includes(search))).sort((a, b) => a.order - b.order || a.assetCode.localeCompare(b.assetCode));
-}
-export function equipmentRange(date, mode) {
-  if (["day", "week", "month"].includes(mode)) return calendarRange(date, mode);
-  if (!validCalendarDate(date)) throw Error("วันที่ไม่ถูกต้อง");
-  const year = Number(date.slice(0, 4)),
-    month = Number(date.slice(5, 7));
-  if (mode === "fiscal") return {
-    start: `${month >= 10 ? year : year - 1}-10-01`,
-    end: `${month >= 10 ? year + 1 : year}-09-30`
-  };
-  if (mode === "quarter") {
-    const start = `${year}-${String(Math.floor((month - 1) / 3) * 3 + 1).padStart(2, "0")}-01`;
-    return {
-      start,
-      end: addCalendarDays(addCalendarMonths(start, 3), -1)
-    };
-  }
-  throw Error("ไม่รองรับช่วงวันที่");
 }
 export function equipmentSummary(data, range, filters = {}) {
   if (!validCalendarDate(range.start) || !validCalendarDate(range.end) || range.end < range.start) throw Error("ระบุช่วงวันที่ให้ถูกต้อง");

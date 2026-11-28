@@ -27,7 +27,7 @@ export function getWorkspaceNavigation(role) {
         item("users", "/admin/users", "จัดการผู้ใช้", "staff"),
         item("system", "/admin/system", "เครื่องมือระบบ", "settings"),
         item("settings", "/admin/settings", "ตั้งค่าระบบ", "settings"),
-        ...(role === "superadmin" ? [item("audit", "/admin/audit-logs", "ประวัติระบบ", "audit"), item("cleanup", "/admin/cleanup", "ตรวจข้อมูลซ้ำ", "audit", "amber")] : []),
+        ...(role === "superadmin" ? [item("audit", "/admin/audit-logs", "ประวัติการใช้งาน (ตัวอย่าง)", "audit"), item("cleanup", "/admin/cleanup", "ตรวจข้อมูลซ้ำ", "audit", "amber")] : []),
       ] : []),
     ] },
   ];

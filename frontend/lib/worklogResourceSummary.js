@@ -1,6 +1,7 @@
 import { timeMinutes } from "./calendarView.js";
 import { EQUIPMENT_LABELS, visibleEquipment } from "./equipmentCatalog.js";
 import { RESOURCE_ROOM_IDS } from "./resourceStatusIndex.js";
+import { equipmentDisplayState } from "./resourcePresentation.js";
 
 const bangkokDateTime = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
@@ -40,13 +41,19 @@ export function roomClosureNotices(roomStatus, schedule, clock) {
   return notices.sort((a, b) => a.minutes - b.minutes || a.room.localeCompare(b.room));
 }
 
-export function summarizeEquipment(catalog, statuses, conditions) {
-  const summaries = Object.fromEntries(Object.keys(EQUIPMENT_LABELS).map(kind => [kind, { ready: 0, inUse: 0, issue: 0 }]));
-  for (const { id, kind } of visibleEquipment(catalog, statuses)) {
-    const state = statuses[kind]?.[id];
-    if (state === "in_use") summaries[kind].inUse++;
-    else if (state !== "available" || ["damaged", "lost"].includes(conditions[id])) summaries[kind].issue++;
-    else summaries[kind].ready++;
+export function worklogEquipmentSummary(catalog, statuses, conditions) {
+  const counts = Object.fromEntries(Object.keys(EQUIPMENT_LABELS).map(kind => [kind, { ready: 0, inUse: 0, issue: 0 }]));
+  const loans = [], unconfirmed = [], conditionIssues = [];
+  const items = visibleEquipment(catalog, statuses);
+  for (const item of items) {
+    const { id, kind } = item;
+    const status = statuses[kind]?.[id];
+    const condition = conditions[id];
+    const state = equipmentDisplayState(status, condition);
+    counts[kind][state]++;
+    if (state === "inUse") loans.push(item);
+    else if (status !== "available") unconfirmed.push(item);
+    else if (state === "issue") conditionIssues.push({ ...item, condition });
   }
-  return summaries;
+  return { counts, loans, unconfirmed, conditionIssues, total: items.length };
 }

@@ -45,8 +45,11 @@ async function login(browser, handle, width) {
 
 async function room(page, action) {
   await page.getByRole("button", { name: /QA ห้องชั้น 4/ }).click();
-  await page.getByRole("button", { name: new RegExp("^ห้อง 401 .*" + action) }).click();
-  await page.getByRole("button", { name: new RegExp("ยืนยัน.*" + action + "ห้อง 401") }).click();
+  const dialog = page.getByRole("dialog", { name: "QA ห้องชั้น 4" });
+  const state = action === "เปิด" ? "ปิดอยู่" : "เปิดอยู่";
+  await dialog.getByRole("button", { name: `ห้อง 401 ${state}`, exact: true }).click();
+  assert.equal(await dialog.locator(".record-resource-tile").count(), 4);
+  await dialog.getByRole("button", { name: `${action}ห้อง 401`, exact: true }).click();
   await page.getByRole("heading", { name: "QA ห้องชั้น 4", exact: true }).waitFor({ state: "hidden" });
 }
 
@@ -114,8 +117,8 @@ async function verifyWrites() {
     const row = await addEquipment(admin);
     const desktop = await login(browser, "qa-role-staff-a", 1440);
     const mobile = await login(browser, "qa-role-staff-b", 390);
-    await room(desktop, "เปิดใช้งาน");
-    await room(mobile, "ปิดการใช้งาน");
+    await room(desktop, "เปิด");
+    await room(mobile, "ปิด");
     const first = await equipmentModal(desktop, "QA หูฟัง", "ห้องบริการชั้น 3");
     const field = desktop.getByRole("textbox", { name: "รหัสนักศึกษา 13 หลัก" });
     await field.fill(student);

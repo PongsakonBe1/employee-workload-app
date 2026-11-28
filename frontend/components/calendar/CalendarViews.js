@@ -151,7 +151,7 @@ export function CalendarMonth({ anchor, selected, today, rows, holidays, holiday
     </div>
   </section>;
 }
-export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent, onHoliday, colorBy = "room", selectedRoom = "all", emptyText = "ไม่มีตารางตรงกับตัวกรอง" }) {
+export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent, onHoliday, colorBy = "room", selectedRoom = "all", emptyText = "ไม่มีตารางตรงกับตัวกรอง", showDate = true }) {
   const days = calendarDates(range.start, range.end).filter(date => rows.some(row => row.date === date) || calendarHolidays(holidays, date, holidayOptions).length);
   if (!days.length) return <div className="cal-empty">
     <CalendarDays size={28} aria-hidden="true" />
@@ -160,7 +160,7 @@ export function CalendarAgenda({ rows, range, holidays, holidayOptions, onEvent,
   </div>;
   return <div className="cal-agenda">
     {days.map(date => <section key={date} aria-label={calendarLabel(date)}>
-      <h2>{calendarLabel(date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</h2>
+      {showDate && <h2>{calendarLabel(date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</h2>}
       <HolidayLabels {...{ date, holidays, holidayOptions, onHoliday }} />
       {rows.filter(row => row.date === date).map(row => <button
         type="button" className="cal-agenda-event"

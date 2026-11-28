@@ -29,9 +29,32 @@ function Bars({
 }
 function Summary({
   summary,
-  personal = false
+  personal = false,
+  partial = false
 }) {
-  return <section className="planning-summary" data-personal={personal} aria-label="สรุปข้อมูลในช่วงที่เลือก"><div className="planning-summary-primary"><span>กิจกรรมที่บันทึก</span><strong data-metric="activities">{summary.activities.toLocaleString("th-TH")}<small>รายการ</small></strong><span>นับจากรายการที่โหลดแล้ว</span></div><dl>{[["people", "ผู้มีบันทึก", "คนที่ระบุได้"], ["days", "วันที่มีบันทึก", "วัน"], ["tasks", "หัวข้อรอง", "ประเภท"]].filter(([key]) => !personal || key !== "people").map(([key, label, unit]) => <div key={key}><dt>{label}</dt><dd data-metric={key}>{summary[key].toLocaleString("th-TH")}<small>{unit}</small></dd></div>)}</dl></section>;
+  return <section className="planning-summary" data-personal={personal} aria-label={partial ? "สรุปเฉพาะบันทึกที่โหลดแล้ว" : "สรุปข้อมูลในช่วงที่เลือก"}><div className="planning-summary-primary"><span>{partial ? "กิจกรรมที่โหลดแล้ว" : "กิจกรรมที่บันทึก"}</span><strong data-metric="activities">{summary.activities.toLocaleString("th-TH")}<small>รายการ</small></strong></div><dl>{[["people", "ผู้มีบันทึก", "คนที่ระบุได้"], ["days", "วันที่มีบันทึก", "วัน"], ["tasks", "หัวข้อรอง", "ประเภท"]].filter(([key]) => !personal || key !== "people").map(([key, label, unit]) => <div key={key}><dt>{label}</dt><dd data-metric={key}>{summary[key].toLocaleString("th-TH")}<small>{unit}</small></dd></div>)}</dl></section>;
+}
+
+function ActivityTrend({ rows, selection, drill }) {
+  const trend = planningTrend(rows, selection.range);
+  const today = calendarToday();
+  const busiest = planningCounts(rows, "date");
+  const maxTrend = Math.max(1, ...trend.values.map(row => row.count));
+  return <section className="planning-panel planning-trend">
+    <div className="planning-panel-head"><h2>แนวโน้มกิจกรรม</h2><span className="ui-caption">{PLANNING_MODES[selection.mode]}</span></div>
+    <p className="planning-takeaway">{busiest.length ? <><strong>{calendarLabel(busiest[0][0], { dateStyle: "medium" })}</strong>{busiest.filter(([, count]) => count === busiest[0][1]).length > 1 ? " และวันอื่นที่มียอดเท่ากัน" : ""} มีบันทึกมากที่สุด <strong>{busiest[0][1]} รายการ</strong></> : "ยังไม่มีบันทึกสำหรับช่วงนี้"}</p>
+    <div className="planning-trend-scroll" role="group" aria-label="แนวโน้มจำนวนกิจกรรม หน่วยรายการ"><div className="planning-columns">
+      {trend.values.map(bucket => {
+        const start = trend.unit === "day" ? bucket.date : trend.unit === "month" ? `${bucket.date}-01` : `${bucket.date}-01-01`;
+        const future = start > today && !bucket.count;
+        const label = trend.unit === "day" ? `${Number(bucket.date.slice(8))}/${Number(bucket.date.slice(5, 7))}` : trend.unit === "month" ? `${Number(bucket.date.slice(5, 7))}/${Number(bucket.date.slice(0, 4)) + 543}` : Number(bucket.date) + 543;
+        return <button key={bucket.date} disabled={future} aria-label={`${bucket.date} ${future ? "ยังไม่ถึงช่วงนี้" : bucket.count + " กิจกรรม"}`} onClick={() => drill("date", bucket.date)}>
+          <strong>{future ? "—" : bucket.count}</strong><span aria-hidden="true" style={{ height: `${Math.max(2, bucket.count / maxTrend * 130)}px` }} /><small>{label}</small>
+        </button>;
+      })}
+    </div></div>
+    <p className="ui-caption">หน่วย: กิจกรรมที่บันทึก{trend.unit === "day" ? "ต่อวัน" : trend.unit === "month" ? "ต่อเดือน" : "ต่อปี"} · แตะแท่งเพื่อดูรายการ{selection.range.end >= today ? " · ช่วงปัจจุบันยังไม่สิ้นสุด และ — หมายถึงยังไม่ถึงช่วงนั้น" : ""}</p>
+  </section>;
 }
 export function PlanningWorkspaceView({
   mode, actor, person, people, tasks, result, selection, setSelection, employee, setEmployee,
@@ -43,10 +66,11 @@ export function PlanningWorkspaceView({
   const [search, setSearch] = useState("");
   const [dialog, setDialog] = useState(null);
   const [status, setStatus] = useState("");
-  const ready = !loading && !error || result.rows.length > 0;
+  const ready = (!loading && !error) || result.rows.length > 0;
+  const complete = ready && !loading && !error && !result.partial;
+  const today = calendarToday();
   const rows = result.rows,
     summary = planningSummary(rows),
-    trend = planningTrend(rows, selection.range),
     taskCounts = planningCounts(rows, "task");
   const effectiveEmployee = admin ? employee : person.id;
   const team = planningStaff(rows, people, search, effectiveEmployee),
@@ -55,9 +79,6 @@ export function PlanningWorkspaceView({
     profile = profiles[year],
     jd = planningJD(rows, year, profile);
   const scopedTasks = [...new Set([...tasks.map(task => task.label), ...rows.map(row => row.task)])].sort((a, b) => a.localeCompare(b, "th"));
-  const busiest = planningCounts(rows, "date"),
-    maxTrend = Math.max(1, ...trend.values.map(row => row.count)),
-    today = calendarToday();
   const title = mode === "staff" ? "การกระจายงานของทีม" : "ภาพรวมงาน";
   function applySelection(next) {
     setSelection(next);
@@ -82,7 +103,7 @@ export function PlanningWorkspaceView({
   }
   return <>
     <div className="planning-workspace" data-planning-mode={mode} data-revision={revision}>
-      <div className="ui-page-heading planning-heading"><div><h1>{title}</h1><p>{mode === "staff" ? "จำนวนและประเภทกิจกรรม ใช้ประกอบการวางแผนกำลังคน" : "อ่านแนวโน้มและกิจกรรมที่บันทึก เพื่อวางแผนงาน"}</p>{preview && <small className="ui-caption">Development · ข้อมูลสังเคราะห์ร่วมกับบันทึกงานและประวัติ</small>}</div><div className="planning-heading-actions">{(mode !== "staff" || admin) && <GlassButton mode="quick" disabled={!ready} onClick={() => setDialog({
+      <div className="ui-page-heading planning-heading"><div><h1>{title}</h1><p>{mode === "staff" ? "จำนวนและประเภทกิจกรรม ใช้ประกอบการวางแผนกำลังคน" : "อ่านแนวโน้มและกิจกรรมที่บันทึก เพื่อวางแผนงาน"}</p>{preview && <small className="ui-caption">Development · ข้อมูลสังเคราะห์ร่วมกับบันทึกงานและประวัติ</small>}</div><div className="planning-heading-actions">{mode !== "staff" && <GlassButton mode="quick" disabled={!ready} onClick={() => setDialog({
             kind: "assessment"
           })}><ReviewSymbol name="record" size={17} />สรุปแบบประเมิน</GlassButton>}{mode === "staff" ? admin && <GlassButton mode="quick" disabled={!ready} onClick={exportDisplayed}><Download size={17} aria-hidden="true" />ส่งออกข้อมูลที่แสดง</GlassButton> : <GlassButton mode="quick" variant="prominent" onClick={() => navigate(!preview && actor.role === "admin" ? "/admin/record" : "/worklogs/new")}><Plus size={17} aria-hidden="true" />บันทึกงาน</GlassButton>}</div></div>
       {mode === "staff" && !admin ? <section className="planning-panel planning-empty"><h2>หน้านี้สำหรับผู้ดูแล</h2><p>Staff ดูข้อมูลของตนเองได้ในภาพรวมงาน</p><GlassButton mode="quick" onClick={() => navigate("/dashboard")}>เปิดภาพรวมงาน</GlassButton></section> : <>
@@ -94,20 +115,11 @@ export function PlanningWorkspaceView({
             title: "วิธีนับและขอบเขตข้อมูล"
           })}>วิธีนับและขอบเขตข้อมูล</button></div>
         {error && <p className="planning-warning" role="alert">{error} <button className="planning-link" onClick={onRetry}>ลองอีกครั้ง</button></p>}
-        {result.partial && <p className="planning-warning" role="status">กราฟและยอดรวมคำนวณจากรายการที่โหลดแล้ว ยังใช้เป็นยอดครบทั้งช่วงไม่ได้</p>}
+        {result.partial && <p className="planning-warning" role="status">ยังโหลดข้อมูลไม่ครบช่วงที่เลือก ยอดด้านล่างนับเฉพาะรายการที่โหลดแล้ว กราฟแนวโน้มจะแสดงเมื่อข้อมูลครบ</p>}
         {ready && (mode === "dashboard" ? <>
-          <Summary summary={summary} />
-          <section className="planning-panel planning-trend"><div className="planning-panel-head"><h2>แนวโน้มกิจกรรม</h2><span className="ui-caption">{PLANNING_MODES[selection.mode]}</span></div><p className="planning-takeaway">{busiest.length ? <>จากข้อมูลที่โหลด <strong>{calendarLabel(busiest[0][0], {
-                    dateStyle: "medium"
-                  })}</strong>{busiest.filter(([, count]) => count === busiest[0][1]).length > 1 ? " และวันอื่นที่มียอดเท่ากัน" : ""} มีบันทึกมากที่สุด <strong>{busiest[0][1]} รายการ</strong></> : "ยังไม่มีบันทึกในข้อมูลที่โหลดสำหรับช่วงนี้"}</p><div className="planning-trend-scroll" role="group" aria-label="แนวโน้มจำนวนกิจกรรม หน่วยรายการ"><div className="planning-columns">{trend.values.map(bucket => {
-                  const date = bucket.date.length === 4 ? bucket.date + "-01-01" : bucket.date.length === 7 ? bucket.date + "-01" : bucket.date,
-                    future = date > today && !bucket.count;
-                  const label = trend.unit === "day" ? Number(bucket.date.slice(8)) + "/" + Number(bucket.date.slice(5, 7)) : trend.unit === "month" ? Number(bucket.date.slice(5, 7)) + "/" + (Number(bucket.date.slice(0, 4)) + 543) : Number(bucket.date) + 543;
-                  return <button key={bucket.date} disabled={future} aria-label={`${bucket.date} ${future ? "ยังไม่ถึงช่วงนี้" : bucket.count + " กิจกรรม"}`} onClick={() => drill("date", bucket.date)}><strong>{future ? "—" : bucket.count}</strong><span aria-hidden="true" style={{
-                      height: `${Math.max(2, bucket.count / maxTrend * 130)}px`
-                    }} /><small>{label}</small></button>;
-                })}</div></div><p className="ui-caption">หน่วย: กิจกรรมที่บันทึก{trend.unit === "day" ? "ต่อวัน" : trend.unit === "month" ? "ต่อเดือน" : "ต่อปี"} · แตะแท่งเพื่อดูรายการ{selection.range.end >= today ? " · ช่วงปัจจุบันยังไม่สิ้นสุด และ — หมายถึงยังไม่ถึงช่วงนั้น" : ""}</p></section>
-          <div className="planning-detail-grid"><section className="planning-panel planning-task-panel"><div className="planning-panel-head"><h2>{taskView === "all" ? "หัวข้อรองทั้งหมด" : "หัวข้อรองที่มีบันทึกบ่อย"}</h2><GlassControlGroup mode="quick" label="มุมมองหัวข้อรอง">{[["popular", "บ่อยที่สุด"], ["all", "ทุกหัวข้อ"]].map(([value, label]) => <button key={value} aria-pressed={taskView === value} onClick={() => setTaskView(value)}>{label}</button>)}</GlassControlGroup></div>{taskView === "all" ? <TaskCatalog rows={rows} catalog={tasks} partial={result.partial} onSelect={key => drill("task", key)} /> : <><Bars pairs={taskCounts.slice(0, 5)} onSelect={key => drill("task", key)} /><button className="planning-link" onClick={() => setDialog({
+          <Summary summary={summary} personal={!admin || effectiveEmployee !== "all"} partial={!complete} />
+          {complete && <ActivityTrend rows={rows} selection={selection} drill={drill} />}
+          <div className="planning-detail-grid"><section className="planning-panel planning-task-panel"><div className="planning-panel-head"><h2>{taskView === "all" ? "หัวข้อรองทั้งหมด" : "หัวข้อรองที่มีบันทึกบ่อย"}{!complete && " · ที่โหลดแล้ว"}</h2><GlassControlGroup mode="quick" label="มุมมองหัวข้อรอง">{[["popular", "บ่อยที่สุด"], ["all", "ทุกหัวข้อ"]].map(([value, label]) => <button key={value} aria-pressed={taskView === value} onClick={() => setTaskView(value)}>{label}</button>)}</GlassControlGroup></div>{taskView === "all" ? <TaskCatalog rows={rows} catalog={tasks} partial={result.partial} onSelect={key => drill("task", key)} /> : <><Bars pairs={taskCounts.slice(0, 5)} onSelect={key => drill("task", key)} /><button className="planning-link" onClick={() => setDialog({
                   kind: "tasks",
                   title: "หัวข้อรองทั้งหมด"
                 })}>ดูหัวข้อรองทั้งหมด ({scopedTasks.length})</button><p className="ui-caption">หน่วย: ครั้งตามบันทึกหัวข้อรอง · แตะแถบเพื่อดูรายละเอียด</p></>}</section><section className="planning-panel"><h2>{admin ? "บันทึกของทีม" : "บันทึกของฉัน"}</h2><p className="ui-caption">เรียงตามรายชื่อทีม ไม่จัดอันดับตามจำนวนบันทึก</p><div className="planning-team">{dashboardTeam.map(item => <button key={item.id} onClick={() => drill("person", item.id, item.displayName)}><span className="planning-avatar">{item.initial}</span><span><strong>{item.displayName}</strong><small>{item.tasks} หัวข้อ · {item.days} วันที่มีบันทึก</small></span><span className="planning-team-count"><strong>{item.activities}</strong><small>รายการ</small></span><ChevronRight size={14} aria-hidden="true" /></button>)}</div>{summary.unresolved > 0 && <button className="planning-link" onClick={() => drill("person", "unresolved", "ระบุเจ้าหน้าที่ไม่ได้")}>ระบุเจ้าหน้าที่ไม่ได้ {summary.unresolved} รายการ</button>}<p className="ui-caption">จำนวนบันทึกไม่ใช่คะแนนผลงาน และการไม่มีบันทึกไม่ได้หมายถึงไม่ได้ทำงาน · แตะชื่อเพื่อดูรายการต้นทาง</p></section></div>
@@ -118,13 +130,15 @@ export function PlanningWorkspaceView({
                 kind: "jd"
               })}>ดูบริบท JD</GlassButton>}</div></details>
         </> : <>
+          <Summary summary={summary} personal={effectiveEmployee !== "all"} partial={!complete} />
+          {complete && (effectiveEmployee === "all" ? <ActivityTrend rows={rows} selection={selection} drill={drill} />
+            : <PersonalTrend rows={rows} range={selection.range} name={people.find(item => item.id === effectiveEmployee)?.displayName || "เจ้าหน้าที่ที่เลือก"} onShow={value => setDialog({ kind: "timeline", title: "ข้อมูลแนวโน้ม", trend: value })} />)}
           <label className="planning-search"><Search size={18} aria-hidden="true" /><input type="search" aria-label="ค้นหาเจ้าหน้าที่" placeholder="ค้นหาเจ้าหน้าที่" value={search} onChange={event => setSearch(event.target.value)} /></label>
-          <StaffDistribution rows={rows} people={team} mapping={assessmentMapping} partial={result.partial} onPerson={(id, label) => drill("person", id, label)} />{effectiveEmployee !== "all" && <PersonalTrend rows={rows} range={selection.range} name={people.find(item => item.id === effectiveEmployee)?.displayName || "เจ้าหน้าที่ที่เลือก"} onShow={value => setDialog({
-            kind: "timeline",
-            title: "ข้อมูลแนวโน้ม",
-            trend: value
-          })} />}<section className="planning-staff-table" aria-label="กิจกรรมรายเจ้าหน้าที่"><div role="table" aria-label="กิจกรรมรายเจ้าหน้าที่"><div className="planning-staff-head" role="row"><span role="columnheader">ผู้ปฏิบัติงาน</span><span role="columnheader">กิจกรรม</span><span role="columnheader">หัวข้อรอง</span><span role="columnheader">วันที่มีบันทึก</span><span role="columnheader">รายละเอียด</span></div>{team.map(item => <div className="planning-staff-row" role="row" key={item.id}><strong role="cell">{item.displayName}</strong><span role="cell"><small aria-hidden="true">กิจกรรม</small>{item.activities}</span><span role="cell"><small aria-hidden="true">หัวข้อรอง</small>{item.tasks}</span><span role="cell"><small aria-hidden="true">วันที่มีบันทึก</small>{item.days}</span><span role="cell"><button className="planning-link" aria-label={`รายละเอียด ${item.displayName}`} onClick={() => drill("person", item.id, item.displayName)}><ChevronRight size={16} aria-hidden="true" />รายละเอียด</button></span></div>)}{!team.length && <p className="planning-empty">ไม่พบเจ้าหน้าที่ตรงกับตัวกรอง</p>}</div><footer><span>{team.length} คน{preview ? " · ข้อมูลตัวอย่าง" : ""}</span><span>{result.partial ? "ยังโหลดไม่ครบช่วงที่เลือก" : "แสดงทั้งหมดในช่วงนี้"}</span></footer></section>
+          <section className="planning-staff-table" aria-label="กิจกรรมรายเจ้าหน้าที่"><div role="table" aria-label="กิจกรรมรายเจ้าหน้าที่"><div className="planning-staff-head" role="row"><span role="columnheader">ผู้ปฏิบัติงาน</span><span role="columnheader">กิจกรรม</span><span role="columnheader">หัวข้อรอง</span><span role="columnheader">วันที่มีบันทึก</span><span role="columnheader">รายละเอียด</span></div>{team.map(item => <div className="planning-staff-row" role="row" key={item.id}><strong role="cell">{item.displayName}</strong><span role="cell"><small aria-hidden="true">กิจกรรม</small>{item.activities}</span><span role="cell"><small aria-hidden="true">หัวข้อรอง</small>{item.tasks}</span><span role="cell"><small aria-hidden="true">วันที่มีบันทึก</small>{item.days}</span><span role="cell"><button className="planning-link" aria-label={`รายละเอียด ${item.displayName}`} onClick={() => drill("person", item.id, item.displayName)}><ChevronRight size={16} aria-hidden="true" />รายละเอียด</button></span></div>)}{!team.length && <p className="planning-empty">ไม่พบเจ้าหน้าที่ตรงกับตัวกรอง</p>}</div><footer><span>{team.length} คน{preview ? " · ข้อมูลตัวอย่าง" : ""}</span><span>{result.partial ? "ยังโหลดไม่ครบช่วงที่เลือก" : "แสดงทั้งหมดในช่วงนี้"}</span></footer></section>
+          {summary.unresolved > 0 && <button type="button" className="planning-link planning-unknown" onClick={() => drill("person", "unresolved", "ระบุเจ้าหน้าที่ไม่ได้")}>ระบุเจ้าหน้าที่ไม่ได้ {summary.unresolved} รายการ</button>}
           <p className="ui-caption planning-note">ไม่มีการจัดอันดับคุณภาพบุคลากร วันที่มีบันทึกไม่ใช่ข้อมูลการมาทำงาน{summary.unresolved ? ` · ยังระบุเจ้าหน้าที่ไม่ได้ ${summary.unresolved} รายการ จึงไม่รวมในแถวรายคน` : ""}</p>
+          {complete && <StaffDistribution rows={rows} people={team} mapping={assessmentMapping} partial={false} onPerson={(id, label) => drill("person", id, label)} />}
+          <section className="planning-panel planning-assessment-link"><h2>รายงาน</h2><GlassButton mode="quick" onClick={() => setDialog({ kind: "assessment" })}>สรุปแบบประเมิน</GlassButton></section>
           <section className="planning-panel"><h2>{profile ? `บริบท JD กลาง · ปีงบ ${year}` : "JD กลางของทีม"}</h2>{profile ? <><p className="ui-caption">น้ำหนักความรับผิดชอบและจำนวนกิจกรรมเป็นคนละความหมาย ไม่ใช้ส่วนต่างเป็นคะแนนประเมิน · ค่าทดลองใน develop</p><div className="planning-jd-table"><div><span>ความรับผิดชอบ</span><span>น้ำหนัก JD</span><span>กิจกรรม</span></div>{jd.map(item => <button key={item.id} onClick={() => drill("jd", item.id, item.label)}><span>{item.label}</span><strong>{item.weight === null ? "—" : item.weight + "%"}</strong><span>{item.count}</span></button>)}</div><p className="ui-caption">นับเฉพาะกิจกรรมของปีงบ {year} ที่อยู่ในช่วงเลือก · หัวข้อที่ยังไม่จับคู่แสดงแยกเสมอ</p></> : <><p>ยังไม่ได้กำหนดชุดกลางสำหรับปีงบ {year}</p><p className="ui-caption">{preview ? "ยังไม่มีน้ำหนัก JD จริงที่ยืนยันแล้วใน development · กำหนดทดลองแยกแต่ละปีได้" : "จะแสดงน้ำหนักเมื่อมีชุด JD ที่ตรวจทานแล้วสำหรับปีนี้"}</p></>}{preview && <GlassButton mode="quick" onClick={() => setDialog({
               kind: "jd"
             })}><Plus size={16} aria-hidden="true" />{profile ? "ตั้งค่า JD และผังจับคู่" : "กำหนด JD กลาง"}</GlassButton>}</section>
@@ -147,7 +161,7 @@ export function PlanningWorkspaceView({
       setStatus(`ใช้ JD กลางปีงบ ${value.year} ในต้นแบบแล้ว`);
     }} />}
     {dialog && !["range", "jd", "assessment"].includes(dialog.kind) && <Dialog key={`${dialog.kind}:${dialog.title}`} open onClose={() => setDialog(null)} title={dialog.title} description={dialog.kind === "records" ? `${dialog.rows.length} กิจกรรม · ${rangeLabel(selection.range)}${result.partial ? " · ยังโหลดไม่ครบช่วง" : ""}` : undefined} className={dialog.kind === "records" ? "planning-source-dialog" : ""} footer={dialog.parent ? <GlassButton mode="quick" onClick={() => setDialog(dialog.parent)}><ChevronLeft size={16} aria-hidden="true" />กลับรายละเอียดเจ้าหน้าที่</GlassButton> : undefined}>
-      {dialog.kind === "records" && <>{dialog.person && <><Summary summary={planningSummary(dialog.rows)} personal /><Bars pairs={planningCounts(dialog.rows, "task")} onSelect={key => setDialog({
+      {dialog.kind === "records" && <>{dialog.person && <><Summary summary={planningSummary(dialog.rows)} personal partial={!complete} /><Bars pairs={planningCounts(dialog.rows, "task")} onSelect={key => setDialog({
             kind: "records",
             title: key,
             rows: dialog.rows.filter(row => row.task === key),

@@ -98,7 +98,7 @@ export default function AuditLogsPage() {
                 Admin
               </p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-                ประวัติการใช้งาน
+                {t("admin.auditLogs.title")}
               </h1>
               <p className="mt-1 text-sm text-[var(--ui-sub)]">ข้อมูลตัวอย่างสำหรับดูรูปแบบประวัติการใช้งาน</p>
             </div>

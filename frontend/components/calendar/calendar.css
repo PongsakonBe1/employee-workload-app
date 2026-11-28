@@ -111,6 +111,7 @@
 .cal-month-more { color: var(--ui-blue-ink); font-size: .6875rem; padding: 4px; min-height: 28px; border-radius: 5px; }
 .cal-month-dots { display: none; }
 .cal-month-selection { margin-top: 22px; }
+.cal-day-agenda,.cal-dialog .cal-dialog-color { display: none; }
 .cal-agenda { display: grid; gap: 25px; }
 .cal-agenda section>h2 { font-size: .875rem; font-weight: 650; padding-block: 12px; border-bottom: 1px solid var(--ui-line); }
 .cal-agenda .cal-holiday { margin-block: 10px; min-height: 36px; font-size: .75rem; }
@@ -169,12 +170,16 @@
 @media(max-width:1240px) { .cal-layout { grid-template-columns: minmax(0,1fr); } .cal-sidebar,.cal-sidebar-toggle { display: none; } .cal-mobile-filters { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ui-blue-ink); } }
 @media(max-width:760px) {
   .cal-room-toolbar { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; margin-bottom: 14px; }
+  .cal-room-filter legend { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .cal-room-chips { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; }
   .cal-room-chips>button { padding: 7px 4px; }
-  .cal-color-choice { display: flex; align-items: center; justify-content: flex-end; gap: 8px; justify-self: stretch; }
-  .cal-color-choice>span { margin: 0; white-space: nowrap; }
-  .cal-color-choice select { font-size: 1rem; min-width: 145px; width: auto; }
-  .cal-page-heading { display: block; margin-bottom: 23px; }
+  .cal-color-choice,.cal-day-timeline { display: none; }
+  .cal-day-agenda { display: block; }
+  .cal-dialog .cal-dialog-color { display: grid; margin-top: 14px; }
+  .cal-day-agenda .cal-agenda-event { padding-block: 12px; }
+  .cal-day-agenda .cal-agenda-text strong { overflow-wrap: anywhere; }
+  .cal-day-agenda .cal-empty { padding-block: 24px; }
+  .cal-page-heading { display: block; margin-bottom: 14px; }
   .cal-page-heading h1 { font-size: 1.5rem; }
   .cal-page-heading p { font-size: .8125rem; }
   .cal-heading-actions { margin-top: 17px; justify-content: space-between; gap: 12px; }
@@ -192,8 +197,8 @@
   .cal-scope-line { gap: 4px; font-size: .6875rem; margin: 0 0 8px; }
   .cal-scope-line>span:first-child { flex-basis: 100%; }
   .cal-mobile-filters { margin-inline-start: auto; }
-  .cal-day-strip { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin: 10px 0 15px; }
-  .cal-day-strip>button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 17px; min-width: 0; min-height: 65px; padding: 8px 1px; position: relative; }
+  .cal-day-strip { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin: 8px 0; }
+  .cal-day-strip>button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 17px; min-width: 0; min-height: 50px; padding: 5px 1px; position: relative; }
   .cal-day-strip small { color: var(--ui-sub); font-size: .6875rem; }
   .cal-day-strip strong { font-size: 1.125rem; font-weight: 550; }
   .cal-day-strip button[aria-pressed=true] { background: var(--ui-accent); color: var(--ui-accent-ink); }
