@@ -2,6 +2,7 @@
 
 import "../../ui-detail-layouts.css";
 import { MobileDetailCell } from "../../../components/ui/MobileDetailCell";
+import { Dialog } from "../../../components/ui/Dialog";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -22,6 +23,12 @@ import { AppShell } from "../../../components/AppShell";
 import { useAuth } from "../../../components/AuthProvider";
 import { db } from "../../../lib/firebase";
 import { isAdminRole, isSuperAdminRole } from "../../../lib/authUtils";
+import {
+  canEditUserNickname,
+  canEditWorklogDisplayName,
+  getUserNameChanges,
+  nicknameMaxLength,
+} from "../../../lib/adminUserNames";
 import { useLoadingTimeout } from "../../../hooks/useLoadingTimeout";
 import {
   collection,
@@ -50,7 +57,7 @@ function sanitizePhotoURL(url) {
 export default function AdminUsersPage() {
   const t = useTranslations();
   const router = useRouter();
-  const { user, approveUser, rejectUser } = useAuth();
+  const { user, setUser, approveUser, rejectUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [roleChangeRequests, setRoleChangeRequests] = useState([]);
@@ -59,25 +66,49 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active"); // "active" | "pending" | "role-requests"
   const [promoteModal, setPromoteModal] = useState(null); // { uid, name } of target user
-  // ITEM-3A: แก้ displayName ผ่าน admin
-  const [editDisplayNameModal, setEditDisplayNameModal] = useState(null); // { uid, currentName }
-  const [editDisplayNameValue, setEditDisplayNameValue] = useState('');
-  const [savingDisplayName, setSavingDisplayName] = useState(false);
+  const [nameEdit, setNameEdit] = useState(null);
+  const [savingName, setSavingName] = useState(false);
+  const [nameEditError, setNameEditError] = useState("");
+  const [nameStatus, setNameStatus] = useState("");
+  const nameTarget = nameEdit && users.find(({ id }) => id === nameEdit.original.id);
+  const canSaveName = nameEdit?.actorId === user?.uid && canEditUserNickname(user, nameTarget);
+  const editableDisplayName = canSaveName && canEditWorklogDisplayName(user, nameTarget);
+  const nameChanges = canSaveName ? getUserNameChanges(nameEdit.original, nameEdit.draft, editableDisplayName) : null;
+  const hasNameChanges = Boolean(nameChanges && Object.keys(nameChanges).length);
 
-  async function handleSaveDisplayName() {
-    if (!editDisplayNameModal || !editDisplayNameValue.trim()) return;
-    setSavingDisplayName(true);
+  function startNameEdit(target) {
+    setNameEditError("");
+    setNameStatus("");
+    setNameEdit({
+      actorId: user.uid,
+      original: target,
+      draft: { nickname: target.nickname ?? "", displayName: target.displayName ?? "" },
+    });
+  }
+
+  function updateNameDraft(field, value) {
+    setNameEditError("");
+    setNameEdit(current => ({ ...current, draft: { ...current.draft, [field]: value } }));
+  }
+
+  async function handleSaveName(event) {
+    event.preventDefault();
+    if (savingName || !hasNameChanges) return;
+    const targetId = nameTarget.id;
+    setSavingName(true);
+    setNameEditError("");
     try {
-      await updateDoc(doc(db, 'users', editDisplayNameModal.uid), {
-        displayName: editDisplayNameValue.trim(),
-      });
-      setUsers((prev) => prev.map((u) => u.id === editDisplayNameModal.uid
-        ? { ...u, displayName: editDisplayNameValue.trim() } : u));
-      setEditDisplayNameModal(null);
-    } catch (err) {
-      alert('แก้ชื่อไม่สำเร็จ: ' + err.message);
+      await updateDoc(doc(db, "users", targetId), nameChanges);
+      setUsers(current => current.map(item => item.id === targetId ? { ...item, ...nameChanges } : item));
+      if (targetId === user.uid) {
+        setUser(current => current?.uid === targetId ? { ...current, ...nameChanges } : current);
+      }
+      setNameEdit(null);
+      setNameStatus("บันทึกชื่อแล้ว");
+    } catch {
+      setNameEditError("บันทึกชื่อไม่สำเร็จ กรุณาลองอีกครั้ง");
     } finally {
-      setSavingDisplayName(false);
+      setSavingName(false);
     }
   }
 
@@ -639,14 +670,14 @@ export default function AdminUsersPage() {
                     </MobileDetailCell>
                     <MobileDetailCell actions className="px-5 py-4">
                       <div className="flex gap-2 flex-wrap">
-                        {/* ITEM-3A: แก้ชื่อลงงาน — admin แก้สำหรับ staff ทุกคน */}
-                        {u.role !== 'superadmin' && u.id !== user?.uid && (
+                        {canEditUserNickname(user, u) && (
                           <button
-                            onClick={() => { setEditDisplayNameModal({ uid: u.id, currentName: u.displayName || '' }); setEditDisplayNameValue(u.displayName || ''); }}
+                            type="button"
+                            onClick={() => startNameEdit(u)}
                             className="rounded-lg px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 flex items-center gap-1"
                           >
-                            <Pencil size={12} />
-                            ชื่อลงงาน
+                            <Pencil size={12} aria-hidden="true" />
+                            {canEditWorklogDisplayName(user, u) ? "แก้ไขชื่อ" : "แก้ชื่อเล่น"}
                           </button>
                         )}
                         {/* Superadmin สามารถ promote admin → superadmin */}
@@ -708,28 +739,53 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* ITEM-3A: Edit displayName Modal */}
-      {editDisplayNameModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-lg font-semibold text-slate-950 mb-1">แก้ชื่อลงงาน</h3>
-            <p className="text-sm text-slate-500 mb-4">ชื่อที่แสดงใน Dashboard และรายงานงาน</p>
-            <input
-              type="text"
-              className="apple-input mb-4"
-              value={editDisplayNameValue}
-              onChange={(e) => setEditDisplayNameValue(e.target.value)}
-              placeholder="ชื่อภาษาไทย เช่น พงศกร"
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
-            />
-            <div className="flex gap-2">
-              <button onClick={handleSaveDisplayName} disabled={savingDisplayName || !editDisplayNameValue.trim()} className="apple-button flex-1 disabled:opacity-40">
-                {savingDisplayName ? 'กำลังบันทึก...' : 'บันทึก'}
-              </button>
-              <button onClick={() => setEditDisplayNameModal(null)} className="apple-button-secondary px-4">ยกเลิก</button>
+      <p role="status" className={nameStatus ? "mt-3 text-sm text-slate-600" : "sr-only"}>{nameStatus}</p>
+      {nameEdit && (
+        <Dialog
+          open
+          title={editableDisplayName ? "แก้ไขชื่อ" : "แก้ชื่อเล่น"}
+          description={savingName ? "กำลังบันทึกชื่อ…" :
+            nameEdit.original.displayName || nameEdit.original.fullName || nameEdit.original.email}
+          onClose={() => setNameEdit(null)}
+          busy={savingName}
+          footer={
+            <>
+              <button type="button" className="apple-button-secondary" disabled={savingName} onClick={() => setNameEdit(null)}>ยกเลิก</button>
+              <button type="submit" form="admin-user-name-form" className="apple-button" disabled={savingName || !hasNameChanges}>บันทึก</button>
+            </>
+          }
+        >
+          <form id="admin-user-name-form" className="space-y-4" onSubmit={handleSaveName}>
+            <div className="ui-field">
+              <label htmlFor="admin-user-nickname">ชื่อเล่น (ไม่บังคับ)</label>
+              <input
+                id="admin-user-nickname"
+                className="apple-input"
+                aria-describedby="admin-user-nickname-hint"
+                maxLength={nicknameMaxLength}
+                value={nameEdit.draft.nickname}
+                onChange={event => updateNameDraft("nickname", event.target.value)}
+              />
+              <small id="admin-user-nickname-hint" className="ui-caption">เว้นว่างเพื่อล้างชื่อเล่น</small>
             </div>
-          </div>
-        </div>
+            {editableDisplayName && (
+              <div className="ui-field">
+                <label htmlFor="admin-user-display-name">ชื่อที่ใช้ลงงาน</label>
+                <input
+                  id="admin-user-display-name"
+                  className="apple-input"
+                  aria-describedby="admin-user-display-name-hint"
+                  value={nameEdit.draft.displayName}
+                  onChange={event => updateNameDraft("displayName", event.target.value)}
+                />
+                <small id="admin-user-display-name-hint" className="ui-caption">ใช้แสดงในบันทึกงานและรายงาน</small>
+              </div>
+            )}
+            {nameEditError && <p role="alert" className="text-sm text-red-600">{nameEditError}</p>}
+            {!canSaveName && <p role="alert">บัญชีนี้แก้ไขชื่อไม่ได้</p>}
+            {canSaveName && !nameChanges && <p role="alert">กรอกชื่อที่ใช้ลงงานให้ครบและใช้ชื่อเล่นไม่เกิน {nicknameMaxLength} ตัวอักษร</p>}
+          </form>
+        </Dialog>
       )}
 
       {/* Role Change Requests Table - เฉพาะ Superadmin */}
