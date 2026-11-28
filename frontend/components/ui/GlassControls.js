@@ -32,7 +32,9 @@ export function GlassButton({ children, icon, engine, mode = "css", variant = "r
 }
 
 export function GlassControlGroup({ children, mode = "css", label, className = "" }) {
-  const selected = Children.toArray(children).findIndex(child => isValidElement(child) && (child.props["aria-pressed"] === true || child.props["aria-pressed"] === "true"));
+  const buttons = Children.toArray(children);
+  const selectable = buttons.length > 1 && buttons.every(child => isValidElement(child) && child.type === "button" && child.props["aria-pressed"] != null);
+  const pressed = selectable ? buttons.filter(child => String(child.props["aria-pressed"]) === "true") : [];
   return <div
     className={`ui-glass-controls ${className}`} role="group"
     aria-label={label}
@@ -41,10 +43,10 @@ export function GlassControlGroup({ children, mode = "css", label, className = "
       mode={mode} radius={15}
       name="control-group"
     />
-    {selected >= 0 && <GlassSelection
-      mode={mode} selected={selected}
+    {pressed.length === 1 && <GlassSelection
+      selected={buttons.indexOf(pressed[0])}
       targetSelector='button[aria-pressed="true"]' itemSelector="button"
-      className="ui-control-indicator" layoutMeasurement
+      className="ui-control-indicator"
     />}
     {children}
   </div>;

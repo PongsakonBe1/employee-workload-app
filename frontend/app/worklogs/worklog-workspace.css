@@ -84,6 +84,15 @@
 .worklog-quick-panel .record-quick-copy { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; }
 .worklog-quick-panel .record-quick-copy :is(strong,small) { margin:0; }
 .worklog-quick-panel .record-quick-card:focus-visible { outline:2px solid var(--ui-accent); outline-offset:2px; }
+.worklog-quick-panel .record-quick-card { border:1px solid var(--ui-line); box-shadow:none; transition:background-color var(--ui-press-duration), border-color var(--ui-press-duration), transform var(--ui-press-duration) var(--ui-motion-easing); }
+.worklog-quick-panel .record-quick-card[data-tone=purple] { --quick-tint:var(--ui-purple); }
+.worklog-quick-panel .record-quick-card[data-tone=green] { --quick-tint:var(--ui-green); }
+.worklog-quick-panel .record-quick-card[data-tone=blue] { --quick-tint:var(--ui-blue); }
+.worklog-quick-panel .record-quick-card[data-tone=amber] { --quick-tint:var(--ui-amber); }
+@media(hover:hover) { .worklog-quick-panel .record-quick-card:hover:not(:disabled) { background:color-mix(in srgb,var(--ui-surface) 70%,var(--quick-tint,var(--ui-soft))); border-color:var(--ui-control-edge); } }
+.worklog-quick-panel .record-quick-card:not(:disabled):active { transform:scale(.985); }
+[data-ui-motion=reduce] .worklog-quick-panel .record-quick-card:active { transform:none; }
+@media(prefers-reduced-motion:reduce) { .worklog-quick-panel .record-quick-card:active { transform:none; } }
 .worklog-quick-panel .record-quick-count { position:static; flex:none; white-space:nowrap; }
 .worklog-quick-panel .record-quick-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 6px; min-width:0; }
 .record-dl-shifts { grid-template-columns:repeat(3,minmax(0,1fr)); }

@@ -11,8 +11,11 @@ import { prepareDlOcrAssets } from "./prepare-dl-ocr.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" });
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
-const verify = process.argv[2] === "--verify";
-assert(process.argv.length === 2 || verify && process.argv.length === 3, "Usage: build-production-hosting.mjs [--verify]");
+const flags = process.argv.slice(2);
+assert(new Set(flags).size === flags.length && flags.every(flag => ["--verify", "--mobile-tab-scrub"].includes(flag)),
+  "Usage: build-production-hosting.mjs [--verify] [--mobile-tab-scrub]");
+const verify = flags.includes("--verify");
+const mobileTabScrub = flags.includes("--mobile-tab-scrub");
 assert.equal(git("status", "--porcelain", "--untracked-files=no").trim(), "", "Commit tracked changes before building");
 
 const project = "labboy-workload-app";
@@ -75,6 +78,7 @@ execFileSync(process.execPath, [require.resolve("next/dist/bin/next"), "build", 
     NEXT_PUBLIC_ANALYTICS_WORKSPACE: "1",
     NEXT_PUBLIC_WORKLOG_WORKSPACE: "1",
     NEXT_PUBLIC_CALENDAR_PRODUCTION_CREATE: "1",
+    NEXT_PUBLIC_MOBILE_TAB_SCRUB: mobileTabScrub ? "1" : "0",
     NODE_ENV: "production",
     NEXT_TELEMETRY_DISABLED: "1",
     UI_BUILD_CHECK: "1",
@@ -101,6 +105,7 @@ const manifest = {
   commit: git("rev-parse", "HEAD").trim(),
   project,
   verificationOnly: verify,
+  features: { mobileTabScrub },
   hostingConfigSha256: hash(config),
   assets,
 };

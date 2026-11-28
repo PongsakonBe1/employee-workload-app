@@ -165,6 +165,7 @@ export function WorklogRecordReview({ review, saving, error, onClose, onConfirm 
     footer={<><GlassButton mode="quick" disabled={saving} onClick={onClose}>กลับไปแก้ไข</GlassButton><GlassButton mode="quick" variant="prominent" disabled={saving} onClick={onConfirm}>ยืนยันบันทึก</GlassButton></>}>
     {fields && <dl className="record-review-fields">
       <dt>ผู้ปฏิบัติงาน</dt><dd>{review.employeeLabel}</dd>
+      {review.employeeFullName && <><dt>ชื่อ–นามสกุล</dt><dd>{review.employeeFullName}</dd></>}
       <dt>หัวข้อรอง</dt><dd>{fields.minorTask}</dd><dt>งานหลัก</dt><dd>{fields.mainDuty}</dd>
       <dt>กลุ่มงาน</dt><dd>{fields.dutyGroup || "—"}</dd>
       <dt>วันที่และเวลา</dt><dd>{fields.date} · {fields.time}</dd>

@@ -2,9 +2,11 @@
 
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
+import { useAppearance } from "./AppearanceProvider";
 
 export function Dialog({ open, onClose, title, description, children, footer, className = "", origin, busy = false }) {
-  const ref = useRef(null), closeRef = useRef(onClose), titleId = useId(), descriptionId = useId();
+  const ref = useRef(null), entrance = useRef(null), closeRef = useRef(onClose), titleId = useId(), descriptionId = useId();
+  const { resolved } = useAppearance();
   const originRef = useRef(origin);originRef.current = origin;
   closeRef.current = onClose;
   useEffect(() => {
@@ -12,22 +14,30 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
     if (!open || !dialog) return;
     const previous = document.activeElement;
     dialog.showModal();
-    let animation;
     const source = originRef.current;
     const reduced = matchMedia("(prefers-reduced-motion:reduce)").matches || document.documentElement.dataset.uiMotion === "reduce";
-    if (source && !reduced && dialog.animate) {
+    if (source && !reduced && matchMedia("(min-width:761px)").matches && dialog.animate) {
       // Native modality and focus stay intact; only the presentation is animated.
       dialog.style.animation = "none";
       const box = dialog.getBoundingClientRect();
       const x = Math.max(0, Math.min(box.width, source.x - box.left));
       const y = Math.max(0, Math.min(box.height, source.y - box.top));
-      animation = dialog.animate([
-        { opacity: 0, transform: `translateX(-18px) scale(.93)`, transformOrigin: `${x}px ${y}px` },
-        { opacity: 1, transform: "translateX(0) scale(1)", transformOrigin: `${x}px ${y}px` },
-      ], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+      entrance.current = dialog.animate([
+        { opacity: .55, transform: "scale(.97)", transformOrigin: `${x}px ${y}px` },
+        { opacity: 1, transform: "scale(1)", transformOrigin: `${x}px ${y}px` },
+      ], { duration: 200, easing: "cubic-bezier(.2,.8,.2,1)" });
     }
-    return () => { animation?.cancel();dialog.style.removeProperty("animation");if (dialog.open) dialog.close();if (previous?.isConnected) previous.focus({ preventScroll: true }); };
+    return () => {
+      entrance.current?.cancel();
+      entrance.current = null;
+      dialog.style.removeProperty("animation");
+      if (dialog.open) dialog.close();
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
   }, [open]);
+  useEffect(() => {
+    if (resolved.reducedMotion) entrance.current?.cancel();
+  }, [resolved.reducedMotion]);
   return <dialog
     ref={ref} className={`ui-dialog ${className}`}
     aria-busy={busy || undefined}

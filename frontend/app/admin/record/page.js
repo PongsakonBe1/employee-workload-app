@@ -15,17 +15,13 @@ import { auth, db } from "../../../lib/firebase";
 import { withWorklogResourceIndex } from "../../../lib/resourceStatusIndex";
 import { logSystemAction, SystemActions } from "../../../lib/systemLog";
 import { sanitizeInput, validateWorklogForm } from "../../../lib/validation";
+import { labelWorklogOperators } from "../../../lib/worklogOperatorLabels";
 import { dispatchEquipmentStatusEvents } from "../../../lib/worklogUtils";
 
 const priority = { superadmin: 3, admin: 2, staff: 1 };
 
 function emptyForm(date = today()) {
   return { date, time: nowTime(), recipient: "", minorTask: "", mainDuty: "", dutyGroup: "", comment: "" };
-}
-
-function displayLabel(person) {
-  const name = person.displayName || person.fullName || person.nickname || person.email || person.id;
-  return person.username && person.username !== name ? `${name} (${person.username})` : name;
 }
 
 export default function AdminRecordPage() {
@@ -69,12 +65,10 @@ function TeamRecord({ user }) {
     let current = true;
     const assignedRoles = query(collection(db, "users"), where("role", "in", Object.keys(priority)));
     getDocsFromServer(assignedRoles).then(snapshot => {
-      const people = snapshot.docs
-        .map(document => {
-          const person = { ...document.data(), id: document.id, uid: document.id };
-          return { ...person, label: displayLabel(person) };
-        })
-        .filter(person => person.active !== false)
+      const activePeople = snapshot.docs
+        .map(document => ({ ...document.data(), id: document.id, uid: document.id }))
+        .filter(person => person.active !== false);
+      const people = labelWorklogOperators(activePeople)
         .sort((a, b) => priority[b.role] - priority[a.role] || a.label.localeCompare(b.label, "th"));
       if (current) setDirectory({ people, status: "ready", attempt: directoryAttempt });
     }).catch(() => {
@@ -105,7 +99,13 @@ function TeamRecord({ user }) {
       return;
     }
     setError("");
-    setReview({ actorId: user.uid, employeeId: person.id, employeeLabel: person.label, fields: { ...form } });
+    setReview({
+      actorId: user.uid,
+      employeeId: person.id,
+      employeeLabel: person.label,
+      employeeFullName: typeof person.fullName === "string" ? person.fullName.trim() || "—" : "—",
+      fields: { ...form },
+    });
   }
 
   async function confirm() {

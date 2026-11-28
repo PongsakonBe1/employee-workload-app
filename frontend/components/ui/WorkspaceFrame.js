@@ -18,6 +18,10 @@ import { useAppearance } from "./AppearanceProvider";
 
 const roleLabels = { staff: "Staff", admin: "Admin", superadmin: "Superadmin" };
 const directHref = href => href;
+const scrubPreview = process.env.NEXT_PUBLIC_MOBILE_TAB_SCRUB_PREVIEW === "1" &&
+  (process.env.NODE_ENV === "development" || ["demo-worklog-workspace", "labboy-workload-app-staging"].includes(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
+const scrubEnabled = scrubPreview || (process.env.NEXT_PUBLIC_MOBILE_TAB_SCRUB === "1" &&
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "labboy-workload-app");
 
 export function WorkspaceFrame({ user, pathname, notificationSlot, children, onLogout, onNavigate, resolveHref = directHref, glassMode = "css" }) {
   const { preferences } = useAppearance();
@@ -207,12 +211,12 @@ export function WorkspaceFrame({ user, pathname, notificationSlot, children, onL
         {process.env.NODE_ENV === "development" && <span className="ui-develop-label">Development · UI Foundation</span>}
       </footer>
     </main>
-    <nav className="ui-mobile-nav ui-glass" aria-label="เมนูประจำ">
+    <nav className="ui-mobile-nav ui-glass" aria-label="เมนูประจำ" data-scrub-preview={scrubEnabled || undefined}>
       <GlassSurface
         mode={pilotMode} radius={25}
         name="tabbar"
       />
-      <GlassSelection mode={pilotMode} selected={mobileArea} targetSelector="a[aria-current]" />
+      <GlassSelection selected={mobileArea} targetSelector="a[aria-current]" itemSelector="a" navigationKey={user.uid || "preview"} scrubPreview={scrubEnabled} />
       {mobileNavigation(groups).map(entry => { return <Link
         key={entry.id} href={entry.href}
         prefetch={false} aria-current={mobileArea === entry.id ? current === entry.id ? "page" : "location" : undefined}

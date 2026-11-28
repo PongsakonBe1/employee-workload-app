@@ -29,7 +29,7 @@ switch (process.argv[2]) {
     fs.mkdirSync(artifact, { recursive: true });
     const result = spawnSync(process.execPath, [require.resolve("next/dist/bin/next"), "build", "--no-lint"], {
       cwd: frontend,
-      env: { ...process.env, ...uiDevelopmentEnvironment, NODE_ENV: "production", UI_BUILD_CHECK: "1", NEXT_PUBLIC_WORKLOG_WORKSPACE: "1", NEXT_PUBLIC_ANALYTICS_WORKSPACE: process.argv.includes("--analytics") ? "1" : "0", NEXT_PUBLIC_API_URL: "http://127.0.0.1:4318", NEXT_PUBLIC_FIREBASE_PROJECT_ID: project, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: `${project}.firebaseapp.com`, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: `${project}.appspot.com`, CALENDAR_TRUSTED_DENIAL_UI: "1" },
+      env: { ...process.env, ...uiDevelopmentEnvironment, NODE_ENV: "production", UI_BUILD_CHECK: "1", NEXT_PUBLIC_WORKLOG_WORKSPACE: "1", NEXT_PUBLIC_ANALYTICS_WORKSPACE: process.argv.includes("--analytics") ? "1" : "0", NEXT_PUBLIC_MOBILE_TAB_SCRUB_PREVIEW: process.argv.includes("--scrub-preview") ? "1" : "0", NEXT_PUBLIC_API_URL: "http://127.0.0.1:4318", NEXT_PUBLIC_FIREBASE_PROJECT_ID: project, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: `${project}.firebaseapp.com`, NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: `${project}.appspot.com`, CALENDAR_TRUSTED_DENIAL_UI: "1" },
       encoding: "utf8", maxBuffer: 8 * 1024 * 1024
     });
     fs.writeFileSync(path.join(artifact, "build.log"), (result.stdout ?? "") + (result.stderr ?? ""));

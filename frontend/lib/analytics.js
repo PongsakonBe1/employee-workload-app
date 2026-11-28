@@ -871,19 +871,23 @@ export function calculateLongestStreak(worklogs) {
  * @param {Array} worklogs - array of worklog objects
  * @returns {Array} - array of { subject, count, fullMark }
  */
+export function worklogCategory(worklog) {
+  return String(worklog.minorTask || worklog.category || worklog.dutyType || "อื่นๆ");
+}
+
 export function getCategoryBreakdown(worklogs) {
   if (!worklogs || worklogs.length === 0) return [];
 
-  const categories = {};
+  const categories = new Map();
   worklogs.forEach(w => {
     // PM/UX: Use minorTask (หัวข้อรอง) for meaningful skill categories
-    const cat = w.minorTask || w.category || w.dutyType || 'อื่นๆ';
-    categories[cat] = (categories[cat] || 0) + 1;
+    const category = worklogCategory(w);
+    categories.set(category, (categories.get(category) ?? 0) + 1);
   });
 
-  const maxCount = Math.max(...Object.values(categories), 1);
+  const maxCount = Math.max(...categories.values(), 1);
 
-  return Object.entries(categories)
+  return [...categories]
     .map(([subject, count]) => ({
       subject,
       count,

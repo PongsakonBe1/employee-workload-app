@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useId, useRef, useSyncExternalStore } from 'react';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardCheck, MonitorDown, Search, UserRoundCheck } from 'lucide-react';
 import { DlQuickLogDialog } from './DlQuickLogDialog';
 import { Dialog } from './ui/Dialog';
 import { GlassButton } from './ui/GlassControls';
@@ -35,10 +35,13 @@ const equipmentAppearance = {
   usb: ["usb", "blue"]
 };
 
+const actionGlyphs = { exam: ClipboardCheck, software: MonitorDown, account: UserRoundCheck };
+
 function templateAppearance(template, equipmentKind) {
   if (equipmentKind) return equipmentAppearance[equipmentKind];
   const text = `${template.name} ${template.minorTask}`;
   if (/ชั้น [34]|เปิดห้อง|ปิดห้อง/.test(text)) return ["door", "purple"];
+  if (isDlRoundTemplate(template) || /คุมสอบ|Digital Literacy/i.test(text)) return ["exam", "blue"];
   if (/โทรศัพท์|รับสาย/.test(text)) return ["phone", "amber"];
   if (/โปรแกรม|Software/i.test(text)) return ["software", "purple"];
   if (/บัญชี|account/i.test(text)) return ["account", "blue"];
@@ -692,11 +695,13 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
           const saving = loggingTemplate === template.id;
           const kind = equipmentLoanKind(template);
           const [symbol, tone] = templateAppearance(template, kind);
+          const Glyph = actionGlyphs[symbol];
           const hint = templateHint(template, kind, symbol, hasRoundPicker);
           return <button
             key={template.id}
             type="button"
             className="record-quick-card"
+            data-tone={tone}
             data-holding={holding || undefined}
             aria-busy={saving || undefined}
             disabled={loading}
@@ -718,7 +723,9 @@ export default function QuickLogButtons({ onLogSuccess, targetUser, expandOnDesk
             onKeyUp={event => { if (direct && (event.key === " " || event.key === "Enter")) handleHoldEnd(); }}
             onBlur={() => { if (direct) handleHoldEnd(); }}
           >
-            <span className="record-tile ui-nav-symbol" data-tone={tone}><ReviewSymbol name={symbol} size={28} /></span>
+            <span className="record-tile ui-nav-symbol" data-tone={tone} aria-hidden="true">
+              {Glyph ? <Glyph size={28} /> : <ReviewSymbol name={symbol} size={28} />}
+            </span>
             <span className="record-quick-copy">
               <span className="record-quick-title">
                 <strong>{template.name}</strong>
