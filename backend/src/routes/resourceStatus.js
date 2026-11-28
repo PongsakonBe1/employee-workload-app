@@ -2,7 +2,7 @@ import { Router } from "express";
 import cors from "cors";
 import { createResourceStatusHandler } from "../resource-status/resourceStatusHandler.js";
 
-const productionOrigin = "https://labboy-workload-app.web.app";
+const productionOrigins = ["https://labboy-workload-app.web.app", "https://labboy-workload-app.firebaseapp.com"];
 const productionProject = "labboy-workload-app";
 
 export function createResourceStatusRouter(getFirebase) {
@@ -18,11 +18,11 @@ export function createResourceStatusRouter(getFirebase) {
     res.vary("Origin");
     res.set("Cache-Control", "private, no-store");
     const origin = req.get("Origin");
-    if (origin && origin !== productionOrigin) return res.sendStatus(403);
+    if (origin && !productionOrigins.includes(origin)) return res.sendStatus(403);
     if (req.method !== "GET" && req.method !== "OPTIONS") return res.sendStatus(404);
     next();
   });
-  router.use(cors({ origin: productionOrigin, methods: ["GET", "OPTIONS"], allowedHeaders: ["Authorization"] }));
+  router.use(cors({ origin: productionOrigins, methods: ["GET", "OPTIONS"], allowedHeaders: ["Authorization"] }));
   router.get("/", resourceStatus);
   router.close = resourceStatus.close;
   return router;
