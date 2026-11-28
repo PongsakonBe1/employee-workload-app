@@ -72,10 +72,10 @@ const adminModules = [
   },
   {
     id: "stats",
-    title: "สถิติรวม",
-    titleEn: "Statistics",
-    description: "ดูสถิติการทำงานของพนักงานทั้งหมด",
-    descriptionEn: "View overall employee workload statistics",
+    title: "ภาพรวมงาน",
+    titleEn: "Work Overview",
+    description: "ดูบันทึกงานและแนวโน้มของทีมตามช่วงเวลา",
+    descriptionEn: "View team worklogs and trends by period",
     icon: BarChart3,
     href: "/dashboard",
     color: "bg-violet-500",
@@ -171,27 +171,6 @@ export default function AdminPage() {
           );
         })}
       </div>
-
-      {/* Quick Stats */}
-      <section className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-slate-950">
-          ภาพรวมระบบ
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="apple-panel p-5">
-            <p className="text-sm text-slate-500">พนักงานทั้งหมด</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">8</p>
-          </div>
-          <div className="apple-panel p-5">
-            <p className="text-sm text-slate-500">งานที่บันทึกวันนี้</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">-</p>
-          </div>
-          <div className="apple-panel p-5">
-            <p className="text-sm text-slate-500">งานรอการล็อก</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">-</p>
-          </div>
-        </div>
-      </section>
     </AppShell>
   );
 }
