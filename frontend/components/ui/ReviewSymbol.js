@@ -22,7 +22,15 @@ const paths = {
   admin: "m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4m-4 10 3 3 5-6",
   settings: "m9 3-.5 3-2 1L4 6 2 10l2.5 2v2L2 16l2 4 3-1 2 1 .5 2h5l.5-2 2-1 3 1 2-4-2.5-2v-2l2.5-2-2-4-3 1-2-1-.5-3H9M12 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8",
 };
-const layers = { calendar: "M5 5h14v5H5z", resources: "M4 4h6v6H4zM14 14h6v6h-6z", headphones: "M3 13h4v7H3zM17 13h4v7h-4z" };
+const layers = {
+  record: "M11 10l7-7 3 3-7 7-4 1z",
+  history: "M21 15a6 6 0 1 1-12 0 6 6 0 1 1 12 0Z",
+  calendar: "M5 5h14v5H5z",
+  resources: "M4 4h6v6H4zM14 14h6v6h-6z",
+  headphones: "M3 13h4v7H3zM17 13h4v7h-4z",
+  door: "M6 21V4l12-2v19Z",
+  chart: "M6.5 14h3v6h-3zM10.5 10h3v10h-3zM14.5 8h3v12h-3zM18.5 7h3v13h-3z",
+};
 export function ReviewSymbol({ name, size = 20, ...props }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" data-review-symbol={name} {...props}>
     {layers[name] && <path d={layers[name]} fill="currentColor" fillOpacity=".16" stroke="none" />}

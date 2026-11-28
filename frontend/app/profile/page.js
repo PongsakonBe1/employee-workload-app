@@ -75,13 +75,16 @@ function ProfileAccount({ user, setUser }) {
         {draft ? "ยกเลิกการแก้ไข" : "แก้ไขข้อมูล"}
       </GlassButton>
     </div>
-    <dl className="profile-account-details">
-      <div><dt>บทบาท</dt><dd>{roleLabels[user.role] ?? "ยังไม่ระบุ"}</dd></div>
-      <div><dt>สถานะบัญชี</dt><dd>{user.active === true ? "เปิดใช้งาน" : user.active === false ? "ปิดใช้งาน" : "ยังไม่ยืนยัน"}</dd></div>
-      <div><dt>ชื่อที่ใช้ลงงาน</dt><dd>{user.displayName || "ยังไม่ได้กำหนด"}</dd></div>
-      <div><dt>ชื่อ–นามสกุล</dt><dd>{user.fullName || "—"}</dd></div>
-      <div><dt>ชื่อเล่น</dt><dd>{user.nickname || "—"}</dd></div>
-    </dl>
+    <details className="profile-account-disclosure">
+      <summary>ข้อมูลบัญชี</summary>
+      <dl className="profile-account-details">
+        <div><dt>บทบาท</dt><dd>{roleLabels[user.role] ?? "ยังไม่ระบุ"}</dd></div>
+        <div><dt>สถานะบัญชี</dt><dd>{user.active === true ? "เปิดใช้งาน" : user.active === false ? "ปิดใช้งาน" : "ยังไม่ยืนยัน"}</dd></div>
+        <div><dt>ชื่อที่ใช้ลงงาน</dt><dd>{user.displayName || "ยังไม่ได้กำหนด"}</dd></div>
+        <div><dt>ชื่อ–นามสกุล</dt><dd>{user.fullName || "—"}</dd></div>
+        <div><dt>ชื่อเล่น</dt><dd>{user.nickname || "—"}</dd></div>
+      </dl>
+    </details>
     {message && <p className="profile-account-feedback" role={message.error ? "alert" : "status"}>{message.text}</p>}
     {draft && <form ref={form} className="profile-account-edit" onSubmit={save}>
       {admin && <div className="ui-field">
@@ -116,7 +119,7 @@ export default function ProfilePage() {
         <ProfileAccount key={user.uid} user={user} setUser={setUser} />
         <section className="profile-workspace-stats" aria-labelledby="profile-stats-title">
           <h2 id="profile-stats-title">สถิติของฉัน</h2>
-          <ProfileStats user={user} />
+          <ProfileStats key={user.uid} user={user} />
         </section>
       </>}
     </div>

@@ -17,10 +17,13 @@
 .ui-mobile-nav:has(>.ui-optical-layer[data-active=true]) { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 /* Keep labels above the selection lens even while optics are loading or disabled. */
 .ui-mobile-nav>a { position: relative; z-index: 10; }
-.ui-glass-indicator { display: none; position: absolute; left: 0; pointer-events: none; z-index: 7; border-radius: 20px; background: color-mix(in srgb,var(--ui-surface) 90%,transparent); border: 1px solid var(--ui-glass-edge); box-shadow: inset 0 1px 1px #ffffff70,inset 0 -1px 1px #74829920,0 2px 6px #14254714; }
+.ui-glass-indicator { display: none; position: absolute; top:0; left:0; pointer-events:none; z-index:1; border-radius:20px; }
+.ui-glass-indicator::before { content:""; position:absolute; inset:0; border-radius:inherit; background:var(--ui-surface); border:1px solid var(--ui-glass-edge); box-shadow:inset 0 1px 1px #ffffff70,0 2px 6px #14254714; transition:transform var(--ui-press-duration) var(--ui-motion-easing),box-shadow var(--ui-press-duration) ease; }
 .ui-glass-indicator[hidden] { display: none !important; }
-[data-glass-pilot=quick] .ui-glass-indicator[data-ready=true] { display: block; }
-[data-glass-pilot=quick] .ui-mobile-nav:has(>.ui-glass-indicator[data-ready=true]:not([hidden]))>a[aria-current] { background: transparent; box-shadow: none; }
+.ui-glass-indicator[data-ready=true] { display:block; }
+:is(.ui-mobile-nav,.ui-glass-controls):has(> :is(a[aria-current],button[aria-pressed=true]):active) > .ui-glass-indicator::before { transform:scale(1.045); box-shadow:inset 0 1px 2px #ffffffa0,0 3px 8px #14254724; }
+.ui-mobile-nav[data-scrubbing=true] > .ui-glass-indicator::before { transform:scale(1.06,1.08); box-shadow:inset 0 1px 2px #ffffffa0,0 4px 12px #14254734; }
+.ui-mobile-nav:has(>.ui-glass-indicator[data-ready=true]:not([hidden]))>a[aria-current] { background:transparent; box-shadow:none; }
 .ui-glass-comparison { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--ui-surface); }
 .ui-glass-comparison>.ui-choice { flex: initial; min-height: 40px; font-size: .8125rem; }
 .ui-glass-pilot-note { margin: -10px 0 22px; }
@@ -81,10 +84,12 @@
 .ui-button-demo-status[data-active=true] { background: var(--ui-green); color: var(--ui-green-ink); }
 .ui-glass-controls { position: relative; display: inline-flex; align-items: stretch; gap: 3px; padding: 4px; border: 1px solid var(--ui-glass-edge); border-radius: 15px; background: var(--ui-glass); box-shadow: inset 0 1px 0 #ffffff30; }
 .ui-glass-controls:has(>.ui-optical-layer[data-active=true]) { background: transparent; border-color: transparent; box-shadow: none; }
-.ui-glass-controls>button { position: relative; z-index: 2; min-height: 40px; border-radius: 11px; display: inline-flex; justify-content: center; align-items: center; gap: 7px; padding: 8px 15px; color: var(--ui-sub); font-size: .8125rem; transition: background-color 150ms ease,color 150ms ease,transform 130ms ease; }
+.ui-glass-controls>button { position: relative; z-index: 2; min-height: 40px; border-radius: 11px; display: inline-flex; justify-content: center; align-items: center; gap: 7px; padding: 8px 15px; color: var(--ui-sub); font-size: .8125rem; transition: background-color var(--ui-selection-duration) var(--ui-motion-easing),color var(--ui-selection-duration),transform var(--ui-press-duration) ease; }
 .ui-glass-controls>button[aria-pressed=true] { background: var(--ui-surface); color: var(--ui-blue-ink); box-shadow: inset 0 1px 1px #ffffff55,0 1px 5px #162b4820; font-weight: 600; }
 .ui-glass-controls>button:active { transform: scale(.98); }
-.ui-glass-controls>.ui-control-indicator { z-index: 1; border-radius: 11px; box-shadow: inset 0 1px 1px #ffffff55,0 1px 5px #162b4820; }
+[data-ui-motion=reduce] .ui-glass-controls>button:active { transform:none; }
+@media(prefers-reduced-motion:reduce) { .ui-glass-controls>button:active { transform:none; } }
+.ui-glass-controls>.ui-control-indicator { border-radius:11px; }
 .ui-glass-controls:has(>.ui-control-indicator[data-ready=true]:not([hidden]))>button[aria-pressed=true] { background: transparent; box-shadow: none; }
 @media(max-width:760px) { .ui-glass-controls>button { min-height: 44px; } }
 @media(forced-colors:active) { .ui-glass-button,.ui-glass-controls { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; box-shadow: none; } .ui-glass-button::after { display: none; } .ui-glass-controls>button[aria-pressed=true] { outline: 2px solid Highlight; outline-offset: -3px; } .ui-glass-button[data-kind=prominent] { background: Highlight; color: HighlightText; } }
